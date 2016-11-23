@@ -1,26 +1,41 @@
 /*
-* Copyright (c) 2005-2010, Vonage Holdings Corp.
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY VONAGE HOLDINGS CORP. ''AS IS'' AND ANY
-* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL VONAGE HOLDINGS CORP. BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (c) 2005-2010, Vonage Holdings Corp.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY VONAGE HOLDINGS CORP. ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL VONAGE HOLDINGS CORP. BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+ * Copyright (c) 2014-2016, Todd M. Kover
+ * All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 //
 // $Id$
 //
@@ -87,7 +102,7 @@ function ShowDevTab(what,devid) {
 
 	deviceForm = document.getElementById('deviceForm');
 	if(deviceForm == null) {
-		alert("Can't find form on the document");   
+		alert("Can't find form on the document");
 		return;
 	}
 
@@ -132,7 +147,7 @@ function ShowDevTab(what,devid) {
 			qstr.replace(/__errormsg__=[^&;]+/, '');
 		}
 		url += ";passedin=" + qstr;
- 
+
 		divObj.style.textAlign = 'center';
 		divObj.style.padding = '50px';
 		divObj.innerHTML = "<img src=\"../stabcons/progress.gif\"> <em>Loading, Please Wait...</em>"
@@ -162,7 +177,7 @@ function ShowDevTab(what,devid) {
 	if(gotoTab) {
 		gotoTab.className = 'tabgroupactive';
 	}
-	
+
 }
 
 // this is the legal way to do innerHTML, but this appears to be
@@ -201,9 +216,9 @@ function uncheck (id, restoclass) {
 }
 
 // //////////////////////////////////////////////////////////////////////////
-// 
+//
 // Parent Device smartness
-// 
+//
 // //////////////////////////////////////////////////////////////////////////
 function updateDeviceParentLink(devid, paridfld) {
 	var devlink;
@@ -240,20 +255,20 @@ function setDevLinkRedir(dropfield, redirlink, root) {
 
     if(root == null) {
 	root = "./";
-    } 
-    
+    }
+
     if(dropfield && dropfield.value) {
 	redirlink.href = root+"type/?DEVICE_TYPE_ID=" + dropfield.value;
     } else {
 	redirlink.href = "javascript:void(null);";
-    }   
-}   
+    }
+}
 
 
 // //////////////////////////////////////////////////////////////////////////
-// 
+//
 // Physical Portage
-// 
+//
 // //////////////////////////////////////////////////////////////////////////
 //
 // does an ajax request and replaces the select option
@@ -335,7 +350,7 @@ function showPhysPortKid_Groups(devid, id, trid, portname) {
 
 	if(kid_tr) {
 		// totally need to toggle tr visibility and maybe change the  pic
-		if(kid_tr.style.visibility == 'hidden') { 
+		if(kid_tr.style.visibility == 'hidden') {
 			kid_tr.style.display = '';
 			kid_tr.style.visibility = 'visible';
 			swaparrows("kidXpand_" + id, 'down');
@@ -358,7 +373,7 @@ function showPhysPortKid_Groups(devid, id, trid, portname) {
 		if(tbl.tagName == 'TABLE') {
 			break;
 		}
-	}	
+	}
 
 	if(tbl == null) {
 		return;
@@ -406,7 +421,7 @@ function showPhysPortKid_Groups(devid, id, trid, portname) {
 
 	if(kid_tr) {
 		// totally need to toggle tr visibility and maybe change the  pic
-		if(kid_tr.style.visibility == 'hidden') { 
+		if(kid_tr.style.visibility == 'hidden') {
 			kid_tr.style.display = '';
 			kid_tr.style.visibility = 'visible';
 			swaparrows("kidXpand_" + id, 'down');
@@ -429,7 +444,7 @@ function showPhysPortKid_Groups(devid, id, trid, portname) {
 		if(tbl.tagName == 'TABLE') {
 			break;
 		}
-	}	
+	}
 
 	if(tbl == null) {
 		return;
@@ -479,7 +494,7 @@ function cleanup_patchpanel_links(pportid) {
 	if(pcthing) {
 		pcthing.parentNode.removeChild(pcthing);
 	}
-} 
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -531,9 +546,9 @@ function updatePowerPort() {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// 
+//
 // Device Sanity checking
-// 
+//
 ////////////////////////////////////////////////////////////////////////////
 function verify_device_submission(form) {
 	var msgtally, msg, result, name, verifybox, ser_reset, retire;
@@ -546,7 +561,7 @@ function verify_device_submission(form) {
 		form.dontSubmit = false;
 		return false;
 	}
-	
+
 
 	verifybox = document.getElementById("verifybox");
 	verifybox.innerHTML = null;
@@ -664,13 +679,13 @@ function toggleon_text(but) {
 
 	$(but).prev(":input").removeAttr('disabled');
 	$(but).addClass('irrelevant');
-	
+
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// 
+//
 // patch panels
-// 
+//
 ////////////////////////////////////////////////////////////////////////////
 function close_patchpanel(killid) {
 	var node = document.getElementById(killid);
@@ -974,7 +989,7 @@ function showCircuitKids(link, circid, parent_tr_id, interface_id)
 
 	if(kid_tr) {
 		// totally need to toggle tr visibility and maybe change the  pic
-		if(kid_tr.style.visibility == 'hidden') { 
+		if(kid_tr.style.visibility == 'hidden') {
 			kid_tr.style.display = '';
 			kid_tr.style.visibility = 'visible';
 			swaparrows("cirExpand_" + circid, 'down');
@@ -997,7 +1012,7 @@ function showCircuitKids(link, circid, parent_tr_id, interface_id)
 		if(tbl.tagName == 'TABLE') {
 			break;
 		}
-	}	
+	}
 
 	if(tbl == null) {
 		return;
@@ -1104,9 +1119,9 @@ function add_License(thing, parent_tr_id, devid)
 // will not change anything; this is just to not make devices with many
 // interfaces not have giant pages.
 //
-function replace_int_dns_drop (td, resp)
+function replace_int_dns_drop (obj, resp)
 {
-	$(td).empty();
+	$(obj).empty();
 	var name = $("<input />", resp['DNS_NAME']);
 	var s = $("<select />", resp['DNS_DOMAIN']);
 
@@ -1114,8 +1129,8 @@ function replace_int_dns_drop (td, resp)
 		var o = $("<option/>",resp['domains']['options'][field]);
 		$(s).append(o);
 	}
-	$(td).append(name);
-	$(td).append(s);
+	$(obj).append(name);
+	$(obj).append(s);
 	$(name).focus();
 }
 
@@ -1148,14 +1163,20 @@ function RefreshAfterTabs() {
 		}
 	});
 
+	// this wants to be merged into the above.
 	$("table.interfacetable").on('click', 'img.intdnsedit', function(event) {
-		var td = $(this).closest("td");
-		var id = $(this).closest("tr").find('.recordid').val();
-		if( $(td).is("td") && id) {
-			$.getJSON('device-ajax.pl',
-				'json=yes;type=service;what=interfacedns;NETWORK_INTERFACE_ID='+ id,
-				function (resp) {
-					replace_int_dns_drop (td, resp);
+		var span = $(this).closest("span");
+		var url = "";
+		if ( $(span).hasClass('interfacedns') ) {
+			var id = $(this).closest('tr').find('.recordid').val();
+			url = 'json=yes;type=service;what=interfacedns;NETWORK_INTERFACE_ID='+ id;
+		} else {
+			var id = $(span).find('input.dnsrecordid').val();
+			url = 'json=yes;type=service;what=dns;DNS_RECORD_ID='+ id;
+		}
+		if( $(span).is("span") && id) {
+			$.getJSON('device-ajax.pl', url, function (resp) {
+					replace_int_dns_drop (span, resp);
 				}
 			);
 		} else {
@@ -1163,4 +1184,23 @@ function RefreshAfterTabs() {
 		}
 		return(0);
 	});
+
+	$("table.interfacetable").on('click', 'img.devdnsref', function(event) {
+		var td = $(this).closest("td");
+		var id = $(td).attr('id');
+		var divid = "dnsvalue_" + id;
+		var div = $(td).find('#'+divid);
+		if( $(div).length == 0) {
+			alert("Nonsensical lookup of value dns records");
+		} else {
+			$(div).toggleClass('irrelevant');
+		}
+		return(0);
+	});
+
+	$("table.interfacetable").on('click', 'a.dnsref', function(event) {
+		alert("add");
+		return(0);
+	});
+
 }

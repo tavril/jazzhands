@@ -476,11 +476,11 @@ sub build_page {
 						  "ShowDevTab('$tab', $devid);"
 					},
 					$tabp
-				);
+				)."\n\n";
 			}
 		}
 
-		$maindiv .= $cgi->div(
+		$maindiv .= "\n\n".$cgi->div(
 			$cgi->div( { -class => 'tabgroup_pending' } ),
 			$cgi->hidden(
 				-name    => $opentabid,
@@ -495,7 +495,7 @@ sub build_page {
 					$cgi->em("please select a tab.")
 				)
 			)
-		);
+		)."\n\n";
 	}
 
 	$maindiv .= $cgi->div(

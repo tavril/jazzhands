@@ -45,6 +45,7 @@ sub do_show_serial {
 	my $pportid  = $stab->cgi_parse_param('PHYSICAL_PORT_ID')     || undef;
 	my $piport   = $stab->cgi_parse_param('POWER_INTERFACE_PORT') || undef;
 	my $niid     = $stab->cgi_parse_param('NETWORK_INTERFACE_ID') || undef;
+	my $dnsid     = $stab->cgi_parse_param('DNS_RECORD_ID') || undef;
 	my $what     = $stab->cgi_parse_param('what')                 || undef;
 	my $type     = $stab->cgi_parse_param('type')                 || undef;
 	my $row      = $stab->cgi_parse_param('row')                  || undef;
@@ -223,23 +224,41 @@ sub do_show_serial {
 			print $stab->b_dropdown( { -site => $site },
 				$p, 'RACK_ID', 'RACK_LOCATION_ID', 1 );
 		}
-	} elsif ( $what eq 'interfacedns' ) {
-		my $sth = $stab->prepare(
-			qq{
-			select	dns.dns_record_id,
-					dns.dns_domain_id,
-					dom.soa_name,
-					dns.dns_name,
-					ni.network_interface_id
-			  from	network_interface ni
-					left join dns_record dns using (netblock_id)
-			  		left join dns_domain dom using (dns_domain_id)
-			 where	ni.network_interface_id= ?
-			 order by dns.should_generate_ptr desc, dns.dns_record_id
-			 limit 1
+	} elsif ( $what eq 'interfacedns' || $what eq 'dns') {
+		my $sth;
+		if($what eq 'interfacedns') {
+			$sth = $stab->prepare(
+				qq{
+				select	dns.dns_record_id,
+						dns.dns_domain_id,
+						dom.soa_name,
+						dns.dns_name,
+						ni.network_interface_id
+			  	from	network_interface ni
+						left join dns_record dns using (netblock_id)
+			  			left join dns_domain dom using (dns_domain_id)
+			 	where	ni.network_interface_id= ?
+			 	order by dns.should_generate_ptr desc, dns.dns_record_id
+			 	limit 1
+			}
+			) || $stab->return_db_err();
+			$sth->execute($niid) || die $sth->errstr;
+		} elsif($what eq 'dns') {
+			$sth = $stab->prepare(
+				qq{
+				select	dns.dns_record_id,
+						dns.dns_domain_id,
+						dom.soa_name,
+						dns.dns_name
+			  	from	dns_record dns 
+			  			inner join dns_domain dom using (dns_domain_id)
+			 	where	dns_record_id = ?
+			 	limit 1
+			}) || $stab->return_db_err();
+			$sth->execute($dnsid) || die $sth->errstr;
+		} else {
+			die "wtf";
 		}
-		) || $stab->return_db_err();
-		$sth->execute($niid) || die $sth->errstr;
 		my $row = $sth->fetchrow_hashref;
 		$sth->finish;
 		my $doms = "";
@@ -250,7 +269,7 @@ sub do_show_serial {
 		}
 		my $j = JSON::PP->new->utf8;
 		my $r = {
-			'NETWORK_INTERFACE_ID' => $niid,
+			# 'NETWORK_INTERFACE_ID' => $niid,
 			'domains'              => $doms,
 			'DNS_NAME'             => {
 				'name' => "DNS_NAME_$niid",
@@ -270,8 +289,30 @@ sub do_show_serial {
 			}
 		}
 		print $j->encode($r);
-	} else {
+	} elsif ( $what eq 'interfacednsref' ) {
+		# XXX - this should go away    
+		my $sth = $stab->prepare(
+			qq{
+			select	dns.dns_record_id,
+					dns.dns_name,
+					dom.soa_name
+			  from	dns_record dns
+			  		left join dns_domain dom using (dns_domain_id)
+			 where	dns.dns_value_record_id = ?
+			 order by dns_domain_id, dns_name
+		}
+		) || $stab->return_db_err();
+		$sth->execute($dnsid) || die $sth->errstr;
+		my $rv;
 
+		while(my $hr = $sth->fetchrow_hashref) {
+			push(@{$rv}, $hr);
+		}
+		my $j = JSON::PP->new->utf8;
+		print $j->encode($rv);
+
+
+	} else {
 		# catch-all error condition
 		print $cgi->div(
 			{ -style => 'text-align: center; padding: 50px', },

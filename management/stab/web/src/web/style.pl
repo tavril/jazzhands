@@ -141,6 +141,14 @@ table.physPortTitle {
 	width: 600px;
 }
 
+div.dnsvalueref {
+	margin-left: auto;
+	margin-right: auto;
+	background: lightblue;
+	text-align: center;
+	border: 1px solid;
+}
+
 
 /* Tabs */
 
@@ -344,6 +352,7 @@ div.approles {
 	text-align: center;
 	border: 1px solid;
 }
+
 div.approles > div {
 	text-align: left;
 }
@@ -383,6 +392,10 @@ input.srvnum {
 
 div.chosen-workaround {
 	width: 100% !important;
+}
+
+div.ipdiv {
+	width: 100%;
 }
 
 ul.collection {
@@ -438,6 +451,10 @@ table.interfacetable {
 
 table.interfacetable tr {
 	outline: 1px solid;
+}
+
+table.interfacetable td {
+	vertical-align: top;
 }
 
 #verifybox li {
@@ -594,6 +611,7 @@ table.reporting > tbody td {
 	border: 1px solid;
 	border-color: grey;
 }
+
 
 END
 	undef $stab;

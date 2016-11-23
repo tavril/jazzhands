@@ -299,31 +299,31 @@ sub start_html {
 			push(
 				@{ $args{'-script'} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/ajaxsearch.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/table-manip.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/stab-common.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/device-utils.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/racks.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/ajax-utils.js"
 				},
 			);
@@ -332,19 +332,19 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$root/javascript-common/common.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/netblock-collection.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/ajax-utils.js"
 				}
 			);
@@ -353,23 +353,23 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$root/javascript-common/common.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/tickets.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/netblock.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/ajax-utils.js"
 				}
 			);
@@ -378,15 +378,15 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/stab-common.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/dns-utils.js"
 				},
 			);
@@ -395,20 +395,20 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src =>
 					  "$root/javascript-common/external/chosen/chosen.jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/stab-common.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/attest.js"
 				},
 			);
@@ -417,20 +417,20 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src =>
 					  "$root/javascript-common/external/datatables-1.10.9/jquery.dataTables.min.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/stab-common.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/reporting.js"
 				},
 			);
@@ -439,16 +439,16 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src =>
 					  "$root/javascript-common/external/datatables-1.10.9/jquery.dataTables.min.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/stab-common.js"
 				},
 			);
@@ -458,11 +458,11 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/devicetype.js"
 				}
 			);
@@ -471,15 +471,15 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src => "$root/javascript-common/external/jQuery/jquery.js",
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/racks.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/ajax-utils.js"
 				}
 			);
@@ -488,11 +488,11 @@ sub start_html {
 			push(
 				@{ $args{-script} },
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/app-utils.js"
 				},
 				{
-					-language => 'JavaScript',
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/ajax-utils.js"
 				}
 			);
@@ -1137,7 +1137,11 @@ sub b_nondbdropdown {
 	} elsif ( $selectfield eq 'RACK_STYLE' ) {
 		@list = ( 'CABINET', 'RELAY' );
 		my $df = 'CABINET';
+	} elsif ( $selectfield eq 'DNS_TYPE' ) {
+		@list = ( 'CNAME', 'A', 'AAAA' );
+		my $df = 'CNAME';
 	}
+
 	if ( defined($values) ) {
 		$default =
 		  ( defined( $values->{$field} ) ) ? $values->{$field} : undef;
@@ -2038,7 +2042,7 @@ sub b_textfield {
 		$size = 7  if ( $field =~ /APPROVAL_REF_NUM\b/ );
 		$size = 20 if ( $field eq 'SNMP_COMMSTR' );
 		$size = 16 if ( $field =~ /_?IP$/ );
-		$size = 18 if ( $field eq 'MAC_ADDR' );
+		$size = 13 if ( $field eq 'MAC_ADDR' );
 		$size = 40 if ( $field eq 'DNS_NAME' );
 		$size = 10 if ( $field eq 'RACK_UNITS' );
 		$size = 20 if ( $field eq 'INTERFACE_NAME' );

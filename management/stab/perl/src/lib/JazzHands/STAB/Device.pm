@@ -21,6 +21,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#
+# Copyright (c) 2010-2016 Todd M. Kover
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # $Id$
 #
 # most of the code for implementing the device tabs are here.
@@ -109,13 +125,8 @@ sub device_notes_print {
 	while ( my ( $id, $user, $date, $text ) = $sth->fetchrow_array ) {
 		$contents .= $cgi->Tr(
 			{ -width => '100%' },
-			$cgi->td(
-				{ -width => '85%' }, $cgi->escapeHTML($text)
-			),
-			$cgi->td(
-				{ -width => '15%' }, $cgi->br($user),
-				$cgi->br($date)
-			)
+			$cgi->td( { -width => '85%' }, $cgi->escapeHTML($text) ),
+			$cgi->td( { -width => '15%' }, $cgi->br($user), $cgi->br($date) )
 		);
 	}
 	$sth->finish;
@@ -123,10 +134,7 @@ sub device_notes_print {
 	$contents .= $cgi->Tr(
 		$cgi->td(
 			{ -colspan => 2, -style => 'text-align: center;' },
-			$cgi->h4(
-				{ -style => 'text-align: center' },
-				'Add a note'
-			),
+			$cgi->h4( { -style => 'text-align: center' }, 'Add a note' ),
 			$cgi->textarea(
 				{
 					-name    => "DEVICE_NOTE_TEXT_$devid",
@@ -138,12 +146,10 @@ sub device_notes_print {
 	);
 
 	if ( !length($contents) ) {
-		return $cgi->div(
-			{ -style => 'text-align: center; padding: 50px' },
+		return $cgi->div( { -style => 'text-align: center; padding: 50px' },
 			$cgi->em("no notes.") );
 	} else {
-		return $cgi->table( { -width => '100%', -border => 1 },
-			$contents );
+		return $cgi->table( { -width => '100%', -border => 1 }, $contents );
 	}
 }
 
@@ -160,8 +166,7 @@ sub device_circuit_tab {
 	#
 	# [XXX] want to switch to named bind variables, methinks.
 	#
-	my $limit =
-	  "p.device_id = ?  and	ni.PARENT_NETWORK_INTERFACE_ID is NULL";
+	my $limit = "p.device_id = ?  and	ni.PARENT_NETWORK_INTERFACE_ID is NULL";
 	if ($parent) {
 		$limit = "ni.PARENT_NETWORK_INTERFACE_ID = ?";
 	}
@@ -214,7 +219,7 @@ sub device_circuit_tab {
 		$nitype =~ tr/A-Z/a-z/;
 
 		my $Xsth = $self->prepare(
-"select count(*) from network_interface where parent_network_interface_id = ?"
+			"select count(*) from network_interface where parent_network_interface_id = ?"
 		);
 		$Xsth->execute( $hr->{ _dbx('NETWORK_INTERFACE_ID') } )
 		  || $self->return_db_err($Xsth);
@@ -227,13 +232,12 @@ sub device_circuit_tab {
 				{
 					-href => 'javascript:void(null)',
 					-onClick =>
-"showCircuitKids(this, \"$id\", \"${id}_tr\", $hr->{_dbx('NETWORK_INTERFACE_ID')})",
+					  "showCircuitKids(this, \"$id\", \"${id}_tr\", $hr->{_dbx('NETWORK_INTERFACE_ID')})",
 				},
 				$cgi->img(
 					{
-						-id => "cirExpand_$id",
-						-src =>
-						  "$root/stabcons/expand.jpg"
+						-id  => "cirExpand_$id",
+						-src => "$root/stabcons/expand.jpg"
 					}
 				),
 				$hr->{ _dbx('NETWORK_INTERFACE_NAME') }
@@ -243,8 +247,7 @@ sub device_circuit_tab {
 		}
 		my $circstr = "";
 		if ( $hr->{ _dbx('CIRCUIT_ID') } ) {
-			my $name =
-			  $hr->{ _dbx('VENDOR_CIRCUIT_ID_STR') } || 'unnamed';
+			my $name = $hr->{ _dbx('VENDOR_CIRCUIT_ID_STR') } || 'unnamed';
 			$circstr = $cgi->a(
 				{
 					-href => "$root/circuit/?CIRCUIT_ID="
@@ -259,8 +262,7 @@ sub device_circuit_tab {
 		if ( $hr->{ _dbx('TRUNK_GROUP_NAME') } ) {
 			$trunk = $cgi->a(
 				{
-					-href =>
-"$root/circuit/trunkgroup/?TRUNK_GROUP_ID="
+					-href => "$root/circuit/trunkgroup/?TRUNK_GROUP_ID="
 					  . $hr->{ _dbx('TRUNK_GROUP_ID') }
 				},
 				$hr->{ _dbx('TRUNK_GROUP_NAME') }
@@ -279,12 +281,9 @@ sub device_circuit_tab {
 			},
 			$cgi->td(
 				[
-					$iname,
-					$hr->{ _dbx('COMPANY_NAME') },
-					$circstr,
-					$hr->{ _dbx('NETWORK_INTERFACE_TYPE') },
-					$trunk,
-					$cic,
+					$iname,   $hr->{ _dbx('COMPANY_NAME') },
+					$circstr, $hr->{ _dbx('NETWORK_INTERFACE_TYPE') },
+					$trunk,   $cic,
 				]
 			)
 		);
@@ -293,11 +292,7 @@ sub device_circuit_tab {
 	$cgi->table(
 		{ -align => 'center', -border => 1 },
 		$cgi->th(
-			[
-				"Name",       "Company",
-				"Circuit ID", "Type",
-				"Trunk",      "CIC Range"
-			]
+			[ "Name", "Company", "Circuit ID", "Type", "Trunk", "CIC Range" ]
 		),
 		$tt
 	);
@@ -319,9 +314,8 @@ sub device_switch_port {
 	#
 	# if we have > 55 ports, then need to break down by card.
 	#
-	if (      !$parent
-		&& $self->get_physical_port_tally( $devid, 'network', '/' ) >
-		55 )
+	if (  !$parent
+		&& $self->get_physical_port_tally( $devid, 'network', '/' ) > 55 )
 	{
 		my $root = $self->guess_stab_root;
 
@@ -347,8 +341,7 @@ sub device_switch_port {
 				{
 					-align  => 'center',
 					-border => 0,
-					-style =>
-					  'width: 90%; border: 1px solid;'
+					-style  => 'width: 90%; border: 1px solid;'
 				},
 				$cgi->caption('Card'),
 				$cgi->th( [ 'Port', '' ] ),
@@ -383,9 +376,7 @@ sub device_switch_port {
 					-style  => 'border: 1px solid;'
 				},
 				$cgi->caption('Switchport Connections'),
-				$cgi->th(
-					[ 'Port/Label', 'Other End', 'Port' ]
-				),
+				$cgi->th( [ 'Port/Label', 'Other End', 'Port' ] ),
 				$x
 			);
 		} else {
@@ -407,7 +398,7 @@ sub build_switch_droppable_tr {
 		{
 			-href => 'javascript:void(null)',
 			-onClick =>
-"showPhysPortKid_Groups($devid, \"$id\", \"${id}_tr\", \"$hr->{_dbx('PORT_NAME')}\")",
+			  "showPhysPortKid_Groups($devid, \"$id\", \"${id}_tr\", \"$hr->{_dbx('PORT_NAME')}\")",
 		},
 		$cgi->img(
 			{
@@ -440,10 +431,8 @@ sub build_switch_drop_tr {
 	my $pname = $hr->{ _dbx('P1_PORT_NAME') };
 	if ( $hr->{ _dbx('P1_PHYSICAL_LABEL') } ) {
 		$pname .= "/"
-		  . $cgi->span(
-			{ -class => 'port_label' },
-			$hr->{ _dbx('P1_PHYSICAL_LABEL') }
-		  );
+		  . $cgi->span( { -class => 'port_label' },
+			$hr->{ _dbx('P1_PHYSICAL_LABEL') } );
 	}
 
 	$cgi->Tr(
@@ -459,10 +448,8 @@ sub build_switch_drop_tr {
 		),
 		$cgi->td(
 			$self->physicalport_otherend_device_magic(
-				{ -deviceID => $devid, -pportKey => $pportid },
-				$hr,
-				'network',
-				$divwrapid
+				{ -deviceID => $devid, -pportKey => $pportid }, $hr,
+				'network', $divwrapid
 			)
 		),
 		$cgi->td(
@@ -470,8 +457,7 @@ sub build_switch_drop_tr {
 				{
 					-portLimit => 'network',
 					-divWrap   => $divwrapid,
-					-deviceid =>
-					  $hr->{ _dbx('P2_DEVICE_ID') }
+					-deviceid  => $hr->{ _dbx('P2_DEVICE_ID') }
 				},
 				$hr,
 				'P2_PHYSICAL_PORT_ID',
@@ -575,20 +561,12 @@ sub device_power_ports {
 					$hr->{ _dbx('P1_POWER_INTERFACE_PORT') }
 				)
 			),
-			$cgi->td(
-				$self->powerport_device_magic(
-					$hr, $divwrapid
-				)
-			),
+			$cgi->td( $self->powerport_device_magic( $hr, $divwrapid ) ),
 			$cgi->td(
 				$self->b_dropdown(
 					{
 						-divWrap  => $divwrapid,
-						-deviceid => $hr->{
-							_dbx(
-'P2_POWER_DEVICE_ID'
-							)
-						}
+						-deviceid => $hr->{ _dbx('P2_POWER_DEVICE_ID') }
 					},
 					$hr,
 					'P2_POWER_INTERFACE_PORT',
@@ -603,15 +581,12 @@ sub device_power_ports {
 		$cgi->table(
 			{ -align => 'center' },
 			$cgi->caption('Power Connections'),
-			$cgi->th( [ 'Local Port', 'Other End', 'Port' ] ),
-			$x
+			$cgi->th( [ 'Local Port', 'Other End', 'Port' ] ), $x
 		);
 	} else {
 		print $cgi->div(
 			{ -style => 'text-align: center; padding: 50px', },
-			$cgi->em(
-"This device type does not have a power configuration"
-			)
+			$cgi->em("This device type does not have a power configuration")
 		);
 	}
 }
@@ -632,7 +607,7 @@ sub powerport_device_magic {
 
 	my $pdnam = "P2_POWER_DEVICE_NAME_" . $id;
 	my $dostuffjavascript =
-"showPowerPorts(\"$devdrop\", \"$devname\", \"$portdivwrapid\", \"$id\", \"$devlinkid\");";
+	  "showPowerPorts(\"$devdrop\", \"$devname\", \"$portdivwrapid\", \"$id\", \"$devlinkid\");";
 	my $rv = $cgi->hidden(
 		{
 			-name    => $devdrop,
@@ -647,9 +622,9 @@ sub powerport_device_magic {
 			-id   => $pdnam,
 			-size => 40,
 			-onInput =>
-"inputEvent_Search(this, $devdrop, event, \"deviceForm\", function(){$dostuffjavascript});",
+			  "inputEvent_Search(this, $devdrop, event, \"deviceForm\", function(){$dostuffjavascript});",
 			-onKeydown =>
-"keyprocess_Search(this, $devdrop, event, \"deviceForm\", function(){$dostuffjavascript});",
+			  "keyprocess_Search(this, $devdrop, event, \"deviceForm\", function(){$dostuffjavascript});",
 			-onChange => "$dostuffjavascript",
 			-onBlur   => "hidePopup_Search($pdnam)",
 			-default  => $pname,
@@ -692,15 +667,14 @@ sub device_serial_ports {
 
 	my $x = "";
 	while ( my $hr = $sth->fetchrow_hashref ) {
-		if (       defined( $hr->{ _dbx('DATA_BITS') } )
+		if (   defined( $hr->{ _dbx('DATA_BITS') } )
 			&& defined( $hr->{ _dbx('STOP_BITS') } )
 			&& defined( $hr->{ _dbx('PARITY') } ) )
 		{
 			my $p = substr( $hr->{ _dbx('PARITY') }, 0, 1 );
 			$p =~ tr/a-z/A-Z/;
 			$hr->{ _dbx('SERIAL_PARAMS') } =
-			    $hr->{ _dbx('DATA_BITS') } . "-$p-"
-			  . $hr->{ _dbx('STOP_BITS') };
+			  $hr->{ _dbx('DATA_BITS') } . "-$p-" . $hr->{ _dbx('STOP_BITS') };
 		}
 		$x .= $self->build_serial_drop_tr( $devid, $hr );
 	}
@@ -737,10 +711,8 @@ sub build_serial_drop_tr {
 	my $pname = $hr->{ _dbx('P1_PORT_NAME') };
 	if ( $hr->{ _dbx('P1_PHYSICAL_LABEL') } ) {
 		$pname .= "/"
-		  . $cgi->span(
-			{ -class => 'port_label' },
-			$hr->{ _dbx('P1_PHYSICAL_LABEL') }
-		  );
+		  . $cgi->span( { -class => 'port_label' },
+			$hr->{ _dbx('P1_PHYSICAL_LABEL') } );
 	}
 
 	$cgi->Tr(
@@ -756,10 +728,8 @@ sub build_serial_drop_tr {
 		),
 		$cgi->td(
 			$self->physicalport_otherend_device_magic(
-				{ -deviceID => $devid, -pportKey => $pportid },
-				$hr,
-				'serial',
-				$divwrapid
+				{ -deviceID => $devid, -pportKey => $pportid }, $hr,
+				'serial', $divwrapid
 			)
 		),
 		$cgi->td(
@@ -767,26 +737,21 @@ sub build_serial_drop_tr {
 				{
 					-portLimit => 'serial',
 					-divWrap   => $divwrapid,
-					-deviceid =>
-					  $hr->{ _dbx('P2_DEVICE_ID') }
+					-deviceid  => $hr->{ _dbx('P2_DEVICE_ID') }
 				},
 				$hr,
 				'P2_PHYSICAL_PORT_ID',
 				'P1_PHYSICAL_PORT_ID'
 			)
 		),
-		$cgi->td(
-			$self->b_dropdown( $hr, 'BAUD', 'P1_PHYSICAL_PORT_ID' )
-		),
+		$cgi->td( $self->b_dropdown( $hr, 'BAUD', 'P1_PHYSICAL_PORT_ID' ) ),
 		$cgi->td(
 			$self->b_nondbdropdown(
 				$hr, 'SERIAL_PARAMS', 'P1_PHYSICAL_PORT_ID'
 			)
 		),
 		$cgi->td(
-			$self->b_dropdown(
-				$hr, 'FLOW_CONTROL', 'P1_PHYSICAL_PORT_ID'
-			)
+			$self->b_dropdown( $hr, 'FLOW_CONTROL', 'P1_PHYSICAL_PORT_ID' )
 		),
 	);
 }
@@ -822,11 +787,9 @@ sub device_physical_connection {
 	#
 	if ( ( !$path || ( !scalar @$path ) ) ) {
 		my $startp =
-		  $self->get_physical_port(
-			$l1c->{ _dbx('PHYSICAL_PORT1_ID') } );
+		  $self->get_physical_port( $l1c->{ _dbx('PHYSICAL_PORT1_ID') } );
 		my $endp =
-		  $self->get_physical_port(
-			$l1c->{ _dbx('PHYSICAL_PORT2_ID') } );
+		  $self->get_physical_port( $l1c->{ _dbx('PHYSICAL_PORT2_ID') } );
 
 		if ( $startp->{ _dbx('PHYSICAL_PORT_ID') } != $pportkey ) {
 			$backwards = 1;
@@ -834,9 +797,7 @@ sub device_physical_connection {
 
 		my $connpk = "PC_path_" . $startp->{ _dbx('PHYSICAL_PORT_ID') };
 		if ( !defined($row) ) {
-			if ( $startp->{ _dbx('PHYSICAL_PORT_ID') } !=
-				$pportkey )
-			{
+			if ( $startp->{ _dbx('PHYSICAL_PORT_ID') } != $pportkey ) {
 				my $x = $endp;
 				$endp   = $startp;
 				$startp = $x;
@@ -851,8 +812,7 @@ sub device_physical_connection {
 							-choosable => 0,
 							-showAdd   => 1,
 							-tableId   => $tableid,
-							-backwards =>
-							  $backwards,
+							-backwards => $backwards,
 						},
 						0, undef, $startp
 					  )
@@ -864,8 +824,7 @@ sub device_physical_connection {
 							-showAdd   => 0,
 							-showCable => 1,
 							-tableId   => $tableid,
-							-backwards =>
-							  $backwards,
+							-backwards => $backwards,
 						},
 						1, undef, $endp
 					  )
@@ -890,7 +849,7 @@ sub device_physical_connection {
 		my $connpk =
 		  "PC_path_" . $path->[0]->{ _dbx('PC_P1_PHYSICAL_PORT_ID') };
 
-		if (       $path
+		if (   $path
 			&& $path->[0]->{ _dbx('PC_P1_DEVICE_ID') } != $devid )
 		{
 			$backwards = 1;
@@ -935,11 +894,10 @@ sub device_physical_connection {
 
 				$tt .= $self->physical_connection_row(
 					{
-						-deviceID => $devid,
-						-pportKey => $pportkey,
-						-choosable =>
-						  ( $iter != $count ),
-						-showAdd => ( $iter != $count ),
+						-deviceID  => $devid,
+						-pportKey  => $pportkey,
+						-choosable => ( $iter != $count ),
+						-showAdd   => ( $iter != $count ),
 						-showCable => 1,
 						-tableId   => $tableid,
 						-backwards => $backwards,
@@ -991,13 +949,7 @@ sub device_patch_ports {
 		$cgi->table(
 			{ -align => 'center', -border => 1 },
 			$cgi->caption('Patch Panel Connections'),
-			$cgi->th(
-				[
-					'Device',    'Port',
-					'PatchPort', 'Device',
-					'Port'
-				]
-			),
+			$cgi->th( [ 'Device', 'Port', 'PatchPort', 'Device', 'Port' ] ),
 			$x
 		);
 	} else {
@@ -1023,8 +975,7 @@ sub build_patchpanel_drop_tr {
 		my $rdevid = $hr->{ _dbx('D1_DEVICE_ID') };
 		$lhs = $cgi->a(
 			{
-				-href => "$root/device/device.pl?devid="
-				  . $rdevid,
+				-href   => "$root/device/device.pl?devid=" . $rdevid,
 				-target => "stab_device_$rdevid",
 			},
 			$hr->{ _dbx('D1_DEVICE_NAME') }
@@ -1034,8 +985,7 @@ sub build_patchpanel_drop_tr {
 		my $rdevid = $hr->{ _dbx('D2_DEVICE_ID') };
 		$rhs = $cgi->a(
 			{
-				-href => "$root/device/device.pl?devid="
-				  . $rdevid,
+				-href   => "$root/device/device.pl?devid=" . $rdevid,
 				-target => "stab_device_$rdevid",
 			},
 			$hr->{ _dbx('D2_DEVICE_NAME') }
@@ -1045,15 +995,13 @@ sub build_patchpanel_drop_tr {
 	$cgi->Tr(
 		$cgi->td($lhs),
 		$cgi->td(
-			  $hr->{ _dbx('D1_PORT_NAME') }
-			? $hr->{ _dbx('D1_PORT_NAME') }
+			$hr->{ _dbx('D1_PORT_NAME') } ? $hr->{ _dbx('D1_PORT_NAME') }
 			: ""
 		),
 		$cgi->td( $cgi->b( $hr->{ _dbx('PATCH_NAME') } ) ),
 		$cgi->td($rhs),
 		$cgi->td(
-			  $hr->{ _dbx('D2_PORT_NAME') }
-			? $hr->{ _dbx('D2_PORT_NAME') }
+			$hr->{ _dbx('D2_PORT_NAME') } ? $hr->{ _dbx('D2_PORT_NAME') }
 			: ""
 		),
 	);
@@ -1103,21 +1051,18 @@ sub physical_connection_row {
 	my $divwrapid = "pc_r_dwrap_$uniqid";
 	if ( !$sel ) {
 		if ( defined($side) ) {
-			$pport =
-			  $hr->{ _dbx("PC_P${side}_PHYSICAL_PORT_NAME") };
-			$dev = $hr->{ _dbx("PC_P${side}_DEVICE_NAME") };
+			$pport = $hr->{ _dbx("PC_P${side}_PHYSICAL_PORT_NAME") };
+			$dev   = $hr->{ _dbx("PC_P${side}_DEVICE_NAME") };
 		} else {
 			$pport = $hr->{ _dbx("PORT_NAME") };
-			my $d =
-			  $self->get_dev_from_devid(
-				$hr->{ _dbx('DEVICE_ID') } );
+			my $d = $self->get_dev_from_devid( $hr->{ _dbx('DEVICE_ID') } );
 			$dev = $d->{ _dbx('DEVICE_NAME') };
 		}
 	} else {
 
-	       #
-	       # this grossness allows for dynamically added entries to show up.
-	       #
+		#
+		# this grossness allows for dynamically added entries to show up.
+		#
 		my $oep = {};
 		$oep->{'-uniqID'}    = $uniqid;
 		$oep->{'-deviceID'}  = $devid;
@@ -1128,11 +1073,11 @@ sub physical_connection_row {
 		$dev = $self->physicalport_otherend_device_magic( $oep, $hr,
 			'physconn', $divwrapid );
 
-	 # when side is not set, its because an empty row is being added.  In
-	 # that case, the side depends on if the connection is backwards or not.
-	 # Yes, this is totally confusing.  Welcome to layer1 connections.
+		# when side is not set, its because an empty row is being added.  In
+		# that case, the side depends on if the connection is backwards or not.
+		# Yes, this is totally confusing.  Welcome to layer1 connections.
 		my $pportside = $side;
-		if (       !$hr
+		if (   !$hr
 			|| !defined( $hr->{ _dbx('PC_P1_PHYSICAL_PORT_ID') } ) )
 		{
 			if ($backwards) {
@@ -1145,8 +1090,8 @@ sub physical_connection_row {
 		my $dropp = {};
 		$dropp->{-divWrap} = $divwrapid;
 		if ( !$hr ) {
-			my $cgiid = "PC_P${pportside}_PHYSICAL_PORT_ID_"
-			  . $oep->{'-uniqID'};
+			my $cgiid =
+			  "PC_P${pportside}_PHYSICAL_PORT_ID_" . $oep->{'-uniqID'};
 			$dropp->{-id}   = $cgiid;
 			$dropp->{-name} = $cgiid;
 		} else {
@@ -1155,8 +1100,7 @@ sub physical_connection_row {
 		}
 
 		$pport =
-		  $self->b_dropdown( $dropp, $hr,
-			"PC_P${pportside}_PHYSICAL_PORT_ID",
+		  $self->b_dropdown( $dropp, $hr, "PC_P${pportside}_PHYSICAL_PORT_ID",
 			'PC_P1_PHYSICAL_PORT_ID' );
 
 	}
@@ -1197,7 +1141,7 @@ sub physical_connection_row {
 			{
 				-id => $addid,
 				-href =>
-"javascript:AppendPatchPanelRow(\"$addid\", \"$pportkey\", \"$tableid\", $newlineside)",
+				  "javascript:AppendPatchPanelRow(\"$addid\", \"$pportkey\", \"$tableid\", $newlineside)",
 				-style => 'border: 1px solid; font-size: 50%'
 			},
 			"ADD"
@@ -1345,8 +1289,7 @@ sub physicalport_otherend_device_magic {
 	# Yes, this is totally confusing.  Welcome to layer1 connections.
 	#
 	if ( !defined($side) ) {
-		if ( exists( $params->{-backwards} ) && $params->{-backwards} )
-		{
+		if ( exists( $params->{-backwards} ) && $params->{-backwards} ) {
 			$side = 1;
 		} else {
 			$side = 2;
@@ -1399,11 +1342,11 @@ sub physicalport_otherend_device_magic {
 			-id   => $pdnam,
 			-size => 40,
 			-onInput =>
-"inputEvent_Search(this, $pdid, event, \"deviceForm\", function(){showPhysical_ports($pdid, $pdnam, \"$pportid\", \"$divwrapid\", \"$what\"$sidestuff)});",
+			  "inputEvent_Search(this, $pdid, event, \"deviceForm\", function(){showPhysical_ports($pdid, $pdnam, \"$pportid\", \"$divwrapid\", \"$what\"$sidestuff)});",
 			-onKeydown =>
-"keyprocess_Search(this, $pdid, event, \"deviceForm\", function(){showPhysical_ports($pdid, $pdnam, \"$pportid\", \"$divwrapid\", \"$what\"$sidestuff)});",
+			  "keyprocess_Search(this, $pdid, event, \"deviceForm\", function(){showPhysical_ports($pdid, $pdnam, \"$pportid\", \"$divwrapid\", \"$what\"$sidestuff)});",
 			-onChange =>
-"showPhysical_ports($pdid, $pdnam, \"$pportid\", \"$divwrapid\", \"$what\"$sidestuff);",
+			  "showPhysical_ports($pdid, $pdnam, \"$pportid\", \"$divwrapid\", \"$what\"$sidestuff);",
 			-onBlur  => "hidePopup_Search($pdnam)",
 			-default => $pname,
 		}
@@ -1436,8 +1379,7 @@ sub physicalport_otherend_device_magic {
 		},
 		">>"
 	);
-	if ( defined($hr) && defined( $hr->{ _dbx('LAYER1_CONNECTION_ID') } ) )
-	{
+	if ( defined($hr) && defined( $hr->{ _dbx('LAYER1_CONNECTION_ID') } ) ) {
 		my $pportkey = $params->{-pportKey};
 		my $myid     = "pplink_a_$pportkey";
 		my $pplink =
@@ -1481,7 +1423,7 @@ sub dump_advanced_tab {
 				-id    => 'chk_dev_port_reset',
 				-value => 'off',
 				-label =>
-'Reset serial port connections to default (This will erase existing connections)'
+				  'Reset serial port connections to default (This will erase existing connections)'
 			)
 		),
 		$cgi->li(
@@ -1490,7 +1432,7 @@ sub dump_advanced_tab {
 				-id    => 'chk_dev_retire',
 				-value => 'off',
 				-label =>
-'RETIRE THIS DEVICE: Delete all ports, erase name, and if no serial number or device notes, remove device from JazzHands'
+				  'RETIRE THIS DEVICE: Delete all ports, erase name, and if no serial number or device notes, remove device from JazzHands'
 			)
 		),
 		$cgi->li(
@@ -1499,8 +1441,7 @@ sub dump_advanced_tab {
 				-id      => $addpwrid,
 				-checked => undef,
 				-value   => 'off',
-				-label =>
-				  'Add missing power ports from Device Type',
+				-label   => 'Add missing power ports from Device Type',
 			)
 		),
 		$cgi->li(
@@ -1509,7 +1450,7 @@ sub dump_advanced_tab {
 				-id      => $addserid,
 				-checked => undef,
 				-value   => 'off',
-				-label => 'Add missing serial from Device Type',
+				-label   => 'Add missing serial from Device Type',
 			)
 		),
 		$cgi->li(
@@ -1518,8 +1459,7 @@ sub dump_advanced_tab {
 				-id      => $addnetid,
 				-checked => undef,
 				-value   => 'off',
-				-label =>
-				  'Add missing switchports from Device Type',
+				-label   => 'Add missing switchports from Device Type',
 			)
 		),
 	);
@@ -1590,14 +1530,13 @@ sub dump_device_route {
 
 	my $tt = $cgi->th(
 		[
-			'Delete',  'Source address',
-			"/",       "Bits",
+			'Delete',  'Source address', "/", "Bits",
 			'Dest IP', 'Destination Device',
 		]
 	);
 	while ( my $hr = $sth->fetchrow_hashref ) {
-		$seen{      $hr->{_dbx('ROUTE_SRC_IP')} } =
-		  $hr->{_dbx('NETWORK_INTERFACE_ID')};
+		$seen{ $hr->{ _dbx('ROUTE_SRC_IP') } } =
+		  $hr->{ _dbx('NETWORK_INTERFACE_ID') };
 		$tt .= $self->build_existing_route_box($hr);
 	}
 
@@ -1605,8 +1544,8 @@ sub dump_device_route {
 
 	my $oc = get_device_netblock_routes( $self, $devid, \%seen );
 	if ( length($oc) ) {
-		$oc = $cgi->h3( { -align => 'center' },
-			"Routes for this Host's Netblocks" )
+		$oc =
+		  $cgi->h3( { -align => 'center' }, "Routes for this Host's Netblocks" )
 		  . $oc;
 	}
 
@@ -1636,8 +1575,7 @@ sub build_existing_route_box {
 
 		$intname = $cgi->td(
 			{
-				-name => 'DEST_INT_'
-				  . $hr->{ _dbx('STATIC_ROUTE_ID') }
+				-name => 'DEST_INT_' . $hr->{ _dbx('STATIC_ROUTE_ID') }
 			},
 			$hr->{ _dbx('DEST_DEVICE_NAME') } . ":"
 			  . $hr->{ _dbx('DEST_INTERFACE_NAME') }
@@ -1649,17 +1587,13 @@ sub build_existing_route_box {
 			[
 				$del,
 				$self->b_textfield(
-					{ -allow_ip0 => 1 },
-					$hr,
-					"ROUTE_SRC_IP",
-					'STATIC_ROUTE_ID'
+					{ -allow_ip0 => 1 }, $hr,
+					"ROUTE_SRC_IP", 'STATIC_ROUTE_ID'
 				),
 			]
 		),
 		$cgi->td(
-			$self->b_textfield(
-				$hr, "ROUTE_DEST_IP", 'STATIC_ROUTE_ID'
-			),
+			$self->b_textfield( $hr, "ROUTE_DEST_IP", 'STATIC_ROUTE_ID' ),
 		),
 		$intname,
 	);
@@ -1716,8 +1650,7 @@ sub get_device_netblock_routes {
 		if (
 			!(
 				defined( $seen->{$x} )
-				&& $seen->{$x} ==
-				$hr->{ _dbx('NETWORK_INTERFACE_ID') }
+				&& $seen->{$x} == $hr->{ _dbx('NETWORK_INTERFACE_ID') }
 			)
 		  )
 		{
@@ -1725,9 +1658,7 @@ sub get_device_netblock_routes {
 			$tt .= $cgi->Tr(
 				$cgi->td(
 					$self->build_checkbox(
-						$hr,
-						"",
-						'add_STATIC_ROUTE_TEMPLATE_ID',
+						$hr, "", 'add_STATIC_ROUTE_TEMPLATE_ID',
 						'STATIC_ROUTE_TEMPLATE_ID'
 					)
 				),
@@ -1817,9 +1748,8 @@ sub dump_interfaces {
 
 		# XXX: These need to be handled!
 		next
-		  if (     $lastid
-			&& $lastid ==
-			$values->{ _dbx('NETWORK_INTERFACE_ID') } );
+		  if ( $lastid
+			&& $lastid == $values->{ _dbx('NETWORK_INTERFACE_ID') } );
 		if ( $collapse eq 'yes' ) {
 			$rv .= $self->build_collapsed_if_box( $values, $devid );
 		} else {
@@ -1829,18 +1759,14 @@ sub dump_interfaces {
 	}
 
 	if ( $collapse eq 'yes' ) {
-		my $collist =
-		  [ 'Del', 'Name', 'IP', 'Mac', 'DNS', 'Type', 'More' ];
+		my $collist = [ 'Del', 'Name', 'IP', 'Mac', 'DNS', 'Type', 'More' ];
 		$rv = $cgi->table(
 			{ -class => 'interfacetable' },
 			$cgi->th($collist),
 			$rv,
 			$cgi->Tr(
 				{ -class => 'intableheader' },
-				$cgi->td(
-					{ -colspan => $#{$collist} + 1 },
-					"Add Interface"
-				)
+				$cgi->td( { -colspan => $#{$collist} + 1 }, "Add Interface" )
 			),
 			$self->build_collapsed_if_box( undef, $devid )
 		);
@@ -1860,17 +1786,18 @@ sub dump_interfaces {
 # likely needs to become b_list or some such.
 #
 sub build_network_interface_purpose_table($$) {
-	my ($self, $values, $devid) = @_;
+	my ( $self, $values, $devid ) = @_;
 
 	my $name = 'NETWORK_INTERFACE_PURPOSE';
 
-	if(defined($values->{_dbx('network_interface_id')})) {
-		$name .= "_".$values->{_dbx('network_interface_id')};
+	if ( defined( $values->{ _dbx('network_interface_id') } ) ) {
+		$name .= "_" . $values->{ _dbx('network_interface_id') };
 	}
 
 	my $cgi = $self->cgi || die "Could not create cgi";
 
-	my $sth = $self->prepare(qq{
+	my $sth = $self->prepare(
+		qq{
 		WITH x AS (
 			SELECT  network_interface_purpose, network_interface_id
 			FROM    network_interface_purpose nip
@@ -1879,14 +1806,16 @@ sub build_network_interface_purpose_table($$) {
 			FROM val_network_interface_purpose
 			LEFT JOIN x USING (network_interface_purpose)
 			ORDER BY    network_interface_purpose
-	}) || return $self->return_db_err();
+	}
+	) || return $self->return_db_err();
 
-	$sth->execute( $values->{_dbx('network_interface_id')}) || return $self->return_db_err($sth);
+	$sth->execute( $values->{ _dbx('network_interface_id') } )
+	  || return $self->return_db_err($sth);
 
-	my(@options, @set, %labels);
-	while(my ($val, $desc, $set) = $sth->fetchrow_array) {
-		push(@options, $val);
-		push(@set, $val) if ($set);
+	my ( @options, @set, %labels );
+	while ( my ( $val, $desc, $set ) = $sth->fetchrow_array ) {
+		push( @options, $val );
+		push( @set, $val ) if ($set);
 		$labels{$val} = $desc || $val;
 	}
 
@@ -1897,6 +1826,84 @@ sub build_network_interface_purpose_table($$) {
 		-labels   => \%labels,
 		-size     => 3,
 		-multiple => 'true'
+	);
+}
+
+sub build_value_dns_table($$) {
+	my ( $self, $vdnsid ) = @_;
+
+	my $cgi = $self->cgi || die "Could not create cgi";
+
+	my $sth = $self->prepare(
+		qq{
+	  select  dns.dns_record_id,
+	            dns.dns_type,
+	            dns.dns_name,
+	            dom.soa_name
+	      from  dns_record dns
+	            left join dns_domain dom using (dns_domain_id)
+	     where  dns.dns_value_record_id = ?
+	     order by dns_domain_id, dns_name
+	}
+	) || $self->return_db_err();
+
+	$sth->execute($vdnsid) || $self->return_db_err;
+
+	my $r = "";
+	while ( my $hr = $sth->fetchrow_hashref() ) {
+		my $dnsid = $hr->{ _dbx('DNS_RECORD_ID') };
+		my $dot   = "";
+		if ( $hr->{ _dbx('DNS_NAME') } ) {
+			$dot = ".";
+		}
+		my $hidden = $cgi->hidden(
+			{
+				-class   => 'dnsrecordid',
+				-name    => 'DNS_RECORD_ID_' . $dnsid,
+				-id      => 'DNS_RECORD_ID_' . $dnsid,
+				-default => $dnsid,
+			}
+		);
+		my $dns .= $cgi->span(				# span is used by javascript
+			{ -class => 'valdnsref' },
+			$hidden,
+			$cgi->a(
+				{
+					-class  => 'intdns',
+					-target => "dns_domain_id" . $hr->{ _dbx('DNS_DOMAIN_ID') },
+					-href   => '../dns/?dnsdomainid='
+					  . $hr->{ _dbx('DNS_DOMAIN_ID') },
+				},
+				$hr->{ _dbx('DNS_NAME') } . $dot . $hr->{ _dbx('SOA_NAME') },
+			  )
+			  . $cgi->img(
+				{
+					-src   => "../stabcons/e.gif",
+					-alt   => "Edit",
+					-title => 'Edit',
+					-class => 'intdnsedit',
+				}
+			  )
+		);
+		$r .= $cgi->Tr(
+			$cgi->td( $self->b_nondbdropdown( $hr, "DNS_TYPE", 'DNS_RECORD_ID' )),
+			$cgi->td( $dns ),
+		);
+	}
+
+	$r .= $cgi->Tr(
+		$cgi->td({-colspan => 2}, $cgi->a({-href=>'#', -class=>'dnsref'},
+			"[ADD]"))
+	);
+
+
+	return $cgi->div(
+		{
+			-id    => 'dnsvalue_' . $vdnsid,
+			-class => 'irrelevant dnsvalueref'
+		},
+		$cgi->div("DNS Records that refer to this one"),
+		$cgi->table({-class => 'reporting'}, $r),
 	);
 }
 
@@ -1937,51 +1944,75 @@ sub build_collapsed_if_box {
 			"rm_NETWORK_INTERFACE", 'NETWORK_INTERFACE_ID' );
 	}
 
-	$self->textfield_sizing(undef);
+	# $self->textfield_sizing(undef);
 
 	my $pk = "NETWORK_INTERFACE_ID";
-	my $intname =
-	  $self->b_textfield( $values, 'NETWORK_INTERFACE_NAME', $pk );
+	my $intname = $self->b_textfield( { -textfield_width => 10 },
+		$values, 'NETWORK_INTERFACE_NAME', $pk );
 
 	if ( defined( $values->{ _dbx('SECONDARY_NETBLOCK_ID') } ) ) {
 		my @pk = ( 'NETWORK_INTERFACE_ID', 'SECONDARY_NETBLOCK_ID' );
 		$pk = \@pk;
 	}
 
-	my $dns = "";
+	my $dns   = "";
+	my $dnsid = "new";
 	if ( $values && $values->{ _dbx('DNS_RECORD_ID') } ) {
+		$dnsid = $values->{ _dbx('DNS_RECORD_ID') };
 		my $dot = "";
 		if ( $values->{ _dbx('DNS_NAME') } ) {
 			$dot = ".";
 		}
-		$dns = $cgi->a(
+		my $dnshidden = $cgi->hidden(
 			{
-				-class  => 'intdns',
-				-target => "dns_domain_id"
-				  . $values->{ _dbx('DNS_DOMAIN_ID') },
-				-href => '../dns/?dnsdomainid='
-				  . $values->{ _dbx('DNS_DOMAIN_ID') },
-			},
-			$values->{ _dbx('DNS_NAME') }
-			  . $dot
-			  . $values->{ _dbx('SOA_NAME') },
-		  )
-		  . $cgi->img(
-			{
-				-src   => "../stabcons/e.gif",
-				-alt   => "Edit",
-				-title => 'Edit',
-				-class => 'intdnsedit',
+				-class   => 'dnsrecordid',
+				-name    => 'DNS_RECORD_ID_' . $dnsid,
+				-id      => 'DNS_RECORD_ID_' . $dnsid,
+				-default => $dnsid,
 			}
-		  ),
-		  ;
+		);
+		$dns = $cgi->span(		# span is used by javascript
+			{ -class => 'interfacedns' },
+			$dnshidden,
+			$cgi->a(
+				{
+					-class  => 'intdns',
+					-target => "dns_domain_id"
+					  . $values->{ _dbx('DNS_DOMAIN_ID') },
+					-href => '../dns/?dnsdomainid='
+					  . $values->{ _dbx('DNS_DOMAIN_ID') },
+				},
+				$values->{ _dbx('DNS_NAME') }
+				  . $dot
+				  . $values->{ _dbx('SOA_NAME') },
+			  )
+			  . $cgi->img(
+				{
+					-src   => "../stabcons/e.gif",
+					-alt   => "Edit",
+					-title => 'Edit',
+					-class => 'intdnsedit',
+				}
+			  ))
+			  . $cgi->a(
+				{ -class => 'devdnsref', -href => 'javascript:void(null)' },
+				$cgi->img(
+					{
+						-src   => "../stabcons/arrow.png",
+						-alt   => "DNS Names",
+						-title => 'DNS Names',
+						-class => 'devdnsref',
+					}
+				)
+		) . $self->build_value_dns_table($dnsid);
 	} else {
-		$dns =
-		    $self->b_textfield( $values, "DNS_NAME", $pk )
+		$dns = $self->b_textfield( { -textfield_width => 20 },
+			$values, "DNS_NAME", $pk )
 		  . $self->b_dropdown( $values, "DNS_DOMAIN_ID", $pk );
 	}
 
-	my $netintpurp = $self->build_network_interface_purpose_table($values, $devid);
+	my $netintpurp =
+	  $self->build_network_interface_purpose_table( $values, $devid );
 
 	# Build a table for Extras
 	my $xbox = $cgi->table(
@@ -1994,10 +2025,8 @@ sub build_collapsed_if_box {
 		$cgi->Tr(
 			$cgi->td(
 				$self->build_checkbox(
-					$values,
-					"Up",
-					'IS_INTERFACE_UP',
-					'NETWORK_INTERFACE_ID',
+					$values,           "Up",
+					'IS_INTERFACE_UP', 'NETWORK_INTERFACE_ID',
 					$defchecked
 				)
 			)
@@ -2005,10 +2034,8 @@ sub build_collapsed_if_box {
 		$cgi->Tr(
 			$cgi->td(
 				$self->build_checkbox(
-					$values,
-					"Should Manage",
-					'SHOULD_MANAGE',
-					'NETWORK_INTERFACE_ID',
+					$values,         "Should Manage",
+					'SHOULD_MANAGE', 'NETWORK_INTERFACE_ID',
 					$defchecked
 				)
 			)
@@ -2016,10 +2043,8 @@ sub build_collapsed_if_box {
 		$cgi->Tr(
 			$cgi->td(
 				$self->build_checkbox(
-					$values,
-					"Should Monitor",
-					'SHOULD_MONITOR',
-					'NETWORK_INTERFACE_ID',
+					$values,          "Should Monitor",
+					'SHOULD_MONITOR', 'NETWORK_INTERFACE_ID',
 					$defchecked
 				)
 			)
@@ -2027,20 +2052,16 @@ sub build_collapsed_if_box {
 		$cgi->Tr(
 			$cgi->td(
 				$self->build_checkbox(
-					$values,
-					"NATing",
-					'PROVIDES_NAT',
-					'NETWORK_INTERFACE_ID'
+					$values,        "NATing",
+					'PROVIDES_NAT', 'NETWORK_INTERFACE_ID'
 				)
 			)
 		),
 		$cgi->Tr(
 			$cgi->td(
 				$self->build_checkbox(
-					$values,
-					"DHCP",
-					'PROVIDES_DHCP',
-					'NETWORK_INTERFACE_ID'
+					$values,         "DHCP",
+					'PROVIDES_DHCP', 'NETWORK_INTERFACE_ID'
 				)
 			)
 		),
@@ -2048,20 +2069,17 @@ sub build_collapsed_if_box {
 		? $cgi->Tr(
 			$cgi->td(
 				$self->build_checkbox(
-					$values,
-					"Do Not Free IPs on Removal",
-					'rm_NET_INT_preserveips',
-					'NETWORK_INTERFACE_ID'
+					$values,                  "Do Not Free IPs on Removal",
+					'rm_NET_INT_preserveips', 'NETWORK_INTERFACE_ID'
 				)
 			)
 		  )
 		: "",
-		$cgi->Tr($cgi->td($cgi->b("Purpose:"), $netintpurp)),
+		$cgi->Tr( $cgi->td( $cgi->b("Purpose:"), $netintpurp ) ),
 	);
 
 	# Make the extras something that can be clicked on and expanded
-	$xbox =
-	  $cgi->a( { -href => '#', -class => 'showmore' }, "More" ) . $xbox;
+	$xbox = $cgi->a( { -href => '#', -class => 'showmore' }, "More" ) . $xbox;
 
 	my $rv = $cgi->Tr(
 		$rowitems,
@@ -2069,15 +2087,12 @@ sub build_collapsed_if_box {
 		$cgi->td($intname),
 		$cgi->td( $self->b_textfield( $values, "IP",       $pk ) ),
 		$cgi->td( $self->b_textfield( $values, "MAC_ADDR", $pk ) ),
-		$cgi->td($dns),
-		$cgi->td(
-			$self->b_dropdown(
-				$values, 'NETWORK_INTERFACE_TYPE', $pk
-			)
-		),
+		$cgi->td( { -id => $dnsid }, $dns ),
+		$cgi->td( $self->b_dropdown( $values, 'NETWORK_INTERFACE_TYPE', $pk ) ),
 		$cgi->td($xbox),
 	);
-	$self->textfield_sizing(1);
+
+	# $self->textfield_sizing(1);
 	$rv;
 }
 
@@ -2107,20 +2122,19 @@ sub build_interface_box {
 	my $delem = "";
 	if ( defined($values) ) {
 
-    #	$delem .= $cgi->div($cgi->submit({-align => 'center', -valign => 'bottom',
-    #			-name=>'del_free_ip'.$pnk,
-    #			-label=>'Delete/Free All IPs'}));
-    #	$delem .= $cgi->div($cgi->submit({-align => 'center', -valign => 'bottom',
-    #			-name=>'del_reserve_ip'.$pnk,
-    #			-label=>'Delete/Rsv All IPs'}));
+		#	$delem .= $cgi->div($cgi->submit({-align => 'center', -valign => 'bottom',
+		#			-name=>'del_free_ip'.$pnk,
+		#			-label=>'Delete/Free All IPs'}));
+		#	$delem .= $cgi->div($cgi->submit({-align => 'center', -valign => 'bottom',
+		#			-name=>'del_reserve_ip'.$pnk,
+		#			-label=>'Delete/Rsv All IPs'}));
 		$delem .= $cgi->span( { -align => 'center' },
 			$cgi->b( { -align => 'center' }, "Delete Interface" ) );
 
 		# [XXX ] - need to make the class name in both -class and
 		# uncheck()
 		my $classname =
-		  'delete_int_class_INT_'
-		  . $values->{ _dbx('NETWORK_INTERFACE_ID') };
+		  'delete_int_class_INT_' . $values->{ _dbx('NETWORK_INTERFACE_ID') };
 		$delem .= $cgi->div(
 			$cgi->checkbox(
 				-class => $classname,
@@ -2132,7 +2146,7 @@ sub build_interface_box {
 				,
 				-label => 'Delete/Free IPs',
 				-onClick =>
-"uncheck(\"rm_free_INTERFACE_$values->{_dbx('NETWORK_INTERFACE_ID')}\",\"$classname\");"
+				  "uncheck(\"rm_free_INTERFACE_$values->{_dbx('NETWORK_INTERFACE_ID')}\",\"$classname\");"
 			)
 		);
 		$delem .= $cgi->div(
@@ -2146,7 +2160,7 @@ sub build_interface_box {
 				,
 				-label => 'Delete/Reserve IPs',
 				-onClick =>
-"uncheck(\"rm_rsv_INTERFACE_$values->{_dbx('NETWORK_INTERFACE_ID')}\", \"$classname\");"
+				  "uncheck(\"rm_rsv_INTERFACE_$values->{_dbx('NETWORK_INTERFACE_ID')}\", \"$classname\");"
 			)
 		);
 	}
@@ -2154,20 +2168,19 @@ sub build_interface_box {
 	$xbox .= $delem;
 
 	my $ltd;
-	$ltd = $cgi->start_table . "\n";
 
-       #
-       # The ability to change the interface name is not in the front end, but
-       # the backend supports it.  Changing this to just be the else case allows
-       # it to be edited in all cases.  Need to contemplate if it should be
-       # changable
-       #
+	#
+	# The ability to change the interface name is not in the front end, but
+	# the backend supports it.  Changing this to just be the else case allows
+	# it to be edited in all cases.  Need to contemplate if it should be
+	# changable
+	#
 	if ( defined($values) ) {
 		$ltd .=
 		  $self->build_tr( {}, $values, "b_textfield", "Iface",
 			'NETWORK_INTERFACE_NAME', 'NETWORK_INTERFACE_ID' );
 
-# $ltd .= $cgi->hidden('NETWORK_INTERFACE_NAME_'.$values->{_dbx('NETWORK_INTERFACE_ID')}, $values->{_dbx('NETWORK_INTERFACE_NAME')});
+		# $ltd .= $cgi->hidden('NETWORK_INTERFACE_NAME_'.$values->{_dbx('NETWORK_INTERFACE_ID')}, $values->{_dbx('NETWORK_INTERFACE_NAME')});
 	} else {
 		$ltd .=
 		  $self->build_tr( {}, $values, "b_textfield", "Iface",
@@ -2181,12 +2194,9 @@ sub build_interface_box {
 	$ltd .= $cgi->Tr(
 		$cgi->td( { -align => 'right' }, $cgi->b("DNS:") ),
 		$cgi->td(
-			$self->b_textfield(
-				$values, 'DNS_NAME', 'NETWORK_INTERFACE_ID'
-			),
+			$self->b_textfield( $values, 'DNS_NAME', 'NETWORK_INTERFACE_ID' ),
 			$self->b_dropdown(
-				$values, 'DNS_DOMAIN_ID',
-				'NETWORK_INTERFACE_ID'
+				$values, 'DNS_DOMAIN_ID', 'NETWORK_INTERFACE_ID'
 			)
 		)
 	);
@@ -2207,15 +2217,14 @@ sub build_interface_box {
 			undef $dns;
 		}
 	}
-	$ltd .= $cgi->end_table . "\n";
+	$ltd .= $cgi->table($ltd) . "\n";
 
 	my $rv = "";
 
 	my $action_url = "write/update_interface.pl";
 	my $hidden     = "";
 	if ( !defined($values) ) {
-		$rv .=
-		  $cgi->h4( { -align => 'center' }, 'Add interface' ) . "\n";
+		$rv .= $cgi->h4( { -align => 'center' }, 'Add interface' ) . "\n";
 		$action_url = "write/add_interface.pl";
 		$hidden     = $cgi->hidden(
 			-name    => 'DEVICE_ID',
@@ -2344,8 +2353,7 @@ sub device_location_print {
 	my $racklink = "";
 	if ( $hr && exists( $hr->{ _dbx('LOCATION_RACK_ID') } ) ) {
 		my $rack =
-		  $self->get_rack_from_rackid(
-			$hr->{ _dbx('LOCATION_RACK_ID') } );
+		  $self->get_rack_from_rackid( $hr->{ _dbx('LOCATION_RACK_ID') } );
 
 		my $rackname = "";
 		foreach my $c ( 'ROOM', 'SUB_ROOM', 'RACK_ROW', 'RACK_NAME' ) {
@@ -2360,13 +2368,11 @@ sub device_location_print {
 				{ -colspan => 2, -align => 'center' },
 				$cgi->a(
 					{
-						-align => 'center',
-						-target =>
-						  "stab_location_$rackid",
-						-href => $root
+						-align  => 'center',
+						-target => "stab_location_$rackid",
+						-href   => $root
 						  . "/sites/rack/?RACK_ID="
-						  . $hr->{ _dbx( 'LOCATION_RACK_ID'
-						  ) }
+						  . $hr->{ _dbx('LOCATION_RACK_ID') }
 					},
 					$rackname,
 				)
@@ -2390,7 +2396,7 @@ sub device_location_print {
 		$self->build_tr(
 			{
 				-onChange =>
-"site_to_rack(\"$racksiteid\", \"$rackdivid\", \"dev\", $locid);"
+				  "site_to_rack(\"$racksiteid\", \"$rackdivid\", \"dev\", $locid);"
 			},
 			$hr,
 			"b_dropdown",
@@ -2400,11 +2406,7 @@ sub device_location_print {
 		),
 		$self->build_tr(
 			{ -divWrap => $rackdivid, -dolinkUpdate => 'rack' },
-			$hr,
-			"b_dropdown",
-			"Rack",
-			'LOCATION_RACK_ID',
-			'RACK_LOCATION_ID'
+			$hr, "b_dropdown", "Rack", 'LOCATION_RACK_ID', 'RACK_LOCATION_ID'
 		),
 		$self->build_tr(
 			$hr,                    "b_textfield",
@@ -2448,8 +2450,8 @@ sub device_license_tab {
 
 	my $tt = "";
 	while ( my $hr = $sth->fetchrow_hashref ) {
-		my $delid = "rm_Lic_DEVICE_COLLECTION_"
-		  . $hr->{ _dbx('DEVICE_COLLECTION_ID') };
+		my $delid =
+		  "rm_Lic_DEVICE_COLLECTION_" . $hr->{ _dbx('DEVICE_COLLECTION_ID') };
 		my $rm .= $cgi->checkbox(
 			-name    => $delid,
 			-id      => $delid,
@@ -2474,9 +2476,8 @@ sub device_license_tab {
 				},
 				$cgi->a(
 					{
-						-onClick =>
-"add_License(this, \"$addid\", $devid)",
-						-href => "javascript:void(null)"
+						-onClick => "add_License(this, \"$addid\", $devid)",
+						-href    => "javascript:void(null)"
 					},
 					"Add a License"
 				),
@@ -2538,8 +2539,8 @@ sub device_appgroup_tab {
 	my $indicatetab = "";
 	if ($devid) {
 
-	       # this only shows if we're updating an existing device.  If we're
-	       # adding new, then this is somewhat superfluous.
+		# this only shows if we're updating an existing device.  If we're
+		# adding new, then this is somewhat superfluous.
 		$warnmsg = qq{
 			Please select all that apply.  Please note that if you
 			are adding additional items, you need to use a key
@@ -2555,15 +2556,13 @@ h
 			{ -style => 'text-align: center;' },
 			$cgi->a(
 				{
-					-href => "javascript:void(null)",
-					-onClick =>
-qq{ShowDevTab("AppGroup", "$devid", "force")},
+					-href    => "javascript:void(null)",
+					-onClick => qq{ShowDevTab("AppGroup", "$devid", "force")},
 				},
 				"(reset tab)"
 			)
 		);
-		$indicatetab =
-		  $cgi->hidden( "has_appgroup_tab_$devid", $devid );
+		$indicatetab = $cgi->hidden( "has_appgroup_tab_$devid", $devid );
 		$name = 'appgroup_' . $devid;
 	}
 
