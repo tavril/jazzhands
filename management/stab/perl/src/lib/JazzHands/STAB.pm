@@ -1035,7 +1035,9 @@ sub b_nondbdropdown {
 	my $cgi      = $self->cgi;
 	my $onchange = $params->{'-onChange'};
 	my $id       = $params->{'-id'};
+	my $class    = $params->{'-class'};
 	my $prefix   = $params->{'-prefix'} || "";
+	my $preidfix = $params->{'-preidfix'} || "";
 	my $suffix   = $params->{'-suffix'} || "";
 
 	my $xml = $params->{'-xml'};
@@ -1172,7 +1174,7 @@ sub b_nondbdropdown {
 
 	$field =~ tr/a-z/A-Z/;
 
-	my $name = "$prefix$field$pkn$suffix";
+	my $name = "$prefix$field$preidfix$pkn$suffix";
 	if ( defined($params) && exists( $params->{-name} ) ) {
 		$name = $params->{-name};
 	}
@@ -1182,6 +1184,7 @@ sub b_nondbdropdown {
 	}
 
 	my $popup_args = {};
+	$popup_args->{'-class'}    = $class if ($class);
 	$popup_args->{'-name'}     = $name;
 	$popup_args->{'-values'}   = \@list if ( $#list >= 0 );
 	$popup_args->{'-labels'}   = \%list if ( $#list >= 0 );
@@ -1225,6 +1228,7 @@ sub b_dropdown {
 	my $onchange = $params->{'-onChange'};
 	my $class    = $params->{'-class'};
 	my $prefix   = $params->{'-prefix'} || "";
+	my $preidfix = $params->{'-preidfix'} || "";
 	my $suffix   = $params->{'-suffix'} || "";
 
 	# [XXX] need to consider making id/name always the same?
@@ -1836,12 +1840,12 @@ sub b_dropdown {
 	my $nfield = $field;
 	$nfield =~ tr/a-z/A-Z/;
 
-	my $name = "$nfield$pkn";
+	my $name = "$nfield$preidfix$pkn";
 	if ( defined($params) && exists( $params->{-name} ) ) {
 		$name = $params->{-name};
 	}
 
-	$name = "$prefix$name$suffix";
+	$name = "$prefix$preidfix$name$suffix";
 
 	if ( !defined($id) ) {
 		$id = $name;
@@ -1980,12 +1984,13 @@ sub b_textfield {
 	$field     = _dbx($field)     if ( defined($field) );
 	$pkeyfield = _dbx($pkeyfield) if ( defined($pkeyfield) );
 
-	my $default = $params->{'-default'};
-	my $ip0     = $params->{'-allow_ip0'};
-	my $class   = $params->{'-class'};
-	my $editoff = $params->{'-noEdit'} || 'never';
-	my $prefix  = $params->{'-prefix'} || "";
-	my $suffix  = $params->{'-suffix'} || "";
+	my $default  = $params->{'-default'};
+	my $ip0      = $params->{'-allow_ip0'};
+	my $class    = $params->{'-class'};
+	my $editoff  = $params->{'-noEdit'} || 'never';
+	my $prefix   = $params->{'-prefix'} || "";
+	my $preidfix = $params->{'-preidfix'} || "";
+	my $suffix   = $params->{'-suffix'} || "";
 
 	my $cgi = $self->cgi;
 
@@ -2013,7 +2018,7 @@ sub b_textfield {
 	$f =~ tr/a-z/A-Z/;
 
 	my $name    = $pkn;
-	my $webname = "$prefix$f$pkn$suffix";
+	my $webname = "$prefix$f$preidfix$pkn$suffix";
 	if ( $params && $params->{'-name'} ) {
 		$name = $webname = $params->{'-name'};
 	}
@@ -2124,14 +2129,14 @@ sub b_textfield {
 	$disabled = 1 if ( $params->{-disabled} );
 
 	my $args = {};
-	$args->{'-name'}     = $webname;
-	$args->{'-id'}       = $webname;
-	$args->{'-class'}    = $class if ( defined($class) );
-	$args->{'-default'}  = $allf if ( defined($allf) );
-	$args->{'-size'}     = $size if ($size);
+	$args->{'-name'}    = $webname;
+	$args->{'-id'}      = $webname;
+	$args->{'-class'}   = $class if ( defined($class) );
+	$args->{'-default'} = $allf if ( defined($allf) );
+	$args->{'-size'}    = $size if ($size);
 	$args->{'-maxlength'} = 2048;    ## [XXX] probably need to rethink!
 
-	$args->{'-class'}    .= " off" if($disabled);
+	$args->{'-class'} .= " off" if ($disabled);
 
 	my $optional = "";
 	if ( $params->{-mark} ) {

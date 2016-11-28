@@ -531,6 +531,11 @@ table.attest tbody tr.odd td {
 	background-color: lightgrey;
 }
 
+img.plusbutton {
+	height: 2ex;
+	border: 1px solid;
+}
+
 div.description {
 	border: 3px solid;
 	text-align: center;

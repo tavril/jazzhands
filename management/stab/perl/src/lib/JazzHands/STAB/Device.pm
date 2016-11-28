@@ -1864,7 +1864,8 @@ sub build_value_dns_table($$) {
 				-default => $dnsid,
 			}
 		);
-		my $dns .= $cgi->span(				# span is used by javascript
+		my $prefix = "_dnsref_" . $vdnsid;
+		my $dns .= $cgi->span(    # span is used by javascript
 			{ -class => 'valdnsref' },
 			$hidden,
 			$cgi->a(
@@ -1886,24 +1887,57 @@ sub build_value_dns_table($$) {
 			  )
 		);
 		$r .= $cgi->Tr(
-			$cgi->td( $self->b_nondbdropdown( $hr, "DNS_TYPE", 'DNS_RECORD_ID' )),
-			$cgi->td( $dns ),
+			{ -class => 'dnsroot dnsvalroot' },
+			$cgi->td(
+				$self->b_nondbdropdown(
+					{
+						-class    => 'off',
+						-prefix   => 'dnsref_',
+						-preidfix => $prefix
+					},
+					$hr,
+					"DNS_TYPE",
+					'DNS_RECORD_ID'
+				)
+			),
+			$cgi->td($dns),
 		);
 	}
 
 	$r .= $cgi->Tr(
-		$cgi->td({-colspan => 2}, $cgi->a({-href=>'#', -class=>'dnsref'},
-			"[ADD]"))
+		$cgi->td(
+			{ -colspan => 2 },
+			$cgi->a(
+				{ -href => '#', -class => 'dnsref' },
+				$cgi->img(
+					{
+						-src   => '../stabcons/plus.png',
+						-alt   => 'Add',
+						-title => 'Add',
+						-class => 'plusbutton'
+					}
+				)
+			)
+		)
 	);
 
+	my $dnshidden = $cgi->hidden(
+		{
+			-class   => 'dnsrecordid',
+			-name    => 'DNS_RECORD_ID_' . $vdnsid,
+			-id      => 'DNS_RECORD_ID_' . $vdnsid,
+			-default => $vdnsid,
+		}
+	);
 
 	return $cgi->div(
 		{
 			-id    => 'dnsvalue_' . $vdnsid,
-			-class => 'irrelevant dnsvalueref'
+			-class => 'irrelevant dnsvalueref dnsrefroot'
 		},
+		$dnshidden,
 		$cgi->div("DNS Records that refer to this one"),
-		$cgi->table({-class => 'reporting'}, $r),
+		$cgi->table($r),
 	);
 }
 
@@ -1963,6 +1997,8 @@ sub build_collapsed_if_box {
 		if ( $values->{ _dbx('DNS_NAME') } ) {
 			$dot = ".";
 		}
+
+		# note, this gets cleared by javascript
 		my $dnshidden = $cgi->hidden(
 			{
 				-class   => 'dnsrecordid',
@@ -1971,7 +2007,7 @@ sub build_collapsed_if_box {
 				-default => $dnsid,
 			}
 		);
-		$dns = $cgi->span(		# span is used by javascript
+		$dns = $cgi->span(    # span is used by javascript
 			{ -class => 'interfacedns' },
 			$dnshidden,
 			$cgi->a(
@@ -1993,18 +2029,19 @@ sub build_collapsed_if_box {
 					-title => 'Edit',
 					-class => 'intdnsedit',
 				}
-			  ))
-			  . $cgi->a(
-				{ -class => 'devdnsref', -href => 'javascript:void(null)' },
-				$cgi->img(
-					{
-						-src   => "../stabcons/arrow.png",
-						-alt   => "DNS Names",
-						-title => 'DNS Names',
-						-class => 'devdnsref',
-					}
-				)
-		) . $self->build_value_dns_table($dnsid);
+			  )
+		  )
+		  . $cgi->a(
+			{ -class => 'devdnsref', -href => 'javascript:void(null)' },
+			$cgi->img(
+				{
+					-src   => "../stabcons/arrow.png",
+					-alt   => "DNS Names",
+					-title => 'DNS Names',
+					-class => 'devdnsref',
+				}
+			)
+		  ) . $self->build_value_dns_table($dnsid);
 	} else {
 		$dns = $self->b_textfield( { -textfield_width => 20 },
 			$values, "DNS_NAME", $pk )
@@ -2087,7 +2124,7 @@ sub build_collapsed_if_box {
 		$cgi->td($intname),
 		$cgi->td( $self->b_textfield( $values, "IP",       $pk ) ),
 		$cgi->td( $self->b_textfield( $values, "MAC_ADDR", $pk ) ),
-		$cgi->td( { -id => $dnsid }, $dns ),
+		$cgi->td( { -class => 'dnsroot intdnsroot', -id => $dnsid }, $dns ),
 		$cgi->td( $self->b_dropdown( $values, 'NETWORK_INTERFACE_TYPE', $pk ) ),
 		$cgi->td($xbox),
 	);

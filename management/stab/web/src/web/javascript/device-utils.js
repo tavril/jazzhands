@@ -1114,6 +1114,49 @@ function add_License(thing, parent_tr_id, devid)
 }
 
 //
+// adds a row before the row that contains 'button' based on the domain list
+// in resp.  The rest of resp can be ignored.
+//
+function add_dns_ref_record_row(button, dnsrecid, resp) 
+{
+	var offset = 0;
+	while ( $("input#dnsref_DNS_NAME_dnsref_"+dnsrecid+"_new_"+offset).length ) {
+		offset += 1;
+	}
+	var recpart = "dnsref_"+dnsrecid+"_new_"+offset;
+	var s = $("<select />", {
+		name: 'dnsref_DNS_DOMAIN_ID_'+recpart,
+		id: 'dnsref_DNS_DOMAIN_ID_'+recpart,
+	});
+	for(var field in resp['domains']['options']) {
+		var o = $("<option/>",resp['domains']['options'][field]);
+		$(s).append(o);
+	}
+
+	// this should possibly be pulled from json. maybe.
+	// its redundant with backend code.
+	var drop = $("<select/>", {
+		name: 'dnsref_DNS_TYPE_'+recpart,
+		id: 'dnsref_DNS_TYPE_'+recpart
+	}).append(
+		$("<option/>", { value: 'CNAME', text: 'CNAME'}),
+		$("<option/>", { value: 'A', text: 'A'}),
+		$("<option/>", { value: 'AAAA', text:'AAAA'})
+	);
+
+	$(button).closest('tr').before(
+		$("<tr/>").append(
+			$("<td>").append(drop),
+			$("<td>").append(
+				$("<input/>", {
+					id: 'dnsref_DNS_NAME_'+recpart,
+					name: 'dnsref_DNS_NAME_'+recpart,
+				})).append(s)
+		)
+	);
+}
+
+//
 // replaces the name.domain link with a textbox and drop down for dns
 // suitable for changing.  Name and domain will match the link so submits
 // will not change anything; this is just to not make devices with many
@@ -1163,20 +1206,35 @@ function RefreshAfterTabs() {
 		}
 	});
 
-	// this wants to be merged into the above.
+	// This enables a CNAME/A record row for editing.
 	$("table.interfacetable").on('click', 'img.intdnsedit', function(event) {
 		var span = $(this).closest("span");
 		var url = "";
+		var dnsroot;
 		if ( $(span).hasClass('interfacedns') ) {
+			// This case is for the network interface, in which case the
+			// various ids become DNS_wahtever_netintid
 			var id = $(this).closest('tr').find('.recordid').val();
 			url = 'json=yes;type=service;what=interfacedns;NETWORK_INTERFACE_ID='+ id;
 		} else {
-			var id = $(span).find('input.dnsrecordid').val();
+			//
+			// This case covers a pointer to another dns record, which ends
+			// up with the name dnsref_DNS_whatever_dsnref_#_#
+			// where thef irst number is the dns record for the interface
+			// and the second is the is for this record that points to it.
+			//
+
+			var dr = $(this).closest('.dnsrefroot').children('.dnsrecordid').val();
+			var id = $(this).closest('.dnsvalroot').find('span.valdnsref').children('.dnsrecordid').val();
 			url = 'json=yes;type=service;what=dns;DNS_RECORD_ID='+ id;
+			url += ';REFERENCED_DNS_RECORD_ID='+dr;
+			dnsroot = $(this).closest('.dnsroot');
 		}
 		if( $(span).is("span") && id) {
 			$.getJSON('device-ajax.pl', url, function (resp) {
 					replace_int_dns_drop (span, resp);
+					// enables any fields that were off.
+					$(dnsroot).find('.off').removeClass('off');
 				}
 			);
 		} else {
@@ -1185,6 +1243,7 @@ function RefreshAfterTabs() {
 		return(0);
 	});
 
+	// This shows the CNAME/A record reference table.
 	$("table.interfacetable").on('click', 'img.devdnsref', function(event) {
 		var td = $(this).closest("td");
 		var id = $(td).attr('id');
@@ -1198,8 +1257,14 @@ function RefreshAfterTabs() {
 		return(0);
 	});
 
+	// implements the add button on the device/ip network/dns tab 
 	$("table.interfacetable").on('click', 'a.dnsref', function(event) {
-		alert("add");
+		var dr = $(this).closest('.dnsrefroot').children('.dnsrecordid').val();
+
+		url = 'json=yes;type=service;what=dns;DNS_RECORD_ID='+ dr;
+		$.getJSON('device-ajax.pl', url, function (resp) {
+			add_dns_ref_record_row(event.target, dr, resp);
+		});
 		return(0);
 	});
 
