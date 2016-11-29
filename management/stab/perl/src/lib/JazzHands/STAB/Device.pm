@@ -1870,7 +1870,7 @@ sub build_value_dns_table($$) {
 			$hidden,
 			$cgi->a(
 				{
-					-class  => 'intdnsedit',
+					-class  => 'intdns',
 					-target => "dns_domain_id" . $hr->{ _dbx('DNS_DOMAIN_ID') },
 					-href   => '../dns/?dnsdomainid='
 					  . $hr->{ _dbx('DNS_DOMAIN_ID') },

@@ -1199,7 +1199,7 @@ $(document).ready(function(){
 	});
 
 	// This enables a CNAME/A record row for editing.
-	$("div.maindiv").on('click', 'a.intdnsedit', function(event) {
+	$("div.maindiv").on('click', 'img.intdnsedit', function(event) {
 		var span = $(this).closest("span");
 		var url = "";
 		var dnsroot;

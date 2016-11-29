@@ -826,7 +826,9 @@ sub add_dns_record {
 
 	$opts = _dbx( $opts, 'lower' );
 
-	if ( $opts->{dns_type} =~ /^A(AAA)?/ ) {
+	if ( $opts->{dns_value_record_id} ) {
+		$opts->{dns_value} = undef;
+	} elsif ( $opts->{dns_type} =~ /^A(AAA)?/ ) {
 		$opts->{dns_value} = undef;
 		if ( !$opts->{should_generate_ptr} ) {
 			if ( $self->ptr_exists( $opts->{netblock_id} ) ) {
@@ -858,7 +860,7 @@ sub add_dns_record {
 	{
 		$self->error_return( join( " ", @errs ) );
 	}
-	return ( $opts->{ _dbx('dns_domain_id') } );
+	return ( $opts->{ _dbx('dns_record_id') } );
 }
 
 sub fetch_property {

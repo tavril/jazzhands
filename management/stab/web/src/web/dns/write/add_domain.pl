@@ -139,7 +139,8 @@ sub add_default_ns_records($$) {
 			dns_type      => 'NS',
 			dns_value     => $row->{property_value}
 		};
-		$numchanges += $stab->add_dns_record($new);
+		$stab->add_dns_record($new);
+		$numchanges++;
 	}
 	$numchanges;
 }

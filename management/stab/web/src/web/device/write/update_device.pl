@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Copyright (c) 2010-2014 Todd M. Kover
+# Copyright (c) 2010-2016 Todd M. Kover
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -165,13 +165,13 @@ sub clear_same_physical_port_params {
 			if ( $l1c->{ _dbx('PHYSICAL_PORT1_ID') } == $pportid ) {
 				next
 				  if ( !$p2portid
-					&& defined( $l1c->{ _dbx( 'PHYSICAL_PORT2_ID' ) } )
+					&& defined( $l1c->{ _dbx('PHYSICAL_PORT2_ID') } )
 					|| $l1c->{ _dbx('PHYSICAL_PORT2_ID') } != $p2portid );
 			}
 			if ( $l1c->{ _dbx('PHYSICAL_PORT2_ID') } == $pportid ) {
 				next
 				  if ( !$p2portid
-					&& defined( $l1c->{ _dxb( 'PHYSICAL_PORT1_ID' ) } )
+					&& defined( $l1c->{ _dxb('PHYSICAL_PORT1_ID') } )
 					|| $l1c->{ _dbx('PHYSICAL_PORT1_ID') } != $p2portid );
 			}
 		}
@@ -328,11 +328,12 @@ sub do_update_device {
 	$numchanges += update_location( $stab, $devid );
 
 	$numchanges += update_all_interfaces( $stab, $devid );
+	$numchanges += update_all_dns_value_references( $stab, $devid );
 	$numchanges += add_device_note( $stab, $devid );
 
 	if ( $serial_reset && $retire_device ) {
 		$stab->error_return(
-			"You may not both reset serial ports and retire the box." );
+			"You may not both reset serial ports and retire the box.");
 	}
 
 	if ($retire_device) {
@@ -1199,7 +1200,7 @@ sub update_physical_port {
 	if ( !$p2portid ) {
 		my $cgi = $stab->cgi;
 		$stab->error_return(
-			"You must specify the port on the other end's serial device." );
+			"You must specify the port on the other end's serial device.");
 	}
 
 	#
@@ -1404,7 +1405,7 @@ sub update_physical_connection {
 
 		if ( !$cable ) {
 			$stab->error_return(
-				"Must specify a cable type on Patch Panel Connections" );
+				"Must specify a cable type on Patch Panel Connections");
 		}
 
 		# the last one does not have a port end, just a cable...
@@ -1606,6 +1607,52 @@ sub purge_physical_connection_by_physical_port_id {
 	}
 
 	$numchanges;
+}
+
+sub update_all_dns_value_references {
+	my ( $stab, $devid ) = @_;
+
+	my $numchanges = 0;
+
+	for my $basednsrecid ( $stab->cgi_get_ids('DNS_RECORD_ID') ) {
+		my $base = "dnsref_DNS_NAME_dnsref_$basednsrecid";
+		for my $dnsrecid ( $stab->cgi_get_ids($base) ) {
+			my $p    = "dnsref_";
+			my $s    = "dnsref_$basednsrecid";
+			my $name = $stab->cgi_parse_param( "${p}DNS_NAME_${s}", $dnsrecid );
+			my $type = $stab->cgi_parse_param( "${p}DNS_TYPE_${s}", $dnsrecid );
+			my $dom =
+			  $stab->cgi_parse_param( "${p}DNS_DOMAIN_ID_${s}", $dnsrecid );
+
+			if ( $dnsrecid =~ /^\d+$/ ) {
+				my $old = $stab->get_dns_record_from_id($dnsrecid);
+				my $new = {
+					DNS_RECORD_ID => $dnsrecid,
+					DNS_NAME      => $name,
+					DNS_TYPE      => $type,
+					DNS_DOMAIN_ID => $dom,
+				};
+
+				my $diff = $stab->hash_table_diff( $old, _dbx($new) );
+				$numchanges += keys %$diff;
+				$stab->run_update_from_hash( 'dns_record', 'dns_record_id',
+					$dnsrecid, $diff );
+			} elsif ( $dnsrecid =~ /^new_(\d+)$/ ) {
+				my $iter = $1;
+				$numchanges++;
+				my $opts = {
+					dns_name            => $name,
+					dns_type            => $type,
+					dns_domain_id       => $dom,
+					dns_value_record_id => $basednsrecid,
+				};
+				$stab->add_dns_record($opts);
+			} else {
+				$stab->error_return("Invalid dns record reference");
+			}
+		}
+	}
+	return $numchanges;
 }
 
 sub update_all_interfaces {
@@ -2104,7 +2151,7 @@ sub process_interfaces {
 		  )
 		{
 			$stab->error_return(
-				"Static Route $srcip/$srcbits->$destip is already on device" );
+				"Static Route $srcip/$srcbits->$destip is already on device");
 		}
 
 		my $sth = $stab->prepare(
@@ -2302,6 +2349,7 @@ sub add_interfaces {
 				netblock_id   => $nblk->{ _dbx('NETBLOCK_ID') },
 			}
 		);
+		$numchanges++;
 	}
 
 	#
