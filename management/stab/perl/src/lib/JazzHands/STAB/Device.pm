@@ -1872,8 +1872,8 @@ sub build_value_dns_table($$) {
 				{
 					-class  => 'intdns',
 					-target => "dns_domain_id" . $hr->{ _dbx('DNS_DOMAIN_ID') },
-					-href   => '../dns/?dnsdomainid='
-					  . $hr->{ _dbx('DNS_DOMAIN_ID') },
+					-href   => '../dns/?DNS_RECORD_ID='
+					  . $hr->{ _dbx('DNS_RECORD_ID') },
 				},
 				$hr->{ _dbx('DNS_NAME') } . $dot . $hr->{ _dbx('SOA_NAME') },
 			  )
@@ -2013,10 +2013,10 @@ sub build_collapsed_if_box {
 			$cgi->a(
 				{
 					-class  => 'intdnsedit',
-					-target => "dns_domain_id"
-					  . $values->{ _dbx('DNS_DOMAIN_ID') },
-					-href => '../dns/?dnsdomainid='
-					  . $values->{ _dbx('DNS_DOMAIN_ID') },
+					-target => "dns-record_id"
+					  . $values->{ _dbx('DNS_RECORD_ID') },
+					-href => '../dns/?DNS_RECORD_ID='
+					  . $values->{ _dbx('DNS_RECORD_ID') },
 				},
 				$values->{ _dbx('DNS_NAME') }
 				  . $dot
