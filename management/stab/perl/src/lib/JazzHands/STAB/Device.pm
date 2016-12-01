@@ -1870,7 +1870,7 @@ sub build_value_dns_table($$) {
 			$hidden,
 			$cgi->a(
 				{
-					-class  => 'intdns',
+					-class  => 'intdnsedit',
 					-target => "dns_domain_id" . $hr->{ _dbx('DNS_DOMAIN_ID') },
 					-href   => '../dns/?dnsdomainid='
 					  . $hr->{ _dbx('DNS_DOMAIN_ID') },
@@ -1908,7 +1908,7 @@ sub build_value_dns_table($$) {
 		$cgi->td(
 			{ -colspan => 2 },
 			$cgi->a(
-				{ -href => '#', -class => 'dnsref' },
+				{ -href => '#', -class => 'dnsaddref' },
 				$cgi->img(
 					{
 						-src   => '../stabcons/plus.png',
@@ -2012,7 +2012,7 @@ sub build_collapsed_if_box {
 			$dnshidden,
 			$cgi->a(
 				{
-					-class  => 'intdns',
+					-class  => 'intdnsedit',
 					-target => "dns_domain_id"
 					  . $values->{ _dbx('DNS_DOMAIN_ID') },
 					-href => '../dns/?dnsdomainid='

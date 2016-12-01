@@ -162,8 +162,6 @@ function ShowDevTab(what,devid) {
 				obj.style.textAlign = '';
 				obj.style.padding = '';
 				obj.innerHTML = htmlgoo;
-
-				RefreshAfterTabs();
 			}
 		}
 		ajaxrequest.send(null);
@@ -1180,20 +1178,14 @@ function replace_int_dns_drop (obj, resp)
 // jQuery magic!
 $(document).ready(function(){
 	// this causes the EDIT button to show up where needed
-	$("table").on('click', ".stabeditbutton", function(event) {
+	$("body").on('click', ".stabeditbutton", function(event) {
 		toggleon_text(event.target);
 	});
 
-});
 
-//
-// This is called after any device tab is rendered fresh (additional clicks
-// on the tap will not call it
-//
-function RefreshAfterTabs() {
 	// When the more button is clicked on, find the table underneath
 	// and toggle if its shown or not
-	$("a.showmore").on('click', function(event) {
+	$("div.maindiv").on('click', 'a.showmore', function(event) {
 		var t = $(this).closest("td").find("table.intmoretable");
 		if(t) {
 			if ($(t).hasClass('irrelevant') ){
@@ -1207,7 +1199,7 @@ function RefreshAfterTabs() {
 	});
 
 	// This enables a CNAME/A record row for editing.
-	$("table.interfacetable").on('click', 'img.intdnsedit', function(event) {
+	$("div.maindiv").on('click', 'a.intdnsedit', function(event) {
 		var span = $(this).closest("span");
 		var url = "";
 		var dnsroot;
@@ -1244,7 +1236,7 @@ function RefreshAfterTabs() {
 	});
 
 	// This shows the CNAME/A record reference table.
-	$("table.interfacetable").on('click', 'img.devdnsref', function(event) {
+	$("div.maindiv").on('click', 'a.devdnsref', function(event) {
 		var td = $(this).closest("td");
 		var id = $(td).attr('id');
 		var divid = "dnsvalue_" + id;
@@ -1258,7 +1250,7 @@ function RefreshAfterTabs() {
 	});
 
 	// implements the add button on the device/ip network/dns tab 
-	$("table.interfacetable").on('click', 'a.dnsref', function(event) {
+	$("div.maindiv").on('click', 'a.dnsaddref', function(event) {
 		var dr = $(this).closest('.dnsrefroot').children('.dnsrecordid').val();
 
 		url = 'json=yes;type=service;what=dns;DNS_RECORD_ID='+ dr;
@@ -1267,5 +1259,4 @@ function RefreshAfterTabs() {
 		});
 		return(0);
 	});
-
-}
+});
