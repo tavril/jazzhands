@@ -37,7 +37,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 #
 # $Id$
 #
@@ -219,36 +218,33 @@ n";
 	$sth->finish;
 }
 
-sub zone_dns_records {
-	my ( $stab, $dnsdomainid ) = @_;
+sub build_dns_zone {
+	my ( $stab, $dnsdomainid, $dnsrecid ) = @_;
 
 	my $cgi = $stab->cgi || die "Could not create cgi";
 
 	my $q = qq{
-		select	dns.*,
-				nb.netblock_id,
-				net_manip.inet_dbtop(nb.ip_address) as IP
-		 from 	dns_record dns
-				inner join val_dns_type vdt on
-					dns.dns_type = vdt.dns_type
-				left join netblock nb
-					on nb.netblock_id = dns.netblock_id
-		where	vdt.id_type in ('ID', 'NON-ID')
-		  and	dns.dns_name is NULL
-		  and	dns.reference_dns_record_id is null
-		  and	dns.dns_domain_id = ?
-		order by dns.dns_type
+		SELECT  d.*, device_id
+		FROM	v_dns_sorted d
+				LEFT JOIN network_interface USING (netblock_id)
+		WHERE	dns_domain_id = ?
 	};
 	my $sth = $stab->prepare($q) || return $stab->return_db_err;
 	$sth->execute($dnsdomainid) || return $stab->return_db_err($sth);
 
 	while ( my $hr = $sth->fetchrow_hashref ) {
-		print build_fwd_zone_Tr( $stab, $hr, 1 );
+		print build_dns_rec_Tr( $stab, $hr );
 	}
 	$sth->finish;
 }
 
-sub build_fwd_zone_Tr {
+#
+# build the row for a (possibly) editable dns record.
+#
+# Some things end up not being editable but just become links to other
+# records.
+#
+sub build_dns_rec_Tr {
 	my ( $stab, $hr, $iszone ) = @_;
 
 	my $cssclass = 'dnsupdate';
@@ -278,139 +274,152 @@ sub build_fwd_zone_Tr {
 	my $showexcess = 1;
 	my $ttlonly    = 0;
 
-	# XXX need to make secondary name and CNAME manipulation right in
-	# device tab before this is reenabled!
-	if ( 0 && defined($hr) && $hr->{ _dbx('DEVICE_ID') } ) {
-		$showexcess = 0
-		  if ( $hr->{ _dbx('SHOULD_GENERATE_PTR') } eq 'Y' );
-		$ttlonly = 1;
-		my $link = "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
-		$name = $cgi->a( { -href => $link }, $name );
+	my $canedit = 1;
 
-		#$class = $stab->b_dropdown($opts, $hr, 'DNS_CLASS', 'DNS_CLASS', 1);
-		#$type = $stab->b_dropdown($opts, $hr, 'DNS_TYPE', 'DNS_TYPE', 1);
-		$class = $hr->{ _dbx('DNS_CLASS') };
-		$type  = $hr->{ _dbx('DNS_TYPE') };
-		$value = $hr->{ _dbx('DNS_VALUE') };
-		if ( defined($hr) && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
-			$value = $hr->{ _dbx('IP') };
+	if ( !$hr->{ _dbx('DNS_RECORD_ID') } ) {
+		$name     = $hr->{ _dbx('DNS_NAME') };
+		$class    = $hr->{ _dbx('DNS_CLASS') };
+		$type     = $hr->{ _dbx('DNS_TYPE') };
+		$value    = $hr->{ _dbx('DNS_VALUE') };
+		$ttl      = "";
+		$canedit  = 0;
+		$cssclass = 'dnsinfo';
+	} else {
+		if($hr->{ _dbx('REF_RECORD_ID') }) {
+			$name = $hr->{ _dbx('DNS_NAME') };
+		} else {
+			$name =
+		  	$stab->b_textfield( $opts, $hr, 'DNS_NAME', 'DNS_RECORD_ID' );
 		}
-	} elsif ( !defined($iszone) ) {
-		$name = $stab->b_textfield( $opts, $hr, 'DNS_NAME', 'DNS_RECORD_ID' );
 		$class =
 		  $stab->b_dropdown( $opts, $hr, 'DNS_CLASS', 'DNS_RECORD_ID', 1 );
 
 		$opts->{-class} = 'dnstype';
-		$type = $stab->b_dropdown( $opts, $hr, 'DNS_TYPE', 'DNS_RECORD_ID', 1 );
+		$type =
+		  $stab->b_dropdown( $opts, $hr, 'DNS_TYPE', 'DNS_RECORD_ID', 1 );
 		delete( $opts->{-class} );
 
-		$opts->{-textfield_width} = 40;
-		$value = $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
-		delete( $opts->{-textfield_width} );
-
 		if ( defined($hr) && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
-
-			# [XXX] hack hack hack, needs to be fixed right.
+			# [XXX] hack hack hack, needs to be fixed right so it doesn't
+			# show up as a value, but the network.  I think.
 			$hr->{ _dbx('DNS_VALUE') } = $hr->{ _dbx('IP') };
-			$value =
-			  $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
+		}
+	}
+
+	if($hr->{ _dbx('DNS_VALUE_RECORD_ID') }) {
+		if ( ! $hr->{ _dbx('NETBLOCK_ID') }) {
+			my $link = "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
+			$value = $cgi->a( { -href => $link }, $hr->{_dbx('DNS_VALUE')});
+		} else {
+			my $link = "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
+			$value = $cgi->a( { -href => $link }, $hr->{_dbx('IP')} );
 		}
 	} else {
 		$opts->{-textfield_width} = 40;
-		$value = $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
+		$value =
+	  	$stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
 		delete( $opts->{-textfield_width} );
-		if ( defined($hr) && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
-
-			# [XXX] hack hack hack, needs to be fixed right.
-			$hr->{ _dbx('DNS_VALUE') } = $hr->{ _dbx('IP') };
-			$value =
-			  $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
-		}
-		$class =
-		  $stab->b_dropdown( $opts, $hr, 'DNS_CLASS', 'DNS_RECORD_ID', 1 );
-
-		$opts->{-class} = 'dnstype';
-		$type = $stab->b_dropdown( $opts, $hr, 'DNS_TYPE', 'DNS_RECORD_ID', 1 );
-		delete( $opts->{-class} );
 	}
 
-	my $excess = "";
-	if ($showexcess) {
-		if ( defined($hr) ) {
-			$excess .= $cgi->checkbox(
+	if ($hr->{ _dbx('DEVICE_ID') }) {
+		if($hr->{_dbx('DNS_TYPE')} eq 'PTR') {
+			my $link = "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
+			$value = $cgi->a( { -href => $link }, $value );
+		} elsif ( $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
+			$ttlonly = 1;
+			my $link = "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
+			$name = $cgi->a( { -href => $link }, $name );
+		}
+	}
+
+	my $args      = { '-class' => $cssclass };
+	my $enablebox = "";
+	my $ptrbox    = "";
+	my $hidden    = "";
+	my $excess    = "";
+
+	if ($canedit) {
+		$opts->{-default} = 'Y';
+		if ($showexcess) {
+			if ( defined($hr) && $hr->{ _dbx('DNS_RECORD_ID') } ) {
+				$excess .= $cgi->checkbox(
+					{
+						-name  => "Del_" . $hr->{ _dbx('DNS_RECORD_ID') },
+						-label => 'Delete',
+					}
+				);
+			} else {
+				$cssclass = "dnsadd";
+				$excess .= "(Add)";
+			}
+		}
+		if ( $ttlonly && defined($hr) ) {
+			$excess .= $cgi->hidden(
 				{
-					-name  => "Del_" . $hr->{ _dbx('DNS_RECORD_ID') },
-					-label => 'Delete',
+					-name  => "ttlonly_" . $hr->{ _dbx('DNS_RECORD_ID') },
+					-value => 'ttlonly'
 				}
 			);
-		} else {
-			$cssclass = "dnsadd";
-			$excess .= "(Add)";
 		}
-	}
-	if ( $ttlonly && defined($hr) ) {
-		$excess .= $cgi->hidden(
-			{
-				-name  => "ttlonly_" . $hr->{ _dbx('DNS_RECORD_ID') },
-				-value => 'ttlonly'
-			}
-		);
-	}
 
-	my $hidden = "";
-	if ($hr) {
-		$hidden = $cgi->hidden(
-			{
-				-name  => "DNS_RECORD_ID_" . $hr->{ _dbx('DNS_RECORD_ID') },
-				-value => $hr->{ _dbx('DNS_RECORD_ID') }
-			}
-		);
-	}
+		if ( $hr && $hr->{ _dbx('DNS_RECORD_ID') } ) {
+			$hidden = $cgi->hidden(
+				{
+					-name  => "DNS_RECORD_ID_" . $hr->{ _dbx('DNS_RECORD_ID') },
+					-value => $hr->{ _dbx('DNS_RECORD_ID') }
+				}
+			);
+		}
 
-	$opts->{-default} = 'Y';
-	my $enablebox =
-	  $stab->build_checkbox( $opts, $hr, "", "IS_ENABLED", 'DNS_RECORD_ID' );
-	delete( $opts->{-default} );
+		$enablebox =
+		  $stab->build_checkbox( $opts, $hr, "", "IS_ENABLED",
+			'DNS_RECORD_ID' );
+		delete( $opts->{-default} );
 
-	my $ptrbox = "";
-	if ( $hr && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
-		$opts->{-class} = "ptrbox";
-		$ptrbox =
-		  $stab->build_checkbox( $opts,
-			$hr, "", "SHOULD_GENERATE_PTR", 'DNS_RECORD_ID' );
-		delete( $opts->{-class} );
-	}
+		$ptrbox = "";
+		if ( $hr && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
+			$opts->{-class} = "ptrbox";
+			$ptrbox =
+			  $stab->build_checkbox( $opts,
+				$hr, "", "SHOULD_GENERATE_PTR", 'DNS_RECORD_ID' );
+			delete( $opts->{-class} );
+		}
 
-	# for SRV records, it iss necessary to prepend the
-	# protocol and service name to the name
-	if ( $hr && $hr->{ _dbx('DNS_TYPE') } eq 'SRV' ) {
-		$name =
-		  $stab->b_dropdown( $opts, $hr, 'DNS_SRV_SERVICE', 'DNS_RECORD_ID', 1 )
-		  . $stab->b_nondbdropdown( $opts, $hr, 'DNS_SRV_PROTOCOL',
-			'DNS_RECORD_ID' )
-		  . $name;
+		# for SRV records, it iss necessary to prepend the
+		# protocol and service name to the name
+		if ( $hr && $hr->{ _dbx('DNS_TYPE') } eq 'SRV' ) {
+			$name =
+			  $stab->b_dropdown( $opts, $hr, 'DNS_SRV_SERVICE',
+				'DNS_RECORD_ID', 1 )
+			  . $stab->b_nondbdropdown( $opts, $hr, 'DNS_SRV_PROTOCOL',
+				'DNS_RECORD_ID' )
+			  . $name;
 
-		$opts->{-class} = 'srvnum';
-		$value =
-		    $stab->b_textfield( $opts, $hr, 'DNS_PRIORITY',   'DNS_RECORD_ID' )
-		  . $stab->b_textfield( $opts, $hr, 'DNS_SRV_WEIGHT', 'DNS_RECORD_ID' )
-		  . $stab->b_textfield( $opts, $hr, 'DNS_SRV_PORT',   'DNS_RECORD_ID' )
-		  . $value;
-		delete( $opts->{-class} );
-	} elsif ( $hr && $hr->{ _dbx('DNS_TYPE') } eq 'MX' ) {
-		$opts->{-class} = 'srvnum';
-		$value =
-		    $stab->b_textfield( $opts, $hr, 'DNS_PRIORITY', 'DNS_RECORD_ID' )
-		  . $value;
-		delete( $opts->{-class} );
-	}
+			$opts->{-class} = 'srvnum';
+			$value =
+			  $stab->b_textfield( $opts, $hr, 'DNS_PRIORITY', 'DNS_RECORD_ID' )
+			  . $stab->b_textfield( $opts, $hr, 'DNS_SRV_WEIGHT',
+				'DNS_RECORD_ID' )
+			  . $stab->b_textfield( $opts, $hr, 'DNS_SRV_PORT',
+				'DNS_RECORD_ID' )
+			  . $value;
+			delete( $opts->{-class} );
+		} elsif ( $hr && $hr->{ _dbx('DNS_TYPE') } eq 'MX' ) {
+			$opts->{-class} = 'srvnum';
+			$value =
+			  $stab->b_textfield( $opts, $hr, 'DNS_PRIORITY', 'DNS_RECORD_ID' )
+			  . $value;
+			delete( $opts->{-class} );
+		}
 
-	$stab->textfield_sizing(1);
-	my $args = { '-class' => $cssclass };
-	if ($hr) {
-		$args->{'-id'} = $hr->{ _dbx('DNS_RECORD_ID') };
-	} else {
-		$args->{'-id'} = "0";
+		$stab->textfield_sizing(1);
+		if ($hr) {
+			$args->{'-id'} = $hr->{ _dbx('DNS_RECORD_ID') };
+		} else {
+			$args->{'-id'} = "0";
+		}
+	} else {	# uneditable.
+		$ttl = "";
 	}
 	return $cgi->Tr(
 		$args,
@@ -425,187 +434,22 @@ sub build_fwd_zone_Tr {
 	);
 }
 
-sub zone_fwd_records {
-	my ( $stab, $dnsdomainid ) = @_;
-
-	my $cgi = $stab->cgi || die "Could not create cgi";
-
-	my $q = qq{
-		select	dns.*,
-				nb.netblock_id,
-				net_manip.inet_dbtop(nb.ip_address) as IP,
-				ni.device_id
-		 from 	dns_record dns
-				inner join val_dns_type vdt on
-					dns.dns_type = vdt.dns_type
-				left join netblock nb
-					on nb.netblock_id = dns.netblock_id
-				left join network_interface ni
-					on ni.netblock_id = nb.netblock_id
-		where	vdt.id_type in ('ID', 'NON-ID')
-		  and	
-				(	
-					dns.dns_name is not NULL
-				or
-		  			dns.reference_dns_record_id is not null
-				)
-		  and	dns.dns_domain_id = ?
-		order by dns.dns_name
-	};
-	my $sth = $stab->prepare($q) || return $stab->return_db_err();
-	$sth->execute($dnsdomainid) || return $stab->return_db_err($sth);
-
-	while ( my $hr = $sth->fetchrow_hashref ) {
-		print build_fwd_zone_Tr( $stab, $hr );
-	}
-	$sth->finish;
-}
-
-sub zone_rvs_records {
-	my ( $stab, $dnsdomainid, $domain ) = @_;
-
-	my $cgi = $stab->cgi || die "Could not create cgi";
-
-	my $q = qq{
-		select  host(nb.ip_address) as ip,
-			dns.dns_name,
-			dom.soa_name,
-			dns.dns_ttl,
-			network(nb.ip_address) as ip_base,
-			dns.is_enabled,
-			root.netblock_id as root_netblock_id,
-			nb.netblock_id as netblock_id
-		  from  netblock nb
-				inner join dns_record dns
-					on nb.netblock_id = dns.netblock_id
-				inner join dns_domain dom
-					on dns.dns_domain_id =
-						dom.dns_domain_id,
-			netblock root
-				inner join dns_record rootd
-					on rootd.netblock_id = root.netblock_id
-					and rootd.dns_type =
-						'REVERSE_ZONE_BLOCK_PTR'
-		 where
-				dns.should_generate_ptr = 'Y'
-		   and  family(root.ip_address) = family(nb.ip_address)
-		   and  dns.dns_class = 'IN'
-			and ( ( dns.dns_type = 'A' or dns.dns_type = 'AAAA')
-					AND     set_masklen(nb.ip_address, masklen(root.ip_address))
-							<<= root.ip_address
-				)
-		   and  rootd.dns_domain_id = ?
-		order by nb.ip_address
-	};
-	my $sth = $stab->prepare($q) || return $stab->return_db_err();
-	$sth->execute($dnsdomainid) || return $stab->return_db_err($sth);
-
-	$stab->textfield_sizing(0);
-	while ( my $hr = $sth->fetchrow_hashref ) {
-		my $ip    = $hr->{ _dbx('IP') };
-		my $ipobj = new Net::IP($ip);
-		my $rec   = $ipobj->reverse_ip();
-		if ( $rec =~ /^$domain\.?$/ ) {
-			$rec = 0;
-		} else {
-			$rec =~ s/\.$domain\.?$//i;
-		}
-
-		# only print the shortname if it is actually set.
-		my $name = (
-			defined( ( $hr->{ _dbx('DNS_NAME') } ) )
-			? $hr->{ _dbx('DNS_NAME') } . "."
-			: ""
-		) . $hr->{ _dbx('SOA_NAME') } . ".";
-
-		my $ttl   = "";
-		my $class = 'IN';
-		my $type  = 'PTR';
-		my $value = $stab->b_textfield( $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
-		if (   $hr
-			&& $hr->{ _dbx('DNS_TYPE') }
-			&& $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ )
-		{
-			$value = $stab->b_textfield( $hr, 'IP', 'DNS_RECORD_ID' );
-		}
-
-		if ( $hr->{ _dbx('DEVICE_ID') } ) {
-			my $link =
-			  "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
-			$name = $cgi->a( { -href => $link }, $name );
-		}
-
-		#
-		# at this point, we don't want direct manipulation of PTR records.
-		#
-		my $button = "";
-		if (   0
-			&& defined($hr)
-			&& defined( $hr->{ _dbx('DNS_RECORD_ID') } ) )
-		{
-
-			# [XXX] these aren't buttons now, but rather
-			# a delete check box...
-			$button = $cgi->submit(
-				{
-					-name  => "Update_" . $hr->{ _dbx('DNS_RECORD_ID') },
-					-value => 'Update'
-				}
-			);
-			$button .= $cgi->submit(
-				{
-					-name  => "Del_" . $hr->{ _dbx('DNS_RECORD_ID') },
-					-value => 'Delete'
-				}
-			);
-		}
-
-		my $hidden = "";
-		if ( $hr && $hr->{ _dbx('DNS_RECORD_ID') } )
-		{    # should not need the && case?
-			$hidden = $cgi->hidden(
-				{
-					-name  => "DNS_RECORD_ID_" . $hr->{ _dbx('DNS_RECORD_ID') },
-					-value => $hr->{ _dbx('DNS_RECORD_ID') }
-				}
-			);
-		}
-
-		# this is disabled at present since disabling from the forward
-		# record likely makes more sense.
-		#my $enablebox = $stab->build_checkbox({-default=>'Y'},
-		#	$hr, "", "IS_ENABLED", 'DNS_RECORD_ID');
-		my $enablebox = "";
-
-		print $cgi->Tr(
-			$cgi->td(
-				[ $enablebox, $rec, $ttl, $class, $type, $name, $button, ]
-			),
-		);
-	}
-	$stab->textfield_sizing(1);
-	$sth->finish;
-}
-
-#
-# Its possible to dump a whole zone or just the records in a zone.  This
-# depends on if the last argument is passed
-#
 sub dump_zone {
 	my ( $stab, $dnsdomainid, $dnsrecid ) = @_;
 	my $cgi = $stab->cgi || die "Could not create cgi";
 
 	my @limit;
 
-	if(!$dnsdomainid) {
-		if(!$dnsrecid) {
+	if ( !$dnsdomainid ) {
+		if ( !$dnsrecid ) {
 			return $stab->error_return("Must specify a domain to examine");
 		}
 		my $dns = $stab->get_dns_record_from_id($dnsrecid);
-		if(!$dns) {
-			return $stab->error_return("Must specify a valid record to examine");
+		if ( !$dns ) {
+			return $stab->error_return(
+				"Must specify a valid record to examine");
 		}
-		$dnsdomainid = $dns->{ _dbx('DNS_DOMAIN_ID')};
+		$dnsdomainid = $dns->{ _dbx('DNS_DOMAIN_ID') };
 	}
 
 	if ($dnsdomainid) {
@@ -741,21 +585,12 @@ sub dump_zone {
 		)
 	);
 
-	print build_fwd_zone_Tr($stab);
-	zone_dns_records(
+	# print build_dns_rec_Tr($stab);
+	# this prints
+	build_dns_zone(
 		$stab,
 		$hr->{ _dbx('DNS_DOMAIN_ID') },
-		$hr->{ _dbx('SOA_NAME') }
-	);
-	zone_fwd_records(
-		$stab,
-		$hr->{ _dbx('DNS_DOMAIN_ID') },
-		$hr->{ _dbx('SOA_NAME') }
-	);
-	zone_rvs_records(
-		$stab,
-		$hr->{ _dbx('DNS_DOMAIN_ID') },
-		$hr->{ _dbx('SOA_NAME') }
+		$hr->{ _dbx('SOA_NAME') }, $dnsrecid,
 	);
 
 	print $cgi->end_table;
