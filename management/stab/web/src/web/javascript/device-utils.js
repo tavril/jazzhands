@@ -677,7 +677,7 @@ function toggleon_text(but) {
 	// var d = $(but).previousSibling;
 	// $(but).filter(":parent").filter("input:disabled").removeAttr('disabled');
 
-	$(but).prev(":input").removeAttr('disabled');
+	$(but).closest("td").find(".off").removeClass('off');
 	$(but).addClass('irrelevant');
 
 }

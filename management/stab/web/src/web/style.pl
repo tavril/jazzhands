@@ -390,6 +390,11 @@ input.srvnum {
 	visibility: hidden;
 }
 
+.irrelevant {
+	display: none;
+	visibility: hidden;
+}
+
 div.chosen-workaround {
 	width: 100% !important;
 }
@@ -455,6 +460,8 @@ table.interfacetable tr {
 
 table.interfacetable td {
 	vertical-align: top;
+	margin: auto;
+	text-align: center;
 }
 
 #verifybox li {
@@ -516,6 +523,12 @@ table.attest tbody tr.odd td {
 	/*pointer-events: none;*/
 	opacity: .9;
 	text-decoration: line-through;
+}
+
+.off  {
+	pointer-events: none;
+	opacity: .9;
+	background-color: lightgrey;
 }
 
 div.description {

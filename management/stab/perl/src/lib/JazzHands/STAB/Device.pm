@@ -1878,7 +1878,7 @@ sub build_value_dns_table($$) {
 			  )
 			  . $cgi->img(
 				{
-					-src   => "../stabcons/e.gif",
+					-src   => "../stabcons/e.png",
 					-alt   => "Edit",
 					-title => 'Edit',
 					-class => 'intdnsedit',
@@ -1988,7 +1988,7 @@ sub build_collapsed_if_box {
 			  )
 			  . $cgi->img(
 				{
-					-src   => "../stabcons/e.gif",
+					-src   => "../stabcons/e.png",
 					-alt   => "Edit",
 					-title => 'Edit',
 					-class => 'intdnsedit',

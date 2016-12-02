@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013 Todd M. Kover, Matthew Ragan
+# Copyright (c) 2013-2016 Todd M. Kover, Matthew Ragan
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -797,7 +797,7 @@ sub error_return {
 	}
 
 	my $dbh = $self->dbh;
-	if($dbh) {
+	if ($dbh) {
 		$dbh->rollback;
 		$dbh->ping;
 		$dbh->disconnect;
@@ -821,7 +821,7 @@ sub msg_return {
 	print $cgi->redirect($url);
 
 	my $dbh = $self->dbh;
-	if($dbh) {
+	if ($dbh) {
 		$dbh->rollback;
 		$dbh->ping;
 		$dbh->disconnect;
@@ -2084,9 +2084,15 @@ sub b_textfield {
 					-id    => $buttonid,
 					-class => 'stabeditbutton',
 					-href  => '#',
-					-style => 'border: 1px solid; font-size: 50%'
 				},
-				"EDIT"
+				$cgi->img(
+					{
+						-src   => "../stabcons/e.png",
+						-alt   => "Edit",
+						-title => 'Edit',
+						-class => 'stabeditbutton',
+					}
+				)
 			);
 		}
 		$disabled = 'true';
@@ -2101,9 +2107,15 @@ sub b_textfield {
 					-id    => $buttonid,
 					-class => 'stabeditbutton',
 					-href  => '#',
-					-style => 'border: 1px solid; font-size: 50%'
 				},
-				"EDIT"
+				$cgi->img(
+					{
+						-src   => "../stabcons/e.png",
+						-alt   => "Edit",
+						-title => 'Edit',
+						-class => 'stabeditbutton',
+					}
+				)
 			);
 		}
 		$disabled = 'true';
@@ -2112,13 +2124,14 @@ sub b_textfield {
 	$disabled = 1 if ( $params->{-disabled} );
 
 	my $args = {};
-	$args->{'-disabled'} = 'true' if ($disabled);
 	$args->{'-name'}     = $webname;
 	$args->{'-id'}       = $webname;
 	$args->{'-class'}    = $class if ( defined($class) );
 	$args->{'-default'}  = $allf if ( defined($allf) );
 	$args->{'-size'}     = $size if ($size);
 	$args->{'-maxlength'} = 2048;    ## [XXX] probably need to rethink!
+
+	$args->{'-class'}    .= " off" if($disabled);
 
 	my $optional = "";
 	if ( $params->{-mark} ) {
