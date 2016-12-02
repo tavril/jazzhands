@@ -96,6 +96,15 @@ sub do_dns_ajax {
 		my $r = $stab->build_dns_drop( undef, $type );
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
+	} elsif ( $what eq 'dnsaddrow' ) {
+		my $types = $stab->build_dns_type_drop();
+		my $classes = $stab->build_dns_classes_drop();
+		my $r = {
+			'classes' => $classes,
+			'types' => $types,
+		};
+		my $j = JSON::PP->new->utf8;
+		print $j->encode($r);
 	} else {
 
 		# catch-all error condition

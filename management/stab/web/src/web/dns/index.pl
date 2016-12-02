@@ -285,49 +285,52 @@ sub build_dns_rec_Tr {
 		$canedit  = 0;
 		$cssclass = 'dnsinfo';
 	} else {
-		if($hr->{ _dbx('REF_RECORD_ID') }) {
+		if ( $hr->{ _dbx('REF_RECORD_ID') } ) {
 			$name = $hr->{ _dbx('DNS_NAME') };
 		} else {
 			$name =
-		  	$stab->b_textfield( $opts, $hr, 'DNS_NAME', 'DNS_RECORD_ID' );
+			  $stab->b_textfield( $opts, $hr, 'DNS_NAME', 'DNS_RECORD_ID' );
 		}
 		$class =
 		  $stab->b_dropdown( $opts, $hr, 'DNS_CLASS', 'DNS_RECORD_ID', 1 );
 
 		$opts->{-class} = 'dnstype';
-		$type =
-		  $stab->b_dropdown( $opts, $hr, 'DNS_TYPE', 'DNS_RECORD_ID', 1 );
+		$type = $stab->b_dropdown( $opts, $hr, 'DNS_TYPE', 'DNS_RECORD_ID', 1 );
 		delete( $opts->{-class} );
 
 		if ( defined($hr) && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
+
 			# [XXX] hack hack hack, needs to be fixed right so it doesn't
 			# show up as a value, but the network.  I think.
 			$hr->{ _dbx('DNS_VALUE') } = $hr->{ _dbx('IP') };
 		}
 	}
 
-	if($hr->{ _dbx('DNS_VALUE_RECORD_ID') }) {
-		if ( ! $hr->{ _dbx('NETBLOCK_ID') }) {
-			my $link = "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
-			$value = $cgi->a( { -href => $link }, $hr->{_dbx('DNS_VALUE')});
+	if ( $hr->{ _dbx('DNS_VALUE_RECORD_ID') } ) {
+		if ( !$hr->{ _dbx('NETBLOCK_ID') } ) {
+			my $link =
+			  "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
+			$value = $cgi->a( { -href => $link }, $hr->{ _dbx('DNS_VALUE') } );
 		} else {
-			my $link = "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
-			$value = $cgi->a( { -href => $link }, $hr->{_dbx('IP')} );
+			my $link =
+			  "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
+			$value = $cgi->a( { -href => $link }, $hr->{ _dbx('IP') } );
 		}
 	} else {
 		$opts->{-textfield_width} = 40;
-		$value =
-	  	$stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
+		$value = $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
 		delete( $opts->{-textfield_width} );
 	}
 
-	if ($hr->{ _dbx('DEVICE_ID') }) {
-		if($hr->{_dbx('DNS_TYPE')} eq 'PTR') {
-			my $link = "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
+	if ( $hr->{ _dbx('DEVICE_ID') } ) {
+		if ( $hr->{ _dbx('DNS_TYPE') } eq 'PTR' ) {
+			my $link =
+			  "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
 			$value = $cgi->a( { -href => $link }, $value );
 		} elsif ( $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
 			$ttlonly = 1;
-			my $link = "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
+			my $link =
+			  "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
 			$name = $cgi->a( { -href => $link }, $name );
 		}
 	}
@@ -418,7 +421,7 @@ sub build_dns_rec_Tr {
 		} else {
 			$args->{'-id'} = "0";
 		}
-	} else {	# uneditable.
+	} else {    # uneditable.
 		$ttl = "";
 	}
 	return $cgi->Tr(
@@ -573,7 +576,7 @@ sub dump_zone {
 	# second form, second table
 	#
 	print $cgi->start_form( { -action => "update_dns.pl" } );
-	print $cgi->start_table;
+	print $cgi->start_table({-class => 'dnstable'});
 	print $cgi->hidden(
 		-name    => 'DNS_DOMAIN_ID',
 		-default => $hr->{ _dbx('DNS_DOMAIN_ID') }
@@ -583,6 +586,24 @@ sub dump_zone {
 		$cgi->th(
 			[ 'Enable', 'Record', 'TTL', 'Class', 'Type', 'Value', 'PTR' ]
 		)
+	);
+
+	print $cgi->Tr(
+		$cgi->td(
+			{ -colspan => '7' },
+
+			$cgi->a(
+				{ -href => '#', -class => 'adddnsrec' },
+				$cgi->img(
+					{
+						-src   => '../stabcons/plus.png',
+						-alt   => 'Add',
+						-title => 'Add',
+						-class => 'plusbutton'
+					}
+				)
+			  )
+		),
 	);
 
 	# print build_dns_rec_Tr($stab);

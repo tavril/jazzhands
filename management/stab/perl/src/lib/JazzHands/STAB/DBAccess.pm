@@ -2192,6 +2192,64 @@ sub build_dns_drop {
 }
 
 #
+# Builds a list of dns dns types for pushing into jquery
+#
+sub build_dns_type_drop {
+	my $self = shift @_;
+	my $type = shift @_;
+
+	my $sth = $self->prepare(
+		qq{
+		select  dns_type, description
+		  from  val_dns_type
+		WHERE	id_type IN ('ID','NON-ID')
+	}
+	) || die;
+	$sth->execute;
+
+	my @rv;
+	push(@rv, {
+			value => '__unknown__',
+			text => 'Please Choose',
+			selected => 'true',
+	});
+	while ( my ( $id, $desc ) = $sth->fetchrow_array ) {
+		my $r = {};
+		$r->{$id}->{'value'} = $id;
+		$r->{'text'}  = $desc || $id;
+		push(@rv, $r);
+	}
+	$sth->finish;
+	\@rv;
+}
+
+sub build_dns_classes_drop {
+	my $self = shift @_;
+
+	my $sth = $self->prepare(
+		qq{
+		select  dns_type, description
+		  from  val_dns_class
+	}
+	) || die;
+	$sth->execute;
+	my @rv;
+	while ( my ( $id, $desc ) = $sth->fetchrow_array ) {
+		my $r = {};
+		$r->{'value'} = $id;
+		$r->{'text'}  = $desc || $id;
+		if ($id eq 'IN') {
+			$r->{selected} = 'true';
+		}
+		push(@rv, $r);
+	}
+	$sth->finish;
+	\@rv;
+}
+
+
+
+#
 # check to see if account is in another's managment chain
 #
 sub check_management_chain($$;$) {

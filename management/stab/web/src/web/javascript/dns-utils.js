@@ -303,6 +303,79 @@ function change_dns_record(obj) {
 	}
 }
 
+
+function add_new_dns_row(button, resp) {
+	var offset = 1;
+	while ( $("input#new_DNS_NAME_"+offset).length ) {
+		offset += 0;
+	}
+
+	var types = $("<select />", {
+		name: 'new_DNS_TYPE_'+offset,
+		id: 'new_DNS_TYPE_'+offset,
+	});
+	for(var field in resp['types']) {
+		var o = $("<option/>",resp['types'][field]);
+		$(types).append(o);
+	}
+
+	var classes = $("<select />", {
+		name: 'new_DNS_CLASS_'+offset,
+		id: 'new_DNS_CLASS_'+offset,
+	});
+	for(var field in resp['classes']) {
+		var o = $("<option/>",resp['classes'][field]);
+		$(classes).append(o);
+	}
+
+	$(button).closest('tr').after(
+		$("<tr/>").append(
+			$("<td>").append(
+				$("<input/>", {
+					type: 'checkbox',
+					name: 'new_IS_ENABLED_'+offset,
+					checked: true,
+				})
+			),
+			$("<td>").append(
+				$("<input/>", {
+					type: 'text',
+					name: 'new_DNS_NAME_'+offset,
+					id: 'new_DNS_NAME_'+offset,
+				})
+			),
+			$("<td>").append(
+				$("<input/>", {
+					type: 'text',
+					name: 'new_DNS_TTL'+offset,
+					id: 'new_DNS_TTL'+offset,
+					class: 'off',
+				}),
+				$("<a/>", {
+					href: '#',
+					class: 'stabeditbutton'
+				}).append(
+					$("<img/>", {
+						class: 'stabeditbutton',
+						src: '../stabcons/e.png',
+						title: 'Edit'
+					})
+			)),
+			$("<td>").append(classes),
+			$("<td>").append(types),
+			$("<td>").append(
+				$("<input/>", {
+					type: 'text',
+					name: 'new_DNS_VALUE_'+offset,
+					id: 'new_DNS_VALUE_'+offset,
+				})
+			),
+			$("<td>").append('ptr')
+		)
+	);
+
+}
+
 $(document).ready(function(){
 	$("select.dnstype").change(
 		function(event) {
@@ -334,4 +407,15 @@ $(document).ready(function(){
 	$("table").on('click', ".stabeditbutton", function(event) {
 		toggleon_text(event.target);
 	});
+
+	// this causes a new dns record button to show up wher needed.
+	$("table.dnstable").on('click', 'a.adddnsrec', function(event) {
+
+		url = 'json=yes;what=dnsaddrow';
+		$.getJSON('dns-ajax.pl', url, function (resp) {
+			add_new_dns_row(event.target, resp);
+		});
+		return(0);
+	});
+
 });
