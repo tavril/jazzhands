@@ -408,7 +408,7 @@ $(document).ready(function(){
 		toggleon_text(event.target);
 	});
 
-	// this causes a new dns record button to show up wher needed.
+	// this causes a new dns record button to show up where needed.
 	$("table.dnstable").on('click', 'a.adddnsrec', function(event) {
 
 		url = 'json=yes;what=dnsaddrow';
