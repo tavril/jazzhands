@@ -17,13 +17,8 @@
 
 
 function toggleon_text(but) {
-	// var p = $(but).prev(":input").removeAttr('disabled');
-	// var d = $(but).previousSibling;
-	// $(but).filter(":parent").filter("input:disabled").removeAttr('disabled');
-
-	$(but).prev(":input").removeAttr('disabled');
+	$(but).parent('a').prev(":input").toggleClass('off');
 	$(but).addClass('irrelevant');
-	
 }
 
 //

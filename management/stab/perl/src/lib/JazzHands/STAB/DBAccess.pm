@@ -2228,7 +2228,7 @@ sub build_dns_classes_drop {
 
 	my $sth = $self->prepare(
 		qq{
-		select  dns_type, description
+		select  dns_class, description
 		  from  val_dns_class
 	}
 	) || die;

@@ -46,21 +46,21 @@ use 5.008007;
 use strict;
 use warnings;
 
-use JazzHands::STAB::DBAccess;
-use JazzHands::STAB::Device;
-use JazzHands::STAB::Rack;
-use JazzHands::DBI;
-use JazzHands::Common qw(:all);
-use Net::IP;
 use Storable qw(dclone);
-
 use CGI;    #qw(-no_xhtml);
-
 # use CGI::Pretty;
 use URI;
 use Carp qw(cluck);
 use Data::Dumper;
 use NetAddr::IP;
+use Net::IP;
+
+# Try to keep these later.
+use JazzHands::STAB::DBAccess;
+use JazzHands::STAB::Device;
+use JazzHands::STAB::Rack;
+use JazzHands::DBI;
+use JazzHands::Common qw(:all);
 
 our @ISA = qw(
   JazzHands::Mgmt
@@ -2048,7 +2048,6 @@ sub b_textfield {
 		$size = 20 if ( $field eq 'SNMP_COMMSTR' );
 		$size = 16 if ( $field =~ /_?IP$/ );
 		$size = 13 if ( $field eq 'MAC_ADDR' );
-		$size = 40 if ( $field eq 'DNS_NAME' );
 		$size = 10 if ( $field eq 'RACK_UNITS' );
 		$size = 20 if ( $field eq 'INTERFACE_NAME' );
 		$size = 10 if ( $field eq 'POWER_INTERFACE_PORT' );
@@ -2056,7 +2055,6 @@ sub b_textfield {
 		$size = 10 if ( $field eq 'MAX_AMPERAGE' );
 		$size = 10 if ( $field eq 'P1_PORT_NAME' );
 		$size = 10 if ( $field eq 'P2_PORT_NAME' );
-		$size = 10 if ( $field eq 'DNS_TTL' );
 		$size = 15 if ( $field eq 'RD_STRING' );
 		$size = 15 if ( $field eq 'WR_STRING' );
 		$size = 15 if ( $field eq 'LOCAL_PO' );
@@ -2095,7 +2093,7 @@ sub b_textfield {
 						-src   => "../stabcons/e.png",
 						-alt   => "Edit",
 						-title => 'Edit',
-						-class => 'stabeditbutton',
+						# -class => 'stabeditbutton',
 					}
 				)
 			);
@@ -2136,7 +2134,13 @@ sub b_textfield {
 	$args->{'-size'}    = $size if ($size);
 	$args->{'-maxlength'} = 2048;    ## [XXX] probably need to rethink!
 
-	$args->{'-class'} .= " off" if ($disabled);
+	if($disabled) {
+		if($args->{-class}) {
+			$args->{'-class'} .= " off";
+		} else {
+			$args->{'-class'} = "off";
+		}
+	}
 
 	my $optional = "";
 	if ( $params->{-mark} ) {

@@ -258,8 +258,10 @@ sub build_dns_rec_Tr {
 		$opts->{-suffix} = "_0";
 	}
 
+	$opts->{-class} = 'dnsttl';
 	my $ttl =
 	  $stab->b_offalwaystextfield( $opts, $hr, 'DNS_TTL', 'DNS_RECORD_ID' );
+	delete $opts->{-class};
 	$stab->textfield_sizing(0);
 
 	my $value = "";
@@ -288,8 +290,10 @@ sub build_dns_rec_Tr {
 		if ( $hr->{ _dbx('REF_RECORD_ID') } ) {
 			$name = $hr->{ _dbx('DNS_NAME') };
 		} else {
+			$opts->{-class} = 'dnsname';
 			$name =
 			  $stab->b_textfield( $opts, $hr, 'DNS_NAME', 'DNS_RECORD_ID' );
+			delete $opts->{-class};
 		}
 		$class =
 		  $stab->b_dropdown( $opts, $hr, 'DNS_CLASS', 'DNS_RECORD_ID', 1 );

@@ -669,7 +669,7 @@ function verify_device_submission(form) {
 	return true;
 }
 
-// jquery version
+// jquery version - needs to merge in
 function toggleon_text(but) {
 	// var p = $(but).prev(":input").removeAttr('disabled');
 	// var d = $(but).previousSibling;

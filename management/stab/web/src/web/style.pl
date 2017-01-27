@@ -390,11 +390,6 @@ input.srvnum {
 	visibility: hidden;
 }
 
-.irrelevant {
-	display: none;
-	visibility: hidden;
-}
-
 div.chosen-workaround {
 	width: 100% !important;
 }
@@ -427,6 +422,14 @@ tr.dnsadd {
 
 tr.intadd {
 	background: grey;
+}
+
+table.dnstable input.dnsttl {
+	width: 6em;
+}
+
+table.dnstable input.dnsname {
+	width: 15em;
 }
 
 /* netblock management (pre rewrite */
