@@ -428,8 +428,12 @@ table.dnstable input.dnsttl {
 	width: 6em;
 }
 
+table.dnstable input.dnsvalue {
+	width: 20em;
+}
+
 table.dnstable input.dnsname {
-	width: 15em;
+	width: 10em;
 }
 
 /* netblock management (pre rewrite */
@@ -633,6 +637,11 @@ table.reporting > tbody td {
 	border-color: grey;
 }
 
+
+div.centeredlist {
+	text-align: center;
+	margin: auto;
+}
 
 END
 	undef $stab;

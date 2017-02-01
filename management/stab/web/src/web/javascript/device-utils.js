@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- * Copyright (c) 2014-2016, Todd M. Kover
+ * Copyright (c) 2014-2017, Todd M. Kover
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,21 +41,6 @@
 //
 
 var request = null;
-
-function swaparrows(id, state) {
-	img = document.getElementById( id );
-	if(img == null) {
-		return;
-	}
-
-	if(state == 'dance') {
-		img.src = img.src.replace(/stabcons\/.*$/gi, "stabcons/progress.gif");
-	} else if(state == 'down') {
-		img.src = img.src.replace(/stabcons\/.*$/gi, "stabcons/collapse.jpg");
-	} else if(state == 'up') {
-		img.src = img.src.replace(/stabcons\/.*$/gi, "stabcons/expand.jpg");
-	}
-}
 
 function forcedevtabload(tabname, devid) {
 	if(devid == null) {
@@ -1111,48 +1096,6 @@ function add_License(thing, parent_tr_id, devid)
 	}
 }
 
-//
-// adds a row before the row that contains 'button' based on the domain list
-// in resp.  The rest of resp can be ignored.
-//
-function add_dns_ref_record_row(button, dnsrecid, resp) 
-{
-	var offset = 0;
-	while ( $("input#dnsref_DNS_NAME_dnsref_"+dnsrecid+"_new_"+offset).length ) {
-		offset += 1;
-	}
-	var recpart = "dnsref_"+dnsrecid+"_new_"+offset;
-	var s = $("<select />", {
-		name: 'dnsref_DNS_DOMAIN_ID_'+recpart,
-		id: 'dnsref_DNS_DOMAIN_ID_'+recpart,
-	});
-	for(var field in resp['domains']['options']) {
-		var o = $("<option/>",resp['domains']['options'][field]);
-		$(s).append(o);
-	}
-
-	// this should possibly be pulled from json. maybe.
-	// its redundant with backend code.
-	var drop = $("<select/>", {
-		name: 'dnsref_DNS_TYPE_'+recpart,
-		id: 'dnsref_DNS_TYPE_'+recpart
-	}).append(
-		$("<option/>", { value: 'CNAME', text: 'CNAME'}),
-		$("<option/>", { value: 'A', text: 'A'}),
-		$("<option/>", { value: 'AAAA', text:'AAAA'})
-	);
-
-	$(button).closest('tr').before(
-		$("<tr/>").append(
-			$("<td>").append(drop),
-			$("<td>").append(
-				$("<input/>", {
-					id: 'dnsref_DNS_NAME_'+recpart,
-					name: 'dnsref_DNS_NAME_'+recpart,
-				})).append(s)
-		)
-	);
-}
 
 //
 // replaces the name.domain link with a textbox and drop down for dns
@@ -1198,65 +1141,6 @@ $(document).ready(function(){
 		}
 	});
 
-	// This enables a CNAME/A record row for editing.
-	$("div.maindiv").on('click', 'img.intdnsedit', function(event) {
-		var span = $(this).closest("span");
-		var url = "";
-		var dnsroot;
-		if ( $(span).hasClass('interfacedns') ) {
-			// This case is for the network interface, in which case the
-			// various ids become DNS_wahtever_netintid
-			var id = $(this).closest('tr').find('.recordid').val();
-			url = 'json=yes;type=service;what=interfacedns;NETWORK_INTERFACE_ID='+ id;
-		} else {
-			//
-			// This case covers a pointer to another dns record, which ends
-			// up with the name dnsref_DNS_whatever_dsnref_#_#
-			// where thef irst number is the dns record for the interface
-			// and the second is the is for this record that points to it.
-			//
+	create_dns_reference_jquery("div.maindiv");
 
-			var dr = $(this).closest('.dnsrefroot').children('.dnsrecordid').val();
-			var id = $(this).closest('.dnsvalroot').find('span.valdnsref').children('.dnsrecordid').val();
-			url = 'json=yes;type=service;what=dns;DNS_RECORD_ID='+ id;
-			url += ';REFERENCED_DNS_RECORD_ID='+dr;
-			dnsroot = $(this).closest('.dnsroot');
-		}
-		if( $(span).is("span") && id) {
-			$.getJSON('device-ajax.pl', url, function (resp) {
-					replace_int_dns_drop (span, resp);
-					// enables any fields that were off.
-					$(dnsroot).find('.off').removeClass('off');
-				}
-			);
-		} else {
-			alert("Nonsensical lookup of recordid");
-		}
-		return(0);
-	});
-
-	// This shows the CNAME/A record reference table.
-	$("div.maindiv").on('click', 'a.devdnsref', function(event) {
-		var td = $(this).closest("td");
-		var id = $(td).attr('id');
-		var divid = "dnsvalue_" + id;
-		var div = $(td).find('#'+divid);
-		if( $(div).length == 0) {
-			alert("Nonsensical lookup of value dns records");
-		} else {
-			$(div).toggleClass('irrelevant');
-		}
-		return(0);
-	});
-
-	// implements the add button on the device/ip network/dns tab 
-	$("div.maindiv").on('click', 'a.dnsaddref', function(event) {
-		var dr = $(this).closest('.dnsrefroot').children('.dnsrecordid').val();
-
-		url = 'json=yes;type=service;what=dns;DNS_RECORD_ID='+ dr;
-		$.getJSON('device-ajax.pl', url, function (resp) {
-			add_dns_ref_record_row(event.target, dr, resp);
-		});
-		return(0);
-	});
 });

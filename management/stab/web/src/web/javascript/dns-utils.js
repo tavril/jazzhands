@@ -103,6 +103,7 @@ function dns_debug_addns(button)
 	button.parentNode.appendChild(br);
 }
 
+
 //
 //  builds a drop down based on what was fetched from an ajax server.
 // Optionally takes a hash at the end that contains possible defaults
@@ -420,12 +421,13 @@ $(document).ready(function(){
 
 	// this causes a new dns record button to show up where needed.
 	$("table.dnstable").on('click', 'a.adddnsrec', function(event) {
-
 		url = 'json=yes;what=dnsaddrow';
 		$.getJSON('dns-ajax.pl', url, function (resp) {
 			add_new_dns_row(event.target, resp);
 		});
 		return(0);
 	});
+
+	create_dns_reference_jquery("table.dnstable");
 
 });

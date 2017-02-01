@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+
 # Copyright (c) 2013 Todd Kover
 # All rights reserved.
 #
@@ -35,6 +35,8 @@ sub do_dns_ajax {
 
 	my $mime = $stab->cgi_parse_param('MIME_TYPE') || 'text';
 	my $what = $stab->cgi_parse_param('what')      || 'none';
+	my $dnsrecid = $stab->cgi_parse_param('DNS_RECORD_ID');
+	my $dnsdomid = $stab->cgi_parse_param('DNS_DOMAIN_ID');
 
 	#
 	# passedin contains all the arguments that were passed to the original
@@ -97,19 +99,70 @@ sub do_dns_ajax {
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
 	} elsif ( $what eq 'dnsaddrow' ) {
-		my $types = $stab->build_dns_type_drop();
+		my $types   = $stab->build_dns_type_drop();
 		my $classes = $stab->build_dns_classes_drop();
-		my $r = {
+		my $r	= {
 			'classes' => $classes,
-			'types' => $types,
+			'types'   => $types,
 		};
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
+	} elsif ( $what eq 'dnsref' ) {
+		my $r   = { 
+			types => ['A','AAAA','CNAME'],
+			domains => $stab->build_dns_drop( $dnsdomid ),
+
+		};
+		my $sth = $stab->prepare(
+			qq{
+	 			select  dns.dns_record_id,
+		     			dns.dns_type,
+		     			dns.dns_name,
+					dns.dns_domain_id,
+		     			dom.soa_name
+	      			from  dns_record dns
+		     			left join dns_domain dom using (dns_domain_id)
+	     			where  dns.dns_value_record_id = ?
+	     			order by dns_domain_id, dns_name
+		}
+		);
+		$sth->execute($dnsrecid) || die $sth->errstr;
+		while ( my $hr = $sth->fetchrow_hashref ) {
+			push( @{ $r->{records} }, $hr );
+		}
+
+		my $j = JSON::PP->new->utf8;
+		print $j->encode($r);
+	} elsif ( $what eq 'domains' ) {
+		my $r   = { };
+		my $sth = $stab->prepare(
+			qq{
+	 			select  dns.dns_domain_id,
+					soa_name
+	      			from  dns_domain
+	     			order by dns_domain_id;
+		}
+		);
+		$sth->execute() || die $sth->errstr;
+		while ( my $hr = $sth->fetchrow_hashref ) {
+			my $row = {
+				value => $hr->{dns_domain_id},
+				text => $hr->{soa_name},
+			};
+			if($dnsdomid && $dnsdomid == $hr->{dns_domain_id}) {
+				$row->{'selected'} = 'true';
+			}
+			push( @{ $r->{domains} }, $row );
+		}
+
+		my $j = JSON::PP->new->utf8;
+		print $j->encode($r);
+
+
 	} else {
 
 		# catch-all error condition
-		print $cgi->div(
-			{ -style => 'text-align: center; padding: 50px', },
+		print $cgi->div( { -style => 'text-align: center; padding: 50px', },
 			$cgi->em("not implemented yet.") );
 	}
 

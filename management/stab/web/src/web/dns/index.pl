@@ -1,4 +1,21 @@
 #!/usr/bin/env perl
+
+#
+# Copyright (c) 2016-2017 Todd Kover
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 # Copyright (c) 2005-2010, Vonage Holdings Corp.
 # All rights reserved.
 #
@@ -20,22 +37,6 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-#
-# Copyright (c) 2016 Todd Kover
-# All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 #
 # $Id$
@@ -175,13 +176,11 @@ n";
 		  $stab->build_checkbox( $hr, "ShouldGen", "SHOULD_GENERATE",
 			'DNS_DOMAIN_ID' );
 
-		$stab->textfield_sizing(0);
 		my $serial  = $stab->b_textfield( $hr, 'SOA_SERIAL',  'DNS_DOMAIN_ID' );
 		my $refresh = $stab->b_textfield( $hr, 'SOA_REFRESH', 'DNS_DOMAIN_ID' );
 		my $retry   = $stab->b_textfield( $hr, 'SOA_RETRY',   'DNS_DOMAIN_ID' );
 		my $expire  = $stab->b_textfield( $hr, 'SOA_EXPIRE',  'DNS_DOMAIN_ID' );
 		my $minimum = $stab->b_textfield( $hr, 'SOA_MINIMUM', 'DNS_DOMAIN_ID' );
-		$stab->textfield_sizing(1);
 
 		my $link =
 		  build_dns_link( $stab, $hr->{ _dbx('DNS_DOMAIN_ID') } );
@@ -223,14 +222,27 @@ sub build_dns_zone {
 
 	my $cgi = $stab->cgi || die "Could not create cgi";
 
-	my $q = qq{
+	my @limit;
+	push( @limit, "dns_domain_id = :dns_domain_id" );
+
+	if ($dnsrecid) {
+		push( @limit, "dns_record_id = :dns_record_id" );
+	}
+
+	my $sth = $stab->prepare(
+		qq{
 		SELECT  d.*, device_id
 		FROM	v_dns_sorted d
 				LEFT JOIN network_interface USING (netblock_id)
-		WHERE	dns_domain_id = ?
-	};
-	my $sth = $stab->prepare($q) || return $stab->return_db_err;
-	$sth->execute($dnsdomainid) || return $stab->return_db_err($sth);
+		} . "WHERE " . join( "\nAND ", @limit )
+	) || return $stab->return_db_err;
+
+	$sth->bind_param( ':dns_domain_id', $dnsdomainid );
+	if ($dnsrecid) {
+		$sth->bind_param( ':dns_record_id', $dnsrecid );
+	}
+
+	$sth->execute() || return $stab->return_db_err($sth);
 
 	while ( my $hr = $sth->fetchrow_hashref ) {
 		print build_dns_rec_Tr( $stab, $hr );
@@ -262,15 +274,20 @@ sub build_dns_rec_Tr {
 	my $ttl =
 	  $stab->b_offalwaystextfield( $opts, $hr, 'DNS_TTL', 'DNS_RECORD_ID' );
 	delete $opts->{-class};
-	$stab->textfield_sizing(0);
 
 	my $value = "";
 	my $name  = "";
 	my $class = "";
 	my $type  = "";
 
+	my $dnsrecid;
+
 	if ( defined($hr) && defined( $hr->{ _dbx('DNS_NAME') } ) ) {
 		$name = $hr->{ _dbx('DNS_NAME') };
+	}
+
+	if ( defined($hr) && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
+		$dnsrecid = $hr->{ _dbx('DNS_RECORD_ID') };
 	}
 
 	my $showexcess = 1;
@@ -321,9 +338,23 @@ sub build_dns_rec_Tr {
 			$value = $cgi->a( { -href => $link }, $hr->{ _dbx('IP') } );
 		}
 	} else {
-		$opts->{-textfield_width} = 40;
+		$opts->{-class} = 'dnsvalue';
 		$value = $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
-		delete( $opts->{-textfield_width} );
+		if ($dnsrecid) {
+			$value .= $cgi->a(
+				{ -class => 'dnsref', -href => 'javascript:void(null)' },
+				$cgi->img(
+					{
+						-src   => "../stabcons/arrow.png",
+						-alt   => "DNS Names",
+						-title => 'DNS Names',
+						-class => 'devdnsref',
+					}
+				),
+				$cgi->hidden ({ -class => 'dnsrecordid', -name => '', -value => $dnsrecid, -disabled => 1}),
+			);
+		}
+		delete( $opts->{-class} );
 	}
 
 	if ( $hr->{ _dbx('DEVICE_ID') } ) {
@@ -419,7 +450,6 @@ sub build_dns_rec_Tr {
 			delete( $opts->{-class} );
 		}
 
-		$stab->textfield_sizing(1);
 		if ($hr) {
 			$args->{'-id'} = $hr->{ _dbx('DNS_RECORD_ID') };
 		} else {
@@ -485,7 +515,7 @@ sub dump_zone {
 					(parent_dns_domain_id)
 	};
 	if ( scalar @limit ) {
-		$q .= "WHERE " . join( "\nAND", @limit );
+		$q .= "WHERE " . join( "\nAND ", @limit );
 	}
 	my $sth = $stab->prepare($q) || return $stab->return_db_err;
 
@@ -504,6 +534,9 @@ sub dump_zone {
 	}
 
 	my $title = $hr->{ _dbx('SOA_NAME') };
+	if ($dnsrecid) {
+		$title .= " [ RECORD LIMITED ] ";
+	}
 	$title .= " (Auto Generated) "
 	  if ( $hr->{ _dbx('SHOULD_GENERATE') } eq 'Y' );
 
@@ -560,7 +593,19 @@ sub dump_zone {
 		$nblink = $cgi->br($nblink);
 	}
 
-	print $cgi->div( { -align => 'center' }, $parlink, $nblink );
+	my $zonelink = "";
+	if ($dnsrecid) {
+		$zonelink = $cgi->br(
+			$cgi->a(
+				{ -href => "./?dnsdomid=" . $dnsdomainid },
+				"full zone: ",
+				$hr->{ _dbx('SOA_NAME') }
+			)
+		);
+	}
+
+	print $cgi->div( { -class => 'centeredlist' }, $parlink, $nblink,
+		$zonelink );
 
 	print $cgi->hr;
 
@@ -580,7 +625,7 @@ sub dump_zone {
 	# second form, second table
 	#
 	print $cgi->start_form( { -action => "update_dns.pl" } );
-	print $cgi->start_table({-class => 'dnstable'});
+	print $cgi->start_table( { -class => 'dnstable' } );
 	print $cgi->hidden(
 		-name    => 'DNS_DOMAIN_ID',
 		-default => $hr->{ _dbx('DNS_DOMAIN_ID') }
@@ -592,31 +637,32 @@ sub dump_zone {
 		)
 	);
 
-	print $cgi->Tr(
-		$cgi->td(
-			{ -colspan => '7' },
+	#
+	# Records can only be added to the whole zone.  This may not make sense.
+	#
+	if ( !$dnsrecid ) {
+		print $cgi->Tr(
+			$cgi->td(
+				{ -colspan => '7' },
 
-			$cgi->a(
-				{ -href => '#', -class => 'adddnsrec' },
-				$cgi->img(
-					{
-						-src   => '../stabcons/plus.png',
-						-alt   => 'Add',
-						-title => 'Add',
-						-class => 'plusbutton'
-					}
+				$cgi->a(
+					{ -href => '#', -class => 'adddnsrec' },
+					$cgi->img(
+						{
+							-src   => '../stabcons/plus.png',
+							-alt   => 'Add',
+							-title => 'Add',
+							-class => 'plusbutton'
+						}
+					)
 				)
-			  )
-		),
-	);
+			),
+		);
+	}
 
 	# print build_dns_rec_Tr($stab);
 	# this prints
-	build_dns_zone(
-		$stab,
-		$hr->{ _dbx('DNS_DOMAIN_ID') },
-		$hr->{ _dbx('SOA_NAME') }, $dnsrecid,
-	);
+	build_dns_zone( $stab, $hr->{ _dbx('DNS_DOMAIN_ID') }, $dnsrecid, );
 
 	print $cgi->end_table;
 	print $cgi->submit(
