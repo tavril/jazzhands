@@ -44,9 +44,9 @@ function add_dns_ref_record_row(button, dnsrecid, resp)
 		name: 'dnsref_DNS_TYPE_'+recpart,
 		id: 'dnsref_DNS_TYPE_'+recpart
 	}).append(
-		$("<option/>", { value: 'CNAME', text: 'CNAME'}),
 		$("<option/>", { value: 'A', text: 'A'}),
-		$("<option/>", { value: 'AAAA', text:'AAAA'})
+		$("<option/>", { value: 'AAAA', text:'AAAA'}),
+		$("<option/>", { value: 'CNAME', text: 'CNAME'})
 	);
 
 	$(button).closest('tr').before(
@@ -228,8 +228,8 @@ function add_dns_references(obj) {
 		return(0);
 	}
 
-	url = 'json=yes;type=service;what=dns;DNS_RECORD_ID='+ dr;
-	$.getJSON('../device/device-ajax.pl', url, function (resp) {
+	url = 'json=yes;type=service;what=dnsref;DNS_RECORD_ID='+ dr;
+	$.getJSON('../dns/dns-ajax.pl', url, function (resp) {
 		add_dns_ref_record_row(obj, dr, resp);
 	});
 	return(0);

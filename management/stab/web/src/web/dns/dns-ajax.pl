@@ -157,6 +157,39 @@ sub do_dns_ajax {
 
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
+	} elsif ( $what eq 'dnsref' ) {
+		my $sth = $stab->prepare(
+			qq{
+			select	dns.dns_record_id,
+					dns.dns_domain_id,
+					dom.soa_name,
+					dns.dns_name
+		  	from	dns_record dns 
+		  			inner join dns_domain dom using (dns_domain_id)
+		 	where	dns_record_id = ?
+		 	limit 1
+		}
+		) || $stab->return_db_err();
+		$sth->execute($dnsrecid) || die $sth->errstr;
+
+		my $row = $sth->fetchrow_hashref;
+		$sth->finish;
+		my $id     = "";
+		my $prefix = "";
+		my $fix    = "";
+		$id = $row->{ _dbx('DNS_RECORD_ID') };
+		my $doms = "";
+		if ($row) {
+			my $type;	# not used at the moment.
+			$doms =
+			  $stab->build_dns_drop( $row->{ _dbx('DNS_DOMAIN_ID') }, $type );
+		}
+		my $j = JSON::PP->new->utf8;
+		my $r = {
+			'domains'  => $doms,
+		};
+		print $j->encode($r);
+
 
 
 	} else {

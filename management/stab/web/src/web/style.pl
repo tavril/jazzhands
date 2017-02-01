@@ -149,7 +149,6 @@ div.dnsvalueref {
 	border: 1px solid;
 }
 
-
 /* Tabs */
 
 div.tabgroup_pending {
@@ -541,6 +540,8 @@ table.attest tbody tr.odd td {
 img.plusbutton {
 	height: 2ex;
 	border: 1px solid;
+	display: block;
+	text-align:center;
 }
 
 div.description {

@@ -2179,10 +2179,18 @@ sub build_dns_drop {
 	}
 	$sth->execute;
 	my $r = {};
+	if(!$onid) {
+		$r->{options}->{'__unknown__'} = {
+			value => '__unknown__',
+			text => 'Please Choose',
+			selected => 'true',
+		};
+	}
 	while ( my ( $id, $name ) = $sth->fetchrow_array ) {
-		$r->{options}->{$id}              = {};
-		$r->{'options'}->{$id}->{'value'} = $id;
-		$r->{'options'}->{$id}->{'text'}  = $name;
+		$r->{options}->{$id}              = {
+			'value' => $id,
+			'text' => $name,
+		};
 		if ( $onid && $id == $onid ) {
 			$r->{'options'}->{$id}->{'selected'} = 'true';
 		}
