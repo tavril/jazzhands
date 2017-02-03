@@ -422,7 +422,7 @@ sub build_dns_rec_Tr {
 		delete( $opts->{-default} );
 
 		$ptrbox = "";
-		if ( $hr && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
+		if ( $hr && !$hr->{ _dbx('DNS_VALUE_RECORD_ID') } && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
 			$opts->{-class} = "ptrbox";
 			$ptrbox =
 			  $stab->build_checkbox( $opts,
@@ -614,17 +614,19 @@ sub dump_zone {
 	print $cgi->div( { -class => 'centeredlist' }, $parlink, $nblink,
 		$zonelink );
 
-	print $cgi->hr;
+	if ( !$dnsrecid ) {
+		print $cgi->hr;
 
-	print $stab->zone_header( $hr, 'update' );
-	print $cgi->submit(
-		{
-			-align => 'center',
-			-name  => "SOA",
-			-value => "Submit SOA Changes"
-		}
-	);
-	print $cgi->end_form;
+		print $stab->zone_header( $hr, 'update' );
+		print $cgi->submit(
+			{
+				-align => 'center',
+				-name  => "SOA",
+				-value => "Submit SOA Changes"
+			}
+		);
+		print $cgi->end_form;
+	}
 
 	print $cgi->hr;
 
