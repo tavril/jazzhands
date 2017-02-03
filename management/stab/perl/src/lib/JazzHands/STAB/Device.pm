@@ -1955,7 +1955,7 @@ sub build_collapsed_if_box {
 					-disabled => 1
 				}
 			  )
-		  );    # . $self->build_value_dns_table($dnsid);
+		  );
 	} else {
 		$dns = $self->b_textfield( { -textfield_width => 20 },
 			$values, "DNS_NAME", $pk )
