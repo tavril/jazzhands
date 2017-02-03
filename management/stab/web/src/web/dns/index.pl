@@ -346,12 +346,19 @@ sub build_dns_rec_Tr {
 				$cgi->img(
 					{
 						-src   => "../stabcons/arrow.png",
-						-alt   => "DNS Names",
-						-title => 'DNS Names',
+						-alt   => "DNS Records Referencing This Name",
+						-title => 'DNS Records Referencing This Name',
 						-class => 'devdnsref',
 					}
 				),
-				$cgi->hidden ({ -class => 'dnsrecordid', -name => '', -value => $dnsrecid, -disabled => 1}),
+				$cgi->hidden(
+					{
+						-class    => 'dnsrecordid',
+						-name     => '',
+						-value    => $dnsrecid,
+						-disabled => 1
+					}
+				),
 			);
 		}
 		delete( $opts->{-class} );
