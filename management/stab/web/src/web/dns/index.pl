@@ -639,8 +639,9 @@ sub dump_zone {
 
 	#
 	# Records can only be added to the whole zone.  This may not make sense.
+	# XXX
 	#
-	if ( !$dnsrecid ) {
+	if ( 1 || !$dnsrecid ) {
 		print $cgi->Tr(
 			$cgi->td(
 				{ -colspan => '7' },
