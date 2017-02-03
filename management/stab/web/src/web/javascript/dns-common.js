@@ -181,10 +181,15 @@ function build_dnsref_table (obj) {
 		return(0);
 	}
 
+	//
+	// removing/adding class there until it can be turned to a
+	// spinning wheel.
+	//
 	blt = $(obj).closest('td').find('div#dnsvalue_'+id);
 	if (blt.length) {
 		$(blt).toggleClass('irrelevant');
 	} else {
+		$(obj).removeClass('dnsref');
 		$.getJSON('../dns/dns-ajax.pl', url, function (resp) {
 			var div = $("<div/>", {
 					class: 'dnsvalueref',
@@ -194,6 +199,7 @@ function build_dnsref_table (obj) {
 				);
 			build_dns_ref_table(div, id, resp);
 			$(obj).closest('td').append(div);
+			$(obj).addClass('dnsref');
 		});
 	}
 	return(0);
