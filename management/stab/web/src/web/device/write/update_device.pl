@@ -217,7 +217,7 @@ sub do_update_device {
 	my $appgtab  = $stab->cgi_parse_param( 'has_appgroup_tab', $devid );
 	my @appgroup = $stab->cgi_parse_param( 'appgroup', $devid );
 
-	#-print $cgi->header, $cgi->start_html, $cgi->Dump, $cgi->end_html; exit;
+	#- print $cgi->header, $cgi->html($cgi->Dump()); exit;
 	# print $cgi->header, $cgi->start_html,
 	# my @x = $cgi->param('appgroup_'.$devid);
 	# print $cgi->p("appgroup is ", $cgi->ul(@appgroup), "totally");
@@ -1614,44 +1614,25 @@ sub update_all_dns_value_references {
 
 	my $numchanges = 0;
 
-	for my $basednsrecid ( $stab->cgi_get_ids('DNS_RECORD_ID') ) {
-		my $base = "dnsref_DNS_NAME_dnsref_$basednsrecid";
-		for my $dnsrecid ( $stab->cgi_get_ids($base) ) {
-			my $p    = "dnsref_";
-			my $s    = "dnsref_$basednsrecid";
-			my $name = $stab->cgi_parse_param( "${p}DNS_NAME_${s}", $dnsrecid );
-			my $type = $stab->cgi_parse_param( "${p}DNS_TYPE_${s}", $dnsrecid );
-			my $dom =
-			  $stab->cgi_parse_param( "${p}DNS_DOMAIN_ID_${s}", $dnsrecid );
+	# This is actually copied from dns/update_dns.pl and should probably be
+	# merged in somehow.  Just not doing it yet.
 
-			if ( $dnsrecid =~ /^\d+$/ ) {
-				my $old = $stab->get_dns_record_from_id($dnsrecid);
-				my $new = {
-					DNS_RECORD_ID => $dnsrecid,
-					DNS_NAME      => $name,
-					DNS_TYPE      => $type,
-					DNS_DOMAIN_ID => $dom,
-				};
+	# now process dns references.  Note that this used to be in the update loop
+	# but because "same" dns records get cleared, records were not showing up,
+	# so the assumption here is that the records are valid.
+	foreach my $refname ( $stab->cgi_get_ids('dnsref_DNS_NAME_dnsref') ) {
+		$refname =~ /^(\d+)_(.+$)/;
+		my ( $recupdid, $refid ) = ( $1, $2 );
 
-				my $diff = $stab->hash_table_diff( $old, _dbx($new) );
-				$numchanges += keys %$diff;
-				$stab->run_update_from_hash( 'dns_record', 'dns_record_id',
-					$dnsrecid, $diff );
-			} elsif ( $dnsrecid =~ /^new_(\d+)$/ ) {
-				my $iter = $1;
-				$numchanges++;
-				my $opts = {
-					dns_name            => $name,
-					dns_type            => $type,
-					dns_domain_id       => $dom,
-					dns_value_record_id => $basednsrecid,
-				};
-				$stab->add_dns_record($opts);
-			} else {
-				$stab->error_return("Invalid dns record reference");
-			}
+		if ( $refid =~ /^new/ ) {
+			$numchanges +=
+			  $stab->process_dns_ref_add( $recupdid, $refid );
+		} else {
+			$numchanges +=
+			  $stab->process_dns_ref_updates( $recupdid, $refid );
 		}
 	}
+
 	return $numchanges;
 }
 
@@ -2024,7 +2005,7 @@ sub process_interfaces {
 	my $cgi        = $stab->cgi;
 	my $numchanges = 0;
 
-	#print $cgi->header, $cgi->start_html, $cgi->Dump, $cgi->end_html; exit;
+	#- print $cgi->header, $cgi->html($cgi->Dump()); exit;
 
 	my $x = "";
 

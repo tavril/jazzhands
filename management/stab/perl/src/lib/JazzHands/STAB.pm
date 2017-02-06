@@ -2904,6 +2904,243 @@ sub vendor_logo {
 	$rv;
 }
 
+
+#
+# process new references to this record.
+#
+sub process_dns_ref_add($$$$) {
+	my ( $self, $recupdid, $refid ) = @_;
+
+	my $cgi = $self->cgi || die "Could not create cgi";
+	my $numchanges = 0;
+
+	my $p        = 'dnsref_';
+	my $s        = "_dnsref_${recupdid}";
+	my $name     = $self->cgi_parse_param( "${p}DNS_NAME${s}", $refid );
+	my $type     = $self->cgi_parse_param( "${p}DNS_TYPE${s}", $refid );
+	my $refdomid = $self->cgi_parse_param( "${p}DNS_DOMAIN_ID${s}", $refid );
+
+	my $new = {
+		dns_name            => $name,
+		dns_domain_id       => $refdomid,
+		dns_type            => $type,
+		dns_value_record_id => $recupdid,
+		should_generate_ptr => 'N',
+	};
+
+	$numchanges += $self->process_and_insert_dns_record($new);
+}
+
+# Process recordds that refer to this one.
+sub process_dns_ref_updates($$$$) {
+	my ( $self, $recupdid, $refid ) = @_;
+
+	my $cgi = $self->cgi || die "Could not create cgi";
+	my $numchanges = 0;
+
+	my $p        = 'dnsref_';
+	my $s        = "_dnsref_${recupdid}";
+	my $name     = $self->cgi_parse_param( "${p}DNS_NAME${s}", $refid );
+	my $type     = $self->cgi_parse_param( "${p}DNS_TYPE${s}", $refid );
+	my $refdomid = $self->cgi_parse_param( "${p}DNS_DOMAIN_ID${s}", $refid );
+
+	my $new = {
+		dns_record_id       => $refid,
+		dns_name            => $name,
+		dns_type            => $type,
+		dns_domain_id       => $refdomid,
+		dns_value_record_id => $recupdid,
+		should_generate_ptr => 'N',
+	};
+
+	$numchanges += $self->process_and_update_dns_record( $new );
+}
+
+sub process_and_update_dns_record {
+	my ( $self, $opts, $ttlonly ) = @_;
+
+	$opts = _dbx( $opts, 'lower' );
+
+	$opts->{'is_enabled'} = 'Y' if ( !defined( $opts->{'is_enabled'} ) );
+
+	my $orig = $self->get_dns_record_from_id( $opts->{'dns_record_id'} );
+
+	if ( !exists( $opts->{'dns_ttl'} ) ) {
+		$opts->{'dns_ttl'} = $orig->{ _dbx('DNS_TTL') };
+	} elsif ( !length( $opts->{'dns_ttl'} ) ) {
+		$opts->{'dns_ttl'} = undef;
+	}
+
+	my $newrecord;
+
+	# ttlonly applies only to A/AAAA records anchored to hosts
+	if ($ttlonly) {
+		$newrecord = {
+			DNS_RECORD_ID       => $opts->{'dns_record_id'},
+			DNS_TTL             => $opts->{'dns_ttl'},
+			IS_ENABLED          => $opts->{'is_enabled'},
+			SHOULD_GENERATE_PTR => $opts->{'should_generate_ptr'},
+		};
+	} else {
+		$newrecord = {
+			DNS_RECORD_ID       => $opts->{'dns_record_id'},
+			DNS_TTL             => $opts->{'dns_ttl'},
+			DNS_NAME            => $opts->{'dns_name'},
+			DNS_VALUE           => $opts->{'dns_value'},
+			DNS_TYPE            => $opts->{'dns_type'},
+			IS_ENABLED          => $opts->{'is_enabled'},
+			SHOULD_GENERATE_PTR => $opts->{'should_generate_ptr'},
+			DNS_PRIORITY        => $opts->{'dns_priority'},
+			DNS_SRV_SERVICE     => $opts->{'dns_srv_service'},
+			DNS_SRV_PROTOCOl    => $opts->{'dns_srv_protocol'},
+			DNS_SRV_WEIGHT      => $opts->{'dns_srv_weight'},
+			DNS_SRV_PORT        => $opts->{'dns_srv_port'},
+			DNS_VALUE_RECORD_ID => $opts->{'dns_value_record_id'},
+		};
+	}
+	if ( defined( $opts->{class} ) ) {
+		$newrecord->{'DNS_CLASS'} = $opts->{dns_class};
+	}
+	# This is used for dns references
+	if ( defined( $opts->{dns_domain_id} ) ) {
+		$newrecord->{'DNS_DOMAIN_ID'} = $opts->{dns_domain_id};
+	}
+
+	$newrecord = _dbx( $newrecord, 'lower' );
+
+
+	# On update:
+	#	Only pay attention to if the new type is A or AAAA.
+	#	If it is set to 'Y', then set it to 'Y' and change all other
+	#		records to the same netblock to 'N'.
+	#	If it a type change, and set to 'N', then check to see if there
+	#		is already a record with PTR.  If there is already, then set
+	#		to 'N'.
+	#	If it is not a type change, then just obey what it was set to.
+	#
+	if (   $opts->{should_generate_ptr}
+		&& $opts->{'dns_type'} =~ /^A(AAA)?$/ )
+	{
+		if ( $opts->{should_generate_ptr} eq 'Y' ) {
+			$newrecord->{'should_generate_ptr'} = $opts->{should_generate_ptr};
+		} elsif ( $orig->{'dns_type'} ne $opts->{'dns_type'} ) {
+			if ( !$self->get_dns_a_record_for_ptr( $opts->{'dns_value'} ) ) {
+				$newrecord->{'should_generate_ptr'} = 'Y';
+			} else {
+				$newrecord->{'should_generate_ptr'} =
+				  $opts->{should_generate_ptr};
+			}
+		} else {
+			$newrecord->{'should_generate_ptr'} = $opts->{should_generate_ptr};
+		}
+
+		if ( $opts->{should_generate_ptr} eq 'Y' ) {
+
+			# set all other dns_records but this one to have ptr = 'N'
+			if ( my $recid =
+				$self->get_dns_a_record_for_ptr( $opts->{'dns_value'} ) )
+			{
+				$self->run_update_from_hash( "DNS_RECORD",
+					"DNS_RECORD_ID", $recid, { should_generate_ptr => 'N' } );
+			}
+		}
+	}
+
+	my $nblkid;
+	if (   defined( $opts->{dns_value} )
+		&& defined( $opts->{dns_value_record_id} ) )
+	{
+		$self->error_return("Must not specify a reference and Value");
+	}
+
+	# if the new type is A/AAAA then find the netblock and create if it
+	# does not exist.
+	# Creation should only happen on a change.
+	if ( $opts->{'dns_type'} =~ /^A(AAA)?/ && !$opts->{dns_value_record_id} ) {
+		if (   $opts->{'dns_value'} !~ /^(\d+\.){3}\d+/
+			&& $opts->{'dns_type'} eq 'A' )
+		{
+			$self->error_return(
+				"$opts->{'dns_value'} is not a valid IPv4 address");
+		} elsif ( $opts->{'dns_value'} !~ /^[A-Z0-9:]+$/
+			&& $opts->{'dns_type'} eq 'AAAA' )
+		{
+			$self->error_return(
+				"$opts->{'dns_value'} is not a valid IPv6 address");
+		}
+
+		my $block =
+		  $self->get_netblock_from_ip( ip_address => $opts->{'dns_value'} );
+		if ( !$block ) {
+			$block = $self->get_netblock_from_ip(
+				ip_address    => $opts->{'dns_value'},
+				netblock_type => 'dns'
+			);
+		}
+		if ( !defined($block) ) {
+			my $h = {
+				ip_address        => $opts->{'dns_value'},
+				is_single_address => 'Y'
+			};
+			if (
+				!(
+					my $par =
+					$self->guess_parent_netblock_id( $opts->{'dns_value'} )
+				)
+			  )
+			{
+				# XXX This is outside our IP universe,
+				# which we should probably print a warning
+				# on, but lacking that, it gets created as a
+				# type dns
+				$h->{netblock_type} = 'dns';
+			}
+			$nblkid = $self->add_netblock($h)
+			  || die $self->return_db_err();
+		} else {
+			$nblkid = $block->{ _dbx('NETBLOCK_ID') };
+		}
+	}
+
+	# if changing from A/AAAA or back then just swap out the netblock id and don't set the
+	# value
+	if (   $orig->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?/
+		&& $opts->{dns_type} =~ /^A(AAA)?/ )
+	{
+		$newrecord->{ _dbx('DNS_VALUE') }   = undef;
+		$newrecord->{ _dbx('NETBLOCK_ID') } = $nblkid;
+	} elsif ( $orig->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?/
+		&& $opts->{dns_type} !~ /^A(AAA)?/ )
+	{
+		$newrecord->{ _dbx('DNS_VALUE') }   = $opts->{dns_value};
+		$newrecord->{ _dbx('NETBLOCK_ID') } = undef;
+	} elsif ( $orig->{ _dbx('DNS_TYPE') } !~ /^A(AAA)?/
+		&& $opts->{dns_type} =~ /^A(AAA)?/ )
+	{
+		$newrecord->{ _dbx('DNS_VALUE') }   = undef;
+		$newrecord->{ _dbx('NETBLOCK_ID') } = $nblkid;
+	}
+
+	my $diffs = $self->hash_table_diff( $orig, _dbx($newrecord) );
+	my $tally = keys %$diffs;
+	if ( !$tally ) {
+		return 0;
+	} elsif (
+		!$self->run_update_from_hash(
+			"DNS_RECORD", "DNS_RECORD_ID", $orig->{dns_record_id}, $diffs
+		)
+	  )
+	{
+		$self->rollback;
+		$self->return_db_err();
+	}
+	#
+	# XXX -- NEED TO TRY TO REMOVE OLD NETBLOCK BUT NOT FAIL IF IT FAILS!
+	#
+	#
+	return $tally;
+}
+
 sub DESTROY {
 	my $self = shift;
 	my $dbh  = $self->dbh;
