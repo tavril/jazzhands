@@ -1887,6 +1887,8 @@ sub build_collapsed_if_box {
 		# STAB.pm.   XXX
 		$dnsid = $values->{ _dbx('DNS_RECORD_ID') };
 
+		my $netintid = $values->{ _dbx('NETWORK_INTERFACE_ID') };
+
 		my $dot = "";
 		if ( $values->{ _dbx('DNS_NAME') } ) {
 			$dot = ".";
@@ -1898,13 +1900,13 @@ sub build_collapsed_if_box {
 				{
 					-type  => 'text',
 					-class => 'irrelevant dnsname',
-					-name  => 'DNS_NAME_' . $dnsid
+					-name  => 'DNS_NAME_' . $netintid,
+					-value => $values->{ _dbx('DNS_NAME') },
 				}
 			  )
 			  . $cgi->popup_menu(
 				{
-					-name => 'DNS_DOMAIN_ID'
-					  . $values->{ _dbx('DNS_DOMAIN_ID') },
+					-name => 'DNS_DOMAIN_ID_' . $netintid,
 					-class => 'irrelevant dnsdomain',
 				}
 			  )
