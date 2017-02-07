@@ -83,8 +83,7 @@ sub dump_all_zones_dropdown {
 	print $cgi->start_table( { -align => 'center' } );
 	print $stab->build_tr( undef, undef, "b_dropdown", "Zone",
 		'DNS_DOMAIN_ID' );
-	print $cgi->Tr(
-		{ -align => 'center' },
+	print $cgi->Tr( { -align => 'center' },
 		$cgi->td(
 			{ -colspan => 2 },
 			$cgi->submit(
@@ -244,8 +243,9 @@ sub build_dns_zone {
 
 	$sth->execute() || return $stab->return_db_err($sth);
 
+	my $count = 0;
 	while ( my $hr = $sth->fetchrow_hashref ) {
-		print build_dns_rec_Tr( $stab, $hr );
+		print build_dns_rec_Tr( $stab, $hr, ($count++%2)?'even':'odd' );
 	}
 	$sth->finish;
 }
@@ -257,7 +257,7 @@ sub build_dns_zone {
 # records.
 #
 sub build_dns_rec_Tr {
-	my ( $stab, $hr, $iszone ) = @_;
+	my ( $stab, $hr, $basecssclass ) = @_;
 
 	my $cssclass = 'dnsupdate';
 
@@ -377,7 +377,7 @@ sub build_dns_rec_Tr {
 		}
 	}
 
-	my $args      = { '-class' => $cssclass };
+	my $args      = { '-class' => "dnsrecord $basecssclass $cssclass" };
 	my $enablebox = "";
 	my $ptrbox    = "";
 	my $hidden    = "";
@@ -560,48 +560,50 @@ sub dump_zone {
 		$lastgen = $hr->{ _dbx('LAST_GENERATED') };
 	}
 
-	print $cgi->hr;
-	print $cgi->start_table( { -align => 'center', -border => 1 } );
-	print $cgi->Tr( $cgi->td("Last Generated: $lastgen") );
-	my $autogen = "";
-	if ( $hr->{ _dbx('SHOULD_GENERATE') } eq 'Y' ) {
-		$autogen = "Turn Off Autogen";
-	} else {
-		$autogen = "Turn On Autogen";
-	}
-	print $cgi->Tr(
-		{ -align => 'center' },
-		$cgi->td(
-			$cgi->submit(
-				{
-					-align => 'center',
-					-name  => "AutoGen",
-					-value => $autogen
-				}
-			)
-		)
-	);
-	print $cgi->end_table;
+	my $soatable = "";
+	my $parlink;
+	my $zonelink = "";
 
-	my $parlink = "--none--";
-	if ( $hr->{ _dbx('PARENT_DNS_DOMAIN_ID') } ) {
-		my $url =
-		  build_dns_link( $stab, $hr->{ _dbx('PARENT_DNS_DOMAIN_ID') } );
+	$parlink = $cgi->span( $cgi->b("Parent: ") . $parlink ) if($parlink);
+	my $nblink = build_reverse_association_section( $stab, $dnsdomainid );
+	if (! $dnsrecid) {
+		print $cgi->hr;
+		my $t =  $cgi->Tr( $cgi->td("Last Generated: $lastgen") );
+		my $autogen = "";
+		if ( $hr->{ _dbx('SHOULD_GENERATE') } eq 'Y' ) {
+			$autogen = "Turn Off Autogen";
+		} else {
+			$autogen = "Turn On Autogen";
+		}
+		$t .= $cgi->Tr(
+			{ -align => 'center' },
+			$cgi->td(
+				$cgi->submit(
+					{
+						-align => 'center',
+						-name  => "AutoGen",
+						-value => $autogen
+					}
+				)
+			)
+		);
+		print $cgi->table({-class => 'dnsgentable'}, $t );
+
+		$parlink = "--none--";
+		if ( $hr->{ _dbx('PARENT_DNS_DOMAIN_ID') } ) {
+			my $url =
+		  	build_dns_link( $stab, $hr->{ _dbx('PARENT_DNS_DOMAIN_ID') } );
 		my $parent =
 		  ( $hr->{ _dbx('PARENT_SOA_NAME') } )
 		  ? $hr->{ _dbx('PARENT_SOA_NAME') }
 		  : "unnamed zone";
 		$parlink = $cgi->a( { -href => $url }, $parent );
-	}
-	$parlink = $cgi->span( $cgi->b("Parent: ") . $parlink );
-	my $nblink = build_reverse_association_section( $stab, $dnsdomainid );
+		}
 
-	if ( $nblink && length($nblink) ) {
-		$nblink = $cgi->br($nblink);
-	}
+		if ( $nblink && length($nblink) ) {
+			$nblink = $cgi->br($nblink);
+		}
 
-	my $zonelink = "";
-	if ($dnsrecid) {
 		$zonelink = $cgi->br(
 			$cgi->a(
 				{ -href => "./?dnsdomid=" . $dnsdomainid },
@@ -609,18 +611,18 @@ sub dump_zone {
 				$hr->{ _dbx('SOA_NAME') }
 			)
 		);
+		print $cgi->hr;
 	}
 
 	print $cgi->div( { -class => 'centeredlist' }, $parlink, $nblink,
 		$zonelink );
 
 	if ( !$dnsrecid ) {
-		print $cgi->hr;
 
 		print $stab->zone_header( $hr, 'update' );
 		print $cgi->submit(
 			{
-				-align => 'center',
+				-class => 'dnssubmit',
 				-name  => "SOA",
 				-value => "Submit SOA Changes"
 			}
@@ -652,9 +654,7 @@ sub dump_zone {
 	#
 	if ( 1 || !$dnsrecid ) {
 		print $cgi->Tr(
-			$cgi->td(
-				{ -colspan => '7' },
-
+			$cgi->td({-colspan => '7' },
 				$cgi->a(
 					{ -href => '#', -class => 'adddnsrec' },
 					$cgi->img(
@@ -677,7 +677,7 @@ sub dump_zone {
 	print $cgi->end_table;
 	print $cgi->submit(
 		{
-			-align => 'center',
+			-class => 'dnssubmit', 
 			-name  => "Records",
 			-value => "Submit DNS Record Changes"
 		}

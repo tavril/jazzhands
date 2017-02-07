@@ -334,8 +334,15 @@ function add_new_dns_row(button, resp) {
 		$(classes).append(o);
 	}
 
+	var myclass ='dnsrecord dsadd';
+	if(offset % 2) {
+		myclass += ' even';
+	} else {
+		myclass += ' odd';
+	}
+
 	$(button).closest('tr').after(
-		$("<tr/>").append(
+		$("<tr/>", {class: myclass}).append(
 			$("<td>").append(
 				$("<input/>", {
 					type: 'checkbox',

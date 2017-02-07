@@ -301,11 +301,28 @@ td.rackit_vertical {
 	background: lightgrey;
 }
 
-/* SOA display */
+/* DNS display */
+
+
+table.dnsgentable {
+	text-align: center;
+	margin: auto;
+	border: 2px solid;
+}
 
 table.soatable {
+	text-align: center;
+	margin: auto;
 	background: lightgrey;
 	border: 2px solid;
+}
+
+tr.even {
+	background: lightgrey;
+}
+
+tr.odd {
+	background: transparent;
 }
 
 /* App display */
@@ -423,6 +440,16 @@ tr.intadd {
 	background: grey;
 }
 
+table.dnstable {
+	text-align: center;
+	margin: auto;
+	border: 1px solid;
+}
+
+table.dnstable tr.dnsrecord {
+	text-align: left;
+}
+
 table.dnstable input.dnsttl {
 	width: 6em;
 }
@@ -433,6 +460,12 @@ table.dnstable input.dnsvalue {
 
 table.dnstable input.dnsname {
 	width: 10em;
+}
+
+.dnssubmit {
+	display: block;
+	margin: auto;
+	text-align: center;
 }
 
 /* netblock management (pre rewrite */
