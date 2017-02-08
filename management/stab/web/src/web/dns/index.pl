@@ -370,12 +370,7 @@ sub build_dns_rec_Tr {
 			my $link =
 			  "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
 			$value = $cgi->a( { -href => $link }, $value );
-		} elsif ( $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
-			$ttlonly = 1;
-			my $link =
-			  "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
-			$name = $cgi->a( { -href => $link }, $name );
-		}
+		} 
 	}
 
 	my $args      = { '-class' => "dnsrecord $basecssclass $cssclass" };
@@ -485,7 +480,7 @@ sub build_dns_rec_Tr {
 	return $cgi->Tr(
 		$args,
 		$cgi->td( $hidden, $enablebox ),
-		$cgi->td( { -class => 'DNS_NAME' }, $name ),
+		$cgi->td( $name ),
 		$cgi->td($ttl),
 		$cgi->td($class),
 		$cgi->td($type),

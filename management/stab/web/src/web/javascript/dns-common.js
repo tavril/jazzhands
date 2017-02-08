@@ -51,6 +51,13 @@ function add_dns_ref_record_row(button, dnsrecid, resp)
 
 	$(button).closest('tr').before(
 		$("<tr/>").append(
+			$("<td>").append(
+				$("<a/>", { class: 'purgerow'}).
+					append( $("<img/>", {
+						class: 'rmdnsrow button',
+						src: '../stabcons/redx.jpg',
+					}))
+			),
 			$("<td>").append(drop),
 			$("<td>").append(
 				$("<input/>", {
@@ -89,6 +96,18 @@ function build_dns_ref_table(cell, dnsrecid, resp)
 		}
 
 		var r = $('<tr/>', { class: 'dnsroot'} ).append( 
+			$("<td>").append(
+				$("<a/>", { class: 'rmrow'}).
+					append( $("<img/>", {
+						class: 'rmdnsrow button',
+						src: '../stabcons/redx.jpg',
+					})),
+				$("<input/>", { 
+					type: 'checkbox',
+					class: 'irrelevant rmrow',
+					name: 'Del_' + rec['dns_record_id'],
+				})
+			),
 			$("<td/>").append(
 				$(s)
 			),
@@ -129,7 +148,7 @@ function build_dns_ref_table(cell, dnsrecid, resp)
 	}
 
 	$(tbl).append(
-		$('<tr/>').append( $('<td/>', { colspan: 3 }).append(
+		$('<tr/>').append( $('<td/>', { colspan: 4 }).append(
 			$('<a/>', {
 					href: '#',
 					class: 'dnsaddref'
@@ -169,6 +188,7 @@ function make_dns_editable(dnsroot, resp) {
 		$(dnsroot).find('a').addClass('irrelevant');
 		$(dnsroot).find(':input').removeClass('off');
 		$(dnsroot).find(':input').removeClass('irrelevant');
+		$(dnsroot).find('input.dnsname').prop('disabled', false);
 
 };
 
@@ -260,6 +280,24 @@ function create_dns_reference_jquery(baseobj) {
 	// implements the add button on the dns value cell.
 	$(baseobj).on('click', 'a.dnsaddref', function(event) {
 		return add_dns_references(this);
+	});
+
+	$(baseobj).on('click', 'a.rmrow', function(event) {
+		$(this).closest('tr').toggleClass('rowrm');
+		$(this).closest('td').nextAll('td').toggleClass('pendingrm');
+		$(this).closest('td').find('input.rmrow').prop(
+			"checked", function (i, val) { return !val });
+	});
+	$(baseobj).on('click', 'a.purgerow', function(event) {
+		var t = $(this).closest('table');
+		$(this).closest('tr').remove();
+		// does nothing for dns refernces.
+		$(t).find('tr.dnsadd').each(
+			function(i, v) {
+				$(v).removeClass('odd');
+				$(v).removeClass('even');
+				$(v).addClass( i%2?'even':'odd');
+		});
 	});
 
 }

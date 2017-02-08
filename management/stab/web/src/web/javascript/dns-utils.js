@@ -442,20 +442,4 @@ $(document).ready(function(){
 
 	create_dns_reference_jquery("table.dnstable");
 
-	$("table.dnstable").on('click', 'a.rmrow', function(event) {
-		$(this).closest('tr').toggleClass('rowrm');
-		$(this).closest('td').nextAll('td').toggleClass('pendingrm');
-		$(this).closest('td').find('input.rmrow').prop(
-			"checked", function (i, val) { return !val });
-	});
-	$("table.dnstable").on('click', 'a.purgerow', function(event) {
-		var t = $(this).closest('table');
-		$(this).closest('tr').remove();
-		$(t).find('tr.dnsadd').each(
-			function(i, v) {
-				$(v).removeClass('odd');
-				$(v).removeClass('even');
-				$(v).addClass( i%2?'even':'odd');
-		});
-	});
 });

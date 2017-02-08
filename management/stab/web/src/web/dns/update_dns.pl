@@ -472,7 +472,7 @@ sub do_dns_update {
 
 	clear_same_dns_params( $stab, $domid );
 
-	print $cgi->header, $cgi->html($cgi->Dump); exit;
+	#- print $cgi->header, $cgi->html($cgi->Dump); exit;
 
 	my $genflip = $stab->cgi_parse_param('AutoGen');
 
@@ -495,7 +495,7 @@ sub do_dns_update {
 		$cgi->delete("DNS_RECORD_ID_$delid");
 		$numchanges++;
 
-		if ( $dns && $dns->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
+		if ( $dns && $dns->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ && $dns->{_dbx('NETBLOCK_ID')}) {
 			$numchanges +=
 			  $stab->delete_netblock( $dns->{ _dbx('NETBLOCK_ID') }, 1 );
 		}

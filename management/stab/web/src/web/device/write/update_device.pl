@@ -1612,6 +1612,8 @@ sub purge_physical_connection_by_physical_port_id {
 sub update_all_dns_value_references {
 	my ( $stab, $devid ) = @_;
 
+	my $cgi = $stab->cgi;
+
 	my $numchanges = 0;
 
 	# This is actually copied from dns/update_dns.pl and should probably be
@@ -1625,14 +1627,34 @@ sub update_all_dns_value_references {
 		my ( $recupdid, $refid ) = ( $1, $2 );
 
 		if ( $refid =~ /^new/ ) {
-			$numchanges +=
-			  $stab->process_dns_ref_add( $recupdid, $refid );
+			$numchanges += $stab->process_dns_ref_add( $recupdid, $refid );
 		} else {
-			$numchanges +=
-			  $stab->process_dns_ref_updates( $recupdid, $refid );
+			$numchanges += $stab->process_dns_ref_updates( $recupdid, $refid );
 		}
 	}
 
+	# copied from dns/update_dns.pl
+	my $delsth;
+	foreach my $delid ( $stab->cgi_get_ids('Del') ) {
+		my $dns = $stab->get_dns_record_from_id($delid);
+		if ( !defined($delsth) ) {
+			my $q = qq{
+                delete from dns_record
+                 where  dns_record_id = ?
+            };
+			$delsth = $stab->prepare($q)
+			  || $stab->return_db_err;
+		}
+		$delsth->execute($delid) || $stab->return_db_err($delsth);
+		$cgi->delete("Del_$delid");
+		$cgi->delete("DNS_RECORD_ID_$delid");
+		$numchanges++;
+
+		if ( $dns && $dns->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ && $dns->{_dbx('NETBLOCK_ID')} ) {
+			$numchanges +=
+			  $stab->delete_netblock( $dns->{ 'netblock_id' }, 1 );
+		}
+	}
 	return $numchanges;
 }
 

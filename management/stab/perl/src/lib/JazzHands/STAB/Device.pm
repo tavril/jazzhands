@@ -1902,6 +1902,7 @@ sub build_collapsed_if_box {
 					-class => 'irrelevant dnsname',
 					-name  => 'DNS_NAME_' . $netintid,
 					-value => $values->{ _dbx('DNS_NAME') },
+					-disabled => 1,
 				}
 			  )
 			  . $cgi->popup_menu(
