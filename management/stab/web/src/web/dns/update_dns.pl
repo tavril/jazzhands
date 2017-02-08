@@ -472,7 +472,7 @@ sub do_dns_update {
 
 	clear_same_dns_params( $stab, $domid );
 
-	#- print $cgi->header, $cgi->html($cgi->Dump); exit;
+	print $cgi->header, $cgi->html($cgi->Dump); exit;
 
 	my $genflip = $stab->cgi_parse_param('AutoGen');
 

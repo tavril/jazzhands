@@ -83,7 +83,8 @@ sub dump_all_zones_dropdown {
 	print $cgi->start_table( { -align => 'center' } );
 	print $stab->build_tr( undef, undef, "b_dropdown", "Zone",
 		'DNS_DOMAIN_ID' );
-	print $cgi->Tr( { -align => 'center' },
+	print $cgi->Tr(
+		{ -align => 'center' },
 		$cgi->td(
 			{ -colspan => 2 },
 			$cgi->submit(
@@ -245,7 +246,7 @@ sub build_dns_zone {
 
 	my $count = 0;
 	while ( my $hr = $sth->fetchrow_hashref ) {
-		print build_dns_rec_Tr( $stab, $hr, ($count++%2)?'even':'odd' );
+		print build_dns_rec_Tr( $stab, $hr, ( $count++ % 2 ) ? 'even' : 'odd' );
 	}
 	$sth->finish;
 }
@@ -389,13 +390,13 @@ sub build_dns_rec_Tr {
 			if ( defined($hr) && $hr->{ _dbx('DNS_RECORD_ID') } ) {
 				$excess .= $cgi->checkbox(
 					{
+						-class => 'irrelevant rmrow',
 						-name  => "Del_" . $hr->{ _dbx('DNS_RECORD_ID') },
-						-label => 'Delete',
+						-label => '',
 					}
 				);
 			} else {
 				$cssclass = "dnsadd";
-				$excess .= "(Add)";
 			}
 		}
 		if ( $ttlonly && defined($hr) ) {
@@ -416,13 +417,29 @@ sub build_dns_rec_Tr {
 			);
 		}
 
-		$enablebox =
-		  $stab->build_checkbox( $opts, $hr, "", "IS_ENABLED",
+		$opts->{-nodiv} = 1;
+		$enablebox = $excess
+		  . $cgi->a(
+			{ -class => 'rmrow' },
+			$cgi->img(
+				{
+					-src   => "../stabcons/redx.jpg",
+					-alt   => "Delete this Record",
+					-title => 'Delete This Record',
+					-class => 'rmdnsrow button',
+				}
+			)
+		  )
+		  . $stab->build_checkbox( $opts, $hr, "", "IS_ENABLED",
 			'DNS_RECORD_ID' );
 		delete( $opts->{-default} );
+		delete( $opts->{-nodiv} );
 
 		$ptrbox = "";
-		if ( $hr && !$hr->{ _dbx('DNS_VALUE_RECORD_ID') } && $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ ) {
+		if (   $hr
+			&& !$hr->{ _dbx('DNS_VALUE_RECORD_ID') }
+			&& $hr->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ )
+		{
 			$opts->{-class} = "ptrbox";
 			$ptrbox =
 			  $stab->build_checkbox( $opts,
@@ -474,7 +491,6 @@ sub build_dns_rec_Tr {
 		$cgi->td($type),
 		$cgi->td($value),
 		$cgi->td( { -class => 'ptrtd' }, $ptrbox ),
-		$cgi->td($excess)
 	);
 }
 
@@ -549,11 +565,6 @@ sub dump_zone {
 
 	print $cgi->header( { -type => 'text/html' } ), "\n";
 	print $stab->start_html( { -title => $title, -javascript => 'dns' } ), "\n";
-	print $cgi->start_form( { -action => "write/update_domain.pl" } );
-	print $cgi->hidden(
-		-name    => 'DNS_DOMAIN_ID',
-		-default => $hr->{ _dbx('DNS_DOMAIN_ID') }
-	);
 
 	my $lastgen = 'never';
 	if ( defined( $hr->{ _dbx('LAST_GENERATED') } ) ) {
@@ -564,11 +575,16 @@ sub dump_zone {
 	my $parlink;
 	my $zonelink = "";
 
-	$parlink = $cgi->span( $cgi->b("Parent: ") . $parlink ) if($parlink);
+	$parlink = $cgi->span( $cgi->b("Parent: ") . $parlink ) if ($parlink);
 	my $nblink = build_reverse_association_section( $stab, $dnsdomainid );
-	if (! $dnsrecid) {
+	if ( !$dnsrecid ) {
+		print $cgi->start_form( { -action => "write/update_domain.pl" } );
+		print $cgi->hidden(
+			-name    => 'DNS_DOMAIN_ID',
+			-default => $hr->{ _dbx('DNS_DOMAIN_ID') }
+		);
 		print $cgi->hr;
-		my $t =  $cgi->Tr( $cgi->td("Last Generated: $lastgen") );
+		my $t       = $cgi->Tr( $cgi->td("Last Generated: $lastgen") );
 		my $autogen = "";
 		if ( $hr->{ _dbx('SHOULD_GENERATE') } eq 'Y' ) {
 			$autogen = "Turn Off Autogen";
@@ -587,17 +603,17 @@ sub dump_zone {
 				)
 			)
 		);
-		print $cgi->table({-class => 'dnsgentable'}, $t );
+		print $cgi->table( { -class => 'dnsgentable' }, $t );
 
 		$parlink = "--none--";
 		if ( $hr->{ _dbx('PARENT_DNS_DOMAIN_ID') } ) {
 			my $url =
-		  	build_dns_link( $stab, $hr->{ _dbx('PARENT_DNS_DOMAIN_ID') } );
-		my $parent =
-		  ( $hr->{ _dbx('PARENT_SOA_NAME') } )
-		  ? $hr->{ _dbx('PARENT_SOA_NAME') }
-		  : "unnamed zone";
-		$parlink = $cgi->a( { -href => $url }, $parent );
+			  build_dns_link( $stab, $hr->{ _dbx('PARENT_DNS_DOMAIN_ID') } );
+			my $parent =
+			  ( $hr->{ _dbx('PARENT_SOA_NAME') } )
+			  ? $hr->{ _dbx('PARENT_SOA_NAME') }
+			  : "unnamed zone";
+			$parlink = $cgi->a( { -href => $url }, $parent );
 		}
 
 		if ( $nblink && length($nblink) ) {
@@ -652,9 +668,10 @@ sub dump_zone {
 	# Records can only be added to the whole zone.  This may not make sense.
 	# XXX
 	#
-	if ( 1 || !$dnsrecid ) {
+	if ( !$dnsrecid ) {
 		print $cgi->Tr(
-			$cgi->td({-colspan => '7' },
+			$cgi->td(
+				{ -colspan => '7' },
 				$cgi->a(
 					{ -href => '#', -class => 'adddnsrec' },
 					$cgi->img(
@@ -666,7 +683,7 @@ sub dump_zone {
 						}
 					)
 				)
-			),
+			)
 		);
 	}
 
@@ -677,7 +694,7 @@ sub dump_zone {
 	print $cgi->end_table;
 	print $cgi->submit(
 		{
-			-class => 'dnssubmit', 
+			-class => 'dnssubmit',
 			-name  => "Records",
 			-value => "Submit DNS Record Changes"
 		}

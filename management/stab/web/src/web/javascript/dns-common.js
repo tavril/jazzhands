@@ -261,4 +261,5 @@ function create_dns_reference_jquery(baseobj) {
 	$(baseobj).on('click', 'a.dnsaddref', function(event) {
 		return add_dns_references(this);
 	});
+
 }

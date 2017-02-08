@@ -432,10 +432,6 @@ span.netblocklink {
 	width: 35ex; 
 }
 
-tr.dnsadd {
-	background: lightgrey;
-}
-
 tr.intadd {
 	background: grey;
 }
@@ -577,6 +573,11 @@ img.plusbutton {
 	text-align:center;
 }
 
+img.button {
+	height: 2ex;
+	vertical-align: middle;
+}
+
 div.description {
 	border: 3px solid;
 	text-align: center;
@@ -645,6 +646,17 @@ input.attestsubmit {
 .overdue {
 	background: red;
 	color: white;
+}
+
+tr.rowrm {
+	background: red;
+	text-decoration: line-through;
+}
+
+td.pendingrm * {
+	pointer-events: none;
+	opacity: .5;
+	text-decoration: line-through;
 }
 
 .buttonon {
