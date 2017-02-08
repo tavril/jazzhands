@@ -500,6 +500,8 @@ sub dump_zone {
 
 	my @limit;
 
+	my $dnsname;
+
 	if ( !$dnsdomainid ) {
 		if ( !$dnsrecid ) {
 			return $stab->error_return("Must specify a domain to examine");
@@ -509,6 +511,7 @@ sub dump_zone {
 			return $stab->error_return(
 				"Must specify a valid record to examine");
 		}
+		$dnsname = $dns->{_dbx('DNS_NAME')};
 		$dnsdomainid = $dns->{ _dbx('DNS_DOMAIN_ID') };
 	}
 
@@ -558,8 +561,11 @@ sub dump_zone {
 
 	my $title = $hr->{ _dbx('SOA_NAME') };
 	if ($dnsrecid) {
-		$title .= " [ RECORD LIMITED ] ";
+		if($dnsname) {
+			$title = "$dnsname.$title";
+		}
 	}
+
 	$title .= " (Auto Generated) "
 	  if ( $hr->{ _dbx('SHOULD_GENERATE') } eq 'Y' );
 
