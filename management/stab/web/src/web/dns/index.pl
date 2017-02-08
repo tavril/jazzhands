@@ -300,7 +300,7 @@ sub build_dns_rec_Tr {
 		$name     = $hr->{ _dbx('DNS_NAME') };
 		$class    = $hr->{ _dbx('DNS_CLASS') };
 		$type     = $hr->{ _dbx('DNS_TYPE') };
-		$value    = $hr->{ _dbx('DNS_VALUE') };
+		$value    = $hr->{ _dbx('DNS_VALUE') } || $hr->{_dbx('IP')};
 		$ttl      = "";
 		$canedit  = 0;
 		$cssclass = 'dnsinfo';
@@ -338,7 +338,7 @@ sub build_dns_rec_Tr {
 			  "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
 			$value = $cgi->a( { -href => $link }, $hr->{ _dbx('IP') } );
 		}
-	} else {
+	} elsif($hr->{_dbx('DNS_RECORD_ID')}) {
 		$opts->{-class} = 'dnsvalue';
 		$value = $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
 		if ($dnsrecid) {
