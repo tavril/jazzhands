@@ -342,8 +342,8 @@ sub dump_nodes {
 }
 
 sub get_netblock_link_header {
-	my ( $stab, $nblkid, $blk, $startnblkid, $descr, $pnbid, $site, $numkids ) =
-	  @_;
+	my ( $stab, $nblkid, $blk, $startnblkid, $descr, $pnbid, $site, $numkids )
+	  = @_;
 
 	my $cgi = $stab->cgi;
 	my $dbh = $stab->dbh;
@@ -363,7 +363,7 @@ sub get_netblock_link_header {
 	# Something of a hack.  If it has no "single address" children, then
 	# allow it to be subnetable.
 	#
-	if( ( my $hassingles = num_kids( $stab, $nblkid, 'Y' )) == 0) {
+	if ( ( my $hassingles = num_kids( $stab, $nblkid, 'Y' ) ) == 0 ) {
 		$ops = " - "
 		  . $cgi->a(
 			{ -href => "write/addnetblock.pl?id=$nblkid" },
@@ -388,7 +388,6 @@ sub get_netblock_link_header {
 			)
 		  );
 	}
-
 
 	if ( 1 || $allowdescedit eq 'yes' ) {
 		my $name = "NETBLOCK_DESCRIPTION_$nblkid";
@@ -604,8 +603,8 @@ sub do_dump_netblock {
 			{ -href => "./?nblkid=" . $p->{ _dbx('NETBLOCK_ID') } },
 			"Parent: " . $p->{ _dbx('IP_ADDRESS') },
 			(
-				( $p->{ _dbx( 'DESCRIPTION' ) } )
-				? $p->{ _dbx( 'DESCRIPTION' ) }
+				( $p->{ _dbx('DESCRIPTION') } )
+				? $p->{ _dbx('DESCRIPTION') }
 				: ""
 			)
 		);
@@ -636,14 +635,15 @@ sub do_dump_netblock {
 
 	my $lastl = -1;
 	my @tiers;
+
 	# push( @tiers, { first => '', ul => '' } );
 
 	# indicates that we're in the process of descending into a hierarchy.
 	my $isdescending = 0;
 	while (
 		my (
-			$level, $nblkid, $ip,   $status, $single, $family,
-			$descr, $pnbid,  $site, $numkids
+			$level,  $nblkid, $ip,    $status, $single,
+			$family, $descr,  $pnbid, $site,   $numkids
 		)
 		= $sth->fetchrow_array
 	  )
@@ -656,8 +656,15 @@ sub do_dump_netblock {
 			$start_id, $descr, $pnbid, $site, $numkids );
 
 		my $mknewtier = 0;
-		my $addpeer = 1;
-		my $bumpup = 0;
+		my $addpeer   = 1;
+		my $bumpup    = 0;
+
+		#
+		# this is for subnets that do not further subnet (kind of a hack
+		# but as much time as I have spent on this, I'm going to let that go.
+		if ( $#tiers == -1 ) {
+			$mknewtier = 1;
+		}
 
 		#
 		# When going up a level, need to close out the existing level and
@@ -665,35 +672,37 @@ sub do_dump_netblock {
 		#
 		if ( $lastl > $level ) {
 			for ( my $i = $lastl ; $i > $level ; $i-- ) {
-				my $x  = pop(@tiers);
-				my $me = $cgi->ul({-class=>'nbhier'},$x->{label}, $x->{kids} );
-				$tiers[$#tiers]->{kids} .= $cgi->li({-class=>'nbkids'}, $me);
+				my $x = pop(@tiers);
+				my $me =
+				  $cgi->ul( { -class => 'nbhier' }, $x->{label}, $x->{kids} );
+				$tiers[$#tiers]->{kids} .=
+				  $cgi->li( { -class => 'nbkids' }, $me );
 				$bumpup++;
 			}
 
 			# If this one has kids, then we're immediately going to create
 			# a new level based on this one, because the next row will be
 			# descendents.
-			if($numkids) {
-				$mknewtier = 1;
+			if ($numkids) {
+				$mknewtier    = 1;
 				$isdescending = 1;
 			} else {
 				$isdescending = 0;
 			}
-		} elsif($lastl == $level) {
+		} elsif ( $lastl == $level ) {
 			#
 			# In this case, we're about to drop into children of this row,
 			# so make it so
 			#
-			if($numkids) {
-				$mknewtier = 1;
+			if ($numkids) {
+				$mknewtier    = 1;
 				$isdescending = 1;
 			} else {
 				$isdescending = 0;
 			}
-		} else {	# lastl < $level
-			if($numkids) {
-				$mknewtier = 1;
+		} else {    # lastl < $level
+			if ($numkids) {
+				$mknewtier    = 1;
 				$isdescending = 1;
 			} else {
 				$isdescending = 0;
@@ -702,21 +711,26 @@ sub do_dump_netblock {
 
 		#warn "$ip -- is:$isdescending mk:$mknewtier add:$addpeer last:$lastl/cur:$level kids:$numkids// tiers:", $#tiers, (($lastl != $#tiers + 1)?" -- WTF":""), "\n";
 
-		if($mknewtier) {
+		if ($mknewtier) {
 			push( @tiers, { label => $thing, kids => '', level => $level } );
-		} elsif($addpeer) {
-			$tiers[$#tiers]->{kids} .= $cgi->li( { -class => 'nbnokids' }, $thing );
-		};
+		} elsif ($addpeer) {
+			$tiers[$#tiers]->{kids} .=
+			  $cgi->li( { -class => 'nbnokids' }, $thing );
+		}
 		$lastl = $level;
 	}
 	$sth->finish;
-	for ( my $i = $lastl ; $i && $#tiers > 0; $i-- ) {
+	for ( my $i = $lastl ; $i && $#tiers > 0 ; $i-- ) {
 		my $x = pop @tiers;
-		my $k = (length ($x->{kids}))? $cgi->li({-class=>'nbnokids'},$x->{kids}):"";
-		$tiers[$#tiers]->{kids} .= $cgi->ul({-class=>'nbhier'}, $x->{label}, $k );
+		my $k =
+		  ( length( $x->{kids} ) )
+		  ? $cgi->li( { -class => 'nbnokids' }, $x->{kids} )
+		  : "";
+		$tiers[$#tiers]->{kids} .=
+		  $cgi->ul( { -class => 'nbhier' }, $x->{label}, $k );
 	}
 	my $x = pop @tiers;
-	print $cgi->ul({-class=>'nbhier'},$x->{label}, $x->{kids});
+	print $cgi->ul( { -class => 'nbhier' }, $x->{label}, $x->{kids} );
 	print "\n";
 
 	print $cgi->end_form, "\n";
@@ -752,7 +766,7 @@ sub netblock_search_box {
 					$cgi->textfield( -name => 'bycidr' )
 				),
 				$cgi->div(
-					$cgi->b( "Description/Reservation Search: " ),
+					$cgi->b("Description/Reservation Search: "),
 					$cgi->textfield( -name => 'bydesc' )
 				),
 				$cgi->submit('Search'),
