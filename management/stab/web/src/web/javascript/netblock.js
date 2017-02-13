@@ -135,10 +135,8 @@ $(document).ready(function() {
 		event.stopImmediatePropagation();
 		event.stopPropagation();
 		event.preventDefault();
-		$(this).closest('form').find('li.nblink').nextAll('ul').each(
-			function(i, v) {
-				$(v).addClass('irrelevant');
-			});
+		$(this).closest('form').find('ul.nbhier').children('li,ul').addClass('irrelevant');
+
 		$(this).closest('form').find('img.netblkexpand').each(
 			function(i, v) {
 				swaparrows_jq(v, 'up');
@@ -150,10 +148,7 @@ $(document).ready(function() {
 		event.stopImmediatePropagation();
 		event.stopPropagation();
 		event.preventDefault();
-		$(this).closest('form').find('li.nblink').nextAll('ul').each(
-			function(i, v) {
-				$(v).removeClass('irrelevant');
-			});
+		$(this).closest('form').find('ul.nbhier').children('li,ul').removeClass('irrelevant');
 		$(this).closest('form').find('img.netblkexpand').each(
 			function(i, v) {
 				swaparrows_jq(v, 'down');
