@@ -700,7 +700,7 @@ ul.nbhier > li.nbkids {
 
 ul.nbhier > li.nbnokids {
 	list-style-type: none;
-	padding-left: 23px;
+	padding-left: 19px;
 	margin-left: 5ex;
 }
 
