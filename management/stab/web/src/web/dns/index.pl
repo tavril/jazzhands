@@ -60,12 +60,14 @@ sub do_dns_toplevel {
 	my $dnsid    = $stab->cgi_parse_param('dnsdomainid');
 	my $dnsrecid = $stab->cgi_parse_param('DNS_RECORD_ID');
 
+	my $addonly = $stab->cgi_parse_param('addonly');
+
 	if ($dnsrecid) {
-		dump_zone( $stab, $dnsid, $dnsrecid );
+		dump_zone( $stab, $dnsid, $dnsrecid, $addonly );
 	} elsif ( !defined($dnsid) ) {
 		dump_all_zones_dropdown($stab);
 	} else {
-		dump_zone( $stab, $dnsid );
+		dump_zone( $stab, $dnsid, undef, $addonly );
 	}
 	undef $stab;
 }
@@ -79,21 +81,28 @@ sub dump_all_zones_dropdown {
 	  "\n";
 
 	print $cgi->h4( { -align => 'center' }, "Find a Zone" );
-	print $cgi->start_form( { -action => "search.pl" } );
-	print $cgi->start_table( { -align => 'center' } );
-	print $stab->build_tr( undef, undef, "b_dropdown", "Zone",
-		'DNS_DOMAIN_ID' );
-	print $cgi->Tr(
-		{ -align => 'center' },
-		$cgi->td(
-			{ -colspan => 2 },
-			$cgi->submit(
-				-name  => "Zone",
-				-value => "Go to Zone"
+	print $cgi->start_form( { -class => 'dnspage', -action => "search.pl" } );
+	print $cgi->table(
+		$stab->build_tr( undef, undef, "b_dropdown", "Zone", 'DNS_DOMAIN_ID' ),
+		$cgi->Tr(
+			$cgi->td(
+				{ -colspan => 2 },
+				$cgi->checkbox(
+					{
+						-name  => 'addonly',
+						-label => 'Add record (do not view zone)',
+					}
+				),
+				$cgi->div(
+					$cgi->submit(
+						-name  => "Zone",
+						-value => "Go to Zone"
+					)
+				)
 			)
 		)
 	);
-	print $cgi->end_table;
+
 	print $cgi->end_form;
 
 	print $cgi->hr;
@@ -300,7 +309,7 @@ sub build_dns_rec_Tr {
 		$name     = $hr->{ _dbx('DNS_NAME') };
 		$class    = $hr->{ _dbx('DNS_CLASS') };
 		$type     = $hr->{ _dbx('DNS_TYPE') };
-		$value    = $hr->{ _dbx('DNS_VALUE') } || $hr->{_dbx('IP')};
+		$value    = $hr->{ _dbx('DNS_VALUE') } || $hr->{ _dbx('IP') };
 		$ttl      = "";
 		$canedit  = 0;
 		$cssclass = 'dnsinfo';
@@ -338,7 +347,7 @@ sub build_dns_rec_Tr {
 			  "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
 			$value = $cgi->a( { -href => $link }, $hr->{ _dbx('IP') } );
 		}
-	} elsif($hr->{_dbx('DNS_RECORD_ID')}) {
+	} elsif ( $hr->{ _dbx('DNS_RECORD_ID') } ) {
 		$opts->{-class} = 'dnsvalue';
 		$value = $stab->b_textfield( $opts, $hr, 'DNS_VALUE', 'DNS_RECORD_ID' );
 		if ($dnsrecid) {
@@ -370,7 +379,7 @@ sub build_dns_rec_Tr {
 			my $link =
 			  "../device/device.pl?devid=" . $hr->{ _dbx('DEVICE_ID') };
 			$value = $cgi->a( { -href => $link }, $value );
-		} 
+		}
 	}
 
 	my $args      = { '-class' => "dnsrecord $basecssclass $cssclass" };
@@ -478,19 +487,15 @@ sub build_dns_rec_Tr {
 		$ttl = "";
 	}
 	return $cgi->Tr(
-		$args,
-		$cgi->td( $hidden, $enablebox ),
-		$cgi->td( $name ),
-		$cgi->td($ttl),
-		$cgi->td($class),
-		$cgi->td($type),
-		$cgi->td($value),
-		$cgi->td( { -class => 'ptrtd' }, $ptrbox ),
+		$args,            $cgi->td( $hidden, $enablebox ),
+		$cgi->td($name),  $cgi->td($ttl),
+		$cgi->td($class), $cgi->td($type),
+		$cgi->td($value), $cgi->td( { -class => 'ptrtd' }, $ptrbox ),
 	);
 }
 
 sub dump_zone {
-	my ( $stab, $dnsdomainid, $dnsrecid ) = @_;
+	my ( $stab, $dnsdomainid, $dnsrecid, $addonly ) = @_;
 	my $cgi = $stab->cgi || die "Could not create cgi";
 
 	my @limit;
@@ -506,7 +511,7 @@ sub dump_zone {
 			return $stab->error_return(
 				"Must specify a valid record to examine");
 		}
-		$dnsname = $dns->{_dbx('DNS_NAME')};
+		$dnsname     = $dns->{ _dbx('DNS_NAME') };
 		$dnsdomainid = $dns->{ _dbx('DNS_DOMAIN_ID') };
 	}
 
@@ -554,15 +559,24 @@ sub dump_zone {
 		$stab->error_return("Unknown Domain");
 	}
 
+	my $showzonedata = 1;
+
 	my $title = $hr->{ _dbx('SOA_NAME') };
 	if ($dnsrecid) {
-		if($dnsname) {
+		if ($dnsname) {
 			$title = "$dnsname.$title";
 		}
+		$showzonedata = 0;
 	}
 
-	$title .= " (Auto Generated) "
-	  if ( $hr->{ _dbx('SHOULD_GENERATE') } eq 'Y' );
+	if ( $hr->{ _dbx('SHOULD_GENERATE') } eq 'Y' ) {
+		$title .= " (Auto Generated) ";
+	}
+
+	if ($addonly) {
+		$showzonedata = 0;
+		$title        = "Add record to " . $title;
+	}
 
 	print $cgi->header( { -type => 'text/html' } ), "\n";
 	print $stab->start_html( { -title => $title, -javascript => 'dns' } ), "\n";
@@ -578,7 +592,7 @@ sub dump_zone {
 
 	$parlink = $cgi->span( $cgi->b("Parent: ") . $parlink ) if ($parlink);
 	my $nblink = build_reverse_association_section( $stab, $dnsdomainid );
-	if ( !$dnsrecid ) {
+	if ($showzonedata) {
 		print $cgi->start_form( { -action => "write/update_domain.pl" } );
 		print $cgi->hidden(
 			-name    => 'DNS_DOMAIN_ID',
@@ -634,7 +648,7 @@ sub dump_zone {
 	print $cgi->div( { -class => 'centeredlist' }, $parlink, $nblink,
 		$zonelink );
 
-	if ( !$dnsrecid ) {
+	if ($showzonedata) {
 
 		print $stab->zone_header( $hr, 'update' );
 		print $cgi->submit(
@@ -669,7 +683,7 @@ sub dump_zone {
 	# Records can only be added to the whole zone.  This may not make sense.
 	# XXX
 	#
-	if ( !$dnsrecid ) {
+	if ( !$dnsrecid || $addonly ) {
 		print $cgi->Tr(
 			$cgi->td(
 				{ -colspan => '7' },
@@ -690,7 +704,10 @@ sub dump_zone {
 
 	# print build_dns_rec_Tr($stab);
 	# this prints
-	build_dns_zone( $stab, $hr->{ _dbx('DNS_DOMAIN_ID') }, $dnsrecid, );
+
+	if ( !$addonly ) {
+		build_dns_zone( $stab, $hr->{ _dbx('DNS_DOMAIN_ID') }, $dnsrecid, );
+	}
 
 	print $cgi->end_table;
 	print $cgi->submit(

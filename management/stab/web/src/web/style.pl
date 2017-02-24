@@ -303,6 +303,10 @@ td.rackit_vertical {
 
 /* DNS display */
 
+form.dnspage, form.dnspage table {
+	text-align: center;
+	margin: auto;
+}
 
 table.dnsgentable {
 	text-align: center;
