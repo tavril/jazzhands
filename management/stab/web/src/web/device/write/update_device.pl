@@ -356,8 +356,6 @@ sub do_update_device {
 
 	$numchanges += process_interfaces( $stab, $devid );
 
-	my $x = $stab->device_has_asset();
-
 	my $assetid = $dbdevice->{ _dbx('ASSET_ID') };
 	if ($assetid) {
 		my $dbasset =

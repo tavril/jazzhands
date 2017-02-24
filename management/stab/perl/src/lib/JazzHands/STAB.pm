@@ -1296,7 +1296,6 @@ sub b_dropdown {
 
 	my $q;
 	if ( $selectfield eq 'DEVICE_TYPE_ID' ) {
-
 		# kookiness is to strip out 'Not Applicable' companies.
 		$q = qq{
 			select * from
@@ -1311,6 +1310,19 @@ sub b_dropdown {
 			order by 
 				CASE WHEN name = ' ' THEN lower(model) ELSE lower(name) END,
 				lower(model)
+		};
+	} elsif ( $selectfield eq 'COMPONENT_TYPE_ID' ) {
+		$q = qq{
+			SELECT * FROM (
+			SELECT	component_type_id, 
+					CASE WHEN company_name = 'unknown' THEN ' '
+						ELSE company_name 
+					END AS company_name,
+					model
+			FROM component_type ct
+				JOIN company cy USING (company_id)
+			) xx
+			ORDER BY company_name, lower(model)
 		};
 	} elsif ( $selectfield eq 'DEVICE_STATUS' ) {
 		$q = qq{

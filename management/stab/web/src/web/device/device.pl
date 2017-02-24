@@ -182,25 +182,37 @@ sub build_device_box {
 	);
 	$top_table .= $stab->build_tr( { -dolinkUpdate => 'device_type' },
 		$values, "b_dropdown", "Model", "DEVICE_TYPE_ID", 'DEVICE_ID' );
-	$top_table .= $stab->build_tr(
-		$values, "b_textfield", "Serial #", "SERIAL_NUMBER",
-		'DEVICE_ID'
-	);
-	$top_table .= $stab->build_tr(
-		$values, "b_textfield", "Asset Tag", "ASSET_TAG",
-		'DEVICE_ID'
-	);
-	$top_table .= $stab->build_tr(
-		$values, "b_textfield", "Part #", "PART_NUMBER",
-		'DEVICE_ID'
+	# only show this on new things to setup components
+	if(!$values) {
+		$top_table .= $stab->build_tr( { -class => 'componenttype'},
+			$values, "b_dropdown", "Hardware Type (if applicable)", "COMPONENT_TYPE_ID", 'DEVICE_ID' );
+	}
+
+	if(!$values || $values->{_dbx('COMPONENT_ID') }) {
+		my $args = {};
+		if(!$values) {
+			$args->{'-class'} = 'off componentfields';
+		}
+		$top_table .= $stab->build_tr($args,
+			$values, "b_textfield", "Serial #", "SERIAL_NUMBER",
+			'DEVICE_ID'
+		);
+		$top_table .= $stab->build_tr($args,
+			$values, "b_textfield", "Asset Tag", "ASSET_TAG",
+			'DEVICE_ID'
+		);
+		$top_table .= $stab->build_tr($args,
+			$values, "b_textfield", "Part #", "PART_NUMBER",
+			'DEVICE_ID'
 	);
 
-	$top_table .= $stab->build_tr( $values, "b_dropdown", "Ownership",
-		"OWNERSHIP_STATUS", 'DEVICE_ID' );
-	if ( !$values || (exists($values->{ _dbx('OWNERSHIP_STATUS') }) && $values->{ _dbx('OWNERSHIP_STATUS') } eq 'leased' ) ) {
-		$top_table .=
-		  $stab->build_tr( $values, "b_textfield", "Lease Expires",
-			"LEASE_EXPIRATION_DATE", 'DEVICE_ID' );
+		$top_table .= $stab->build_tr( $args, $values, "b_dropdown", "Ownership",
+			"OWNERSHIP_STATUS", 'DEVICE_ID' );
+		if ( !$values || (exists($values->{ _dbx('OWNERSHIP_STATUS') }) && $values->{ _dbx('OWNERSHIP_STATUS') } eq 'leased' ) ) {
+			$top_table .=
+		  	$stab->build_tr( $args, $values, "b_textfield", "Lease Expires",
+				"LEASE_EXPIRATION_DATE", 'DEVICE_ID' );
+		}
 	}
 
 	#$top_table .= $stab->build_tr($values, "b_textfield",

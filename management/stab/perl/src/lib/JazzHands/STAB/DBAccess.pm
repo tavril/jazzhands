@@ -624,7 +624,7 @@ sub get_dev_from_devid {
 	my ( $self, $devid ) = @_;
 
 	my $q = qq{
-		select  *
+		select  d.*
 		  from  device d
 		 where  d.device_id = :devid
 	};
@@ -642,16 +642,16 @@ sub get_dev_from_devid {
 	$self->fill_asset_details_with_device($hr);
 }
 
-sub get_asset_from_asset_id {
-	my ( $self, $assid ) = @_;
+sub get_asset_from_component_id {
+	my ( $self, $compid ) = @_;
 
 	my $q = qq{
 		select  *
 		  from  asset
-		 where  asset_id = :assid
+		 where  component_id = :compid
 	};
 	my $sth = $self->prepare($q) || $self->return_db_err($self);
-	$sth->bind_param( ':assid', $assid ) || $self->return_db_err($sth);
+	$sth->bind_param( ':compid', $compid ) || $self->return_db_err($sth);
 	$sth->execute || $self->return_db_err($sth);
 
 	my $hr = $sth->fetchrow_hashref;
@@ -664,8 +664,8 @@ sub fill_asset_details_with_device($$) {
 
 	return undef if ( !$dev );
 
-	if ( $dev->{ _dbx('ASSET_ID') } ) {
-		my $ass = $self->get_asset_from_asset_id( $dev->{ _dbx('ASSET_ID') } );
+	if ( $dev->{ _dbx('COMPONENT_ID') } ) {
+		my $ass = $self->get_asset_from_component_id( $dev->{ _dbx('COMPONENT_ID') } );
 
 		foreach my $c (
 			qw(ASSET_ID SERIAL_NUMBER PART_NUMBER ASSET_TAG OWNERSHIP_STATUS LEASE_EXPIRATION_DATE)
@@ -675,18 +675,6 @@ sub fill_asset_details_with_device($$) {
 		}
 	}
 	$dev;
-}
-
-sub device_has_asset($) {
-	my ($self) = shift @_;
-
-	if ( my $dbh = $self->dbh ) {
-		my $sth = $dbh->column_info( undef, undef, 'device', 'serial_number' );
-		my $colinfo = $sth->fetchrow_hashref;
-		$sth->finish;
-		return $colinfo;
-	}
-	undef;
 }
 
 sub add_location_to_dev {

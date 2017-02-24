@@ -1141,6 +1141,17 @@ $(document).ready(function(){
 		}
 	});
 
+	// When a component id checkbox is set to something meanintful,
+	// toggle the component related fields if they matter.
+	$("div.maindiv").on('change', 'select.componenttype', function(event) {
+		var x = $(this).find('option:selected').val();
+		if(x == '__unknown__') {
+			$(this).closest('table').find('.componentfields').addClass('off');
+		} else {
+			$(this).closest('table').find('.componentfields').removeClass('off');
+		} 
+	});
+
 	create_dns_reference_jquery("div.maindiv");
 
 });
