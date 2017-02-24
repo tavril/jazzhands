@@ -1732,16 +1732,12 @@ sub update_interface {
 	my $ip       = $stab->cgi_parse_param( 'IP',            $netintid );
 	my $nitype  = $stab->cgi_parse_param( 'NETWORK_INTERFACE_TYPE', $netintid );
 	my $isintup = $stab->cgi_parse_param( 'chk_IS_INTERFACE_UP',    $netintid );
-	my $isnatint = $stab->cgi_parse_param( 'chk_PROVIDES_NAT',   $netintid );
 	my $shldmng  = $stab->cgi_parse_param( 'chk_SHOULD_MANAGE',  $netintid );
 	my $shldmon  = $stab->cgi_parse_param( 'chk_SHOULD_MONITOR', $netintid );
-	my $dhcp     = $stab->cgi_parse_param( 'chk_PROVIDES_DHCP',  $netintid );
 
 	$isintup  = $stab->mk_chk_yn($isintup);
 	$shldmng  = $stab->mk_chk_yn($shldmng);
 	$shldmon  = $stab->mk_chk_yn($shldmon);
-	$isnatint = $stab->mk_chk_yn($isnatint);
-	$dhcp     = $stab->mk_chk_yn($dhcp);
 
 	if ($intname) {
 		$intname =~ s/^\s+//;
@@ -1857,10 +1853,8 @@ sub update_interface {
 		IS_INTERFACE_UP        => $isintup,
 		MAC_ADDR               => $procdmac,
 		SHOULD_MONITOR         => $shldmon,
-		PROVIDES_NAT           => $isnatint,
 		NETBLOCK_ID            => $nblkid,
 		SHOULD_MANAGE          => $shldmng,
-		PROVIDES_DHCP          => $dhcp,
 		DESCRIPTION            => $desc,
 
 		#- PHYSICAL_PORT_ID => $newppid,
@@ -2193,8 +2187,6 @@ sub add_interfaces {
 	my $isintup  = $stab->cgi_parse_param('chk_IS_INTERFACE_UP');
 	my $ismgmtip = $stab->cgi_parse_param('chk_IS_MANAGEMENT_INTERFACE');
 	my $ispriint = $stab->cgi_parse_param('chk_IS_PRIMARY');
-	my $isnatint = $stab->cgi_parse_param('chk_PROVIDES_NAT');
-	my $dhcp     = $stab->cgi_parse_param('chk_PROVIDES_DHCP');
 	my $shldmng  = $stab->cgi_parse_param('chk_SHOULD_MANAGE');
 	my $shldmon  = $stab->cgi_parse_param('chk_SHOULD_MONITOR');
 
@@ -2217,10 +2209,8 @@ sub add_interfaces {
 	$isintup  = $stab->mk_chk_yn($isintup);
 	$ismgmtip = $stab->mk_chk_yn($ismgmtip);
 	$ispriint = $stab->mk_chk_yn($ispriint);
-	$isnatint = $stab->mk_chk_yn($isnatint);
 	$shldmng  = $stab->mk_chk_yn($shldmng);
 	$shldmon  = $stab->mk_chk_yn($shldmon);
-	$dhcp     = $stab->mk_chk_yn($dhcp);
 
 	return 0 if ( !defined($intname) );
 
@@ -2300,8 +2290,6 @@ sub add_interfaces {
 		IS_INTERFACE_UP        => $isintup,
 		MAC_ADDR               => $macaddr,
 		physical_port_id       => $ppid,
-		provides_nat           => $isnatint,
-		provides_dhcp          => $dhcp,
 		netblock_id            => $nblk->{ _dbx('NETBLOCK_ID') },
 		should_manage          => $shldmng,
 		should_monitor         => $shldmon,
@@ -2312,13 +2300,13 @@ sub add_interfaces {
 			device_id, name, NETWORK_INTERFACE_TYPE,
 			IS_INTERFACE_UP, MAC_ADDR,
 			NETWORK_INTERFACE_PURPOSE, IS_PRIMARY, SHOULD_MONITOR,
-			physical_port_id, provides_nat, provides_dhcp,
+			physical_port_id, 
 			NETBLOCK_ID, SHOULD_MANAGE, IS_MANAGEMENT_INTERFACE
 		) values (
 			:devid, :name, :nitype,
 			:isup, :mac,
 			:nipurpose, :isprimary, :shldmon,
-			:phsportid, :doesnat, 'N',
+			:phsportid,
 			:nblkid, :shldmng, :ismgmtip
 		) returning network_interface_Id into :rv
 	};

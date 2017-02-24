@@ -1717,10 +1717,8 @@ sub dump_interfaces {
 			ni.network_interface_type,
 			ni.is_interface_up,
 			ni.mac_addr,
-			ni.provides_nat,
 			ni.should_manage,
 			ni.should_monitor,
-			ni.provides_dhcp,
 			ni.description,
 			net_manip.inet_dbtop(nb.ip_address) as IP,
 			dns.dns_record_id,
@@ -2003,22 +2001,6 @@ sub build_collapsed_if_box {
 				)
 			)
 		),
-		$cgi->Tr(
-			$cgi->td(
-				$self->build_checkbox(
-					$values,        "NATing",
-					'PROVIDES_NAT', 'NETWORK_INTERFACE_ID'
-				)
-			)
-		),
-		$cgi->Tr(
-			$cgi->td(
-				$self->build_checkbox(
-					$values,         "DHCP",
-					'PROVIDES_DHCP', 'NETWORK_INTERFACE_ID'
-				)
-			)
-		),
 		( length($delbox) )
 		? $cgi->Tr(
 			$cgi->td(
@@ -2060,8 +2042,6 @@ sub build_interface_box {
 
 	my $xbox = $self->build_checkbox( $values, "Up", 'IS_INTERFACE_UP',
 		'NETWORK_INTERFACE_ID', $defchecked );
-	$xbox .= $self->build_checkbox( $values, "NATing", 'PROVIDES_NAT',
-		'NETWORK_INTERFACE_ID' );
 	$xbox .= $self->build_checkbox( $values, "Should Manage",
 		'SHOULD_MANAGE', 'NETWORK_INTERFACE_ID', $defchecked );
 	$xbox .= $self->build_checkbox( $values, "Should Monitor",
