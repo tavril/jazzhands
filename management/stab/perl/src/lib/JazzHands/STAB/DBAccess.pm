@@ -231,7 +231,7 @@ sub get_interface_from_ip {
 	my $sth = $self->prepare(
 		qq{
 		select	ni.*
-		  from	network_interface ni
+		  from	v_network_interface_trans ni
 		 		inner join netblock nb
 					on nb.netblock_id = ni.netblock_id
 		 where	net_manip.inet_ptodb(?) = nb.ip_address
@@ -250,7 +250,7 @@ sub get_interface_from_netblock_id {
 	my $sth = $self->prepare(
 		qq{
 		select	ni.*
-		  from	network_interface ni
+		  from	v_network_interface_trans ni
 		 where	netblock_id = ?
 	}
 	);
@@ -271,7 +271,7 @@ sub check_ip_on_local_nets {
 	my $sth = $self->prepare(
 		qq{
 		select  count(*)
-		  from  network_interface ni
+		  from  v_network_interface_trans ni
 			inner join netblock nb using (netblock_id)
 		where
 			ni.device_id = ?

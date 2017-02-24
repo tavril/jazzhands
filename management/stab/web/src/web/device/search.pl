@@ -104,7 +104,7 @@ sub find_devices {
 	my $q = qq{
 		select	distinct d.device_id, d.device_name
 		  from	device d
-			left join network_interface ni
+			left join v_network_interface_trans ni
 				on ni.device_id = d.device_id
 			left join netblock nb
 				on nb.netblock_id = ni.netblock_id

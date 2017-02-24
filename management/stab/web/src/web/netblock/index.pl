@@ -224,7 +224,7 @@ sub dump_nodes {
 				and dns.dns_type in ('AAAA', 'A', 'A6')
 			left join dns_domain dom
 				on dns.dns_domain_id = dom.dns_domain_id
-			left join network_interface ni
+			left join v_network_interface_trans ni
 				on ni.netblock_id = nb.netblock_id
 		 where	nb.parent_netblock_id = ?
 		order by nb.ip_address
@@ -847,7 +847,7 @@ sub dump_netblock_routes {
 		 from	static_route_template srt
 				inner join netblock snb
 					on srt.netblock_src_id = snb.netblock_id
-				inner join network_interface ni
+				inner join v_network_interface_trans ni
 					on srt.network_interface_dst_id = ni.network_interface_id 
 				inner join netblock dnb
 					on dnb.netblock_id = ni.netblock_id

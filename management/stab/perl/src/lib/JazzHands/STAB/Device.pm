@@ -187,7 +187,7 @@ sub device_circuit_tab {
 			c.trunk_tcic_start,
 			c.trunk_tcic_end
 		  from	physical_port p
-			left join network_interface ni on
+			left join v_network_interface_trans ni on
 				ni.physical_port_id = p.physical_port_id
 			left join layer1_connection l1c on
 				(p.physical_port_id = l1c.physical_port1_id OR
@@ -219,7 +219,7 @@ sub device_circuit_tab {
 		$nitype =~ tr/A-Z/a-z/;
 
 		my $Xsth = $self->prepare(
-			"select count(*) from network_interface where parent_network_interface_id = ?"
+			"select count(*) from v_network_interface_trans where parent_network_interface_id = ?"
 		);
 		$Xsth->execute( $hr->{ _dbx('NETWORK_INTERFACE_ID') } )
 		  || $self->return_db_err($Xsth);
@@ -1513,7 +1513,7 @@ sub dump_device_route {
 		   from	static_route sr
 				inner join netblock snb
 					on snb.netblock_id = sr.netblock_id
-				inner join network_interface dni
+				inner join v_network_interface_trans dni
 					on dni.network_interface_id =
 						sr.NETWORK_INTERFACE_DST_ID
 				inner join device ddev
@@ -1626,9 +1626,9 @@ sub get_device_netblock_routes {
 			inner join netblock rnb
 				on net_manip.inet_base(rnb.ip_address, masklen(rnb.ip_address)) =
 					tnb.ip_address
-			inner join network_interface ni
+			inner join v_network_interface_trans ni
 				on rnb.netblock_id = ni.netblock_id
-			inner join network_interface dni
+			inner join v_network_interface_trans dni
 				on dni.network_interface_id = srt.network_interface_dst_id
 			inner join netblock dnb
 				on dni.netblock_id = dnb.netblock_id
@@ -1727,7 +1727,7 @@ sub dump_interfaces {
 			dom.soa_name,
 			net_manip.inet_dbtop(pnb.ip_address) as parent_IP,
 			nb.parent_netblock_id
-		  from	network_interface ni
+		  from	v_network_interface_trans ni
 			left join netblock nb using (netblock_id)
 			left join dns_record dns using (netblock_id)
 			left join dns_domain dom using (dns_domain_id)
@@ -2215,7 +2215,7 @@ sub build_dns_rr_table {
 		  from	dns_record dns
 				inner join dns_domain dom
 					on dom.dns_domain_id = dns.dns_domain_id
-				inner join network_interface ni
+				inner join v_network_interface_trans ni
 					on dns.netblock_id = ni.netblock_id
 		 where	ni.network_interface_id = ?
 		  and	dns.dns_record_id != ?

@@ -758,7 +758,7 @@ sub get_network_interface {
 
 	my $q = qq{
 		select *
-		from	network_interface
+		from	v_network_interface_trans
 		where	network_interface_id = ?
 	};
 	my $sth = $stab->prepare($q) || die $stab->return_db_err;
@@ -773,7 +773,7 @@ sub get_total_ifs {
 
 	my $q = qq{
 		select	count(*)
-		  from	network_interface
+		  from	v_network_interface_trans
 		 where	device_id = ?
 	};
 	my $sth = $stab->prepare($q) || die $stab->return_db_err;
@@ -792,7 +792,7 @@ sub number_interface_kids {
 	my $sth = $stab->prepare(
 		qq{
 		select	count(*)
-		 from	network_interface
+		 from	v_network_interface_trans
 		where	parent_network_interface_id = ?
 	}
 	) || $stab->return_db_err;
@@ -820,7 +820,7 @@ sub delete_interface {
 			dns.dns_record_id,
 			dns.dns_name,
 			dom.soa_name
-		  from	network_interface ni
+		  from	v_network_interface_trans ni
 			inner join netblock nb on
 				ni.netblock_id = nb.netblock_id
 			left join dns_record dns on
@@ -839,7 +839,7 @@ sub delete_interface {
 
 	if ($netintid) {
 		my $q = qq{
-			delete	from network_interface
+			delete	from v_network_interface_trans
 			  where	network_interface_id = ?
 		};
 		my $sth = $stab->prepare($q) || $stab->return_db_err;
@@ -1671,7 +1671,7 @@ sub update_all_interfaces {
 	my $sth = $stab->prepare(
 		qq{
 		select	network_interface_id
-		 from	network_interface
+		 from	v_network_interface_trans
 		where	device_id = ?
 		order by network_interface_id
 	}
@@ -1865,7 +1865,7 @@ sub update_interface {
 
 	my $diff = $stab->hash_table_diff( $old_int, _dbx($new_int) );
 	$numchanges += keys %$diff;
-	$stab->run_update_from_hash( 'network_interface', 'network_interface_id',
+	$stab->run_update_from_hash( 'v_network_interface_trans', 'network_interface_id',
 		$old_int->{ _dbx('NETWORK_INTERFACE_ID') }, $diff );
 
 	#
@@ -2296,7 +2296,7 @@ sub add_interfaces {
 	};
 
 	my $q = qq{
-		insert into network_interface (
+		insert into v_network_interface_trans (
 			device_id, name, NETWORK_INTERFACE_TYPE,
 			IS_INTERFACE_UP, MAC_ADDR,
 			NETWORK_INTERFACE_PURPOSE, IS_PRIMARY, SHOULD_MONITOR,
@@ -2316,7 +2316,7 @@ sub add_interfaces {
 	if (
 		!(
 			$numchanges += $stab->DBInsert(
-				table  => 'network_interface',
+				table  => 'v_network_interface_trans',
 				hash   => $new,
 				errors => \@errs
 			)
@@ -2357,7 +2357,7 @@ sub switch_all_ni_prop_to_n {
 	if ($field) {
 		my $q = qq{
 			select	count(*)
-			  from	network_interface
+			  from	v_network_interface_trans
 			 where	device_id = ?
 			  and	$field = 'Y'
 		};
@@ -2368,7 +2368,7 @@ sub switch_all_ni_prop_to_n {
 
 	if ($old_count) {
 		my $q = qq{
-			update network_interface
+			update v_network_interface_trans
 			  set  $field = 'N'
 			where  device_id = ?
 		};
@@ -2464,7 +2464,7 @@ sub delete_device_interfaces {
 
 	my (@netblocks);
 	my $nbq = qq{
-		select	netblock_id from network_interface
+		select	netblock_id from v_network_interface_trans
 					where device_id = ?
 	};
 	my $Nsth = $stab->prepare($nbq) || $stab->return_db_err;
@@ -2477,14 +2477,14 @@ sub delete_device_interfaces {
 	my @qs = (
 		qq{delete from dns_record
 			where netblock_id in
-					(select netblock_id from network_interface
+					(select netblock_id from v_network_interface_trans
 						where device_id = ?
 					)
 		},
 		qq{delete from network_interface_purpose
 					where device_id = ?
 		},
-		qq{delete from network_interface
+		qq{delete from v_network_interface_trans
 					where device_id = ?
 		},
 	);
