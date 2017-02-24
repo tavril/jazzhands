@@ -176,6 +176,10 @@ sub build_device_box {
 		"Physical Label", "PHYSICAL_LABEL",
 		'DEVICE_ID'
 	);
+	$top_table .= $stab->build_tr(
+		$values, "b_dropdown", "Site Code", "SITE_CODE",
+		'DEVICE_ID'
+	);
 	$top_table .= $stab->build_tr( { -dolinkUpdate => 'device_type' },
 		$values, "b_dropdown", "Model", "DEVICE_TYPE_ID", 'DEVICE_ID' );
 	$top_table .= $stab->build_tr(
@@ -190,10 +194,14 @@ sub build_device_box {
 		$values, "b_textfield", "Part #", "PART_NUMBER",
 		'DEVICE_ID'
 	);
-	$top_table .= $stab->build_tr(
-		$values, "b_dropdown", "Site Code", "SITE_CODE",
-		'DEVICE_ID'
-	);
+
+	$top_table .= $stab->build_tr( $values, "b_dropdown", "Ownership",
+		"OWNERSHIP_STATUS", 'DEVICE_ID' );
+	if ( !$values || (exists($values->{ _dbx('OWNERSHIP_STATUS') }) && $values->{ _dbx('OWNERSHIP_STATUS') } eq 'leased' ) ) {
+		$top_table .=
+		  $stab->build_tr( $values, "b_textfield", "Lease Expires",
+			"LEASE_EXPIRATION_DATE", 'DEVICE_ID' );
+	}
 
 	#$top_table .= $stab->build_tr($values, "b_textfield",
 	#	"Asset #", "ASSET_TAG", 'DEVICE_ID');
@@ -256,18 +264,10 @@ sub build_device_box {
 	#	  $stab->build_tr( $osargs, $values, "b_dropdown", "Operating System",
 	#		"OPERATING_SYSTEM_ID", 'DEVICE_ID' );
 	$left_table  .= $voetr;
-	$right_table .= $stab->build_tr( $values, "b_dropdown", "Ownership",
-		"OWNERSHIP_STATUS", 'DEVICE_ID' );
-	if ( !$values || (exists($values->{ _dbx('OWNERSHIP_STATUS') }) && $values->{ _dbx('OWNERSHIP_STATUS') } eq 'leased' ) ) {
-		$right_table .=
-		  $stab->build_tr( $values, "b_textfield", "Lease Expires",
-			"LEASE_EXPIRATION_DATE", 'DEVICE_ID' );
-	}
+
 	$right_table .=
 	  $stab->build_tr( $values, "b_dropdown", "Service Environment",
 		"SERVICE_ENVIRONMENT_ID", 'DEVICE_ID' );
-	$right_table .= $stab->build_tr( $values, "b_dropdown", "Mgmt Protocol",
-		"AUTO_MGMT_PROTOCOL", 'DEVICE_ID' );
 
 	if ($values) {
 		$left_table .= $cgi->Tr(
