@@ -110,8 +110,8 @@ sub find_devices {
 				on nb.netblock_id = ni.netblock_id
 			left join dns_record dns
 				on dns.netblock_id = nb.netblock_id
-			left join asset a
-				on a.asset_id = d.asset_id
+			left join component c USING (component_id)
+			left join asset a USING (component_id)
 		 where	
 			$criteria
 		 order by d.device_name

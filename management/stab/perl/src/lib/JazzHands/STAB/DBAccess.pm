@@ -752,10 +752,11 @@ sub get_dev_from_serial {
 	my ( $self, $serno ) = @_;
 
 	my $q = qq{
-		select  *
-		  from  device d
-		  		left join asset a using  (asset_id)
-	 	where  lower(a.serial_number) = lower(:serno)
+		SELECT  *
+		  FROM  device d
+				LEFT JOIN component c USING (component_id)
+				LEFT JOIN asset a using  (component_id)
+		 WHERE  lower(a.serial_number) = lower(:serno)
 		LIMIT 1
 	};
 

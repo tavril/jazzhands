@@ -606,7 +606,7 @@ sub disp_device {
 			INNER JOIN rack_location rl
 				USING (rack_location_id)
 			LEFT JOIN asset a
-				USING (asset_id)
+				USING (component_id)
 		WHERE	
 			device.device_id= ?
 	};
