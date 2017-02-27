@@ -91,7 +91,7 @@ print $cgi->p(
 print $cgi->start_form( -method => 'POST', -action => 'search.pl' ), "\n";
 
 print $cgi->start_table( { align => 'center' } );
-print $cgi->Tr( $cgi->td("Host/Label: "),
+print $cgi->Tr( $cgi->td("Host/Label/DNS Shortname: "),
 	$cgi->td( $cgi->textfield( -name => "byname" ) ) ),
   "\n";
 print $cgi->Tr( $cgi->td("IP or CIDR: "),
