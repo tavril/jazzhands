@@ -182,7 +182,6 @@ sub dump_toplevel {
 
 sub dump_nodes {
 	my ( $stab, $p_nblkid, $nblk ) = @_;
-	my $org = 'N';
 
 	my $nb       = new Net::IP( $nblk->{ _dbx('IP_ADDRESS') } );
 	my $fam      = $nblk->{ _dbx('FAMILY') } || -1;
@@ -201,7 +200,12 @@ sub dump_nodes {
 	  ),
 	  "\n";
 
-	print print_netblock_allocation( $stab, $p_nblkid, $nb, $org );
+	my $isbcst;
+	if($nblk->{_dbx('MASKLEN')} <= 30) {
+		$isbcst = 1;
+	}
+
+	print print_netblock_allocation( $stab, $p_nblkid, $nb, $isbcst );
 
 	print $cgi->hidden( -name => 'NETBLOCK_ID', -default => $p_nblkid );
 	print $cgi->submit( -align => 'center', -name => 'Submit Updates' );
@@ -242,9 +246,9 @@ sub dump_nodes {
 		do {
 			my $ip = $newnb->ip();
 			my $desc;
-			if ( ( $org eq 'N' && $ip eq $nb->ip() ) ) {
+			if ( ( $isbcst && $ip eq $nb->ip() ) ) {
 				$desc = "reserved for network address\n";
-			} elsif ( ( $org eq 'N' && $ip eq $nb->last_ip ) ) {
+			} elsif ( ( $isbcst && $ip eq $nb->last_ip ) ) {
 				$desc = "reserved for broadcast address\n";
 			}
 			print $stab->build_netblock_ip_row( undef,
@@ -536,6 +540,7 @@ sub do_dump_netblock {
 			h.netblock_status,
 			h.is_single_address,
 			family(h.ip_address) as family,
+			masklen(h.ip_address) as masklen,
 			h.description,
 			h.parent_netblock_id,
 			h.site_code,
@@ -643,7 +648,7 @@ sub do_dump_netblock {
 	while (
 		my (
 			$level,  $nblkid, $ip,    $status, $single,
-			$family, $descr,  $pnbid, $site,   $numkids
+			$family, $masklen, $descr,  $pnbid, $site,   $numkids
 		)
 		= $sth->fetchrow_array
 	  )
@@ -777,7 +782,7 @@ sub netblock_search_box {
 }
 
 sub print_netblock_allocation {
-	my ( $stab, $nblkid, $nb, $org ) = @_;
+	my ( $stab, $nblkid, $nb, $isbroadcast ) = @_;
 
 	my $dbh  = $stab->dbh;
 	my $cgi  = $stab->cgi;
@@ -803,7 +808,7 @@ sub print_netblock_allocation {
 	# non-organizational netblocks  end up with their network and
 	# broadcast being consumed. consumed. consumed. consumed.
 	#
-	if ( $org eq 'N' ) {
+	if ( ! $isbroadcast ) {
 		$breakdown{'Allocated'} += 2;
 		$total += 2;
 	}

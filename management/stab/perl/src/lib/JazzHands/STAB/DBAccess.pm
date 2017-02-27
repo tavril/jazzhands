@@ -307,7 +307,8 @@ sub get_netblock_from_id {
 	my $q = qq{
 		select  netblock.*,
 			net_manip.inet_dbtop(ip_address) as ip,
-			family(ip_address) as family
+			family(ip_address) as family,
+			masklen(ip_address) as masklen
 		 from   netblock
 		where   netblock_id = :nblkid
 			$morewhere
