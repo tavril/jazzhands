@@ -32,6 +32,28 @@ function swaparrows(id, state) {
 	}
 }
 
+//
+// jqeuery version of the above.  They should be consolidated.
+//
+function swaparrows_jq(obj, state) {
+	if(obj == null) {
+		return;
+	}
+
+	var thing = $(obj).attr('src');
+	if(state == 'dance') {
+		thing = thing.replace(/stabcons\/.*$/gi, "stabcons/progress.gif");
+	} else if(state == 'arrow') {
+		thing = thing.replace(/stabcons\/.*$/gi, "stabcons/arrow.png");
+	} else if(state == 'down') {
+		thing = thing.replace(/stabcons\/.*$/gi, "stabcons/collapse.jpg");
+	} else if(state == 'up') {
+		thing = thing.replace(/stabcons\/.*$/gi, "stabcons/expand.jpg");
+	}
+
+	$(obj).attr('src', thing);
+}
+
 function toggleon_text(but) {
 	$(but).parent('a').prev(":input").toggleClass('off');
 	$(but).addClass('irrelevant');

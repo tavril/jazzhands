@@ -689,6 +689,22 @@ div.centeredlist {
 	margin: auto;
 }
 
+ul.nbhier {
+	padding-top: 0;
+}
+
+ul.nbhier > li.nbkids {
+	list-style-type: none;
+	margin-left: 0ex;
+}
+
+ul.nbhier > li.nbnokids {
+	list-style-type: none;
+	padding-left: 23px;
+	margin-left: 5ex;
+}
+
+
 END
 	undef $stab;
 }

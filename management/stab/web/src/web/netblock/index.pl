@@ -1,4 +1,20 @@
 #!/usr/bin/env perl
+#
+# Copyright (c) 2010-2017 Todd M. Kover
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 # Copyright (c) 2005-2010, Vonage Holdings Corp.
 # All rights reserved.
 #
@@ -142,9 +158,7 @@ sub dump_toplevel {
 		  . $cgi->li(
 			join(
 				" ",
-				$cgi->span(
-					{ -class => 'netblocksite' }, $site
-				),
+				$cgi->span( { -class => 'netblocksite' }, $site ),
 				$cgi->span(
 					{ -class => 'netblocklink' },
 					"- ",
@@ -238,10 +252,10 @@ sub dump_nodes {
 		} while ( ++$newnb );
 	} else {
 
-	       # ipv6 is different because dumping out a /64 is going to be an
-	       # effing huge web page.  ipv4 could probably be folded into that,
-	       # but being able to visualize the spaces is useful, so maybe only
-	       # for blocks after a certain size
+		# ipv6 is different because dumping out a /64 is going to be an
+		# effing huge web page.  ipv4 could probably be folded into that,
+		# but being able to visualize the spaces is useful, so maybe only
+		# for blocks after a certain size
 		my $lastip;
 		my $trgap = 0;
 		my $gapno = 0;
@@ -277,8 +291,7 @@ sub dump_nodes {
 			#
 			my $ip = $hr->{ _dbx('IP_ADDRESS') };
 			if ( defined($lastip) ) {
-				my $thegap =
-				  $myip->intip() - $lastip->intip() - 1;
+				my $thegap = $myip->intip() - $lastip->intip() - 1;
 				if ( $thegap > 0 ) {
 					print $stab->build_netblock_ip_row(
 						{
@@ -290,8 +303,7 @@ sub dump_nodes {
 				}
 			}
 			$lastip = $myip;
-			print $stab->build_netblock_ip_row( undef,
-				$nblk, $hr, $ip );
+			print $stab->build_netblock_ip_row( undef, $nblk, $hr, $ip );
 		}
 
 		# deal with empty block
@@ -330,8 +342,8 @@ sub dump_nodes {
 }
 
 sub get_netblock_link_header {
-	my ( $stab, $nblkid, $blk, $bits, $startnblkid, $descr, $pnbid, $site )
-	  = @_;
+	my ( $stab, $nblkid, $blk, $startnblkid, $descr, $pnbid, $site, $numkids ) =
+	  @_;
 
 	my $cgi = $stab->cgi;
 	my $dbh = $stab->dbh;
@@ -344,17 +356,14 @@ sub get_netblock_link_header {
 		$displaysite = ( "[" . ( defined($site) ? $site : "" ) . "] " );
 	}
 
-	my $pnb    = $stab->get_netblock_from_id($pnbid);
 	my $parent = "";
-	if ( $pnb && $nblkid == $startnblkid ) {
-		my $purl = make_url( $stab, $pnbid );
-		$parent = " - "
-		  . $cgi->a( { -href => $purl, },
-			"Parent: ", $pnb->{ _dbx('IP_ADDRESS') } );
-	}
 
 	my $ops = "";
-	if ( num_kids( $stab, $nblkid, 'Y' ) == 0 ) {
+	#
+	# Something of a hack.  If it has no "single address" children, then
+	# allow it to be subnetable.
+	#
+	if( ( my $hassingles = num_kids( $stab, $nblkid, 'Y' )) == 0) {
 		$ops = " - "
 		  . $cgi->a(
 			{ -href => "write/addnetblock.pl?id=$nblkid" },
@@ -372,14 +381,14 @@ sub get_netblock_link_header {
 			$cgi->img(
 				{
 					-class => 'subnet',
-					-src =>
-					  "../stabcons/Octagon_delete.svg",
+					-src   => "../stabcons/Octagon_delete.svg",
 					-alt   => "[Remove]",
 					-title => "Remove Network",
 				}
 			)
 		  );
 	}
+
 
 	if ( 1 || $allowdescedit eq 'yes' ) {
 		my $name = "NETBLOCK_DESCRIPTION_$nblkid";
@@ -405,17 +414,36 @@ sub get_netblock_link_header {
 
 	}
 
+	my $expand = "";
+	#
+	# If there are any networks that are children of this one, print an
+	# expansion arrow for javaacripty goodness.
+	#
+	if ($numkids) {
+		$expand = $cgi->a(
+			{ -class => 'netblkexpand' },
+			$cgi->img(
+				{
+					-class => 'netblkexpand',
+					-src   => '../stabcons/collapse.jpg'
+				}
+			)
+		);
+	}
+
 	my $url = make_url( $stab, $nblkid );
-	return $cgi->li(
+
+	return join(
+		" ",
 		$cgi->span(
 			{ -class => 'netblocklink' },
+			$expand,
 			$cgi->a( { -href => $url }, $blk )
 		  )
 		  . "-"
 		  . $displaysite
 		  . $cgi->span( { -class => 'netblockdesc' }, ( $descr || "" ) )
-		  . $ops,
-		$parent, "\n"
+		  . $ops
 	);
 }
 
@@ -472,16 +500,14 @@ sub do_dump_netblock {
 		}
 	} else {
 		if ( $start_id !~ /^\d+$/ ) {
-			$stab->error_return(
-				"Invalid netblock id ($start_id) specified");
+			$stab->error_return("Invalid netblock id ($start_id) specified");
 		}
 
 		my $netblock =
 		  $stab->get_netblock_from_id( $start_id,
 			{ is_single_address => 'N' } );
 		if ( !defined($netblock) ) {
-			$stab->error_return(
-				"Invalid netblock id ($start_id) specified");
+			$stab->error_return("Invalid netblock id ($start_id) specified");
 		}
 		my $base = $netblock->{ _dbx('IP_ADDRESS') };
 		$nb = new Net::IP($base);
@@ -499,25 +525,32 @@ sub do_dump_netblock {
 		$nblk = $stab->get_netblock_from_id( $start_id,
 			{ is_single_address => 'N' } );
 		if ( !defined($nblk) ) {
-			$stab->error_return(
-				"Unable to find Netblock ($start_id)",
+			$stab->error_return( "Unable to find Netblock ($start_id)",
 				undef, 1 );
 		}
 	}
 
 	my $q = qq{
-		select  netblock_level,
-			netblock_id,
-			ip_address,
-			netblock_status,
-			is_single_address,
-			family(ip_address) as family,
-			description,
-			parent_netblock_id,
-			site_code
-		  from  v_netblock_hier
-		where	root_netblock_id = ?
-		order by array_ip_path
+		select  h.netblock_level,
+			h.netblock_id,
+			h.ip_address,
+			h.netblock_status,
+			h.is_single_address,
+			family(h.ip_address) as family,
+			h.description,
+			h.parent_netblock_id,
+			h.site_code,
+			coalesce (haskids.tally, 0) as haskids
+		  from  v_netblock_hier h
+				LEFT JOIN (
+					SELECT	parent_netblock_id AS netblock_id,
+							count(*) AS tally
+					FROM	netblock
+					WHERE	is_single_address = 'N'
+					GROUP BY parent_netblock_id
+				) haskids USING (netblock_id)
+		where	h.root_netblock_id = ?
+		order by h.array_ip_path
 		-- XXX probably need to rethink the order by here.
 	};
 
@@ -560,62 +593,134 @@ sub do_dump_netblock {
 	my $root = $nblk->{'IP_ADDRESS'};
 
 	my ( @hier, %kids );
-	my $lastl = -1;
 	push( @hier, $root );
 
 	print $cgi->p;
+
+	if ( $nblk->{ _dbx('PARENT_NETBLOCK_ID') } ) {
+		my $p =
+		  $stab->get_netblock_from_id( $nblk->{ _dbx('PARENT_NETBLOCK_ID') } );
+		print $cgi->a(
+			{ -href => "./?nblkid=" . $p->{ _dbx('NETBLOCK_ID') } },
+			"Parent: " . $p->{ _dbx('IP_ADDRESS') },
+			(
+				( $p->{ _dbx( 'DESCRIPTION' ) } )
+				? $p->{ _dbx( 'DESCRIPTION' ) }
+				: ""
+			)
+		);
+	}
 
 	print $cgi->start_form(
 		-method => 'POST',
 		-action => 'write/edit_netblock.pl'
 	);
 
+	# This does not work with individual expansion
+	print $cgi->div(
+		{ -class => 'centeredlist' },
+		$cgi->a( { -class => 'expandall' }, "Expand All" ),
+		' // ',
+		$cgi->a( { -class => 'collapseall' }, "Collapse All" ),
+	);
+
 	if ( $allowdescedit eq 'yes' || $nblk->{ _dbx('CAN_SUBNET') } eq 'Y' ) {
 		print $cgi->submit("Submit Updates");
 	}
 
-       # This is required for oracle, I *THINK*.  Under postgresql, this results
-       # in double printing  a given block.  All this needs to be rewritten.
-       # ... and netmask bits is gone.
+	print $cgi->p();
 
-	#print get_netblock_link_header(
-	#	$stab, $start_id, $root, $nblk->{_dbx('NETMASK BITS')},
-	#	$start_id,
-	#	$nblk->{_dbx('DESCRIPTION')},
-	#	$nblk->{_dbx('PARENT_NETBLOCK_ID')}
-	#);
+	# This is required for oracle, I *THINK*.  Under postgresql, this results
+	# in double printing  a given block.  All this needs to be rewritten.
+	# ... and netmask bits is gone.
 
+	my $lastl = -1;
+	my @tiers;
+	# push( @tiers, { first => '', ul => '' } );
+
+	# indicates that we're in the process of descending into a hierarchy.
+	my $isdescending = 0;
 	while (
 		my (
-			$level,  $nblkid, $ip,    $status,
-			$single, $descr,  $pnbid, $site
+			$level, $nblkid, $ip,   $status, $single, $family,
+			$descr, $pnbid,  $site, $numkids
 		)
 		= $sth->fetchrow_array
 	  )
 	{
-		if ( $lastl < $level ) {
-			for ( my $i = $lastl ; $i < $level ; $i++ ) {
-				print "<ul>";
-			}
-		}
+		#
+		# build the printable row for this db row.
+		# How it is used is decided later...
+		#
+		my $thing = get_netblock_link_header( $stab, $nblkid, $ip,
+			$start_id, $descr, $pnbid, $site, $numkids );
+
+		my $mknewtier = 0;
+		my $addpeer = 1;
+		my $bumpup = 0;
+
+		#
+		# When going up a level, need to close out the existing level and
+		# roll it into the one above.  This may happen multiple times.
+		#
 		if ( $lastl > $level ) {
-			print "</ul><ul>\n";
 			for ( my $i = $lastl ; $i > $level ; $i-- ) {
-				print "</ul>";
+				my $x  = pop(@tiers);
+				my $me = $cgi->ul({-class=>'nbhier'},$x->{label}, $x->{kids} );
+				$tiers[$#tiers]->{kids} .= $cgi->li({-class=>'nbkids'}, $me);
+				$bumpup++;
+			}
+
+			# If this one has kids, then we're immediately going to create
+			# a new level based on this one, because the next row will be
+			# descendents.
+			if($numkids) {
+				$mknewtier = 1;
+				$isdescending = 1;
+			} else {
+				$isdescending = 0;
+			}
+		} elsif($lastl == $level) {
+			#
+			# In this case, we're about to drop into children of this row,
+			# so make it so
+			#
+			if($numkids) {
+				$mknewtier = 1;
+				$isdescending = 1;
+			} else {
+				$isdescending = 0;
+			}
+		} else {	# lastl < $level
+			if($numkids) {
+				$mknewtier = 1;
+				$isdescending = 1;
+			} else {
+				$isdescending = 0;
 			}
 		}
-		print get_netblock_link_header( $stab, $nblkid, $ip,
-			$start_id, $descr, $pnbid, $site );
+
+		#warn "$ip -- is:$isdescending mk:$mknewtier add:$addpeer last:$lastl/cur:$level kids:$numkids// tiers:", $#tiers, (($lastl != $#tiers + 1)?" -- WTF":""), "\n";
+
+		if($mknewtier) {
+			push( @tiers, { label => $thing, kids => '', level => $level } );
+		} elsif($addpeer) {
+			$tiers[$#tiers]->{kids} .= $cgi->li( { -class => 'nbnokids' }, $thing );
+		};
 		$lastl = $level;
 	}
 	$sth->finish;
-	for ( my $i = $lastl ; $i ; $i-- ) {
-		print "</ul>";
+	for ( my $i = $lastl ; $i && $#tiers > 0; $i-- ) {
+		my $x = pop @tiers;
+		my $k = (length ($x->{kids}))? $cgi->li({-class=>'nbnokids'},$x->{kids}):"";
+		$tiers[$#tiers]->{kids} .= $cgi->ul({-class=>'nbhier'}, $x->{label}, $k );
 	}
+	my $x = pop @tiers;
+	print $cgi->ul({-class=>'nbhier'},$x->{label}, $x->{kids});
 	print "\n";
 
 	print $cgi->end_form, "\n";
-	if (       ( defined($expand) && $expand eq 'yes' )
+	if (   ( defined($expand) && $expand eq 'yes' )
 		|| ( !defined($expand) && !num_kids( $stab, $start_id ) ) )
 	{
 		dump_nodes( $stab, $start_id, $nblk );
@@ -647,9 +752,7 @@ sub netblock_search_box {
 					$cgi->textfield( -name => 'bycidr' )
 				),
 				$cgi->div(
-					$cgi->b(
-"Description/Reservation Search: "
-					),
+					$cgi->b( "Description/Reservation Search: " ),
 					$cgi->textfield( -name => 'bydesc' )
 				),
 				$cgi->submit('Search'),
@@ -744,10 +847,8 @@ sub dump_netblock_routes {
 
 	my $tt = $cgi->td(
 		[
-			"Del",         "Source IP",
-			"/",           "Bits",
-			"Dest Device", "Dest IP",
-			"Description"
+			"Del",         "Source IP", "/", "Bits",
+			"Dest Device", "Dest IP",   "Description"
 		]
 	);
 	while ( my $hr = $sth->fetchrow_hashref ) {
@@ -773,14 +874,12 @@ sub build_route_Tr {
 	if ($hr) {
 		my $id = $hr->{ _dbx('STATIC_ROUTE_TEMPLATE_ID') };
 		$dev =
-		    $hr->{ _dbx('DEVICE_NAME') } . ":"
-		  . $hr->{ _dbx('INTERFACE_NAME') },
+		  $hr->{ _dbx('DEVICE_NAME') } . ":" . $hr->{ _dbx('INTERFACE_NAME') },
 		  $del = $cgi->hidden(
 			-name    => "STATIC_ROUTE_TEMPLATE_ID_$id",
 			-default => $id
 		  )
-		  . $stab->build_checkbox( $hr, "",
-			'rm_STATIC_ROUTE_TEMPLATE_ID',
+		  . $stab->build_checkbox( $hr, "", 'rm_STATIC_ROUTE_TEMPLATE_ID',
 			'STATIC_ROUTE_TEMPLATE_ID' );
 
 	}
@@ -790,28 +889,20 @@ sub build_route_Tr {
 			[
 				$del,
 				$stab->b_textfield(
-					{ -allow_ip0 => 1 },
-					$hr,
-					'SOURCE_BLOCK_IP',
-					'STATIC_ROUTE_TEMPLATE_ID'
+					{ -allow_ip0 => 1 }, $hr,
+					'SOURCE_BLOCK_IP', 'STATIC_ROUTE_TEMPLATE_ID'
 				),
 				"/",
 				$stab->b_textfield(
-					$hr,
-					'SOURCE_MASKLEN',
-					'STATIC_ROUTE_TEMPLATE_ID'
+					$hr, 'SOURCE_MASKLEN', 'STATIC_ROUTE_TEMPLATE_ID'
 				),
 				$dev,
 				$stab->b_textfield(
-					{ -allow_ip0 => 1 },
-					$hr,
-					'ROUTE_DESTINATION_IP',
-					'STATIC_ROUTE_TEMPLATE_ID'
+					{ -allow_ip0 => 1 }, $hr,
+					'ROUTE_DESTINATION_IP', 'STATIC_ROUTE_TEMPLATE_ID'
 				),
 				$stab->b_textfield(
-					$hr,
-					'ROUTE_DESCRIPTION',
-					'STATIC_ROUTE_TEMPLATE_ID'
+					$hr, 'ROUTE_DESCRIPTION', 'STATIC_ROUTE_TEMPLATE_ID'
 				),
 			]
 		)

@@ -371,6 +371,10 @@ sub start_html {
 				},
 				{
 					-language => 'javascript',
+					-src      => "$stabroot/javascript/stab-common.js"
+				},
+				{
+					-language => 'javascript',
 					-src      => "$stabroot/javascript/netblock.js"
 				},
 				{
