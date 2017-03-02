@@ -666,7 +666,8 @@ sub fill_asset_details_with_device($$) {
 	return undef if ( !$dev );
 
 	if ( $dev->{ _dbx('COMPONENT_ID') } ) {
-		my $ass = $self->get_asset_from_component_id( $dev->{ _dbx('COMPONENT_ID') } );
+		my $ass =
+		  $self->get_asset_from_component_id( $dev->{ _dbx('COMPONENT_ID') } );
 
 		foreach my $c (
 			qw(ASSET_ID SERIAL_NUMBER PART_NUMBER ASSET_TAG OWNERSHIP_STATUS LEASE_EXPIRATION_DATE)
@@ -817,9 +818,9 @@ sub add_dns_record {
 	$opts = _dbx( $opts, 'lower' );
 
 	if ( $opts->{dns_value_record_id} ) {
-		delete($opts->{dns_value});
+		delete( $opts->{dns_value} );
 	} elsif ( $opts->{dns_type} =~ /^A(AAA)?/ ) {
-		delete($opts->{dns_value});
+		delete( $opts->{dns_value} );
 		if ( !$opts->{should_generate_ptr} ) {
 			if ( $self->ptr_exists( $opts->{netblock_id} ) ) {
 				$opts->{should_generate_ptr} = 'N';
@@ -829,7 +830,7 @@ sub add_dns_record {
 		}
 	} elsif ( $opts->{dns_type} eq 'REVERSE_ZONE_BLOCK_PTR' ) {
 		$opts->{netblock_id} = $opts->{dns_value};
-		delete($opts->{dns_value});
+		delete( $opts->{dns_value} );
 	}
 
 	if ( !$opts->{should_generate_ptr} ) {
@@ -1573,22 +1574,22 @@ sub validate_route_entry {
 	  )
 	{
 		$self->error_return(
-			"Must specify all of ip, bits and dest IP for static route route" );
+			"Must specify all of ip, bits and dest IP for static route route");
 	}
 
 	if ($srcip) {
 		if ( !$self->validate_ip($srcip) ) {
 			$self->error_return(
-				"$srcip for static route is an invalid IP address" );
+				"$srcip for static route is an invalid IP address");
 		}
 		if ( !$self->validate_ip($destip) ) {
 			$self->error_return(
-				"$destip for static route is an invalid IP address" );
+				"$destip for static route is an invalid IP address");
 		}
 
 		if ( $srcbits !~ /^\d+$/ || $srcbits > 32 ) {
 			$self->error_return(
-				"$srcbits for static route is not a valid number of bits." );
+				"$srcbits for static route is not a valid number of bits.");
 		}
 
 		# check valid ip, bits, dest ip
@@ -1865,7 +1866,7 @@ sub build_netblock_ip_row {
 		$atix    = $hr->{ _dbx('APPROVAL_REF_NUM') };
 		$atixsys = $hr->{ _dbx('APPROVAL_TYPE') };
 
-		my $recid     = $hr->{ _dbx('DNS_RECORD_ID') };
+		my $recid = $hr->{ _dbx('DNS_RECORD_ID') };
 
 		if ( $status ne 'Reserved' && $status ne 'Legacy' ) {
 			$editabledesc = 0;
@@ -1895,8 +1896,7 @@ sub build_netblock_ip_row {
 
 		if ( defined($recid) ) {
 			$fqhn =
-			  $cgi->a( { -href => "../dns/?DNS_RECORD_ID=$recid" },
-				$fqhn );
+			  $cgi->a( { -href => "../dns/?DNS_RECORD_ID=$recid" }, $fqhn );
 		}
 	} else {
 		$editabledesc = 1;
@@ -2035,8 +2035,8 @@ sub process_and_insert_dns_record {
 		# If it is not set, we set it for the user if the IP address
 		# is showing up for the first time
 
-		if ( exists( $opts->{'should_generate_ptr'} ) 
-			&& defined($opts->{'should_generate_ptr'})
+		if (   exists( $opts->{'should_generate_ptr'} )
+			&& defined( $opts->{'should_generate_ptr'} )
 			&& $opts->{'should_generate_ptr'} eq 'Y' )
 		{
 			# set all other dns_records but this one to have

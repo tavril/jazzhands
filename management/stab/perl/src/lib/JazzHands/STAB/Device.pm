@@ -1896,16 +1896,16 @@ sub build_collapsed_if_box {
 			{ -class => 'dnsroot' },
 			$cgi->textfield(
 				{
-					-type  => 'text',
-					-class => 'irrelevant dnsname',
-					-name  => 'DNS_NAME_' . $netintid,
-					-value => $values->{ _dbx('DNS_NAME') },
+					-type     => 'text',
+					-class    => 'irrelevant dnsname',
+					-name     => 'DNS_NAME_' . $netintid,
+					-value    => $values->{ _dbx('DNS_NAME') },
 					-disabled => 1,
 				}
 			  )
 			  . $cgi->popup_menu(
 				{
-					-name => 'DNS_DOMAIN_ID_' . $netintid,
+					-name  => 'DNS_DOMAIN_ID_' . $netintid,
 					-class => 'irrelevant dnsdomain',
 				}
 			  )

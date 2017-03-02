@@ -1,4 +1,21 @@
 #!/usr/bin/env perl
+#
+# Copyright (c) 2016-2017 Todd Kover
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 # Copyright (c) 2005-2010, Vonage Holdings Corp.
 # All rights reserved.
 #
@@ -54,7 +71,7 @@ sub find_devices {
 	if ( defined($name) ) {
 		$criteria .= " and " if ( length($criteria) );
 		$criteria .=
-" (lower(d.device_name) like lower(:name) or lower(dns.dns_name) like lower(:name) or lower(d.physical_label) like lower(:name))";
+		  " (lower(d.device_name) like lower(:name) or lower(dns.dns_name) like lower(:name) or lower(d.physical_label) like lower(:name))";
 
 	}
 
@@ -90,10 +107,10 @@ sub find_devices {
 		$criteria .= " and " if ( length($criteria) );
 		if ( $bits < 32 ) {
 			$criteria .=
-" (net_manip.inet_base(nb.ip_address, :bits) = net_manip.inet_base(net_manip.inet_ptodb(:ip, 1), :bits))";
+			  " (net_manip.inet_base(nb.ip_address, :bits) = net_manip.inet_base(net_manip.inet_ptodb(:ip, 1), :bits))";
 		} else {
 			$criteria .=
-" (host(nb.ip_address)::inet = net_manip.inet_ptodb(:ip))";
+			  " (host(nb.ip_address)::inet = net_manip.inet_ptodb(:ip))";
 		}
 	}
 
@@ -170,7 +187,7 @@ sub do_device_search {
 	my $byos     = $stab->cgi_parse_param('OPERATING_SYSTEM_ID');
 	my $Search   = $stab->cgi_parse_param('Search');
 
-	my $dormd   = $stab->cgi_parse_param('INCLUDE_REMOVED');
+	my $dormd = $stab->cgi_parse_param('INCLUDE_REMOVED');
 	$dormd = $stab->mk_chk_yn($dormd);
 
 	$cgi->delete('devlist');
@@ -178,7 +195,7 @@ sub do_device_search {
 	#
 	# if no search terms, then redirect to where they can be entered.
 	#
-	if (       !$cgi->referer
+	if (   !$cgi->referer
 		&& !defined($byip)
 		&& !defined($byname)
 		&& !defined($bymac)
@@ -206,7 +223,7 @@ sub do_device_search {
 	} elsif ( $#searchresults > 0 ) {
 		if ( $#searchresults > 500 ) {
 			$stab->error_return(
-"Too many matches ($#searchresults).  Please limit your query"
+				"Too many matches ($#searchresults).  Please limit your query"
 			);
 		}
 		my $devlist = join( ",", @searchresults );

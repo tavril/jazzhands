@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Copyright (c) 2010-2016 Todd M. Kover
+# Copyright (c) 2010-2017 Todd M. Kover
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

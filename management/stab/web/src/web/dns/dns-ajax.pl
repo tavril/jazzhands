@@ -1,5 +1,5 @@
 
-# Copyright (c) 2013 Todd Kover
+# Copyright (c) 2013-2017 Todd Kover
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,16 +101,16 @@ sub do_dns_ajax {
 	} elsif ( $what eq 'dnsaddrow' ) {
 		my $types   = $stab->build_dns_type_drop();
 		my $classes = $stab->build_dns_classes_drop();
-		my $r	= {
+		my $r       = {
 			'classes' => $classes,
 			'types'   => $types,
 		};
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
 	} elsif ( $what eq 'dnsref' ) {
-		my $r   = { 
-			types => ['A','AAAA','CNAME'],
-			domains => $stab->build_dns_drop( $dnsdomid ),
+		my $r = {
+			types   => [ 'A', 'AAAA', 'CNAME' ],
+			domains => $stab->build_dns_drop($dnsdomid),
 
 		};
 		my $sth = $stab->prepare(
@@ -134,7 +134,7 @@ sub do_dns_ajax {
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
 	} elsif ( $what eq 'domains' ) {
-		my $r   = { };
+		my $r   = {};
 		my $sth = $stab->prepare(
 			qq{
 	 			select  dns.dns_domain_id,
@@ -147,9 +147,9 @@ sub do_dns_ajax {
 		while ( my $hr = $sth->fetchrow_hashref ) {
 			my $row = {
 				value => $hr->{dns_domain_id},
-				text => $hr->{soa_name},
+				text  => $hr->{soa_name},
 			};
-			if($dnsdomid && $dnsdomid == $hr->{dns_domain_id}) {
+			if ( $dnsdomid && $dnsdomid == $hr->{dns_domain_id} ) {
 				$row->{'selected'} = 'true';
 			}
 			push( @{ $r->{domains} }, $row );
@@ -180,17 +180,13 @@ sub do_dns_ajax {
 		$id = $row->{ _dbx('DNS_RECORD_ID') };
 		my $doms = "";
 		if ($row) {
-			my $type;	# not used at the moment.
+			my $type;    # not used at the moment.
 			$doms =
 			  $stab->build_dns_drop( $row->{ _dbx('DNS_DOMAIN_ID') }, $type );
 		}
 		my $j = JSON::PP->new->utf8;
-		my $r = {
-			'domains'  => $doms,
-		};
+		my $r = { 'domains' => $doms, };
 		print $j->encode($r);
-
-
 
 	} else {
 

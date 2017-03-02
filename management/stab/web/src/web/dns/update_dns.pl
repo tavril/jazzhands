@@ -22,7 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Copyright (c) 2013 Todd Kover
+# Copyright (c) 2013-2017 Todd Kover
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -495,7 +495,10 @@ sub do_dns_update {
 		$cgi->delete("DNS_RECORD_ID_$delid");
 		$numchanges++;
 
-		if ( $dns && $dns->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/ && $dns->{_dbx('NETBLOCK_ID')}) {
+		if (   $dns
+			&& $dns->{ _dbx('DNS_TYPE') } =~ /^A(AAA)?$/
+			&& $dns->{ _dbx('NETBLOCK_ID') } )
+		{
 			$numchanges +=
 			  $stab->delete_netblock( $dns->{ _dbx('NETBLOCK_ID') }, 1 );
 		}
@@ -522,11 +525,9 @@ sub do_dns_update {
 		my ( $recupdid, $refid ) = ( $1, $2 );
 
 		if ( $refid =~ /^new/ ) {
-			$numchanges +=
-			  $stab->process_dns_ref_add( $recupdid, $refid );
+			$numchanges += $stab->process_dns_ref_add( $recupdid, $refid );
 		} else {
-			$numchanges +=
-			  $stab->process_dns_ref_updates( $recupdid, $refid );
+			$numchanges += $stab->process_dns_ref_updates( $recupdid, $refid );
 		}
 	}
 

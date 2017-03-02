@@ -1296,6 +1296,7 @@ sub b_dropdown {
 
 	my $q;
 	if ( $selectfield eq 'DEVICE_TYPE_ID' ) {
+
 		# kookiness is to strip out 'Not Applicable' companies.
 		$q = qq{
 			select * from
@@ -2921,7 +2922,6 @@ sub vendor_logo {
 	$rv;
 }
 
-
 #
 # process new references to this record.
 #
@@ -2970,7 +2970,7 @@ sub process_dns_ref_updates($$$$) {
 		should_generate_ptr => 'N',
 	};
 
-	$numchanges += $self->process_and_update_dns_record( $new );
+	$numchanges += $self->process_and_update_dns_record($new);
 }
 
 sub process_and_update_dns_record {
@@ -3018,13 +3018,13 @@ sub process_and_update_dns_record {
 	if ( defined( $opts->{class} ) ) {
 		$newrecord->{'DNS_CLASS'} = $opts->{dns_class};
 	}
+
 	# This is used for dns references
 	if ( defined( $opts->{dns_domain_id} ) ) {
 		$newrecord->{'DNS_DOMAIN_ID'} = $opts->{dns_domain_id};
 	}
 
 	$newrecord = _dbx( $newrecord, 'lower' );
-
 
 	# On update:
 	#	Only pay attention to if the new type is A or AAAA.

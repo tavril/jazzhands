@@ -55,9 +55,9 @@ sub do_domain_search {
 	my $cgi  = $stab->cgi          || die "Could not create cgi";
 	my $dbh  = $stab->dbh          || die "Could not create dbh";
 
-	my $id  = $stab->cgi_parse_param('DNS_DOMAIN_ID');
-	my $addonly  = $stab->cgi_parse_param('addonly');
-	if($addonly) {
+	my $id      = $stab->cgi_parse_param('DNS_DOMAIN_ID');
+	my $addonly = $stab->cgi_parse_param('addonly');
+	if ($addonly) {
 		$addonly = ';addonly=1';
 	} else {
 		$addonly = '';
