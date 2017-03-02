@@ -201,7 +201,7 @@ sub dump_nodes {
 	  "\n";
 
 	my $isbcst;
-	if($nblk->{_dbx('MASKLEN')} <= 30) {
+	if ( $nblk->{ _dbx('MASKLEN') } <= 30 ) {
 		$isbcst = 1;
 	}
 
@@ -216,6 +216,7 @@ sub dump_nodes {
 	my $q = qq{
 		select	nb.netblock_id, 
 			ni.device_id,
+			dns.dns_record_id,
 			dns.dns_name,
 			dom.soa_name,
 			net_manip.inet_dbtop(nb.ip_address) as ip,
@@ -647,8 +648,8 @@ sub do_dump_netblock {
 	my $isdescending = 0;
 	while (
 		my (
-			$level,  $nblkid, $ip,    $status, $single,
-			$family, $masklen, $descr,  $pnbid, $site,   $numkids
+			$level,   $nblkid, $ip,    $status, $single, $family,
+			$masklen, $descr,  $pnbid, $site,   $numkids
 		)
 		= $sth->fetchrow_array
 	  )
@@ -808,7 +809,7 @@ sub print_netblock_allocation {
 	# non-organizational netblocks  end up with their network and
 	# broadcast being consumed. consumed. consumed. consumed.
 	#
-	if ( ! $isbroadcast ) {
+	if ( !$isbroadcast ) {
 		$breakdown{'Allocated'} += 2;
 		$total += 2;
 	}

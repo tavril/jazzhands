@@ -1865,6 +1865,8 @@ sub build_netblock_ip_row {
 		$atix    = $hr->{ _dbx('APPROVAL_REF_NUM') };
 		$atixsys = $hr->{ _dbx('APPROVAL_TYPE') };
 
+		my $recid     = $hr->{ _dbx('DNS_RECORD_ID') };
+
 		if ( $status ne 'Reserved' && $status ne 'Legacy' ) {
 			$editabledesc = 0;
 		}
@@ -1889,10 +1891,12 @@ sub build_netblock_ip_row {
 			$printip =
 			  $cgi->a( { -href => "../device/device.pl?devid=$devid" },
 				$printip );
-			$name =
-			  $cgi->a( { -href => "../device/device.pl?devid=$devid" }, $name );
+		}
 
-			# $desc = $fqhn;
+		if ( defined($recid) ) {
+			$fqhn =
+			  $cgi->a( { -href => "../dns/?DNS_RECORD_ID=$recid" },
+				$fqhn );
 		}
 	} else {
 		$editabledesc = 1;
