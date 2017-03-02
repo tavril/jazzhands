@@ -817,9 +817,9 @@ sub add_dns_record {
 	$opts = _dbx( $opts, 'lower' );
 
 	if ( $opts->{dns_value_record_id} ) {
-		$opts->{dns_value} = undef;
+		delete($opts->{dns_value});
 	} elsif ( $opts->{dns_type} =~ /^A(AAA)?/ ) {
-		$opts->{dns_value} = undef;
+		delete($opts->{dns_value});
 		if ( !$opts->{should_generate_ptr} ) {
 			if ( $self->ptr_exists( $opts->{netblock_id} ) ) {
 				$opts->{should_generate_ptr} = 'N';
@@ -829,7 +829,7 @@ sub add_dns_record {
 		}
 	} elsif ( $opts->{dns_type} eq 'REVERSE_ZONE_BLOCK_PTR' ) {
 		$opts->{netblock_id} = $opts->{dns_value};
-		$opts->{dns_value}   = undef;
+		delete($opts->{dns_value});
 	}
 
 	if ( !$opts->{should_generate_ptr} ) {
@@ -2035,7 +2035,8 @@ sub process_and_insert_dns_record {
 		# If it is not set, we set it for the user if the IP address
 		# is showing up for the first time
 
-		if ( exists( $opts->{'should_generate_ptr'} )
+		if ( exists( $opts->{'should_generate_ptr'} ) 
+			&& defined($opts->{'should_generate_ptr'})
 			&& $opts->{'should_generate_ptr'} eq 'Y' )
 		{
 			# set all other dns_records but this one to have

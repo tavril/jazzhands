@@ -1321,6 +1321,7 @@ sub b_dropdown {
 					model
 			FROM component_type ct
 				JOIN company cy USING (company_id)
+			WHERE model IS NOT NULL
 			) xx
 			ORDER BY company_name, lower(model)
 		};
