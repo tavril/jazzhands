@@ -219,7 +219,6 @@ sub do_dns_ajax {
 			push(@{ $r->{suggestions} },
 				{ value => $match, data => $id });
 		}
-		warn Dumper($query, $r);
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
 	} else {

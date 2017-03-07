@@ -390,6 +390,11 @@ function add_new_dns_row(button, resp) {
 			$("<td>").append(classes),
 			$("<td>").append(types),
 			$("<td>").append(
+				$('<input/>', {
+					type: 'hidden',
+					class: 'valuedns',
+					name: 'new_DNS_VALUE_RECORD_ID_' + offset
+				}),
 				$("<input/>", {
 					type: 'text',
 					class: 'dnsvalue',
@@ -419,23 +424,32 @@ function configure_autocomplete() {
 		serviceUrl: 'dns-ajax.pl?what=cname-complete;',
 		onSelect: function (suggestion) {
 			var id = $(this).closest('tr').attr('id');
-			var x = $(this).closest('td').find('.valuedns').val();
-			if($(x).length == 0) {
-				x = $('<input/>', {
-						type: 'hidden',
-						class: 'valuedns',
-						name: 'DNS_VALUE_RECORD_ID_' + id
-					});
-				$(this).closest('td').append(x);
-			}
+			var x = $(this).closest('td').find('.valuedns');
 			$(x).val(suggestion.data);
 		},
-		beforeRender: function(container, suggestions) {
+		onSearchStart: function(container, suggestions) {
 			// just used to clear the dns value record in case it does not
 			// point to another cname.
 			$(this).closest('td').find('.valuedns').val(null);
 		}
 	});
+}
+
+//
+// changes editable field to a text field. 
+//
+function make_outref_editable(obj) {
+	var id= $(obj).closest('tr').attr('id');
+	var v = $(obj).closest('td').find('a.dnsrefoutlink');
+	$(v).before($('<input/>', {
+		type: 'text',
+		class: 'dnsvalue dnscname',
+		name: 'DNS_VALUE_' + id,
+		value: $(v).first().text()
+	}));
+	$(obj).remove();
+	$(v).remove();
+	configure_autocomplete();
 }
 
 $(document).ready(function(){
@@ -466,6 +480,12 @@ $(document).ready(function(){
 	// this causes the EDIT button to show up where needed
 	$("table.dnstable").on('click', "a.stabeditbutton", function(event) {
 		toggleon_text(event.target);
+	});
+
+	// This casuses reference edits to change into the right kind of
+	// text box.
+	$("table.dnstable").on('click', "a.dnsrefoutedit", function(event) {
+		make_outref_editable(event.target);
 	});
 
 	// this causes a new dns record button to show up where needed.
