@@ -195,25 +195,31 @@ sub do_dns_ajax {
 
 		my $sth = $stab->prepare(
 			qq{
+			SELECT * FROM (
 			select	dns.dns_record_id,
+					CASE WHEN dns.dns_name IS NULL THEN soa_name
+					ELSE concat(dns_name, '.', soa_name) END AS match,
 					dom.soa_name,
 					dns.dns_name
 		  	from	dns_record dns 
 		  			inner join dns_domain dom using (dns_domain_id)
-		 	where	coalesce(dns_name, '.', soa_name) LIKE ?
-			and 	dns_type in ('A','AAAA','CNAME')
+			WHERE 	dns_type in ('A','AAAA','CNAME')
 			and		dns_value_record_id IS NULL
 			and		reference_dns_record_id IS NULL
+			) subq
+			WHERE match LIKE :q
 			order by dns_name, soa_name
 		 	limit 10
 		}
 		) || $stab->return_db_err();
-		$sth->execute($query."%") || die $sth->errstr;
+		$sth->bind_param(':q', $query.'%') || die $sth->errstr;
+		$sth->execute() || die $sth->errstr;
 
-		while(my ($id,$soa,$dns) = $sth->fetchrow_array) {
+		while(my ($id,$match, $soa,$dns) = $sth->fetchrow_array) {
 			push(@{ $r->{suggestions} },
-				{ value => join(".", $dns,$soa), data => $id });
+				{ value => $match, data => $id });
 		}
+		warn Dumper($query, $r);
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);
 	} else {

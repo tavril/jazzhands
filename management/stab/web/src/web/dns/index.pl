@@ -633,11 +633,14 @@ sub dump_zone {
 			  : "unnamed zone";
 			$parlink = $cgi->a( { -href => $url }, $parent );
 		}
+		$parlink = "Parent: $parlink";
 
 		if ( $nblink && length($nblink) ) {
 			$nblink = $cgi->br($nblink);
 		}
 
+		print $cgi->hr;
+	} else {
 		$zonelink = $cgi->br(
 			$cgi->a(
 				{ -href => "./?dnsdomid=" . $dnsdomainid },
@@ -645,7 +648,6 @@ sub dump_zone {
 				$hr->{ _dbx('SOA_NAME') }
 			)
 		);
-		print $cgi->hr;
 	}
 
 	print $cgi->div( { -class => 'centeredlist' }, $parlink, $nblink,

@@ -182,6 +182,7 @@ function change_dns_record(obj) {
 
 	if(obj.value == 'CNAME') {
 		$(obj).closest('tr').find('.dnsvalue').addClass('dnscname');
+		configure_autocomplete();
 	} else {
 		$(obj).closest('tr').find('.dnsvalue').removeClass('dnscname');
 	}
@@ -408,6 +409,35 @@ function add_new_dns_row(button, resp) {
 
 }
 
+// This is a separate function so it can be re-called when new rows are
+// created.  There is probably a smarter way to do this.
+function configure_autocomplete() {
+	// This handles making cnames destinations auto complete to othe		// records, if appropriate
+	$('input.dnscname').devbridgeAutocomplete({
+		noCache: false,
+		deferRequestBy: 250,
+		serviceUrl: 'dns-ajax.pl?what=cname-complete;',
+		onSelect: function (suggestion) {
+			var id = $(this).closest('tr').attr('id');
+			var x = $(this).closest('td').find('.valuedns').val();
+			if($(x).length == 0) {
+				x = $('<input/>', {
+						type: 'hidden',
+						class: 'valuedns',
+						name: 'DNS_VALUE_RECORD_ID_' + id
+					});
+				$(this).closest('td').append(x);
+			}
+			$(x).val(suggestion.data);
+		},
+		beforeRender: function(container, suggestions) {
+			// just used to clear the dns value record in case it does not
+			// point to another cname.
+			$(this).closest('td').find('.valuedns').val(null);
+		}
+	});
+}
+
 $(document).ready(function(){
 	$("table.dnstable").on('change', "select.dnstype", function(event) {
 		change_dns_record(event.target);
@@ -447,18 +477,7 @@ $(document).ready(function(){
 		return(0);
 	});
 
-	// This handles making cnames destinations auto complete to othe		// records, if appropriate
-	$('input.dnscname').autocomplete({
-		noCache: false,
-		deferRequestBy: 250,
-		serviceUrl: 'dns-ajax.pl?what=cname-complete;',
-		onSelect: function (suggestion) {
-			alert('You selected: ' + suggestion.value + ', ' + suggestion.data);
-		},
-		beforeRender: function(container, suggestions) {
-			// just used to clear the dns value record.
-		}
-	});
+	configure_autocomplete();
 
 
 	create_dns_reference_jquery("table.dnstable");

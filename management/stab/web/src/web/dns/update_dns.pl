@@ -250,6 +250,7 @@ sub process_dns_update {
 	my $class  = $stab->cgi_parse_param( 'DNS_CLASS', $updateid );
 	my $type   = $stab->cgi_parse_param( 'DNS_TYPE', $updateid );
 	my $value  = $stab->cgi_parse_param( 'DNS_VALUE', $updateid );
+	my $valrecid  = $stab->cgi_parse_param( 'DNS_VALUE_RECORD_ID', $updateid );
 	my $genptr = $stab->cgi_parse_param( 'chk_SHOULD_GENERATE_PTR', $updateid );
 	my $enabled = $stab->cgi_parse_param( 'chk_IS_ENABLED', $updateid );
 	my $ttlonly = $stab->cgi_parse_param( 'ttlonly', $updateid );
@@ -259,6 +260,10 @@ sub process_dns_update {
 	my $in_srv_weight = $stab->cgi_parse_param( "DNS_SRV_WEIGHT",   $updateid );
 	my $in_srv_port   = $stab->cgi_parse_param( "DNS_SRV_PORT",     $updateid );
 	my $in_priority   = $stab->cgi_parse_param( "DNS_PRIORITY",     $updateid );
+
+	if($valrecid) {
+		$value = undef;
+	}
 
 	$enabled = $stab->mk_chk_yn($enabled);
 	$genptr  = $stab->mk_chk_yn($genptr);
@@ -282,7 +287,7 @@ sub process_dns_update {
 		$stab->error_return("SRV/MX Priority must be a number");
 	}
 
-	if ( !defined($name) && !$ttl && !$class && !$type && !$value ) {
+	if ( !defined($name) && !$ttl && !$class && !$type && !$value && !$valrecid) {
 		return $numchanges;
 	}
 
@@ -294,13 +299,15 @@ sub process_dns_update {
 			$name =~ s/^\s+//;
 			$name =~ s/\s+$//;
 		}
-		if ( !$value ) {
+		if ( !$value && !$valrecid ) {
 			my $hint = $name || "";
 			$hint = "($hint id#$updateid)";
 			$stab->error_return("Records may not have empty values ($hint)");
 		}
-		$value =~ s/^\s+//;
-		$value =~ s/\s+$//;
+		if($value) {
+			$value =~ s/^\s+//;
+			$value =~ s/\s+$//;
+		}
 	}
 
 	if ( $ttl && $ttl !~ /^\d+/ ) {
@@ -321,6 +328,7 @@ sub process_dns_update {
 		dns_class           => $class,
 		dns_type            => $type,
 		dns_value           => $value,
+		dns_value_record_id	=> $valrecid,
 		dns_priority        => $in_priority,
 		dns_srv_service     => $in_srv_svc,
 		dns_srv_protocol    => $in_srv_proto,
@@ -329,6 +337,8 @@ sub process_dns_update {
 		is_enabled          => $enabled,
 		should_generate_ptr => $genptr,
 	};
+
+	warn Dumper($new);
 
 	$numchanges += $stab->process_and_update_dns_record( $new, $ttlonly );
 
