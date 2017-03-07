@@ -180,6 +180,12 @@ function change_dns_record(obj) {
 	var nametr = $(obj).closest('tr').first();
 	var nametd = $(obj).closest('tr').find('td.DNS_NAME');
 
+	if(obj.value == 'CNAME') {
+		$(obj).closest('tr').find('.dnsvalue').addClass('dnscname');
+	} else {
+		$(obj).closest('tr').find('.dnsvalue').removeClass('dnscname');
+	}
+
 	// deal with showing/hiding the PTR box for A records
 	if(obj.value == 'A' || obj.value == 'AAAA') {
 		var x = $(obj).closest('tr').find('.ptrbox').first();
@@ -385,6 +391,7 @@ function add_new_dns_row(button, resp) {
 			$("<td>").append(
 				$("<input/>", {
 					type: 'text',
+					class: 'dnsvalue',
 					name: 'new_DNS_VALUE_'+offset,
 					id: 'new_DNS_VALUE_'+offset,
 				})
