@@ -173,7 +173,7 @@ function wtf_build_dns_drop(sel, detail, queryparams) {
 //
 // changes editable field to a text field. 
 //
-function make_outref_editable(obj) {
+function make_outref_editable(obj, type) {
 	if (!$(obj).length) {
 		return;
 	}
@@ -187,7 +187,7 @@ function make_outref_editable(obj) {
 	}));
 	$(obj).remove();
 	$(v).remove();
-	configure_autocomplete();
+	configure_autocomplete(v);
 }
 
 //
@@ -202,16 +202,16 @@ function change_dns_record(obj, old) {
 	var nametr = $(obj).closest('tr').first();
 	var nametd = $(obj).closest('tr').find('td.DNS_NAME');
 
-	if(old == 'CNAME' ) {
-		make_outref_editable( $(obj).closest('tr').find('td.dnsvalue').find('a.dnsrefoutedit') );
-	}
+
+	// this will just do nothing if it is not a dns reference. 
+	make_outref_editable( $(obj).closest('tr').find('td.dnsvalue').find('a.dnsrefoutedit'), obj.value );
 
 	if(obj.value == 'CNAME' || obj.value == 'A' || obj.value == 'AAAA') {
-		$(obj).closest('tr').find('.dnsvalue').addClass('dnsautocomplete');
-		configure_autocomplete();
+		$(obj).closest('tr').find('input.dnsvalue').addClass('dnsautocomplete');
+		configure_autocomplete( $(obj).closest('tr').find('input.dnsvalue') );
 	} else {
-		$(obj).closest('tr').find('.dnsvalue').removeClass('dnsautocomplete');
-		$(obj).closest('tr').find('.dnsvalue').autocomplete('disable');
+		$(obj).closest('tr').find('input.dnsvalue').removeClass('dnsautocomplete');
+		$(obj).closest('tr').find('input.dnsvalue').autocomplete('dispose');
 	}
 
 	// deal with showing/hiding the PTR box for A records
@@ -420,7 +420,7 @@ function add_new_dns_row(button, resp) {
 			$("<td>").append(
 				$('<input/>', {
 					type: 'hidden',
-					class: 'valuedns',
+					class: 'valdnsrecid',
 					name: 'new_DNS_VALUE_RECORD_ID_' + offset
 				}),
 				$("<input/>", {
@@ -442,30 +442,37 @@ function add_new_dns_row(button, resp) {
 
 }
 
+//
 // This is a separate function so it can be re-called when new rows are
-// created.  There is probably a smarter way to do this.
-function configure_autocomplete() {
-	// This handles making cnames destinations auto complete to othe		// records, if appropriate
-	$('input.dnsautocomplete').devbridgeAutocomplete({
-		noCache: false,
-		deferRequestBy: 250,
-		serviceUrl: 'dns-ajax.pl?what=autocomplete-is-broken',
-		onSelect: function (suggestion) {
-			var id = $(this).closest('tr').attr('id');
-			var x = $(this).closest('td').find('.valuedns');
-			$(x).val(suggestion.data);
-		},
-		onSearchStart: function(container, suggestions) {
-			// include the record type in the request.
-			var type = $(this).closest('tr').find('select.dnstype').val();
-			var valf = $(this).closest('td').find('.dnsautocomplete');
-			$(valf).autocomplete('setOptions', {
-				serviceUrl: 'dns-ajax.pl?what=autocomplete;type='+ type +';'
-			});
-			// just used to clear the dns value record in case it does not
-			// point to another cname.
-			$(this).closest('td').find('.valuedns').val(null);
-		}
+// created (or new dnsvalues are created).  This is an each() call in order
+// to pass along the type in the url for correct auto-completion.  This means
+// that every time the type select is chagned, the url needs to be changed
+// to match
+//
+function configure_autocomplete(selector) {
+	if(selector == null) {
+		selector = 'input.dnsautocomplete';
+	}
+
+	//
+	// Its done thsi way so that the URL can have the type in it.
+	//
+	$('html').find(selector).each(function(idx, elem) {
+		var type = $(elem).closest('tr').find('select.dnstype').val();
+		var url = 'dns-ajax.pl?what=autocomplete;type='+ type +';'
+		$(elem).devbridgeAutocomplete({
+			noCache: false,
+			deferRequestBy: 200,
+			serviceUrl: url,
+			onSelect: function (suggestion) {
+				var id = $(this).closest('tr').attr('id');
+				var x = $(this).closest('td').find('.valdnsrecid');
+				$(x).val(suggestion.data);
+			},
+			onSearchStart: function(container, suggestions) {
+				$(this).closest('td').find('.valdnsrecid').val(null);
+			}
+		});
 	});
 }
 

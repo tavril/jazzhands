@@ -401,7 +401,7 @@ sub build_dns_rec_Tr {
 		my %args = (
 			-name  => "DNS_VALUE_RECORD_ID_" . $hr->{ _dbx('DNS_RECORD_ID') },
 			-label => '',
-			-class => 'valuedns',
+			-class => 'valdnsrecid',
 		);
 		if ( $hr->{ _dbx('DNS_VALUE_RECORD_ID') } ) {
 			$args{-value} = $hr->{ _dbx('DNS_VALUE_RECORD_ID') },;
