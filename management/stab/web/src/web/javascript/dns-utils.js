@@ -181,7 +181,7 @@ function make_outref_editable(obj) {
 	var v = $(obj).closest('td').find('a.dnsrefoutlink');
 	$(v).before($('<input/>', {
 		type: 'text',
-		class: 'dnsvalue dnscname',
+		class: 'dnsvalue dnsautocomplete',
 		name: 'DNS_VALUE_' + id,
 		value: $(v).first().text()
 	}));
@@ -206,11 +206,11 @@ function change_dns_record(obj, old) {
 		make_outref_editable( $(obj).closest('tr').find('td.dnsvalue').find('a.dnsrefoutedit') );
 	}
 
-	if(obj.value == 'CNAME') {
-		$(obj).closest('tr').find('.dnsvalue').addClass('dnscname');
+	if(obj.value == 'CNAME' || obj.value == 'A' || obj.value == 'AAAA') {
+		$(obj).closest('tr').find('.dnsvalue').addClass('dnsautocomplete');
 		configure_autocomplete();
 	} else {
-		$(obj).closest('tr').find('.dnsvalue').removeClass('dnscname');
+		$(obj).closest('tr').find('.dnsvalue').removeClass('dnsautocomplete');
 		$(obj).closest('tr').find('.dnsvalue').autocomplete('disable');
 	}
 
@@ -446,16 +446,22 @@ function add_new_dns_row(button, resp) {
 // created.  There is probably a smarter way to do this.
 function configure_autocomplete() {
 	// This handles making cnames destinations auto complete to othe		// records, if appropriate
-	$('input.dnscname').devbridgeAutocomplete({
+	$('input.dnsautocomplete').devbridgeAutocomplete({
 		noCache: false,
 		deferRequestBy: 250,
-		serviceUrl: 'dns-ajax.pl?what=cname-complete;',
+		serviceUrl: 'dns-ajax.pl?what=autocomplete-is-broken',
 		onSelect: function (suggestion) {
 			var id = $(this).closest('tr').attr('id');
 			var x = $(this).closest('td').find('.valuedns');
 			$(x).val(suggestion.data);
 		},
 		onSearchStart: function(container, suggestions) {
+			// include the record type in the request.
+			var type = $(this).closest('tr').find('select.dnstype').val();
+			var valf = $(this).closest('td').find('.dnsautocomplete');
+			$(valf).autocomplete('setOptions', {
+				serviceUrl: 'dns-ajax.pl?what=autocomplete;type='+ type +';'
+			});
 			// just used to clear the dns value record in case it does not
 			// point to another cname.
 			$(this).closest('td').find('.valuedns').val(null);

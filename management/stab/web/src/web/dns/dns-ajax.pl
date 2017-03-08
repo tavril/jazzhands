@@ -188,7 +188,7 @@ sub do_dns_ajax {
 		my $j = JSON::PP->new->utf8;
 		my $r = { 'domains' => $doms, };
 		print $j->encode($r);
-	} elsif ( $what eq 'cname-complete' ) {
+	} elsif ( $what eq 'autocomplete' ) {
 		my $r = {
 			query => 'unit',
 		};
