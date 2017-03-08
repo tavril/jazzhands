@@ -171,20 +171,47 @@ function wtf_build_dns_drop(sel, detail, queryparams) {
 }
 
 //
+// changes editable field to a text field. 
+//
+function make_outref_editable(obj) {
+	if (!$(obj).length) {
+		return;
+	}
+	var id= $(obj).closest('tr').attr('id');
+	var v = $(obj).closest('td').find('a.dnsrefoutlink');
+	$(v).before($('<input/>', {
+		type: 'text',
+		class: 'dnsvalue dnscname',
+		name: 'DNS_VALUE_' + id,
+		value: $(v).first().text()
+	}));
+	$(obj).remove();
+	$(v).remove();
+	configure_autocomplete();
+}
+
+//
 // This deals with showing extra fields for SRV and MX records, and making
 // them go away the class changes.  There is a lot of repetition, so
 // it should probably be broken out into some supporting functions...
 //
-function change_dns_record(obj) {
+// note - old may not be set.
+//
+function change_dns_record(obj, old) {
 	var prms = QsToObj();
 	var nametr = $(obj).closest('tr').first();
 	var nametd = $(obj).closest('tr').find('td.DNS_NAME');
+
+	if(old == 'CNAME' ) {
+		make_outref_editable( $(obj).closest('tr').find('td.dnsvalue').find('a.dnsrefoutedit') );
+	}
 
 	if(obj.value == 'CNAME') {
 		$(obj).closest('tr').find('.dnsvalue').addClass('dnscname');
 		configure_autocomplete();
 	} else {
 		$(obj).closest('tr').find('.dnsvalue').removeClass('dnscname');
+		$(obj).closest('tr').find('.dnsvalue').autocomplete('disable');
 	}
 
 	// deal with showing/hiding the PTR box for A records
@@ -239,6 +266,7 @@ function change_dns_record(obj) {
 			$(box).insertBefore(value);
 		}
 	}
+
 
 	if(obj.value == 'SRV') {
 		var name = $(obj).closest('tr').find('input[name*="DNS_NAME"]');
@@ -435,27 +463,14 @@ function configure_autocomplete() {
 	});
 }
 
-//
-// changes editable field to a text field. 
-//
-function make_outref_editable(obj) {
-	var id= $(obj).closest('tr').attr('id');
-	var v = $(obj).closest('td').find('a.dnsrefoutlink');
-	$(v).before($('<input/>', {
-		type: 'text',
-		class: 'dnsvalue dnscname',
-		name: 'DNS_VALUE_' + id,
-		value: $(v).first().text()
-	}));
-	$(obj).remove();
-	$(v).remove();
-	configure_autocomplete();
-}
-
 $(document).ready(function(){
-	$("table.dnstable").on('change', "select.dnstype", function(event) {
-		change_dns_record(event.target);
+	$("table.dnstable").on('focus', "select.dnstype", function(event) {
+		$(this).data("oldValue", $(this).val() )
 	});
+	$("table.dnstable").on('change', "select.dnstype", function(event) {
+		change_dns_record(event.target, $(this).data('oldValue') );
+	});
+
 	// If this was a reload, its possible for this object to be set to
 	// SRV or MX, in which case, those fields should be expanded.
 	var s = document.getElementById("DNS_TYPE");
@@ -485,7 +500,7 @@ $(document).ready(function(){
 	// This casuses reference edits to change into the right kind of
 	// text box.
 	$("table.dnstable").on('click', "a.dnsrefoutedit", function(event) {
-		make_outref_editable(event.target);
+		make_outref_editable(this);
 	});
 
 	// this causes a new dns record button to show up where needed.
