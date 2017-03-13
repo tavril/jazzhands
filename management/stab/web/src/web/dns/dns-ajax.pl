@@ -190,7 +190,7 @@ sub do_dns_ajax {
 		my $r = { 'domains' => $doms, };
 		print $j->encode($r);
 	} elsif ( $what eq 'autocomplete' ) {
-		my $r = { query => 'unit', };
+		my $r = { query => 'unit', suggestions => []};
 
 		my $typelimit = "('A','AAAA','CNAME')";
 		if ( $type eq 'A' ) {

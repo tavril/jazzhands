@@ -178,16 +178,19 @@ function make_outref_editable(obj) {
 		return;
 	}
 	var id= $(obj).closest('tr').attr('id');
-	var v = $(obj).closest('td').find('a.dnsrefoutedit');
-	$(v).before($('<input/>', {
+	var td = $(obj).closest('td');
+	var v = $(td).find('a.dnsrefoutlink');
+	var nelem = $('<input/>', {
 		type: 'text',
 		class: 'dnsvalue dnsautocomplete',
 		name: 'DNS_VALUE_' + id,
 		value: $(v).first().text()
-	}));
+	});
+	$(v).before( nelem );
+	configure_autocomplete( nelem );
+
 	$(obj).remove();
 	$(v).remove();
-	configure_autocomplete(v);
 }
 
 //
@@ -204,7 +207,7 @@ function change_dns_record(obj, old) {
 
 
 	// this will just do nothing if it is not a dns reference. 
-	$(obj).closest('tr').find('a.dnsrefoutedit').each(
+	$(obj).closest('tr').find('a.dnsrefouteditbutton').each(
 		function(idx, elem) {
 			make_outref_editable(elem);
 			
@@ -518,7 +521,7 @@ $(document).ready(function(){
 
 	// This casuses reference edits to change into the right kind of
 	// text box.
-	$("table.dnstable").on('click', "a.dnsrefoutedit", function(event) {
+	$("table.dnstable").on('click', "a.dnsrefouteditbutton", function(event) {
 		make_outref_editable(this);
 	});
 
