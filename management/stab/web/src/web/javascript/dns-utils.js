@@ -459,17 +459,19 @@ function configure_autocomplete(selector) {
 	//
 	$('html').find(selector).each(function(idx, elem) {
 		var type = $(elem).closest('tr').find('select.dnstype').val();
-		var url = 'dns-ajax.pl?what=autocomplete;type='+ type +';'
+		var url = 'dns-ajax.pl?what=autocomplete;DNS_TYPE='+ type +';'
 		$(elem).devbridgeAutocomplete({
 			noCache: false,
 			deferRequestBy: 200,
+			showNoSuggestionNotice: true,
+			noSuggestionNotice: 'No suggested matches.',
 			serviceUrl: url,
 			onSelect: function (suggestion) {
 				var id = $(this).closest('tr').attr('id');
 				var x = $(this).closest('td').find('.valdnsrecid');
 				$(x).val(suggestion.data);
 			},
-			onSearchStart: function(container, suggestions) {
+			onSearchStart: function(container, suggestion) {
 				$(this).closest('td').find('.valdnsrecid').val(null);
 			}
 		});

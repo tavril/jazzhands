@@ -37,7 +37,8 @@ sub do_dns_ajax {
 	my $what = $stab->cgi_parse_param('what')      || 'none';
 	my $dnsrecid = $stab->cgi_parse_param('DNS_RECORD_ID');
 	my $dnsdomid = $stab->cgi_parse_param('DNS_DOMAIN_ID');
-	my $query = $stab->cgi_parse_param('query');
+	my $type     = $stab->cgi_parse_param('DNS_TYPE');
+	my $query    = $stab->cgi_parse_param('query');
 
 	#
 	# passedin contains all the arguments that were passed to the original
@@ -116,7 +117,7 @@ sub do_dns_ajax {
 		};
 		my $sth = $stab->prepare(
 			qq{
-	 			select  dns.dns_record_id,
+				select  dns.dns_record_id,
 		     			dns.dns_type,
 		     			dns.dns_name,
 					dns.dns_domain_id,
@@ -165,7 +166,7 @@ sub do_dns_ajax {
 					dns.dns_domain_id,
 					dom.soa_name,
 					dns.dns_name
-		  	from	dns_record dns 
+				from	dns_record dns
 		  			inner join dns_domain dom using (dns_domain_id)
 		 	where	dns_record_id = ?
 		 	limit 1
@@ -189,35 +190,38 @@ sub do_dns_ajax {
 		my $r = { 'domains' => $doms, };
 		print $j->encode($r);
 	} elsif ( $what eq 'autocomplete' ) {
-		my $r = {
-			query => 'unit',
-		};
+		my $r = { query => 'unit', };
+
+		my $typelimit = "('A','AAAA','CNAME')";
+		if ( $type eq 'A' ) {
+			$typelimit = "('A')";
+		} elsif ( $type eq 'AAAA' ) {
+			$typelimit = "('AAAA')";
+		}
 
 		my $sth = $stab->prepare(
 			qq{
 			SELECT * FROM (
-			select	dns.dns_record_id,
-					CASE WHEN dns.dns_name IS NULL THEN soa_name
-					ELSE concat(dns_name, '.', soa_name) END AS match,
-					dom.soa_name,
-					dns.dns_name
-		  	from	dns_record dns 
-		  			inner join dns_domain dom using (dns_domain_id)
-			WHERE 	dns_type in ('A','AAAA','CNAME')
-			and		dns_value_record_id IS NULL
-			and		reference_dns_record_id IS NULL
+				SELECT	dns.dns_record_id,
+						CASE WHEN dns.dns_name IS NULL THEN soa_name
+						ELSE concat(dns_name, '.', soa_name) END AS match,
+						dom.soa_name,
+						dns.dns_name
+		  		FROM	dns_record dns
+		  				inner join dns_domain dom using (dns_domain_id)
+				WHERE 	dns_type in $typelimit
+				AND		dns_value_record_id IS NULL
+				AND		reference_dns_record_id IS NULL
 			) subq
-			WHERE match LIKE :q
+			WHERE match LIKE ?
 			order by dns_name, soa_name
 		 	limit 10
 		}
 		) || $stab->return_db_err();
-		$sth->bind_param(':q', $query.'%') || die $sth->errstr;
-		$sth->execute() || die $sth->errstr;
+		$sth->execute( $query . "%" ) || die $sth->errstr;
 
-		while(my ($id,$match, $soa,$dns) = $sth->fetchrow_array) {
-			push(@{ $r->{suggestions} },
-				{ value => $match, data => $id });
+		while ( my ( $id, $match, $soa, $dns ) = $sth->fetchrow_array ) {
+			push( @{ $r->{suggestions} }, { value => $match, data => $id } );
 		}
 		my $j = JSON::PP->new->utf8;
 		print $j->encode($r);

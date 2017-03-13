@@ -392,7 +392,8 @@ sub start_html {
 				},
 				{
 					-language => 'javascript',
-					-src => "$root/javascript-common/external/jquery-Autocomplete/jquery.autocomplete.min.js",
+					-src =>
+					  "$root/javascript-common/external/jquery-Autocomplete/jquery.autocomplete.js",
 				},
 				{
 					-language => 'javascript',

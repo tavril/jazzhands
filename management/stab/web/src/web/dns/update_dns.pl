@@ -339,6 +339,11 @@ sub process_dns_update {
 		$stab->error_return("DNS Records may not contain spaces");
 	}
 
+	# force to N.
+	if($valrecid) {
+		$genptr = 'N';
+	}
+
 	my $new = {
 		dns_name            => $name,
 		dns_record_id       => $updateid,
@@ -468,6 +473,11 @@ sub process_dns_add {
 		if ( ( !defined($name) || !length($name) ) && $type eq 'CNAME' ) {
 			$stab->error_return(
 				"CNAMEs are illegal when combined with an SOA record.");
+		}
+
+		# force to N.
+		if($valrcid) {
+			$genptr = 'N';
 		}
 
 		my $new = {
