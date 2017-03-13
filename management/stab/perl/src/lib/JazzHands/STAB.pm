@@ -3046,7 +3046,7 @@ sub process_and_update_dns_record {
 		if ( $opts->{should_generate_ptr} eq 'Y' ) {
 			$newrecord->{'should_generate_ptr'} = $opts->{should_generate_ptr};
 		} elsif ( $orig->{'dns_type'} ne $opts->{'dns_type'} ) {
-			if ( !$self->get_dns_a_record_for_ptr( $opts->{'dns_value'} ) ) {
+			if ( ! $opts->{dns_value_record_id} && !$self->get_dns_a_record_for_ptr( $opts->{'dns_value'} ) ) {
 				$newrecord->{'should_generate_ptr'} = 'Y';
 			} else {
 				$newrecord->{'should_generate_ptr'} =
@@ -3057,7 +3057,6 @@ sub process_and_update_dns_record {
 		}
 
 		if ( $opts->{should_generate_ptr} eq 'Y' ) {
-
 			# set all other dns_records but this one to have ptr = 'N'
 			if ( my $recid =
 				$self->get_dns_a_record_for_ptr( $opts->{'dns_value'} ) )

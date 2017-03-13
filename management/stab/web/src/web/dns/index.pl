@@ -341,7 +341,7 @@ sub build_dns_rec_Tr {
 		if ( !$hr->{ _dbx('NETBLOCK_ID') } ) {
 			my $link =
 			  "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };
-			$value = $cgi->a( { -class => 'dnsrefoutlink', -href => $link }, $hr->{ _dbx('DNS_VALUE') } );
+			$value = $cgi->a( { -class => 'dnsrefoutedit', -href => $link }, $hr->{ _dbx('DNS_VALUE') } );
 		} else {
 			my $link =
 			  "./?DNS_RECORD_ID=" . $hr->{ _dbx('DNS_VALUE_RECORD_ID') };

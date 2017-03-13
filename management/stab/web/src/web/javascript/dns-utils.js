@@ -173,12 +173,12 @@ function wtf_build_dns_drop(sel, detail, queryparams) {
 //
 // changes editable field to a text field. 
 //
-function make_outref_editable(obj, type) {
+function make_outref_editable(obj) {
 	if (!$(obj).length) {
 		return;
 	}
 	var id= $(obj).closest('tr').attr('id');
-	var v = $(obj).closest('td').find('a.dnsrefoutlink');
+	var v = $(obj).closest('td').find('a.dnsrefoutedit');
 	$(v).before($('<input/>', {
 		type: 'text',
 		class: 'dnsvalue dnsautocomplete',
@@ -204,7 +204,11 @@ function change_dns_record(obj, old) {
 
 
 	// this will just do nothing if it is not a dns reference. 
-	make_outref_editable( $(obj).closest('tr').find('td.dnsvalue').find('a.dnsrefoutedit'), obj.value );
+	$(obj).closest('tr').find('a.dnsrefoutedit').each(
+		function(idx, elem) {
+			make_outref_editable(elem);
+			
+	});
 
 	if(obj.value == 'CNAME' || obj.value == 'A' || obj.value == 'AAAA') {
 		$(obj).closest('tr').find('input.dnsvalue').addClass('dnsautocomplete');
