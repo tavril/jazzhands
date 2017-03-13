@@ -340,7 +340,7 @@ sub process_dns_update {
 	}
 
 	# force to N.
-	if($valrecid) {
+	if ($valrecid) {
 		$genptr = 'N';
 	}
 
@@ -476,7 +476,7 @@ sub process_dns_add {
 		}
 
 		# force to N.
-		if($valrcid) {
+		if ($valrcid) {
 			$genptr = 'N';
 		}
 
