@@ -306,6 +306,8 @@ values (
 	0, 'des'
 );
 
+/*
+
 INSERT INTO Account_Password (
 	Account_Id,
 	Password_type,
@@ -318,3 +320,5 @@ INSERT INTO Account_Password (
 	now()
 );
 
+
+*/
