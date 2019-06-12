@@ -515,7 +515,7 @@ FROM jazzhands.layer3_network_collection_hier;
 
 SELECT schema_support.save_grants_for_replay('jazzhands', 'layer3_network_collection_hier');
 CREATE OR REPLACE VIEW jazzhands_legacy.logical_port AS
-SELECT logical_port_id,logical_port_name,logical_port_type,parent_logical_port_id,mac_address,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT logical_port_id,logical_port_name,logical_port_type,device_id,mlag_peering_id,parent_logical_port_id,mac_address,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.logical_port;
 
 SELECT schema_support.save_grants_for_replay('jazzhands', 'logical_port');
@@ -543,7 +543,7 @@ FROM jazzhands.logical_volume_purpose;
 
 SELECT schema_support.save_grants_for_replay('jazzhands', 'logical_volume_purpose');
 CREATE OR REPLACE VIEW jazzhands_legacy.mlag_peering AS
-SELECT mlag_peering_id,device1_id,device2_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT mlag_peering_id,device1_id,device2_id,domain_id,system_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.mlag_peering;
 
 SELECT schema_support.save_grants_for_replay('jazzhands', 'mlag_peering');
@@ -1802,6 +1802,11 @@ SELECT site_code,netblock_id
 FROM jazzhands.v_site_netblock_expanded;
 
 SELECT schema_support.save_grants_for_replay('jazzhands', 'v_site_netblock_expanded');
+CREATE OR REPLACE VIEW jazzhands_legacy.v_site_netblock_expanded_assigned AS
+SELECT site_code,netblock_id
+FROM jazzhands.v_site_netblock_expanded_assigned;
+
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_site_netblock_expanded_assigned');
 CREATE OR REPLACE VIEW jazzhands_legacy.v_token AS
 SELECT token_id,token_type,token_status,token_serial,token_sequence,account_id,token_password,zero_time,time_modulo,time_skew,is_token_locked,token_unlock_time,bad_logins,issued_date,token_last_updated,token_sequence_last_updated,lock_status_last_updated
 FROM jazzhands.v_token;
