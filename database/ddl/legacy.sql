@@ -1324,8 +1324,14 @@ FROM jazzhands.val_person_location_type;
 
 SELECT schema_support.save_grants_for_replay('jazzhands', 'val_person_location_type');
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_status AS
-SELECT person_status,description,is_enabled,propagate_from_person,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT person_status,description,is_enabled,propagate_from_person,is_forced,is_db_enforced,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_status;
+
+ALTER TABLE jazzhands_legacy.val_person_status
+	ALTER is_forced SET DEFAULT 'N'::bpchar;
+
+ALTER TABLE jazzhands_legacy.val_person_status
+	ALTER is_db_enforced SET DEFAULT 'N'::bpchar;
 
 SELECT schema_support.save_grants_for_replay('jazzhands', 'val_person_status');
 CREATE OR REPLACE VIEW jazzhands_legacy.val_physical_address_type AS
