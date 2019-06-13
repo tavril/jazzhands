@@ -1646,6 +1646,7 @@ $function$
 ;
 
 -- DONE: process_ancillary_schema(schema_support)
+DROP SCHEMA jazzhands_legacy CASCADE;
 --
 -- Process middle (non-trigger) schema jazzhands_cache
 --
@@ -3819,6 +3820,16 @@ ALTER TABLE jazzhands.network_interface
 	FOREIGN KEY (logical_port_id, device_id) REFERENCES jazzhands.logical_port(logical_port_id, device_id);
 
 -- FOREIGN KEYS TO
+-- consider FK logical_port and mlag_peering
+-- this gets recreated later, so commented out
+--ALTER TABLE jazzhands.logical_port
+--	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
+--	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
+
+-- consider FK logical_port and device
+ALTER TABLE jazzhands.logical_port
+	ADD CONSTRAINT fk_logical_port_device_id
+	FOREIGN KEY (device_id) REFERENCES jazzhands.device(device_id);
 -- consider FK logical_port and val_logical_port_type
 ALTER TABLE jazzhands.logical_port
 	ADD CONSTRAINT fk_logical_port_lg_port_type
@@ -3827,14 +3838,6 @@ ALTER TABLE jazzhands.logical_port
 ALTER TABLE jazzhands.logical_port
 	ADD CONSTRAINT fk_logical_port_parent_id
 	FOREIGN KEY (parent_logical_port_id) REFERENCES jazzhands.logical_port(logical_port_id);
--- consider FK logical_port and device
-ALTER TABLE jazzhands.logical_port
-	ADD CONSTRAINT r_820
-	FOREIGN KEY (device_id) REFERENCES jazzhands.device(device_id);
--- consider FK logical_port and mlag_peering
---ALTER TABLE jazzhands.logical_port
---	ADD CONSTRAINT r_821
---	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
 
 -- TRIGGERS
 -- this used to be at the end...
@@ -3987,7 +3990,7 @@ CREATE INDEX xif_mlag_peering_devid2 ON jazzhands.mlag_peering USING btree (devi
 -- FOREIGN KEYS FROM
 -- consider FK between mlag_peering and jazzhands.logical_port
 ALTER TABLE jazzhands.logical_port
-	ADD CONSTRAINT r_821
+	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
 	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
 
 -- FOREIGN KEYS TO
@@ -4011,6 +4014,199 @@ ALTER SEQUENCE jazzhands.mlag_peering_mlag_peering_id_seq
 DROP TABLE IF EXISTS mlag_peering_v86;
 DROP TABLE IF EXISTS audit.mlag_peering_v86;
 -- DONE DEALING WITH TABLE mlag_peering (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE operating_system
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'operating_system', 'operating_system');
+
+-- FOREIGN KEYS FROM
+ALTER TABLE device DROP CONSTRAINT IF EXISTS fk_dev_os_id;
+ALTER TABLE operating_system_snapshot DROP CONSTRAINT IF EXISTS fk_os_snap_osid;
+ALTER TABLE property DROP CONSTRAINT IF EXISTS fk_property_osid;
+
+-- FOREIGN KEYS TO
+ALTER TABLE jazzhands.operating_system DROP CONSTRAINT IF EXISTS fk_os_company;
+ALTER TABLE jazzhands.operating_system DROP CONSTRAINT IF EXISTS fk_os_os_family;
+ALTER TABLE jazzhands.operating_system DROP CONSTRAINT IF EXISTS r_819;
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'operating_system');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.operating_system DROP CONSTRAINT IF EXISTS ak_operating_system_name_version;
+ALTER TABLE jazzhands.operating_system DROP CONSTRAINT IF EXISTS pk_operating_system;
+ALTER TABLE jazzhands.operating_system DROP CONSTRAINT IF EXISTS uq_operating_system_short_name;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands"."xif7operating_system";
+DROP INDEX IF EXISTS "jazzhands"."xif_os_company";
+DROP INDEX IF EXISTS "jazzhands"."xif_os_os_family";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_operating_system ON jazzhands.operating_system;
+DROP TRIGGER IF EXISTS trigger_audit_operating_system ON jazzhands.operating_system;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'operating_system');
+---- BEGIN audit.operating_system TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'operating_system', 'operating_system');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'operating_system');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.operating_system DROP CONSTRAINT IF EXISTS operating_system_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_operating_system_ak_operating_system_name_version";
+DROP INDEX IF EXISTS "audit"."aud_operating_system_pk_operating_system";
+DROP INDEX IF EXISTS "audit"."aud_operating_system_uq_operating_system_short_name";
+DROP INDEX IF EXISTS "audit"."operating_system_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."operating_system_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."operating_system_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.operating_system TEARDOWN
+
+
+ALTER TABLE operating_system RENAME TO operating_system_v86;
+ALTER TABLE audit.operating_system RENAME TO operating_system_v86;
+
+CREATE TABLE jazzhands.operating_system
+(
+	operating_system_id	integer NOT NULL,
+	operating_system_name	varchar(255) NOT NULL,
+	operating_system_short_name	varchar(255)  NULL,
+	company_id	integer  NULL,
+	major_version	varchar(50) NOT NULL,
+	version	varchar(255) NOT NULL,
+	operating_system_family	varchar(50)  NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'operating_system', false);
+ALTER TABLE operating_system
+	ALTER operating_system_id
+	SET DEFAULT nextval('jazzhands.operating_system_operating_system_id_seq'::regclass);
+INSERT INTO operating_system (
+	operating_system_id,
+	operating_system_name,
+	operating_system_short_name,
+	company_id,
+	major_version,
+	version,
+	operating_system_family,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	operating_system_id,
+	operating_system_name,
+	operating_system_short_name,
+	company_id,
+	major_version,
+	version,
+	operating_system_family,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM operating_system_v86;
+
+INSERT INTO audit.operating_system (
+	operating_system_id,
+	operating_system_name,
+	operating_system_short_name,
+	company_id,
+	major_version,
+	version,
+	operating_system_family,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	operating_system_id,
+	operating_system_name,
+	operating_system_short_name,
+	company_id,
+	major_version,
+	version,
+	operating_system_family,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.operating_system_v86;
+
+ALTER TABLE jazzhands.operating_system
+	ALTER operating_system_id
+	SET DEFAULT nextval('jazzhands.operating_system_operating_system_id_seq'::regclass);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.operating_system ADD CONSTRAINT ak_operating_system_name_version UNIQUE (operating_system_name, version);
+ALTER TABLE jazzhands.operating_system ADD CONSTRAINT pk_operating_system PRIMARY KEY (operating_system_id);
+ALTER TABLE jazzhands.operating_system ADD CONSTRAINT uq_operating_system_short_name UNIQUE (operating_system_short_name);
+
+-- Table/Column Comments
+-- INDEXES
+CREATE INDEX xif_os_company ON jazzhands.operating_system USING btree (company_id);
+CREATE INDEX xif_os_os_family ON jazzhands.operating_system USING btree (operating_system_family);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+-- consider FK between operating_system and jazzhands.device
+ALTER TABLE jazzhands.device
+	ADD CONSTRAINT fk_dev_os_id
+	FOREIGN KEY (operating_system_id) REFERENCES jazzhands.operating_system(operating_system_id);
+-- consider FK between operating_system and jazzhands.operating_system_snapshot
+ALTER TABLE jazzhands.operating_system_snapshot
+	ADD CONSTRAINT fk_os_snap_osid
+	FOREIGN KEY (operating_system_id) REFERENCES jazzhands.operating_system(operating_system_id);
+-- consider FK between operating_system and jazzhands.property
+ALTER TABLE jazzhands.property
+	ADD CONSTRAINT fk_property_osid
+	FOREIGN KEY (operating_system_id) REFERENCES jazzhands.operating_system(operating_system_id);
+
+-- FOREIGN KEYS TO
+-- consider FK operating_system and company
+ALTER TABLE jazzhands.operating_system
+	ADD CONSTRAINT fk_os_company
+	FOREIGN KEY (company_id) REFERENCES jazzhands.company(company_id) DEFERRABLE;
+-- consider FK operating_system and val_operating_system_family
+ALTER TABLE jazzhands.operating_system
+	ADD CONSTRAINT fk_os_os_family
+	FOREIGN KEY (operating_system_family) REFERENCES jazzhands.val_operating_system_family(operating_system_family);
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'operating_system');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'operating_system');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'operating_system');
+ALTER SEQUENCE jazzhands.operating_system_operating_system_id_seq
+	 OWNED BY operating_system.operating_system_id;
+DROP TABLE IF EXISTS operating_system_v86;
+DROP TABLE IF EXISTS audit.operating_system_v86;
+-- DONE DEALING WITH TABLE operating_system (jazzhands)
 --------------------------------------------------------------------
 --
 -- BEGIN: process_ancillary_schema(jazzhands_cache)
@@ -4363,10 +4559,16 @@ $function$
 -- Process drops in person_manip
 --
 --
+-- Process drops in layerx_network_manip
+--
+--
 -- Process drops in auto_ac_manip
 --
 --
 -- Process drops in company_manip
+--
+--
+-- Process drops in component_connection_utils
 --
 --
 -- Process drops in token_utils
@@ -5349,15 +5551,6 @@ END; $function$
 -- Process drops in backend_utils
 --
 --
--- Process drops in rack_utils
---
---
--- Process drops in layerx_network_manip
---
---
--- Process drops in component_connection_utils
---
---
 -- Process drops in schema_support
 --
 -- Changed function
@@ -6167,6 +6360,9 @@ $function$
 ;
 
 --
+-- Process drops in rack_utils
+--
+--
 -- Process post-schema jazzhands_legacy
 --
 -- Dropping obsoleted sequences....
@@ -6178,6 +6374,11 @@ $function$
 -- Processing tables with no structural changes
 -- Some of these may be redundant
 -- fk constraints
+ALTER TABLE ip_universe DROP CONSTRAINT IF EXISTS r_815;
+ALTER TABLE ip_universe
+	ADD CONSTRAINT fk_ip_universe_namespace
+	FOREIGN KEY (ip_namespace) REFERENCES jazzhands.val_ip_namespace(ip_namespace);
+
 ALTER TABLE network_interface DROP CONSTRAINT IF EXISTS fk_net_int_lgl_port_id;
 ALTER TABLE network_interface
 	ADD CONSTRAINT fk_net_int_lgl_port_id
@@ -6209,449 +6410,6 @@ CREATE INDEX aud_network_interface_uq_netint_device_id_logical_port_id ON audit.
 --
 -- BEGIN: process_ancillary_schema(jazzhands_legacy)
 --
---------------------------------------------------------------------
--- DEALING WITH TABLE logical_port
--- Save grants for later reapplication
-SELECT schema_support.save_grants_for_replay('jazzhands', 'logical_port', 'logical_port');
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'logical_port');
-DROP VIEW IF EXISTS jazzhands_legacy.logical_port;
-CREATE VIEW jazzhands_legacy.logical_port AS
- SELECT logical_port.logical_port_id,
-    logical_port.logical_port_name,
-    logical_port.logical_port_type,
-    logical_port.device_id,
-    logical_port.mlag_peering_id,
-    logical_port.parent_logical_port_id,
-    logical_port.mac_address,
-    logical_port.data_ins_user,
-    logical_port.data_ins_date,
-    logical_port.data_upd_user,
-    logical_port.data_upd_date
-   FROM jazzhands.logical_port;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'logical_port';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of logical_port failed but that is ok';
-				NULL;
-			END;
-$$;
-
--- just in case
-SELECT schema_support.prepare_for_object_replay();
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE logical_port (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH TABLE mlag_peering
--- Save grants for later reapplication
-SELECT schema_support.save_grants_for_replay('jazzhands', 'mlag_peering', 'mlag_peering');
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'mlag_peering');
-DROP VIEW IF EXISTS jazzhands_legacy.mlag_peering;
-CREATE VIEW jazzhands_legacy.mlag_peering AS
- SELECT mlag_peering.mlag_peering_id,
-    mlag_peering.device1_id,
-    mlag_peering.device2_id,
-    mlag_peering.domain_id,
-    mlag_peering.system_id,
-    mlag_peering.data_ins_user,
-    mlag_peering.data_ins_date,
-    mlag_peering.data_upd_user,
-    mlag_peering.data_upd_date
-   FROM jazzhands.mlag_peering;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'mlag_peering';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of mlag_peering failed but that is ok';
-				NULL;
-			END;
-$$;
-
--- just in case
-SELECT schema_support.prepare_for_object_replay();
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE mlag_peering (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH TABLE operating_system
--- Save grants for later reapplication
-SELECT schema_support.save_grants_for_replay('jazzhands', 'operating_system', 'operating_system');
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'operating_system');
-DROP VIEW IF EXISTS jazzhands_legacy.operating_system;
-CREATE VIEW jazzhands_legacy.operating_system AS
- SELECT operating_system.operating_system_id,
-    operating_system.operating_system_name,
-    operating_system.operating_system_short_name,
-    operating_system.company_id,
-    operating_system.major_version,
-    operating_system.version,
-    operating_system.operating_system_family,
-    operating_system.processor_architecture,
-    operating_system.data_ins_user,
-    operating_system.data_ins_date,
-    operating_system.data_upd_user,
-    operating_system.data_upd_date
-   FROM jazzhands.operating_system;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'operating_system';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of operating_system failed but that is ok';
-				NULL;
-			END;
-$$;
-
--- just in case
-SELECT schema_support.prepare_for_object_replay();
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE operating_system (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH TABLE val_person_status
--- Save grants for later reapplication
-SELECT schema_support.save_grants_for_replay('jazzhands', 'val_person_status', 'val_person_status');
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'val_person_status');
-DROP VIEW IF EXISTS jazzhands_legacy.val_person_status;
-CREATE VIEW jazzhands_legacy.val_person_status AS
- SELECT val_person_status.person_status,
-    val_person_status.description,
-    val_person_status.is_enabled,
-    val_person_status.propagate_from_person,
-    val_person_status.is_forced,
-    val_person_status.is_db_enforced,
-    val_person_status.data_ins_user,
-    val_person_status.data_ins_date,
-    val_person_status.data_upd_user,
-    val_person_status.data_upd_date
-   FROM jazzhands.val_person_status;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'val_person_status';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of val_person_status failed but that is ok';
-				NULL;
-			END;
-$$;
-
--- just in case
-SELECT schema_support.prepare_for_object_replay();
-ALTER TABLE jazzhands_legacy.val_person_status
-	ALTER is_forced
-	SET DEFAULT 'N'::bpchar;
-ALTER TABLE jazzhands_legacy.val_person_status
-	ALTER is_db_enforced
-	SET DEFAULT 'N'::bpchar;
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE val_person_status (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH NEW TABLE v_account_collection_hier_from_ancestor (jazzhands_legacy)
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_account_collection_hier_from_ancestor');
-DROP VIEW IF EXISTS jazzhands_legacy.v_account_collection_hier_from_ancestor;
-CREATE VIEW jazzhands_legacy.v_account_collection_hier_from_ancestor AS
- SELECT v_account_collection_hier_from_ancestor.root_account_collection_id,
-    v_account_collection_hier_from_ancestor.intermediate_account_collection_id,
-    v_account_collection_hier_from_ancestor.account_collection_id,
-    v_account_collection_hier_from_ancestor.path,
-    v_account_collection_hier_from_ancestor.cycle
-   FROM jazzhands.v_account_collection_hier_from_ancestor;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_account_collection_hier_from_ancestor';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of v_account_collection_hier_from_ancestor failed but that is ok';
-				NULL;
-			END;
-$$;
-
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE v_account_collection_hier_from_ancestor (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH NEW TABLE v_account_name (jazzhands_legacy)
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_account_name');
-DROP VIEW IF EXISTS jazzhands_legacy.v_account_name;
-CREATE VIEW jazzhands_legacy.v_account_name AS
- SELECT v_account_name.account_id,
-    v_account_name.first_name,
-    v_account_name.last_name,
-    v_account_name.display_name
-   FROM jazzhands.v_account_name;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_account_name';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of v_account_name failed but that is ok';
-				NULL;
-			END;
-$$;
-
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE v_account_name (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH NEW TABLE v_device_collection_hier_from_ancestor (jazzhands_legacy)
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_device_collection_hier_from_ancestor');
-DROP VIEW IF EXISTS jazzhands_legacy.v_device_collection_hier_from_ancestor;
-CREATE VIEW jazzhands_legacy.v_device_collection_hier_from_ancestor AS
- SELECT v_device_collection_hier_from_ancestor.root_device_collection_id,
-    v_device_collection_hier_from_ancestor.intermediate_device_collection_id,
-    v_device_collection_hier_from_ancestor.device_collection_id,
-    v_device_collection_hier_from_ancestor.path,
-    v_device_collection_hier_from_ancestor.cycle
-   FROM jazzhands.v_device_collection_hier_from_ancestor;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_device_collection_hier_from_ancestor';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of v_device_collection_hier_from_ancestor failed but that is ok';
-				NULL;
-			END;
-$$;
-
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE v_device_collection_hier_from_ancestor (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH NEW TABLE v_netblock_collection_hier_from_ancestor (jazzhands_legacy)
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_netblock_collection_hier_from_ancestor');
-DROP VIEW IF EXISTS jazzhands_legacy.v_netblock_collection_hier_from_ancestor;
-CREATE VIEW jazzhands_legacy.v_netblock_collection_hier_from_ancestor AS
- SELECT v_netblock_collection_hier_from_ancestor.root_netblock_collection_id,
-    v_netblock_collection_hier_from_ancestor.intermediate_netblock_collection_id,
-    v_netblock_collection_hier_from_ancestor.netblock_collection_id,
-    v_netblock_collection_hier_from_ancestor.path,
-    v_netblock_collection_hier_from_ancestor.cycle
-   FROM jazzhands.v_netblock_collection_hier_from_ancestor;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_netblock_collection_hier_from_ancestor';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of v_netblock_collection_hier_from_ancestor failed but that is ok';
-				NULL;
-			END;
-$$;
-
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE v_netblock_collection_hier_from_ancestor (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH NEW TABLE v_netblock_hier_expanded (jazzhands_legacy)
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_netblock_hier_expanded');
-DROP VIEW IF EXISTS jazzhands_legacy.v_netblock_hier_expanded;
-CREATE VIEW jazzhands_legacy.v_netblock_hier_expanded AS
- SELECT v_netblock_hier_expanded.netblock_level,
-    v_netblock_hier_expanded.root_netblock_id,
-    v_netblock_hier_expanded.site_code,
-    v_netblock_hier_expanded.path,
-    v_netblock_hier_expanded.netblock_id,
-    v_netblock_hier_expanded.ip_address,
-    v_netblock_hier_expanded.netblock_type,
-    v_netblock_hier_expanded.is_single_address,
-    v_netblock_hier_expanded.can_subnet,
-    v_netblock_hier_expanded.parent_netblock_id,
-    v_netblock_hier_expanded.netblock_status,
-    v_netblock_hier_expanded.ip_universe_id,
-    v_netblock_hier_expanded.description,
-    v_netblock_hier_expanded.external_id,
-    v_netblock_hier_expanded.data_ins_user,
-    v_netblock_hier_expanded.data_ins_date,
-    v_netblock_hier_expanded.data_upd_user,
-    v_netblock_hier_expanded.data_upd_date
-   FROM jazzhands.v_netblock_hier_expanded;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_netblock_hier_expanded';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of v_netblock_hier_expanded failed but that is ok';
-				NULL;
-			END;
-$$;
-
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE v_netblock_hier_expanded (jazzhands_legacy)
---------------------------------------------------------------------
---------------------------------------------------------------------
--- DEALING WITH NEW TABLE v_site_netblock_expanded_assigned (jazzhands_legacy)
-SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_site_netblock_expanded_assigned');
-DROP VIEW IF EXISTS jazzhands_legacy.v_site_netblock_expanded_assigned;
-CREATE VIEW jazzhands_legacy.v_site_netblock_expanded_assigned AS
- SELECT v_site_netblock_expanded_assigned.site_code,
-    v_site_netblock_expanded_assigned.netblock_id
-   FROM jazzhands.v_site_netblock_expanded_assigned;
-
-DO $$
-
-			BEGIN
-				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_site_netblock_expanded_assigned';
-			EXCEPTION WHEN undefined_table THEN
-				RAISE NOTICE 'Drop of v_site_netblock_expanded_assigned failed but that is ok';
-				NULL;
-			END;
-$$;
-
-
--- PRIMARY AND ALTERNATE KEYS
-
--- Table/Column Comments
--- INDEXES
-
--- CHECK CONSTRAINTS
-
--- FOREIGN KEYS FROM
-
--- FOREIGN KEYS TO
-
--- TRIGGERS
--- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
--- DONE DEALING WITH TABLE v_site_netblock_expanded_assigned (jazzhands_legacy)
---------------------------------------------------------------------
 -- DONE: process_ancillary_schema(jazzhands_legacy)
 GRANT select on all tables in schema jazzhands to ro_role;
 GRANT insert,update,delete on all tables in schema jazzhands to iud_role;
