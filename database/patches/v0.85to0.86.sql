@@ -1646,7 +1646,6 @@ $function$
 ;
 
 -- DONE: process_ancillary_schema(schema_support)
-DROP SCHEMA jazzhands_legacy CASCADE;
 --
 -- Process middle (non-trigger) schema jazzhands_cache
 --
@@ -3825,7 +3824,6 @@ ALTER TABLE jazzhands.network_interface
 --ALTER TABLE jazzhands.logical_port
 --	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
 --	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
-
 -- consider FK logical_port and device
 ALTER TABLE jazzhands.logical_port
 	ADD CONSTRAINT fk_logical_port_device_id
@@ -4543,6 +4541,35 @@ $function$
 --
 -- Process drops in jazzhands
 --
+-- New function
+CREATE OR REPLACE FUNCTION jazzhands.val_property_value_del_check()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+DECLARE
+	_tal	INTEGER;
+BEGIN
+
+	SELECT COUNT(*)
+	INTO _tal
+	FROM property p
+	WHERE p.property_name = OLD.property_name
+	AND p.property_type = OLD.property_type
+	AND p.property_value = OLD.valid_property_value;
+
+	IF _tal > 0 THEN
+		RAISE EXCEPTION '% instances of %:% with value %',
+			_tal, OLD.property_type, OLD.property_name, OLD.valid_property_value
+			USING ERRCODE = 'foreign_key_violation';
+	END IF;
+
+	RETURN OLD;
+END;
+$function$
+;
+
 --
 -- Process drops in net_manip
 --
@@ -5446,109 +5473,7 @@ $function$
 ;
 
 --
--- Process drops in property_utils
---
---
--- Process drops in netblock_manip
---
---
--- Process drops in physical_address_utils
---
--- Changed function
-SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_physical_address');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS physical_address_utils.localized_physical_address ( physical_address_id integer, line_separator text, include_country boolean );
-CREATE OR REPLACE FUNCTION physical_address_utils.localized_physical_address(physical_address_id integer, line_separator text DEFAULT ', '::text, include_country boolean DEFAULT true)
- RETURNS text
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'jazzhands'
-AS $function$
-DECLARE
-	address	text;
-BEGIN
-	SELECT concat_ws(line_separator,
-			CASE WHEN iso_country_code IN 
-					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
-				concat_ws(' ', address_housename, address_street)
-			WHEN iso_country_code IN ('IL') THEN
-				concat_ws(', ', address_housename, address_street)
-			WHEN iso_country_code IN ('ES') THEN
-				concat_ws(', ', address_street, address_housename)
-			ELSE
-				concat_ws(' ', address_street, address_housename)
-			END,
-			address_pobox,
-			address_building,
-			address_neighborhood,
-			CASE WHEN iso_country_code IN ('US', 'CA', 'UK') THEN 
-				concat_ws(', ', address_city, 
-					concat_ws(' ', address_region, postal_code))
-			WHEN iso_country_code IN ('SG', 'AU') THEN
-				concat_ws(' ', address_city, address_region, postal_code)
-			ELSE
-				concat_ws(' ', postal_code, address_city, address_region)
-			END,
-			iso_country_code
-		)
-	INTO address
-	FROM
-		physical_address pa
-	WHERE
-		pa.physical_address_id = 
-			localized_physical_address.physical_address_id;
-	RETURN address;
-END; $function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_street_address');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS physical_address_utils.localized_street_address ( address_housename text, address_street text, address_building text, address_pobox text, iso_country_code text, line_separator text );
-CREATE OR REPLACE FUNCTION physical_address_utils.localized_street_address(address_housename text DEFAULT NULL::text, address_street text DEFAULT NULL::text, address_building text DEFAULT NULL::text, address_pobox text DEFAULT NULL::text, iso_country_code text DEFAULT NULL::text, line_separator text DEFAULT ', '::text)
- RETURNS text
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'jazzhands'
-AS $function$
-BEGIN
-	RETURN concat_ws(line_separator,
-			CASE WHEN iso_country_code IN 
-					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
-				concat_ws(' ', address_housename, address_street)
-			WHEN iso_country_code IN ('IL') THEN
-				concat_ws(', ', address_housename, address_street)
-			WHEN iso_country_code IN ('ES') THEN
-				concat_ws(', ', address_street, address_housename)
-			ELSE
-				concat_ws(' ', address_street, address_housename)
-			END,
-			address_pobox,
-			address_building
-		);
-END; $function$
-;
-
---
--- Process drops in component_utils
---
---
--- Process drops in snapshot_manip
---
---
--- Process drops in lv_manip
---
---
--- Process drops in approval_utils
---
---
--- Process drops in account_collection_manip
---
---
--- Process drops in script_hooks
---
---
--- Process drops in backend_utils
+-- Process drops in rack_utils
 --
 --
 -- Process drops in schema_support
@@ -6360,7 +6285,109 @@ $function$
 ;
 
 --
--- Process drops in rack_utils
+-- Process drops in property_utils
+--
+--
+-- Process drops in netblock_manip
+--
+--
+-- Process drops in physical_address_utils
+--
+-- Changed function
+SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_physical_address');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS physical_address_utils.localized_physical_address ( physical_address_id integer, line_separator text, include_country boolean );
+CREATE OR REPLACE FUNCTION physical_address_utils.localized_physical_address(physical_address_id integer, line_separator text DEFAULT ', '::text, include_country boolean DEFAULT true)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+DECLARE
+	address	text;
+BEGIN
+	SELECT concat_ws(line_separator,
+			CASE WHEN iso_country_code IN 
+					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
+				concat_ws(' ', address_housename, address_street)
+			WHEN iso_country_code IN ('IL') THEN
+				concat_ws(', ', address_housename, address_street)
+			WHEN iso_country_code IN ('ES') THEN
+				concat_ws(', ', address_street, address_housename)
+			ELSE
+				concat_ws(' ', address_street, address_housename)
+			END,
+			address_pobox,
+			address_building,
+			address_neighborhood,
+			CASE WHEN iso_country_code IN ('US', 'CA', 'UK') THEN 
+				concat_ws(', ', address_city, 
+					concat_ws(' ', address_region, postal_code))
+			WHEN iso_country_code IN ('SG', 'AU') THEN
+				concat_ws(' ', address_city, address_region, postal_code)
+			ELSE
+				concat_ws(' ', postal_code, address_city, address_region)
+			END,
+			iso_country_code
+		)
+	INTO address
+	FROM
+		physical_address pa
+	WHERE
+		pa.physical_address_id = 
+			localized_physical_address.physical_address_id;
+	RETURN address;
+END; $function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_street_address');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS physical_address_utils.localized_street_address ( address_housename text, address_street text, address_building text, address_pobox text, iso_country_code text, line_separator text );
+CREATE OR REPLACE FUNCTION physical_address_utils.localized_street_address(address_housename text DEFAULT NULL::text, address_street text DEFAULT NULL::text, address_building text DEFAULT NULL::text, address_pobox text DEFAULT NULL::text, iso_country_code text DEFAULT NULL::text, line_separator text DEFAULT ', '::text)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+BEGIN
+	RETURN concat_ws(line_separator,
+			CASE WHEN iso_country_code IN 
+					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
+				concat_ws(' ', address_housename, address_street)
+			WHEN iso_country_code IN ('IL') THEN
+				concat_ws(', ', address_housename, address_street)
+			WHEN iso_country_code IN ('ES') THEN
+				concat_ws(', ', address_street, address_housename)
+			ELSE
+				concat_ws(' ', address_street, address_housename)
+			END,
+			address_pobox,
+			address_building
+		);
+END; $function$
+;
+
+--
+-- Process drops in component_utils
+--
+--
+-- Process drops in snapshot_manip
+--
+--
+-- Process drops in lv_manip
+--
+--
+-- Process drops in approval_utils
+--
+--
+-- Process drops in account_collection_manip
+--
+--
+-- Process drops in script_hooks
+--
+--
+-- Process drops in backend_utils
 --
 --
 -- Process post-schema jazzhands_legacy
@@ -6394,6 +6421,8 @@ DROP INDEX "jazzhands"."xif_net_int_lgl_port_id";
 DROP INDEX IF EXISTS "jazzhands"."xif12network_interface";
 CREATE INDEX xif12network_interface ON jazzhands.network_interface USING btree (logical_port_id, device_id);
 -- triggers
+DROP TRIGGER IF EXISTS trigger_val_property_value_del_check ON val_property_value;
+CREATE CONSTRAINT TRIGGER trigger_val_property_value_del_check AFTER DELETE ON jazzhands.val_property_value DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE jazzhands.val_property_value_del_check();
 
 
 -- Clean Up
@@ -6410,6 +6439,399 @@ CREATE INDEX aud_network_interface_uq_netint_device_id_logical_port_id ON audit.
 --
 -- BEGIN: process_ancillary_schema(jazzhands_legacy)
 --
+--------------------------------------------------------------------
+-- DEALING WITH TABLE logical_port
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'logical_port', 'logical_port');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'logical_port');
+DROP VIEW IF EXISTS jazzhands_legacy.logical_port;
+CREATE VIEW jazzhands_legacy.logical_port AS
+ SELECT logical_port.logical_port_id,
+    logical_port.logical_port_name,
+    logical_port.logical_port_type,
+    logical_port.device_id,
+    logical_port.mlag_peering_id,
+    logical_port.parent_logical_port_id,
+    logical_port.mac_address,
+    logical_port.data_ins_user,
+    logical_port.data_ins_date,
+    logical_port.data_upd_user,
+    logical_port.data_upd_date
+   FROM jazzhands.logical_port;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'logical_port';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of logical_port failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE logical_port (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE mlag_peering
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'mlag_peering', 'mlag_peering');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'mlag_peering');
+DROP VIEW IF EXISTS jazzhands_legacy.mlag_peering;
+CREATE VIEW jazzhands_legacy.mlag_peering AS
+ SELECT mlag_peering.mlag_peering_id,
+    mlag_peering.device1_id,
+    mlag_peering.device2_id,
+    mlag_peering.domain_id,
+    mlag_peering.system_id,
+    mlag_peering.data_ins_user,
+    mlag_peering.data_ins_date,
+    mlag_peering.data_upd_user,
+    mlag_peering.data_upd_date
+   FROM jazzhands.mlag_peering;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'mlag_peering';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of mlag_peering failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE mlag_peering (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE val_person_status
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'val_person_status', 'val_person_status');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'val_person_status');
+DROP VIEW IF EXISTS jazzhands_legacy.val_person_status;
+CREATE VIEW jazzhands_legacy.val_person_status AS
+ SELECT val_person_status.person_status,
+    val_person_status.description,
+    val_person_status.is_enabled,
+    val_person_status.propagate_from_person,
+    val_person_status.is_forced,
+    val_person_status.is_db_enforced,
+    val_person_status.data_ins_user,
+    val_person_status.data_ins_date,
+    val_person_status.data_upd_user,
+    val_person_status.data_upd_date
+   FROM jazzhands.val_person_status;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'val_person_status';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of val_person_status failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+ALTER TABLE jazzhands_legacy.val_person_status
+	ALTER is_forced
+	SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.val_person_status
+	ALTER is_db_enforced
+	SET DEFAULT 'N'::bpchar;
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE val_person_status (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH NEW TABLE v_account_collection_hier_from_ancestor (jazzhands_legacy)
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_account_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_legacy.v_account_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_legacy.v_account_collection_hier_from_ancestor AS
+ SELECT v_account_collection_hier_from_ancestor.root_account_collection_id,
+    v_account_collection_hier_from_ancestor.intermediate_account_collection_id,
+    v_account_collection_hier_from_ancestor.account_collection_id,
+    v_account_collection_hier_from_ancestor.path,
+    v_account_collection_hier_from_ancestor.cycle
+   FROM jazzhands.v_account_collection_hier_from_ancestor;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_account_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_account_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_account_collection_hier_from_ancestor (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH NEW TABLE v_account_name (jazzhands_legacy)
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_account_name');
+DROP VIEW IF EXISTS jazzhands_legacy.v_account_name;
+CREATE VIEW jazzhands_legacy.v_account_name AS
+ SELECT v_account_name.account_id,
+    v_account_name.first_name,
+    v_account_name.last_name,
+    v_account_name.display_name
+   FROM jazzhands.v_account_name;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_account_name';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_account_name failed but that is ok';
+				NULL;
+			END;
+$$;
+
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_account_name (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH NEW TABLE v_device_collection_hier_from_ancestor (jazzhands_legacy)
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_device_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_legacy.v_device_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_legacy.v_device_collection_hier_from_ancestor AS
+ SELECT v_device_collection_hier_from_ancestor.root_device_collection_id,
+    v_device_collection_hier_from_ancestor.intermediate_device_collection_id,
+    v_device_collection_hier_from_ancestor.device_collection_id,
+    v_device_collection_hier_from_ancestor.path,
+    v_device_collection_hier_from_ancestor.cycle
+   FROM jazzhands.v_device_collection_hier_from_ancestor;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_device_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_device_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_device_collection_hier_from_ancestor (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH NEW TABLE v_netblock_collection_hier_from_ancestor (jazzhands_legacy)
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_netblock_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_legacy.v_netblock_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_legacy.v_netblock_collection_hier_from_ancestor AS
+ SELECT v_netblock_collection_hier_from_ancestor.root_netblock_collection_id,
+    v_netblock_collection_hier_from_ancestor.intermediate_netblock_collection_id,
+    v_netblock_collection_hier_from_ancestor.netblock_collection_id,
+    v_netblock_collection_hier_from_ancestor.path,
+    v_netblock_collection_hier_from_ancestor.cycle
+   FROM jazzhands.v_netblock_collection_hier_from_ancestor;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_netblock_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_netblock_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_netblock_collection_hier_from_ancestor (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH NEW TABLE v_netblock_hier_expanded (jazzhands_legacy)
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_netblock_hier_expanded');
+DROP VIEW IF EXISTS jazzhands_legacy.v_netblock_hier_expanded;
+CREATE VIEW jazzhands_legacy.v_netblock_hier_expanded AS
+ SELECT v_netblock_hier_expanded.netblock_level,
+    v_netblock_hier_expanded.root_netblock_id,
+    v_netblock_hier_expanded.site_code,
+    v_netblock_hier_expanded.path,
+    v_netblock_hier_expanded.netblock_id,
+    v_netblock_hier_expanded.ip_address,
+    v_netblock_hier_expanded.netblock_type,
+    v_netblock_hier_expanded.is_single_address,
+    v_netblock_hier_expanded.can_subnet,
+    v_netblock_hier_expanded.parent_netblock_id,
+    v_netblock_hier_expanded.netblock_status,
+    v_netblock_hier_expanded.ip_universe_id,
+    v_netblock_hier_expanded.description,
+    v_netblock_hier_expanded.external_id,
+    v_netblock_hier_expanded.data_ins_user,
+    v_netblock_hier_expanded.data_ins_date,
+    v_netblock_hier_expanded.data_upd_user,
+    v_netblock_hier_expanded.data_upd_date
+   FROM jazzhands.v_netblock_hier_expanded;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_netblock_hier_expanded';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_netblock_hier_expanded failed but that is ok';
+				NULL;
+			END;
+$$;
+
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_netblock_hier_expanded (jazzhands_legacy)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH NEW TABLE v_site_netblock_expanded_assigned (jazzhands_legacy)
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_site_netblock_expanded_assigned');
+DROP VIEW IF EXISTS jazzhands_legacy.v_site_netblock_expanded_assigned;
+CREATE VIEW jazzhands_legacy.v_site_netblock_expanded_assigned AS
+ SELECT v_site_netblock_expanded_assigned.site_code,
+    v_site_netblock_expanded_assigned.netblock_id
+   FROM jazzhands.v_site_netblock_expanded_assigned;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_legacy' AND type = 'view' AND object = 'v_site_netblock_expanded_assigned';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_site_netblock_expanded_assigned failed but that is ok';
+				NULL;
+			END;
+$$;
+
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_site_netblock_expanded_assigned (jazzhands_legacy)
+--------------------------------------------------------------------
 -- DONE: process_ancillary_schema(jazzhands_legacy)
 GRANT select on all tables in schema jazzhands to ro_role;
 GRANT insert,update,delete on all tables in schema jazzhands to iud_role;
