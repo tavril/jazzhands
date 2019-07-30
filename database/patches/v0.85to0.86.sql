@@ -3705,7 +3705,7 @@ CREATE TABLE jazzhands.logical_port
 (
 	logical_port_id	integer NOT NULL,
 	logical_port_name	varchar(50) NOT NULL,
-	logical_port_type	varchar(50)  NULL,
+	logical_port_type	varchar(50) NOT NULL,
 	device_id	integer  NULL,
 	mlag_peering_id	integer  NULL,
 	parent_logical_port_id	integer  NULL,
@@ -3790,6 +3790,8 @@ ALTER TABLE jazzhands.logical_port
 -- PRIMARY AND ALTERNATE KEYS
 ALTER TABLE jazzhands.logical_port ADD CONSTRAINT pk_logical_port PRIMARY KEY (logical_port_id);
 ALTER TABLE jazzhands.logical_port ADD CONSTRAINT uq_device_id_logical_port_id UNIQUE (logical_port_id, device_id);
+ALTER TABLE jazzhands.logical_port ADD CONSTRAINT uq_lg_port_name_type_device UNIQUE (logical_port_name, logical_port_type, device_id);
+ALTER TABLE jazzhands.logical_port ADD CONSTRAINT uq_lg_port_name_type_mlag UNIQUE (logical_port_name, logical_port_type, mlag_peering_id);
 
 -- Table/Column Comments
 -- INDEXES
@@ -3820,9 +3822,9 @@ ALTER TABLE jazzhands.network_interface
 
 -- FOREIGN KEYS TO
 -- consider FK logical_port and mlag_peering
-ALTER TABLE jazzhands.logical_port
-	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
-	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
+--ALTER TABLE jazzhands.logical_port
+--	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
+--	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
 -- consider FK logical_port and device
 ALTER TABLE jazzhands.logical_port
 	ADD CONSTRAINT fk_logical_port_device_id
@@ -6432,6 +6434,8 @@ SELECT schema_support.synchronize_cache_tables();
 
 -- BEGIN Misc that does not apply to above
 CREATE INDEX aud_network_interface_uq_netint_device_id_logical_port_id ON audit.network_interface USING btree (device_id, logical_port_id);
+
+ALTER TABLE  logical_port ALTER logical_port_type SET NOT NULL;
 
 
 -- END Misc that does not apply to above
