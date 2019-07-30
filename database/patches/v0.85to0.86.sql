@@ -1668,10 +1668,16 @@ $function$
 -- Process middle (non-trigger) schema person_manip
 --
 --
+-- Process middle (non-trigger) schema layerx_network_manip
+--
+--
 -- Process middle (non-trigger) schema auto_ac_manip
 --
 --
 -- Process middle (non-trigger) schema company_manip
+--
+--
+-- Process middle (non-trigger) schema component_connection_utils
 --
 --
 -- Process middle (non-trigger) schema token_utils
@@ -2549,118 +2555,7 @@ $function$
 ;
 
 --
--- Process middle (non-trigger) schema property_utils
---
---
--- Process middle (non-trigger) schema netblock_manip
---
---
--- Process middle (non-trigger) schema physical_address_utils
---
--- Changed function
-SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_physical_address');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS physical_address_utils.localized_physical_address ( physical_address_id integer, line_separator text, include_country boolean );
-CREATE OR REPLACE FUNCTION physical_address_utils.localized_physical_address(physical_address_id integer, line_separator text DEFAULT ', '::text, include_country boolean DEFAULT true)
- RETURNS text
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'jazzhands'
-AS $function$
-DECLARE
-	address	text;
-BEGIN
-	SELECT concat_ws(line_separator,
-			CASE WHEN iso_country_code IN 
-					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
-				concat_ws(' ', address_housename, address_street)
-			WHEN iso_country_code IN ('IL') THEN
-				concat_ws(', ', address_housename, address_street)
-			WHEN iso_country_code IN ('ES') THEN
-				concat_ws(', ', address_street, address_housename)
-			ELSE
-				concat_ws(' ', address_street, address_housename)
-			END,
-			address_pobox,
-			address_building,
-			address_neighborhood,
-			CASE WHEN iso_country_code IN ('US', 'CA', 'UK') THEN 
-				concat_ws(', ', address_city, 
-					concat_ws(' ', address_region, postal_code))
-			WHEN iso_country_code IN ('SG', 'AU') THEN
-				concat_ws(' ', address_city, address_region, postal_code)
-			ELSE
-				concat_ws(' ', postal_code, address_city, address_region)
-			END,
-			iso_country_code
-		)
-	INTO address
-	FROM
-		physical_address pa
-	WHERE
-		pa.physical_address_id = 
-			localized_physical_address.physical_address_id;
-	RETURN address;
-END; $function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_street_address');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS physical_address_utils.localized_street_address ( address_housename text, address_street text, address_building text, address_pobox text, iso_country_code text, line_separator text );
-CREATE OR REPLACE FUNCTION physical_address_utils.localized_street_address(address_housename text DEFAULT NULL::text, address_street text DEFAULT NULL::text, address_building text DEFAULT NULL::text, address_pobox text DEFAULT NULL::text, iso_country_code text DEFAULT NULL::text, line_separator text DEFAULT ', '::text)
- RETURNS text
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'jazzhands'
-AS $function$
-BEGIN
-	RETURN concat_ws(line_separator,
-			CASE WHEN iso_country_code IN 
-					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
-				concat_ws(' ', address_housename, address_street)
-			WHEN iso_country_code IN ('IL') THEN
-				concat_ws(', ', address_housename, address_street)
-			WHEN iso_country_code IN ('ES') THEN
-				concat_ws(', ', address_street, address_housename)
-			ELSE
-				concat_ws(' ', address_street, address_housename)
-			END,
-			address_pobox,
-			address_building
-		);
-END; $function$
-;
-
---
--- Process middle (non-trigger) schema component_utils
---
---
--- Process middle (non-trigger) schema snapshot_manip
---
---
--- Process middle (non-trigger) schema lv_manip
---
---
--- Process middle (non-trigger) schema approval_utils
---
---
--- Process middle (non-trigger) schema account_collection_manip
---
---
--- Process middle (non-trigger) schema script_hooks
---
---
--- Process middle (non-trigger) schema backend_utils
---
---
 -- Process middle (non-trigger) schema rack_utils
---
---
--- Process middle (non-trigger) schema layerx_network_manip
---
---
--- Process middle (non-trigger) schema component_connection_utils
 --
 --
 -- Process middle (non-trigger) schema schema_support
@@ -3471,6 +3366,111 @@ END;
 $function$
 ;
 
+--
+-- Process middle (non-trigger) schema property_utils
+--
+--
+-- Process middle (non-trigger) schema netblock_manip
+--
+--
+-- Process middle (non-trigger) schema physical_address_utils
+--
+-- Changed function
+SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_physical_address');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS physical_address_utils.localized_physical_address ( physical_address_id integer, line_separator text, include_country boolean );
+CREATE OR REPLACE FUNCTION physical_address_utils.localized_physical_address(physical_address_id integer, line_separator text DEFAULT ', '::text, include_country boolean DEFAULT true)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+DECLARE
+	address	text;
+BEGIN
+	SELECT concat_ws(line_separator,
+			CASE WHEN iso_country_code IN 
+					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
+				concat_ws(' ', address_housename, address_street)
+			WHEN iso_country_code IN ('IL') THEN
+				concat_ws(', ', address_housename, address_street)
+			WHEN iso_country_code IN ('ES') THEN
+				concat_ws(', ', address_street, address_housename)
+			ELSE
+				concat_ws(' ', address_street, address_housename)
+			END,
+			address_pobox,
+			address_building,
+			address_neighborhood,
+			CASE WHEN iso_country_code IN ('US', 'CA', 'UK') THEN 
+				concat_ws(', ', address_city, 
+					concat_ws(' ', address_region, postal_code))
+			WHEN iso_country_code IN ('SG', 'AU') THEN
+				concat_ws(' ', address_city, address_region, postal_code)
+			ELSE
+				concat_ws(' ', postal_code, address_city, address_region)
+			END,
+			iso_country_code
+		)
+	INTO address
+	FROM
+		physical_address pa
+	WHERE
+		pa.physical_address_id = 
+			localized_physical_address.physical_address_id;
+	RETURN address;
+END; $function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('physical_address_utils', 'localized_street_address');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS physical_address_utils.localized_street_address ( address_housename text, address_street text, address_building text, address_pobox text, iso_country_code text, line_separator text );
+CREATE OR REPLACE FUNCTION physical_address_utils.localized_street_address(address_housename text DEFAULT NULL::text, address_street text DEFAULT NULL::text, address_building text DEFAULT NULL::text, address_pobox text DEFAULT NULL::text, iso_country_code text DEFAULT NULL::text, line_separator text DEFAULT ', '::text)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+BEGIN
+	RETURN concat_ws(line_separator,
+			CASE WHEN iso_country_code IN 
+					('SG', 'US', 'CA', 'UK', 'GB', 'FR', 'AU') THEN 
+				concat_ws(' ', address_housename, address_street)
+			WHEN iso_country_code IN ('IL') THEN
+				concat_ws(', ', address_housename, address_street)
+			WHEN iso_country_code IN ('ES') THEN
+				concat_ws(', ', address_street, address_housename)
+			ELSE
+				concat_ws(' ', address_street, address_housename)
+			END,
+			address_pobox,
+			address_building
+		);
+END; $function$
+;
+
+--
+-- Process middle (non-trigger) schema component_utils
+--
+--
+-- Process middle (non-trigger) schema snapshot_manip
+--
+--
+-- Process middle (non-trigger) schema lv_manip
+--
+--
+-- Process middle (non-trigger) schema approval_utils
+--
+--
+-- Process middle (non-trigger) schema account_collection_manip
+--
+--
+-- Process middle (non-trigger) schema script_hooks
+--
+--
+-- Process middle (non-trigger) schema backend_utils
+--
 -- Creating new sequences....
 
 
@@ -3820,10 +3820,9 @@ ALTER TABLE jazzhands.network_interface
 
 -- FOREIGN KEYS TO
 -- consider FK logical_port and mlag_peering
--- this gets recreated later, so commented out
---ALTER TABLE jazzhands.logical_port
---	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
---	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
+ALTER TABLE jazzhands.logical_port
+	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
+	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
 -- consider FK logical_port and device
 ALTER TABLE jazzhands.logical_port
 	ADD CONSTRAINT fk_logical_port_device_id
@@ -3902,10 +3901,10 @@ ALTER TABLE audit.mlag_peering RENAME TO mlag_peering_v86;
 CREATE TABLE jazzhands.mlag_peering
 (
 	mlag_peering_id	integer NOT NULL,
-	device1_id	integer  NULL,
-	device2_id	integer  NULL,
+	device1_id	integer NOT NULL,
+	device2_id	integer NOT NULL,
 	domain_id	varchar(50)  NULL,
-	system_id	macaddr NOT NULL,
+	system_id	macaddr  NULL,
 	data_ins_user	varchar(255)  NULL,
 	data_ins_date	timestamp with time zone  NULL,
 	data_upd_user	varchar(255)  NULL,
