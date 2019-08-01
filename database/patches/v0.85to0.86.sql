@@ -3472,8 +3472,292 @@ END; $function$
 -- Process middle (non-trigger) schema backend_utils
 --
 -- Creating new sequences....
+CREATE SEQUENCE encapsulation_range_encapsulation_range_id_seq;
+CREATE SEQUENCE layer2_connection_layer2_connection_id_seq;
+CREATE SEQUENCE person_parking_pass_person_parking_pass_id_seq;
+CREATE SEQUENCE snmp_commstr_snmp_commstr_id_seq;
+CREATE SEQUENCE val_auth_question_auth_question_id_seq;
+CREATE SEQUENCE val_encryption_key_purpose_encryption_key_purpose_version_seq;
 
 
+--------------------------------------------------------------------
+-- DEALING WITH TABLE val_auth_question
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'val_auth_question', 'val_auth_question');
+
+-- FOREIGN KEYS FROM
+ALTER TABLE person_auth_question DROP CONSTRAINT IF EXISTS fk_person_aq_val_auth_ques;
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'val_auth_question');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.val_auth_question DROP CONSTRAINT IF EXISTS pk_val_auth_question;
+-- INDEXES
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_val_auth_question ON jazzhands.val_auth_question;
+DROP TRIGGER IF EXISTS trigger_audit_val_auth_question ON jazzhands.val_auth_question;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'val_auth_question');
+---- BEGIN audit.val_auth_question TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'val_auth_question', 'val_auth_question');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'val_auth_question');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.val_auth_question DROP CONSTRAINT IF EXISTS val_auth_question_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_val_auth_question_pk_val_auth_question";
+DROP INDEX IF EXISTS "audit"."val_auth_question_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."val_auth_question_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."val_auth_question_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.val_auth_question TEARDOWN
+
+
+ALTER TABLE val_auth_question RENAME TO val_auth_question_v86;
+ALTER TABLE audit.val_auth_question RENAME TO val_auth_question_v86;
+
+CREATE TABLE jazzhands.val_auth_question
+(
+	auth_question_id	integer NOT NULL,
+	question_text	varchar(4000)  NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'val_auth_question', false);
+ALTER TABLE val_auth_question
+	ALTER auth_question_id
+	SET DEFAULT nextval('jazzhands.val_auth_question_auth_question_id_seq'::regclass);
+INSERT INTO val_auth_question (
+	auth_question_id,
+	question_text,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	auth_question_id,
+	question_text,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM val_auth_question_v86;
+
+INSERT INTO audit.val_auth_question (
+	auth_question_id,
+	question_text,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	auth_question_id,
+	question_text,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.val_auth_question_v86;
+
+ALTER TABLE jazzhands.val_auth_question
+	ALTER auth_question_id
+	SET DEFAULT nextval('jazzhands.val_auth_question_auth_question_id_seq'::regclass);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.val_auth_question ADD CONSTRAINT pk_val_auth_question PRIMARY KEY (auth_question_id);
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+-- consider FK between val_auth_question and jazzhands.person_auth_question
+ALTER TABLE jazzhands.person_auth_question
+	ADD CONSTRAINT fk_person_aq_val_auth_ques
+	FOREIGN KEY (auth_question_id) REFERENCES jazzhands.val_auth_question(auth_question_id);
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'val_auth_question');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'val_auth_question');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'val_auth_question');
+ALTER SEQUENCE jazzhands.val_auth_question_auth_question_id_seq
+	 OWNED BY val_auth_question.auth_question_id;
+DROP TABLE IF EXISTS val_auth_question_v86;
+DROP TABLE IF EXISTS audit.val_auth_question_v86;
+-- DONE DEALING WITH TABLE val_auth_question (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE val_encryption_key_purpose
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'val_encryption_key_purpose', 'val_encryption_key_purpose');
+
+-- FOREIGN KEYS FROM
+ALTER TABLE encryption_key DROP CONSTRAINT IF EXISTS fk_enckey_enckeypurpose_val;
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'val_encryption_key_purpose');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.val_encryption_key_purpose DROP CONSTRAINT IF EXISTS pk_val_encryption_key_purpose;
+-- INDEXES
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_val_encryption_key_purpose ON jazzhands.val_encryption_key_purpose;
+DROP TRIGGER IF EXISTS trigger_audit_val_encryption_key_purpose ON jazzhands.val_encryption_key_purpose;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'val_encryption_key_purpose');
+---- BEGIN audit.val_encryption_key_purpose TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'val_encryption_key_purpose', 'val_encryption_key_purpose');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'val_encryption_key_purpose');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.val_encryption_key_purpose DROP CONSTRAINT IF EXISTS val_encryption_key_purpose_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_val_encryption_key_purpose_pk_val_encryption_key_purpose";
+DROP INDEX IF EXISTS "audit"."val_encryption_key_purpose_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."val_encryption_key_purpose_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."val_encryption_key_purpose_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.val_encryption_key_purpose TEARDOWN
+
+
+ALTER TABLE val_encryption_key_purpose RENAME TO val_encryption_key_purpose_v86;
+ALTER TABLE audit.val_encryption_key_purpose RENAME TO val_encryption_key_purpose_v86;
+
+CREATE TABLE jazzhands.val_encryption_key_purpose
+(
+	encryption_key_purpose	varchar(50) NOT NULL,
+	encryption_key_purpose_version	integer NOT NULL,
+	description	varchar(255)  NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'val_encryption_key_purpose', false);
+ALTER TABLE val_encryption_key_purpose
+	ALTER encryption_key_purpose_version
+	SET DEFAULT nextval('jazzhands.val_encryption_key_purpose_encryption_key_purpose_version_seq'::regclass);
+INSERT INTO val_encryption_key_purpose (
+	encryption_key_purpose,
+	encryption_key_purpose_version,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	encryption_key_purpose,
+	encryption_key_purpose_version,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM val_encryption_key_purpose_v86;
+
+INSERT INTO audit.val_encryption_key_purpose (
+	encryption_key_purpose,
+	encryption_key_purpose_version,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	encryption_key_purpose,
+	encryption_key_purpose_version,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.val_encryption_key_purpose_v86;
+
+ALTER TABLE jazzhands.val_encryption_key_purpose
+	ALTER encryption_key_purpose_version
+	SET DEFAULT nextval('jazzhands.val_encryption_key_purpose_encryption_key_purpose_version_seq'::regclass);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.val_encryption_key_purpose ADD CONSTRAINT pk_val_encryption_key_purpose PRIMARY KEY (encryption_key_purpose, encryption_key_purpose_version);
+
+-- Table/Column Comments
+COMMENT ON TABLE jazzhands.val_encryption_key_purpose IS 'Valid purpose of encryption used by the key_crypto package; Used to identify which functional application knows the app provided portion of the encryption key';
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+-- consider FK between val_encryption_key_purpose and jazzhands.encryption_key
+ALTER TABLE jazzhands.encryption_key
+	ADD CONSTRAINT fk_enckey_enckeypurpose_val
+	FOREIGN KEY (encryption_key_purpose, encryption_key_purpose_version) REFERENCES jazzhands.val_encryption_key_purpose(encryption_key_purpose, encryption_key_purpose_version);
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'val_encryption_key_purpose');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'val_encryption_key_purpose');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'val_encryption_key_purpose');
+ALTER SEQUENCE jazzhands.val_encryption_key_purpose_encryption_key_purpose_version_seq
+	 OWNED BY val_encryption_key_purpose.encryption_key_purpose_version;
+DROP TABLE IF EXISTS val_encryption_key_purpose_v86;
+DROP TABLE IF EXISTS audit.val_encryption_key_purpose_v86;
+-- DONE DEALING WITH TABLE val_encryption_key_purpose (jazzhands)
+--------------------------------------------------------------------
 --------------------------------------------------------------------
 -- DEALING WITH TABLE val_person_status
 -- Save grants for later reapplication
@@ -3646,6 +3930,322 @@ SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'val_person_st
 DROP TABLE IF EXISTS val_person_status_v86;
 DROP TABLE IF EXISTS audit.val_person_status_v86;
 -- DONE DEALING WITH TABLE val_person_status (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE encapsulation_range
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'encapsulation_range', 'encapsulation_range');
+
+-- FOREIGN KEYS FROM
+ALTER TABLE layer2_network DROP CONSTRAINT IF EXISTS fk_l2_net_encap_range_id;
+
+-- FOREIGN KEYS TO
+ALTER TABLE jazzhands.encapsulation_range DROP CONSTRAINT IF EXISTS fk_encap_range_parent_encap_id;
+ALTER TABLE jazzhands.encapsulation_range DROP CONSTRAINT IF EXISTS fk_encap_range_sitecode;
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'encapsulation_range');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.encapsulation_range DROP CONSTRAINT IF EXISTS pk_vlan_range;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands"."ixf_encap_range_parentvlan";
+DROP INDEX IF EXISTS "jazzhands"."ixf_encap_range_sitecode";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_encapsulation_range ON jazzhands.encapsulation_range;
+DROP TRIGGER IF EXISTS trigger_audit_encapsulation_range ON jazzhands.encapsulation_range;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'encapsulation_range');
+---- BEGIN audit.encapsulation_range TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'encapsulation_range', 'encapsulation_range');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'encapsulation_range');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.encapsulation_range DROP CONSTRAINT IF EXISTS encapsulation_range_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_encapsulation_range_pk_vlan_range";
+DROP INDEX IF EXISTS "audit"."encapsulation_range_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."encapsulation_range_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."encapsulation_range_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.encapsulation_range TEARDOWN
+
+
+ALTER TABLE encapsulation_range RENAME TO encapsulation_range_v86;
+ALTER TABLE audit.encapsulation_range RENAME TO encapsulation_range_v86;
+
+CREATE TABLE jazzhands.encapsulation_range
+(
+	encapsulation_range_id	integer NOT NULL,
+	parent_encapsulation_range_id	integer  NULL,
+	site_code	varchar(50) NOT NULL,
+	description	varchar(255)  NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'encapsulation_range', false);
+ALTER TABLE encapsulation_range
+	ALTER encapsulation_range_id
+	SET DEFAULT nextval('jazzhands.encapsulation_range_encapsulation_range_id_seq'::regclass);
+INSERT INTO encapsulation_range (
+	encapsulation_range_id,
+	parent_encapsulation_range_id,
+	site_code,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	encapsulation_range_id,
+	parent_encapsulation_range_id,
+	site_code,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM encapsulation_range_v86;
+
+INSERT INTO audit.encapsulation_range (
+	encapsulation_range_id,
+	parent_encapsulation_range_id,
+	site_code,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	encapsulation_range_id,
+	parent_encapsulation_range_id,
+	site_code,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.encapsulation_range_v86;
+
+ALTER TABLE jazzhands.encapsulation_range
+	ALTER encapsulation_range_id
+	SET DEFAULT nextval('jazzhands.encapsulation_range_encapsulation_range_id_seq'::regclass);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.encapsulation_range ADD CONSTRAINT pk_vlan_range PRIMARY KEY (encapsulation_range_id);
+
+-- Table/Column Comments
+COMMENT ON TABLE jazzhands.encapsulation_range IS 'Captures how tables are assigned administratively.  This is not use for enforcement but primarily for presentation';
+-- INDEXES
+CREATE INDEX ixf_encap_range_parentvlan ON jazzhands.encapsulation_range USING btree (parent_encapsulation_range_id);
+CREATE INDEX ixf_encap_range_sitecode ON jazzhands.encapsulation_range USING btree (site_code);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+-- consider FK between encapsulation_range and jazzhands.layer2_network
+ALTER TABLE jazzhands.layer2_network
+	ADD CONSTRAINT fk_l2_net_encap_range_id
+	FOREIGN KEY (encapsulation_range_id) REFERENCES jazzhands.encapsulation_range(encapsulation_range_id);
+
+-- FOREIGN KEYS TO
+-- consider FK encapsulation_range and encapsulation_range
+ALTER TABLE jazzhands.encapsulation_range
+	ADD CONSTRAINT fk_encap_range_parent_encap_id
+	FOREIGN KEY (parent_encapsulation_range_id) REFERENCES jazzhands.encapsulation_range(encapsulation_range_id);
+-- consider FK encapsulation_range and site
+ALTER TABLE jazzhands.encapsulation_range
+	ADD CONSTRAINT fk_encap_range_sitecode
+	FOREIGN KEY (site_code) REFERENCES jazzhands.site(site_code);
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'encapsulation_range');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'encapsulation_range');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'encapsulation_range');
+ALTER SEQUENCE jazzhands.encapsulation_range_encapsulation_range_id_seq
+	 OWNED BY encapsulation_range.encapsulation_range_id;
+DROP TABLE IF EXISTS encapsulation_range_v86;
+DROP TABLE IF EXISTS audit.encapsulation_range_v86;
+-- DONE DEALING WITH TABLE encapsulation_range (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE layer2_connection
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'layer2_connection', 'layer2_connection');
+
+-- FOREIGN KEYS FROM
+ALTER TABLE layer2_connection_l2_network DROP CONSTRAINT IF EXISTS fk_l2c_l2n_l2connid;
+
+-- FOREIGN KEYS TO
+ALTER TABLE jazzhands.layer2_connection DROP CONSTRAINT IF EXISTS fk_l2_conn_l1port;
+ALTER TABLE jazzhands.layer2_connection DROP CONSTRAINT IF EXISTS fk_l2_conn_l2port;
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'layer2_connection');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.layer2_connection DROP CONSTRAINT IF EXISTS pk_layer2_connection;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands"."xif_l2_conn_l1port";
+DROP INDEX IF EXISTS "jazzhands"."xif_l2_conn_l2port";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_layer2_connection ON jazzhands.layer2_connection;
+DROP TRIGGER IF EXISTS trigger_audit_layer2_connection ON jazzhands.layer2_connection;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'layer2_connection');
+---- BEGIN audit.layer2_connection TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'layer2_connection', 'layer2_connection');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'layer2_connection');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.layer2_connection DROP CONSTRAINT IF EXISTS layer2_connection_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_layer2_connection_pk_layer2_connection";
+DROP INDEX IF EXISTS "audit"."layer2_connection_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."layer2_connection_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."layer2_connection_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.layer2_connection TEARDOWN
+
+
+ALTER TABLE layer2_connection RENAME TO layer2_connection_v86;
+ALTER TABLE audit.layer2_connection RENAME TO layer2_connection_v86;
+
+CREATE TABLE jazzhands.layer2_connection
+(
+	layer2_connection_id	integer NOT NULL,
+	logical_port1_id	integer  NULL,
+	logical_port2_id	integer  NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'layer2_connection', false);
+ALTER TABLE layer2_connection
+	ALTER layer2_connection_id
+	SET DEFAULT nextval('jazzhands.layer2_connection_layer2_connection_id_seq'::regclass);
+INSERT INTO layer2_connection (
+	layer2_connection_id,
+	logical_port1_id,
+	logical_port2_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	layer2_connection_id,
+	logical_port1_id,
+	logical_port2_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM layer2_connection_v86;
+
+INSERT INTO audit.layer2_connection (
+	layer2_connection_id,
+	logical_port1_id,
+	logical_port2_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	layer2_connection_id,
+	logical_port1_id,
+	logical_port2_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.layer2_connection_v86;
+
+ALTER TABLE jazzhands.layer2_connection
+	ALTER layer2_connection_id
+	SET DEFAULT nextval('jazzhands.layer2_connection_layer2_connection_id_seq'::regclass);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.layer2_connection ADD CONSTRAINT pk_layer2_connection PRIMARY KEY (layer2_connection_id);
+
+-- Table/Column Comments
+-- INDEXES
+CREATE INDEX xif_l2_conn_l1port ON jazzhands.layer2_connection USING btree (logical_port1_id);
+CREATE INDEX xif_l2_conn_l2port ON jazzhands.layer2_connection USING btree (logical_port2_id);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+-- consider FK between layer2_connection and jazzhands.layer2_connection_l2_network
+ALTER TABLE jazzhands.layer2_connection_l2_network
+	ADD CONSTRAINT fk_l2c_l2n_l2connid
+	FOREIGN KEY (layer2_connection_id) REFERENCES jazzhands.layer2_connection(layer2_connection_id);
+
+-- FOREIGN KEYS TO
+-- consider FK layer2_connection and logical_port
+ALTER TABLE jazzhands.layer2_connection
+	ADD CONSTRAINT fk_l2_conn_l1port
+	FOREIGN KEY (logical_port1_id) REFERENCES jazzhands.logical_port(logical_port_id);
+-- consider FK layer2_connection and logical_port
+ALTER TABLE jazzhands.layer2_connection
+	ADD CONSTRAINT fk_l2_conn_l2port
+	FOREIGN KEY (logical_port2_id) REFERENCES jazzhands.logical_port(logical_port_id);
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'layer2_connection');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'layer2_connection');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'layer2_connection');
+ALTER SEQUENCE jazzhands.layer2_connection_layer2_connection_id_seq
+	 OWNED BY layer2_connection.layer2_connection_id;
+DROP TABLE IF EXISTS layer2_connection_v86;
+DROP TABLE IF EXISTS audit.layer2_connection_v86;
+-- DONE DEALING WITH TABLE layer2_connection (jazzhands)
 --------------------------------------------------------------------
 --------------------------------------------------------------------
 -- DEALING WITH TABLE logical_port
@@ -3822,9 +4422,9 @@ ALTER TABLE jazzhands.network_interface
 
 -- FOREIGN KEYS TO
 -- consider FK logical_port and mlag_peering
---ALTER TABLE jazzhands.logical_port
---	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
---	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
+ALTER TABLE jazzhands.logical_port
+	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
+	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
 -- consider FK logical_port and device
 ALTER TABLE jazzhands.logical_port
 	ADD CONSTRAINT fk_logical_port_device_id
@@ -4206,6 +4806,312 @@ ALTER SEQUENCE jazzhands.operating_system_operating_system_id_seq
 DROP TABLE IF EXISTS operating_system_v86;
 DROP TABLE IF EXISTS audit.operating_system_v86;
 -- DONE DEALING WITH TABLE operating_system (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE person_parking_pass
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'person_parking_pass', 'person_parking_pass');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+ALTER TABLE jazzhands.person_parking_pass DROP CONSTRAINT IF EXISTS fk_person_parking_pass_personid;
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'person_parking_pass');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.person_parking_pass DROP CONSTRAINT IF EXISTS pk_system_parking_pass;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands"."xif2person_parking_pass";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_person_parking_pass ON jazzhands.person_parking_pass;
+DROP TRIGGER IF EXISTS trigger_audit_person_parking_pass ON jazzhands.person_parking_pass;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'person_parking_pass');
+---- BEGIN audit.person_parking_pass TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'person_parking_pass', 'person_parking_pass');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'person_parking_pass');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.person_parking_pass DROP CONSTRAINT IF EXISTS person_parking_pass_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_person_parking_pass_pk_system_parking_pass";
+DROP INDEX IF EXISTS "audit"."person_parking_pass_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."person_parking_pass_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."person_parking_pass_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.person_parking_pass TEARDOWN
+
+
+ALTER TABLE person_parking_pass RENAME TO person_parking_pass_v86;
+ALTER TABLE audit.person_parking_pass RENAME TO person_parking_pass_v86;
+
+CREATE TABLE jazzhands.person_parking_pass
+(
+	person_parking_pass_id	integer NOT NULL,
+	person_id	integer NOT NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'person_parking_pass', false);
+ALTER TABLE person_parking_pass
+	ALTER person_parking_pass_id
+	SET DEFAULT nextval('jazzhands.person_parking_pass_person_parking_pass_id_seq'::regclass);
+INSERT INTO person_parking_pass (
+	person_parking_pass_id,
+	person_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	person_parking_pass_id,
+	person_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM person_parking_pass_v86;
+
+INSERT INTO audit.person_parking_pass (
+	person_parking_pass_id,
+	person_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	person_parking_pass_id,
+	person_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.person_parking_pass_v86;
+
+ALTER TABLE jazzhands.person_parking_pass
+	ALTER person_parking_pass_id
+	SET DEFAULT nextval('jazzhands.person_parking_pass_person_parking_pass_id_seq'::regclass);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.person_parking_pass ADD CONSTRAINT pk_system_parking_pass PRIMARY KEY (person_parking_pass_id, person_id);
+
+-- Table/Column Comments
+-- INDEXES
+CREATE INDEX xif2person_parking_pass ON jazzhands.person_parking_pass USING btree (person_id);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+-- consider FK person_parking_pass and person
+ALTER TABLE jazzhands.person_parking_pass
+	ADD CONSTRAINT fk_person_parking_pass_personid
+	FOREIGN KEY (person_id) REFERENCES jazzhands.person(person_id);
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'person_parking_pass');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'person_parking_pass');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'person_parking_pass');
+ALTER SEQUENCE jazzhands.person_parking_pass_person_parking_pass_id_seq
+	 OWNED BY person_parking_pass.person_parking_pass_id;
+DROP TABLE IF EXISTS person_parking_pass_v86;
+DROP TABLE IF EXISTS audit.person_parking_pass_v86;
+-- DONE DEALING WITH TABLE person_parking_pass (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE snmp_commstr
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'snmp_commstr', 'snmp_commstr');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+ALTER TABLE jazzhands.snmp_commstr DROP CONSTRAINT IF EXISTS fk_snmpstr_device_id;
+ALTER TABLE jazzhands.snmp_commstr DROP CONSTRAINT IF EXISTS fk_snmpstr_snmpstrtyp_id;
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'snmp_commstr');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.snmp_commstr DROP CONSTRAINT IF EXISTS ak_uq_snmp_commstr_de_snmp_com;
+ALTER TABLE jazzhands.snmp_commstr DROP CONSTRAINT IF EXISTS pk_snmp_commstr;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands"."ix_snmp_commstr_netdev_id";
+DROP INDEX IF EXISTS "jazzhands"."ix_snmp_commstr_type_id";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_snmp_commstr ON jazzhands.snmp_commstr;
+DROP TRIGGER IF EXISTS trigger_audit_snmp_commstr ON jazzhands.snmp_commstr;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'snmp_commstr');
+---- BEGIN audit.snmp_commstr TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'snmp_commstr', 'snmp_commstr');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'snmp_commstr');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.snmp_commstr DROP CONSTRAINT IF EXISTS snmp_commstr_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_snmp_commstr_ak_uq_snmp_commstr_de_snmp_com";
+DROP INDEX IF EXISTS "audit"."aud_snmp_commstr_pk_snmp_commstr";
+DROP INDEX IF EXISTS "audit"."snmp_commstr_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."snmp_commstr_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."snmp_commstr_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.snmp_commstr TEARDOWN
+
+
+ALTER TABLE snmp_commstr RENAME TO snmp_commstr_v86;
+ALTER TABLE audit.snmp_commstr RENAME TO snmp_commstr_v86;
+
+CREATE TABLE jazzhands.snmp_commstr
+(
+	snmp_commstr_id	integer NOT NULL,
+	device_id	integer NOT NULL,
+	snmp_commstr_type	varchar(50) NOT NULL,
+	rd_string	varchar(255)  NULL,
+	wr_string	varchar(255)  NULL,
+	purpose	varchar(255) NOT NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'snmp_commstr', false);
+ALTER TABLE snmp_commstr
+	ALTER snmp_commstr_id
+	SET DEFAULT nextval('jazzhands.snmp_commstr_snmp_commstr_id_seq'::regclass);
+INSERT INTO snmp_commstr (
+	snmp_commstr_id,
+	device_id,
+	snmp_commstr_type,
+	rd_string,
+	wr_string,
+	purpose,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	snmp_commstr_id,
+	device_id,
+	snmp_commstr_type,
+	rd_string,
+	wr_string,
+	purpose,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM snmp_commstr_v86;
+
+INSERT INTO audit.snmp_commstr (
+	snmp_commstr_id,
+	device_id,
+	snmp_commstr_type,
+	rd_string,
+	wr_string,
+	purpose,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	snmp_commstr_id,
+	device_id,
+	snmp_commstr_type,
+	rd_string,
+	wr_string,
+	purpose,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.snmp_commstr_v86;
+
+ALTER TABLE jazzhands.snmp_commstr
+	ALTER snmp_commstr_id
+	SET DEFAULT nextval('jazzhands.snmp_commstr_snmp_commstr_id_seq'::regclass);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.snmp_commstr ADD CONSTRAINT ak_uq_snmp_commstr_de_snmp_com UNIQUE (device_id, snmp_commstr_type);
+ALTER TABLE jazzhands.snmp_commstr ADD CONSTRAINT pk_snmp_commstr PRIMARY KEY (snmp_commstr_id);
+
+-- Table/Column Comments
+-- INDEXES
+CREATE INDEX ix_snmp_commstr_netdev_id ON jazzhands.snmp_commstr USING btree (device_id);
+CREATE INDEX ix_snmp_commstr_type_id ON jazzhands.snmp_commstr USING btree (snmp_commstr_type);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+-- consider FK snmp_commstr and device
+ALTER TABLE jazzhands.snmp_commstr
+	ADD CONSTRAINT fk_snmpstr_device_id
+	FOREIGN KEY (device_id) REFERENCES jazzhands.device(device_id);
+-- consider FK snmp_commstr and val_snmp_commstr_type
+ALTER TABLE jazzhands.snmp_commstr
+	ADD CONSTRAINT fk_snmpstr_snmpstrtyp_id
+	FOREIGN KEY (snmp_commstr_type) REFERENCES jazzhands.val_snmp_commstr_type(snmp_commstr_type);
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'snmp_commstr');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'snmp_commstr');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'snmp_commstr');
+ALTER SEQUENCE jazzhands.snmp_commstr_snmp_commstr_id_seq
+	 OWNED BY snmp_commstr.snmp_commstr_id;
+DROP TABLE IF EXISTS snmp_commstr_v86;
+DROP TABLE IF EXISTS audit.snmp_commstr_v86;
+-- DONE DEALING WITH TABLE snmp_commstr (jazzhands)
 --------------------------------------------------------------------
 --
 -- BEGIN: process_ancillary_schema(jazzhands_cache)
