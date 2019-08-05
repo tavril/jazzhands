@@ -4580,6 +4580,7 @@ ALTER TABLE jazzhands.network_interface
 
 -- FOREIGN KEYS TO
 -- consider FK logical_port and mlag_peering
+-- created later
 --ALTER TABLE jazzhands.logical_port
 --	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
 --	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
@@ -7867,6 +7868,9 @@ SELECT schema_support.synchronize_cache_tables();
 CREATE INDEX aud_network_interface_uq_netint_device_id_logical_port_id ON audit.network_interface USING btree (device_id, logical_port_id);
 
 ALTER TABLE  logical_port ALTER logical_port_type SET NOT NULL;
+
+ALTER SEQUENCE jazzhands.device_note_note_id_seq OWNED BY jazzhands.device_note.note_id;
+COMMENT ON CONSTRAINT pk_sw_package ON jazzhands.sw_package IS 'This should actually be lower(sw_package_name) but erwin isn''t being cooperative.';
 
 
 -- END Misc that does not apply to above
