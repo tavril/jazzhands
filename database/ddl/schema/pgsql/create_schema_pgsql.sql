@@ -63,7 +63,7 @@ CREATE TABLE account
 	login                varchar(50)  NOT NULL ,
 	person_id            integer  NOT NULL ,
 	company_id           integer  NOT NULL ,
-	is_enabled           boolean  NOT NULL ,
+	is_enabled           char(1)  NOT NULL ,
 	account_realm_id     integer  NOT NULL ,
 	account_status       varchar(50)  NOT NULL ,
 	account_role         varchar(50)  NOT NULL ,
@@ -119,10 +119,10 @@ CREATE INDEX idx_account_account_tpe ON account
 );
 
 /***********************************************
- * Table: account_assignd_cert
+ * Table: account_assigned_certificate
  ***********************************************/
 
-CREATE TABLE account_assignd_cert
+CREATE TABLE account_assigned_certificate
 ( 
 	account_id           integer  NOT NULL ,
 	x509_cert_id         integer  NOT NULL ,
@@ -134,7 +134,7 @@ CREATE TABLE account_assignd_cert
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE account_assignd_cert
+ALTER TABLE account_assigned_certificate
 	ADD CONSTRAINT "pk_account_assigned_cer" PRIMARY KEY (account_id,x509_cert_id,x509_key_usg);
 
 /***********************************************
@@ -161,36 +161,6 @@ CREATE INDEX xieacctauthlog_ts_arsrc ON account_auth_log
 ( 
 	account_auth_ts,
 	auth_resource
-);
-
-/***********************************************
- * Table: account_coll_type_relation
- ***********************************************/
-
-CREATE TABLE account_coll_type_relation
-( 
-	account_collection_relation character varying(50)  NOT NULL ,
-	account_collection_type character varying(50)  NOT NULL ,
-	max_num_members      integer  NULL ,
-	max_num_collections  integer  NULL ,
-	description          varchar(4000)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE account_coll_type_relation
-	ADD CONSTRAINT "pk_account_coll_type_relation" PRIMARY KEY (account_collection_relation,account_collection_type);
-
-CREATE INDEX xifacct_coll_rel_type_rel ON account_coll_type_relation
-( 
-	account_collection_relation
-);
-
-CREATE INDEX xifacct_coll_rel_type_type ON account_coll_type_relation
-( 
-	account_collection_type
 );
 
 /***********************************************
@@ -264,6 +234,36 @@ ALTER TABLE account_collection_hier
 	ADD CONSTRAINT "pk_account_collection_hier" PRIMARY KEY (account_collection_id,child_account_collection_id);
 
 /***********************************************
+ * Table: account_collection_type_relation
+ ***********************************************/
+
+CREATE TABLE account_collection_type_relation
+( 
+	account_collection_relation character varying(50)  NOT NULL ,
+	account_collection_type character varying(50)  NOT NULL ,
+	max_num_members      integer  NULL ,
+	max_num_collections  integer  NULL ,
+	description          varchar(4000)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE account_collection_type_relation
+	ADD CONSTRAINT "pk_account_coll_type_relation" PRIMARY KEY (account_collection_relation,account_collection_type);
+
+CREATE INDEX xifacct_coll_rel_type_rel ON account_collection_type_relation
+( 
+	account_collection_relation
+);
+
+CREATE INDEX xifacct_coll_rel_type_type ON account_collection_type_relation
+( 
+	account_collection_type
+);
+
+/***********************************************
  * Table: account_password
  ***********************************************/
 
@@ -325,10 +325,10 @@ CREATE INDEX idx_account_realm_ar_name ON account_realm
 );
 
 /***********************************************
- * Table: account_realm_acct_coll_type
+ * Table: account_realm_account_collection_type
  ***********************************************/
 
-CREATE TABLE account_realm_acct_coll_type
+CREATE TABLE account_realm_account_collection_type
 ( 
 	account_realm_id     integer  NOT NULL ,
 	account_collection_type character varying(50)  NOT NULL ,
@@ -338,15 +338,15 @@ CREATE TABLE account_realm_acct_coll_type
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE account_realm_acct_coll_type
+ALTER TABLE account_realm_account_collection_type
 	ADD CONSTRAINT "pk_account_realm_acct_coll_type" PRIMARY KEY (account_realm_id,account_collection_type);
 
-CREATE INDEX xif1_acct_realm_acct_coll_typ ON account_realm_acct_coll_type
+CREATE INDEX xif1_acct_realm_acct_coll_typ ON account_realm_account_collection_type
 ( 
 	account_collection_type
 );
 
-CREATE INDEX xif2_acct_realm_acct_coll_arid ON account_realm_acct_coll_type
+CREATE INDEX xif2_acct_realm_acct_coll_arid ON account_realm_account_collection_type
 ( 
 	account_realm_id
 );
@@ -464,7 +464,7 @@ CREATE TABLE account_unix_info
 ( 
 	account_id           integer  NOT NULL ,
 	unix_uid             integer  NOT NULL ,
-	unix_group_acct_collection_id integer  NOT NULL ,
+	unix_group_account_collection_id integer  NOT NULL ,
 	shell                varchar(255)  NOT NULL ,
 	default_home         varchar(50)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -481,12 +481,12 @@ ALTER TABLE account_unix_info
 
 CREATE INDEX xif3account_unix_info ON account_unix_info
 ( 
-	unix_group_acct_collection_id
+	unix_group_account_collection_id
 );
 
 CREATE INDEX xif4account_unix_info ON account_unix_info
 ( 
-	unix_group_acct_collection_id,
+	unix_group_account_collection_id,
 	account_id
 );
 
@@ -524,7 +524,7 @@ CREATE TABLE appaal_instance
 	service_environment_id integer  NOT NULL ,
 	file_mode            integer  NOT NULL ,
 	file_owner_account_id integer  NOT NULL ,
-	file_group_acct_collection_id integer  NULL ,
+	file_group_account_collection_id integer  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -536,14 +536,14 @@ ALTER TABLE appaal_instance
 
 CREATE INDEX xifappaal_inst_filgrpacctcolid ON appaal_instance
 ( 
-	file_group_acct_collection_id
+	file_group_account_collection_id
 );
 
 /***********************************************
- * Table: appaal_instance_device_coll
+ * Table: appaal_instance_device_collection
  ***********************************************/
 
-CREATE TABLE appaal_instance_device_coll
+CREATE TABLE appaal_instance_device_collection
 ( 
 	device_collection_id integer  NOT NULL ,
 	appaal_instance_id   integer  NOT NULL ,
@@ -553,7 +553,7 @@ CREATE TABLE appaal_instance_device_coll
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE appaal_instance_device_coll
+ALTER TABLE appaal_instance_device_collection
 	ADD CONSTRAINT "pk_appaal_instance_device_coll" PRIMARY KEY (device_collection_id,appaal_instance_id);
 
 /***********************************************
@@ -631,7 +631,7 @@ CREATE TABLE approval_instance_item
 	approved_label       varchar(255)  NULL ,
 	approved_lhs         varchar(255)  NULL ,
 	approved_rhs         varchar(255)  NULL ,
-	is_approved          boolean  NULL ,
+	is_approved          char(1)  NULL ,
 	approved_account_id  integer  NULL ,
 	approval_note        text  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -699,7 +699,7 @@ CREATE TABLE approval_instance_step
 	approval_instance_step_end timestamp with time zone  NULL ,
 	approver_account_id  integer  NOT NULL ,
 	external_reference_name varchar(255)  NULL ,
-	is_completed         boolean  NOT NULL ,
+	is_completed         char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -774,8 +774,8 @@ CREATE TABLE approval_process
 	approval_process_name varchar(50)  NOT NULL ,
 	approval_process_type varchar(50)  NULL ,
 	description          varchar(255)  NULL ,
-	first_apprvl_process_chain_id integer  NOT NULL ,
-	property_collection_id integer  NOT NULL ,
+	first_approval_process_chain_id integer  NOT NULL ,
+	property_name_collection_id integer  NOT NULL ,
 	approval_expiration_action varchar(50)  NOT NULL ,
 	attestation_frequency varchar(50)  NULL ,
 	attestation_offset   integer  NULL ,
@@ -793,7 +793,7 @@ ALTER TABLE approval_process
 
 CREATE INDEX xif1approval_process ON approval_process
 ( 
-	property_collection_id
+	property_name_collection_id
 );
 
 CREATE INDEX xif2approval_process ON approval_process
@@ -813,7 +813,7 @@ CREATE INDEX xif4approval_process ON approval_process
 
 CREATE INDEX xif5approval_process ON approval_process
 ( 
-	first_apprvl_process_chain_id
+	first_approval_process_chain_id
 );
 
 /***********************************************
@@ -834,7 +834,7 @@ CREATE TABLE approval_process_chain
 	escalation_delay     integer  NULL ,
 	escalation_reminder_gap integer  NULL ,
 	approving_entity     varchar(50)  NULL ,
-	refresh_all_data     boolean  NOT NULL ,
+	refresh_all_data     char(1)  NOT NULL ,
 	accept_app_process_chain_id integer  NULL ,
 	reject_app_process_chain_id integer  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -1334,10 +1334,10 @@ CREATE TABLE component_type
 	slot_type_id         integer  NULL ,
 	description          varchar(255)  NULL ,
 	part_number          varchar(255)  NULL ,
-	is_removable         boolean  NOT NULL ,
-	asset_permitted      boolean  NOT NULL ,
-	is_rack_mountable    boolean  NOT NULL ,
-	is_virtual_component boolean  NOT NULL ,
+	is_removable         char(1)  NOT NULL ,
+	asset_permitted      char(1)  NOT NULL ,
+	is_rack_mountable    char(1)  NOT NULL ,
+	is_virtual_component char(1)  NOT NULL ,
 	size_units           varchar(50)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -1359,10 +1359,10 @@ CREATE INDEX xif_component_type_slt_type_id ON component_type
 );
 
 /***********************************************
- * Table: component_type_component_func
+ * Table: component_type_component_function
  ***********************************************/
 
-CREATE TABLE component_type_component_func
+CREATE TABLE component_type_component_function
 ( 
 	component_function   character varying(50)  NOT NULL ,
 	component_type_id    integer  NOT NULL ,
@@ -1372,24 +1372,24 @@ CREATE TABLE component_type_component_func
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE component_type_component_func
+ALTER TABLE component_type_component_function
 	ADD CONSTRAINT "pk_component_type_component_func" PRIMARY KEY (component_function,component_type_id);
 
-CREATE INDEX xif_cmptypcf_comp_func ON component_type_component_func
+CREATE INDEX xif_cmptypcf_comp_func ON component_type_component_function
 ( 
 	component_function
 );
 
-CREATE INDEX xif_cmptypecf_comp_typ_id ON component_type_component_func
+CREATE INDEX xif_cmptypecf_comp_typ_id ON component_type_component_function
 ( 
 	component_type_id
 );
 
 /***********************************************
- * Table: component_type_slot_tmplt
+ * Table: component_type_slot_template
  ***********************************************/
 
-CREATE TABLE component_type_slot_tmplt
+CREATE TABLE component_type_slot_template
 ( 
 	component_type_slot_tmplt_id serial  NOT NULL ,
 	component_type_id    integer  NOT NULL ,
@@ -1409,15 +1409,15 @@ CREATE TABLE component_type_slot_tmplt
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE component_type_slot_tmplt
+ALTER TABLE component_type_slot_template
 	ADD CONSTRAINT "pk_component_type_slot_tmplt" PRIMARY KEY (component_type_slot_tmplt_id);
 
-CREATE INDEX xif_comp_typ_slt_tmplt_cmptypid ON component_type_slot_tmplt
+CREATE INDEX xif_comp_typ_slt_tmplt_cmptypid ON component_type_slot_template
 ( 
 	component_type_id
 );
 
-CREATE INDEX xif_comp_typ_slt_tmplt_slttypid ON component_type_slot_tmplt
+CREATE INDEX xif_comp_typ_slt_tmplt_slttypid ON component_type_slot_template
 ( 
 	slot_type_id
 );
@@ -1546,11 +1546,8 @@ CREATE TABLE device
 	device_status        varchar(50)  NOT NULL ,
 	operating_system_id  integer  NOT NULL ,
 	service_environment_id integer  NOT NULL ,
-	auto_mgmt_protocol   varchar(50)  NULL ,
 	is_locally_managed   CHAR(1)  NOT NULL ,
-	is_monitored         CHAR(1)  NOT NULL ,
 	is_virtual_device    CHAR(1)  NOT NULL ,
-	should_fetch_config  CHAR(1)  NOT NULL ,
 	date_in_service      timestamp with time zone  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -1575,11 +1572,6 @@ CREATE INDEX idx_device_type_location ON device
 CREATE INDEX idx_dev_islclymgd ON device
 ( 
 	is_locally_managed
-);
-
-CREATE INDEX idx_dev_ismonitored ON device
-( 
-	is_monitored
 );
 
 CREATE INDEX idx_dev_is_virtual_dev ON device
@@ -1683,30 +1675,30 @@ CREATE INDEX idx_devcoll_devcolltype ON device_collection
 );
 
 /***********************************************
- * Table: device_collection_assignd_cert
+ * Table: device_collection_assigned_certificate
  ***********************************************/
 
-CREATE TABLE device_collection_assignd_cert
+CREATE TABLE device_collection_assigned_certificate
 ( 
 	device_collection_id integer  NOT NULL ,
-	x509_cert_id         integer  NOT NULL ,
-	x509_key_usg         character varying(50)  NOT NULL ,
+	x509_signed_certificate_id integer  NOT NULL ,
+	x509_key_usage       character varying(50)  NOT NULL ,
 	x509_file_format     character varying(50)  NOT NULL ,
 	file_location_path   varchar(255)  NOT NULL ,
 	key_tool_label       varchar(255)  NULL ,
 	file_access_mode     integer  NOT NULL ,
 	file_owner_account_id integer  NOT NULL ,
-	file_group_acct_collection_id integer  NOT NULL ,
+	file_group_account_collection_id integer  NOT NULL ,
 	file_passphrase_path varchar(255)  NULL ,
-	key_usage_reason_for_assign varchar(50)  NULL ,
+	key_usage_reason_for_assignment varchar(50)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE device_collection_assignd_cert
-	ADD CONSTRAINT "pk_device_collection_assigned" PRIMARY KEY (device_collection_id,x509_cert_id,x509_key_usg);
+ALTER TABLE device_collection_assigned_certificate
+	ADD CONSTRAINT "pk_device_collection_assigned" PRIMARY KEY (device_collection_id,x509_signed_certificate_id,x509_key_usage);
 
 /***********************************************
  * Table: device_collection_device
@@ -1854,7 +1846,7 @@ CREATE TABLE device_management_controller
 ( 
 	manager_device_id    integer  NOT NULL ,
 	device_id            integer  NOT NULL ,
-	device_mgmt_control_type character varying(255)  NOT NULL ,
+	device_management_control_type character varying(255)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -1877,7 +1869,7 @@ CREATE INDEX xif2device_management_controller ON device_management_controller
 
 CREATE INDEX xif3device_management_controller ON device_management_controller
 ( 
-	device_mgmt_control_type
+	device_management_control_type
 );
 
 /***********************************************
@@ -1982,7 +1974,7 @@ CREATE TABLE device_type
 	has_802_3_interface  CHAR(1)  NOT NULL ,
 	has_802_11_interface CHAR(1)  NOT NULL ,
 	snmp_capable         CHAR(1)  NOT NULL ,
-	is_chassis           boolean  NOT NULL ,
+	is_chassis           char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2162,10 +2154,10 @@ CREATE INDEX xif1dns_domain_collection ON dns_domain_collection
 );
 
 /***********************************************
- * Table: dns_domain_collection_dns_dom
+ * Table: dns_domain_collection_dns_domain
  ***********************************************/
 
-CREATE TABLE dns_domain_collection_dns_dom
+CREATE TABLE dns_domain_collection_dns_domain
 ( 
 	dns_domain_collection_id integer  NOT NULL ,
 	dns_domain_id        integer  NOT NULL ,
@@ -2175,15 +2167,15 @@ CREATE TABLE dns_domain_collection_dns_dom
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE dns_domain_collection_dns_dom
+ALTER TABLE dns_domain_collection_dns_domain
 	ADD CONSTRAINT "pk_dns_domain_collection_dns_dom" PRIMARY KEY (dns_domain_collection_id,dns_domain_id);
 
-CREATE INDEX xif1dns_domain_collection_dns_dom ON dns_domain_collection_dns_dom
+CREATE INDEX xif1dns_domain_collection_dns_domain ON dns_domain_collection_dns_domain
 ( 
 	dns_domain_id
 );
 
-CREATE INDEX xif2dns_domain_collection_dns_dom ON dns_domain_collection_dns_dom
+CREATE INDEX xif2dns_domain_collection_dns_domain ON dns_domain_collection_dns_domain
 ( 
 	dns_domain_collection_id
 );
@@ -2464,7 +2456,7 @@ CREATE TABLE ip_universe
 	ip_universe_id       serial  NOT NULL ,
 	ip_universe_name     varchar(50)  NOT NULL ,
 	ip_namespace         varchar(50)  NOT NULL ,
-	should_generate_dns  boolean  NOT NULL ,
+	should_generate_dns  char(1)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -2491,7 +2483,7 @@ CREATE TABLE ip_universe_visibility
 ( 
 	ip_universe_id       integer  NOT NULL ,
 	visible_ip_universe_id integer  NOT NULL ,
-	propagate_dns        boolean  NOT NULL ,
+	propagate_dns        char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2544,7 +2536,7 @@ CREATE TABLE klogin
 	account_collection_id integer  NULL ,
 	krb_realm_id         integer  NOT NULL ,
 	krb_instance         varchar(50)  NULL ,
-	dest_account_id      integer  NOT NULL ,
+	destination_account_id integer  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2561,7 +2553,7 @@ CREATE INDEX idx_klogin_acctid ON klogin
 
 CREATE INDEX idx_klogin_destacctid ON klogin
 ( 
-	dest_account_id
+	destination_account_id
 );
 
 CREATE INDEX idx_klogin_krbrealmid ON klogin
@@ -2585,64 +2577,6 @@ CREATE TABLE klogin_mclass
 
 ALTER TABLE klogin_mclass
 	ADD CONSTRAINT "pk_klogin_mclass" PRIMARY KEY (klogin_id,device_collection_id);
-
-CREATE TABLE l2_network_coll_l2_network
-( 
-	layer2_network_collection_id integer  NOT NULL ,
-	layer2_network_id    integer  NOT NULL ,
-	layer2_network_id_rank integer  NULL ,
-	start_date           timestamp without time zone  NULL ,
-	finish_date          timestamp without time zone  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE l2_network_coll_l2_network
-	ADD CONSTRAINT "pk_l2_network_coll_l2_network" PRIMARY KEY (layer2_network_collection_id,layer2_network_id);
-
-ALTER TABLE l2_network_coll_l2_network
-	ADD CONSTRAINT "xak_l2netcol_l2netrank" UNIQUE (layer2_network_collection_id,layer2_network_id_rank);
-
-CREATE INDEX xif_l2netcl2net_collid ON l2_network_coll_l2_network
-( 
-	layer2_network_collection_id
-);
-
-CREATE INDEX xif_l2netcl2net_l2netid ON l2_network_coll_l2_network
-( 
-	layer2_network_id
-);
-
-CREATE TABLE l3_network_coll_l3_network
-( 
-	layer3_network_collection_id integer  NOT NULL ,
-	layer3_network_id    integer  NOT NULL ,
-	layer3_network_id_rank integer  NULL ,
-	start_date           timestamp without time zone  NULL ,
-	finish_date          timestamp without time zone  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE l3_network_coll_l3_network
-	ADD CONSTRAINT "pk_l3_network_coll_l3_network" PRIMARY KEY (layer3_network_collection_id,layer3_network_id);
-
-ALTER TABLE l3_network_coll_l3_network
-	ADD CONSTRAINT "ak_l3netcol_l3netrank" UNIQUE (layer3_network_collection_id,layer3_network_id_rank);
-
-CREATE INDEX xif_l3netcol_l3_net_l3netcolid ON l3_network_coll_l3_network
-( 
-	layer3_network_collection_id
-);
-
-CREATE INDEX xif_l3netcol_l3_net_l3netid ON l3_network_coll_l3_network
-( 
-	layer3_network_id
-);
 
 /***********************************************
  * Table: layer2_connection
@@ -2673,10 +2607,10 @@ CREATE INDEX xif_l2_conn_l2port ON layer2_connection
 );
 
 /***********************************************
- * Table: layer2_connection_l2_network
+ * Table: layer2_connection_layer2_network
  ***********************************************/
 
-CREATE TABLE layer2_connection_l2_network
+CREATE TABLE layer2_connection_layer2_network
 ( 
 	layer2_connection_id integer  NOT NULL ,
 	layer2_network_id    integer  NOT NULL ,
@@ -2689,27 +2623,27 @@ CREATE TABLE layer2_connection_l2_network
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE layer2_connection_l2_network
+ALTER TABLE layer2_connection_layer2_network
 	ADD CONSTRAINT "pk_val_layer2_encapsulation_type" PRIMARY KEY (layer2_connection_id,layer2_network_id);
 
-CREATE INDEX xif_l2cl2n_l2net_id_encap_typ ON layer2_connection_l2_network
+CREATE INDEX xif_l2cl2n_l2net_id_encap_typ ON layer2_connection_layer2_network
 ( 
 	layer2_network_id,
 	encapsulation_type
 );
 
-CREATE INDEX xif_l2c_l2n_encap_mode_type ON layer2_connection_l2_network
+CREATE INDEX xif_l2c_l2n_encap_mode_type ON layer2_connection_layer2_network
 ( 
 	encapsulation_mode,
 	encapsulation_type
 );
 
-CREATE INDEX xif_l2c_l2n_l2connid ON layer2_connection_l2_network
+CREATE INDEX xif_l2c_l2n_l2connid ON layer2_connection_layer2_network
 ( 
 	layer2_connection_id
 );
 
-CREATE INDEX xif_l2c_l2n_l2netid ON layer2_connection_l2_network
+CREATE INDEX xif_l2c_l2n_l2netid ON layer2_connection_layer2_network
 ( 
 	layer2_network_id
 );
@@ -2792,7 +2726,7 @@ CREATE INDEX xif_l2netcoll_type ON layer2_network_collection
 CREATE TABLE layer2_network_collection_hier
 ( 
 	layer2_network_collection_id integer  NOT NULL ,
-	child_l2_network_coll_id integer  NOT NULL ,
+	child_layer2_network_collection_id integer  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2800,16 +2734,194 @@ CREATE TABLE layer2_network_collection_hier
 );
 
 ALTER TABLE layer2_network_collection_hier
-	ADD CONSTRAINT "pk_layer2_network_collection_hier" PRIMARY KEY (layer2_network_collection_id,child_l2_network_coll_id);
+	ADD CONSTRAINT "pk_layer2_network_collection_hier" PRIMARY KEY (layer2_network_collection_id,child_layer2_network_collection_id);
 
 CREATE INDEX xif_l2net_collhier_chldl2net ON layer2_network_collection_hier
 ( 
-	child_l2_network_coll_id
+	child_layer2_network_collection_id
 );
 
 CREATE INDEX xif_l2net_collhier_l2net ON layer2_network_collection_hier
 ( 
 	layer2_network_collection_id
+);
+
+CREATE TABLE layer2_network_collection_layer2_network
+( 
+	layer2_network_collection_id integer  NOT NULL ,
+	layer2_network_id    integer  NOT NULL ,
+	layer2_network_id_rank integer  NULL ,
+	start_date           timestamp without time zone  NULL ,
+	finish_date          timestamp without time zone  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE layer2_network_collection_layer2_network
+	ADD CONSTRAINT "pk_l2_network_coll_l2_network" PRIMARY KEY (layer2_network_collection_id,layer2_network_id);
+
+ALTER TABLE layer2_network_collection_layer2_network
+	ADD CONSTRAINT "xak_l2netcol_l2netrank" UNIQUE (layer2_network_collection_id,layer2_network_id_rank);
+
+CREATE INDEX xif_l2netcl2net_collid ON layer2_network_collection_layer2_network
+( 
+	layer2_network_collection_id
+);
+
+CREATE INDEX xif_l2netcl2net_l2netid ON layer2_network_collection_layer2_network
+( 
+	layer2_network_id
+);
+
+/***********************************************
+ * Table: layer3_interface
+ ***********************************************/
+
+CREATE TABLE layer3_interface
+( 
+	layer3_interface_id  serial  NOT NULL ,
+	layer3_interface_name varchar(255)  NULL ,
+	layer3_interface_type character varying(50)  NOT NULL ,
+	device_id            integer  NOT NULL ,
+	description          varchar(255)  NULL ,
+	parent_layer3_interface_id integer  NULL ,
+	parent_relation_type varchar(255)  NULL ,
+	slot_id              integer  NULL ,
+	logical_port_id      integer  NULL ,
+	is_interface_up      CHAR(1)  NOT NULL ,
+	mac_addr             macaddr  NULL ,
+	should_monitor       CHAR(1)  NOT NULL ,
+	should_manage        CHAR(1)  NOT NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "pk_network_interface_id" PRIMARY KEY (layer3_interface_id);
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "ak_net_int_devid_netintid" UNIQUE (layer3_interface_id,device_id);
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "uq_netint_device_id_logical_port_id" UNIQUE (device_id,logical_port_id);
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "fk_netint_devid_name" UNIQUE (device_id,layer3_interface_name);
+
+CREATE INDEX xif12layer3_interface ON layer3_interface
+( 
+	logical_port_id,
+	device_id
+);
+
+CREATE INDEX idx_netint_isifaceup ON layer3_interface
+( 
+	is_interface_up
+);
+
+CREATE INDEX idx_netint_shouldmange ON layer3_interface
+( 
+	should_manage
+);
+
+CREATE INDEX idx_netint_shouldmonitor ON layer3_interface
+( 
+	should_monitor
+);
+
+CREATE INDEX xif_netint_netdev_id ON layer3_interface
+( 
+	device_id
+);
+
+CREATE INDEX xif_netint_parentnetint ON layer3_interface
+( 
+	parent_layer3_interface_id
+);
+
+CREATE INDEX xif_netint_slot_id ON layer3_interface
+( 
+	slot_id 
+);
+
+CREATE INDEX xif_netint_typeid ON layer3_interface
+( 
+	layer3_interface_type
+);
+
+/***********************************************
+ * Table: layer3_interface_netblock
+ ***********************************************/
+
+CREATE TABLE layer3_interface_netblock
+( 
+	netblock_id          integer  NOT NULL ,
+	layer3_interface_id  integer  NOT NULL ,
+	device_id            integer  NOT NULL ,
+	network_interface_rank integer  NOT NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE layer3_interface_netblock
+	ADD CONSTRAINT "pk_network_interface_netblock" PRIMARY KEY (netblock_id,layer3_interface_id,device_id);
+
+ALTER TABLE layer3_interface_netblock
+	ADD CONSTRAINT "ak_netint_nblk_nblk_id" UNIQUE (netblock_id);
+
+ALTER TABLE layer3_interface_netblock
+	ADD CONSTRAINT "ak_network_interface_nblk_ni_rank" UNIQUE (layer3_interface_id,network_interface_rank);
+
+CREATE INDEX xif_netint_nb_nblk_id ON layer3_interface_netblock
+( 
+	layer3_interface_id,
+	device_id
+);
+
+CREATE UNIQUE INDEX xif_netint_nb_netint_id ON layer3_interface_netblock
+( 
+	netblock_id
+);
+
+/***********************************************
+ * Table: layer3_interface_purpose
+ ***********************************************/
+
+CREATE TABLE layer3_interface_purpose
+( 
+	device_id            integer  NOT NULL ,
+	network_interface_purpose character varying(50)  NOT NULL ,
+	layer3_interface_id  integer  NULL ,
+	description          varchar(4000)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE layer3_interface_purpose
+	ADD CONSTRAINT "pk_network_int_purpose" PRIMARY KEY (device_id,network_interface_purpose);
+
+CREATE INDEX xifnetint_purpose_device_id ON layer3_interface_purpose
+( 
+	device_id
+);
+
+CREATE INDEX xifnetint_purpose_val_netint_p ON layer3_interface_purpose
+( 
+	network_interface_purpose
+);
+
+CREATE INDEX xifnetint_purp_dev_ni_id ON layer3_interface_purpose
+( 
+	layer3_interface_id,
+	device_id
 );
 
 /***********************************************
@@ -2893,7 +3005,7 @@ CREATE INDEX xif_l3_netcol_netcol_type ON layer3_network_collection
 CREATE TABLE layer3_network_collection_hier
 ( 
 	layer3_network_collection_id integer  NOT NULL ,
-	child_l3_network_coll_id integer  NOT NULL ,
+	child_layer3_network_collection_id integer  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2901,7 +3013,7 @@ CREATE TABLE layer3_network_collection_hier
 );
 
 ALTER TABLE layer3_network_collection_hier
-	ADD CONSTRAINT "pk_layer3_network_collection_hier" PRIMARY KEY (layer3_network_collection_id,child_l3_network_coll_id);
+	ADD CONSTRAINT "pk_layer3_network_collection_hier" PRIMARY KEY (layer3_network_collection_id,child_layer3_network_collection_id);
 
 CREATE INDEX xif_l3nethierl3netid ON layer3_network_collection_hier
 ( 
@@ -2910,7 +3022,36 @@ CREATE INDEX xif_l3nethierl3netid ON layer3_network_collection_hier
 
 CREATE INDEX xif_l3nethier_chld_l3netid ON layer3_network_collection_hier
 ( 
-	child_l3_network_coll_id
+	child_layer3_network_collection_id
+);
+
+CREATE TABLE layer3_network_collection_layer3_network
+( 
+	layer3_network_collection_id integer  NOT NULL ,
+	layer3_network_id    integer  NOT NULL ,
+	layer3_network_id_rank integer  NULL ,
+	start_date           timestamp without time zone  NULL ,
+	finish_date          timestamp without time zone  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE layer3_network_collection_layer3_network
+	ADD CONSTRAINT "pk_l3_network_coll_l3_network" PRIMARY KEY (layer3_network_collection_id,layer3_network_id);
+
+ALTER TABLE layer3_network_collection_layer3_network
+	ADD CONSTRAINT "ak_l3netcol_l3netrank" UNIQUE (layer3_network_collection_id,layer3_network_id_rank);
+
+CREATE INDEX xif_l3netcol_l3_net_l3netcolid ON layer3_network_collection_layer3_network
+( 
+	layer3_network_collection_id
+);
+
+CREATE INDEX xif_l3netcol_l3_net_l3netid ON layer3_network_collection_layer3_network
+( 
+	layer3_network_id
 );
 
 /***********************************************
@@ -3159,7 +3300,7 @@ CREATE TABLE netblock
 	ip_address           inet  NOT NULL ,
 	netblock_type        varchar(50)  NOT NULL ,
 	is_single_address    CHAR(1)  NOT NULL ,
-	can_subnet           boolean  NOT NULL ,
+	can_subnet           char(1)  NOT NULL ,
 	parent_netblock_id   integer  NULL ,
 	netblock_status      varchar(50)  NOT NULL ,
 	ip_universe_id       integer  NOT NULL ,
@@ -3211,7 +3352,7 @@ CREATE TABLE netblock_collection
 	netblock_collection_id serial  NOT NULL ,
 	netblock_collection_name varchar(255)  NOT NULL ,
 	netblock_collection_type varchar(50)  NULL ,
-	netblock_ip_family_restrict integer  NULL ,
+	netblock_ip_family_restriction integer  NULL ,
 	description          varchar(255)  NULL ,
 	external_id          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -3285,161 +3426,6 @@ CREATE INDEX ifk_nb_col_nb_nblkid ON netblock_collection_netblock
 CREATE INDEX xifk_nb_col_nb_nbcolid ON netblock_collection_netblock
 ( 
 	netblock_collection_id
-);
-
-/***********************************************
- * Table: network_interface
- ***********************************************/
-
-CREATE TABLE network_interface
-( 
-	network_interface_id serial  NOT NULL ,
-	device_id            integer  NOT NULL ,
-	network_interface_name varchar(255)  NULL ,
-	description          varchar(255)  NULL ,
-	parent_network_interface_id integer  NULL ,
-	parent_relation_type varchar(255)  NULL ,
-	physical_port_id     integer  NULL ,
-	slot_id              integer  NULL ,
-	logical_port_id      integer  NULL ,
-	network_interface_type character varying(50)  NOT NULL ,
-	is_interface_up      CHAR(1)  NOT NULL ,
-	mac_addr             macaddr  NULL ,
-	should_monitor       CHAR(1)  NOT NULL ,
-	should_manage        CHAR(1)  NOT NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "pk_network_interface_id" PRIMARY KEY (network_interface_id);
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "ak_net_int_devid_netintid" UNIQUE (network_interface_id,device_id);
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "uq_netint_device_id_logical_port_id" UNIQUE (device_id,logical_port_id);
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "fk_netint_devid_name" UNIQUE (device_id,network_interface_name);
-
-CREATE INDEX xif12network_interface ON network_interface
-( 
-	logical_port_id,
-	device_id
-);
-
-CREATE INDEX idx_netint_isifaceup ON network_interface
-( 
-	is_interface_up
-);
-
-CREATE INDEX idx_netint_shouldmange ON network_interface
-( 
-	should_manage
-);
-
-CREATE INDEX idx_netint_shouldmonitor ON network_interface
-( 
-	should_monitor
-);
-
-CREATE INDEX xif_netint_netdev_id ON network_interface
-( 
-	device_id
-);
-
-CREATE INDEX xif_netint_parentnetint ON network_interface
-( 
-	parent_network_interface_id
-);
-
-CREATE INDEX xif_netint_slot_id ON network_interface
-( 
-	slot_id 
-);
-
-CREATE INDEX xif_netint_typeid ON network_interface
-( 
-	network_interface_type
-);
-
-CREATE INDEX xif_net_int_phys_port_id ON network_interface
-( 
-	physical_port_id
-);
-
-/***********************************************
- * Table: network_interface_netblock
- ***********************************************/
-
-CREATE TABLE network_interface_netblock
-( 
-	netblock_id          integer  NOT NULL ,
-	network_interface_id integer  NOT NULL ,
-	device_id            integer  NOT NULL ,
-	network_interface_rank integer  NOT NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE network_interface_netblock
-	ADD CONSTRAINT "pk_network_interface_netblock" PRIMARY KEY (netblock_id,network_interface_id,device_id);
-
-ALTER TABLE network_interface_netblock
-	ADD CONSTRAINT "ak_netint_nblk_nblk_id" UNIQUE (netblock_id);
-
-ALTER TABLE network_interface_netblock
-	ADD CONSTRAINT "ak_network_interface_nblk_ni_rank" UNIQUE (network_interface_id,network_interface_rank);
-
-CREATE INDEX xif_netint_nb_nblk_id ON network_interface_netblock
-( 
-	network_interface_id,
-	device_id
-);
-
-CREATE UNIQUE INDEX xif_netint_nb_netint_id ON network_interface_netblock
-( 
-	netblock_id
-);
-
-/***********************************************
- * Table: network_interface_purpose
- ***********************************************/
-
-CREATE TABLE network_interface_purpose
-( 
-	device_id            integer  NOT NULL ,
-	network_interface_purpose character varying(50)  NOT NULL ,
-	network_interface_id integer  NULL ,
-	description          varchar(4000)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE network_interface_purpose
-	ADD CONSTRAINT "pk_network_int_purpose" PRIMARY KEY (device_id,network_interface_purpose);
-
-CREATE INDEX xifnetint_purpose_device_id ON network_interface_purpose
-( 
-	device_id
-);
-
-CREATE INDEX xifnetint_purpose_val_netint_p ON network_interface_purpose
-( 
-	network_interface_purpose
-);
-
-CREATE INDEX xifnetint_purp_dev_ni_id ON network_interface_purpose
-( 
-	network_interface_id,
-	device_id
 );
 
 /***********************************************
@@ -3694,7 +3680,7 @@ CREATE TABLE person_auth_question
 	auth_question_id     integer  NOT NULL ,
 	person_id            integer  NOT NULL ,
 	user_answer          varchar(255)  NOT NULL ,
-	is_active            boolean  NOT NULL ,
+	is_active            char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -3724,9 +3710,9 @@ CREATE TABLE person_company
 	person_id            integer  NOT NULL ,
 	person_company_status character varying(50)  NOT NULL ,
 	person_company_relation varchar(50)  NOT NULL ,
-	is_exempt            boolean  NOT NULL ,
-	is_management        boolean  NOT NULL ,
-	is_full_time         boolean  NOT NULL ,
+	is_exempt            char(1)  NOT NULL ,
+	is_management        char(1)  NOT NULL ,
+	is_full_time         char(1)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	position_title       varchar(50)  NULL ,
 	hire_date            timestamp with time zone  NULL ,
@@ -3768,14 +3754,14 @@ CREATE INDEX xifperson_company_person_id ON person_company
 );
 
 /***********************************************
- * Table: person_company_attr
+ * Table: person_company_attribute
  ***********************************************/
 
-CREATE TABLE person_company_attr
+CREATE TABLE person_company_attribute
 ( 
 	company_id           integer  NOT NULL ,
 	person_id            integer  NOT NULL ,
-	person_company_attr_name varchar(50)  NOT NULL ,
+	person_company_attribute_name varchar(50)  NOT NULL ,
 	attribute_value      varchar(50)  NULL ,
 	attribute_value_timestamp timestamp with time zone  NULL ,
 	attribute_value_person_id integer  NULL ,
@@ -3787,26 +3773,26 @@ CREATE TABLE person_company_attr
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE person_company_attr
-	ADD CONSTRAINT "pk_person_company_attr" PRIMARY KEY (company_id,person_id,person_company_attr_name);
+ALTER TABLE person_company_attribute
+	ADD CONSTRAINT "pk_person_company_attr" PRIMARY KEY (company_id,person_id,person_company_attribute_name);
 
-ALTER TABLE person_company_attr
-	ADD CONSTRAINT "ak_person_company_attr_name" UNIQUE (company_id,person_id,person_company_attr_name);
+ALTER TABLE person_company_attribute
+	ADD CONSTRAINT "ak_person_company_attr_name" UNIQUE (company_id,person_id,person_company_attribute_name);
 
-CREATE INDEX xif1person_company_attr ON person_company_attr
+CREATE INDEX xif1person_company_attribute ON person_company_attribute
 ( 
 	company_id,
 	person_id
 );
 
-CREATE INDEX xif2person_company_attr ON person_company_attr
+CREATE INDEX xif2person_company_attribute ON person_company_attribute
 ( 
 	attribute_value_person_id
 );
 
-CREATE INDEX xif3person_company_attr ON person_company_attr
+CREATE INDEX xif3person_company_attribute ON person_company_attribute
 ( 
-	person_company_attr_name
+	person_company_attribute_name
 );
 
 /***********************************************
@@ -3846,7 +3832,7 @@ CREATE TABLE person_contact
 	person_contact_technology varchar(50)  NOT NULL ,
 	person_contact_location_type varchar(50)  NOT NULL ,
 	person_contact_privacy varchar(255)  NOT NULL ,
-	person_contact_cr_company_id integer  NULL ,
+	person_contact_carrier_company_id integer  NULL ,
 	iso_country_code     CHAR(2)  NOT NULL ,
 	phone_number         varchar(50)  NULL ,
 	phone_extension      varchar(10)  NULL ,
@@ -3873,7 +3859,7 @@ CREATE INDEX xif4person_contact ON person_contact
 
 CREATE INDEX xif5person_contact ON person_contact
 ( 
-	person_contact_cr_company_id
+	person_contact_carrier_company_id
 );
 
 CREATE INDEX xif6person_contact ON person_contact
@@ -4132,8 +4118,6 @@ CREATE INDEX xif_physaddr_type_val ON physical_address
 CREATE TABLE physical_connection
 ( 
 	physical_connection_id serial  NOT NULL ,
-	physical_port1_id    integer  NULL ,
-	physical_port2_id    integer  NULL ,
 	slot1_id             integer  NULL ,
 	slot2_id             integer  NULL ,
 	cable_type           character varying(50)  NOT NULL ,
@@ -4145,16 +4129,6 @@ CREATE TABLE physical_connection
 
 ALTER TABLE physical_connection
 	ADD CONSTRAINT "pk_physical_connection" PRIMARY KEY (physical_connection_id);
-
-CREATE INDEX xif_physconn_physport1_id ON physical_connection
-( 
-	physical_port1_id
-);
-
-CREATE INDEX xif_physconn_physport2_id ON physical_connection
-( 
-	physical_port2_id
-);
 
 CREATE INDEX xif_physconn_slot1_id ON physical_connection
 ( 
@@ -4227,7 +4201,7 @@ CREATE TABLE private_key
 ( 
 	private_key_id       serial  NOT NULL ,
 	private_key_encryption_type varchar(50)  NOT NULL ,
-	is_active            boolean  NOT NULL ,
+	is_active            char(1)  NOT NULL ,
 	subject_key_identifier varchar(255)  NULL ,
 	private_key          text  NOT NULL ,
 	passphrase           varchar(255)  NULL ,
@@ -4275,26 +4249,26 @@ CREATE TABLE property
 	operating_system_id  integer  NULL ,
 	operating_system_snapshot_id integer  NULL ,
 	person_id            integer  NULL ,
-	property_collection_id integer  NULL ,
-	service_env_collection_id integer  NULL ,
+	property_name_collection_id integer  NULL ,
+	service_environment_collection_id integer  NULL ,
 	site_code            character varying(50)  NULL ,
 	x509_signed_certificate_id integer  NULL ,
 	property_name        varchar(255)  NOT NULL ,
 	property_type        varchar(50)  NOT NULL ,
 	property_value       varchar(1024)  NULL ,
 	property_value_timestamp timestamp without time zone  NULL ,
-	property_value_account_coll_id integer  NULL ,
-	property_value_device_coll_id integer  NULL ,
+	property_value_account_collection_id integer  NULL ,
+	property_value_device_collection_id integer  NULL ,
 	property_value_json  jsonb  NULL ,
-	property_value_nblk_coll_id integer  NULL ,
+	property_value_netblock_collection_id integer  NULL ,
 	property_value_password_type character varying(50)  NULL ,
 	property_value_person_id integer  NULL ,
 	property_value_sw_package_id integer  NULL ,
-	property_value_token_col_id integer  NULL ,
+	property_value_token_collection_id integer  NULL ,
 	property_rank        integer  NULL ,
 	start_date           timestamp without time zone  NULL ,
 	finish_date          timestamp without time zone  NULL ,
-	is_enabled           boolean  NOT NULL ,
+	is_enabled           char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -4322,6 +4296,11 @@ CREATE INDEX xif32property ON property
 CREATE INDEX xif33property ON property
 ( 
 	x509_signed_certificate_id
+);
+
+CREATE INDEX xif34property ON property
+( 
+	service_environment_collection_id ASC
 );
 
 CREATE INDEX xifprop_account_id ON property
@@ -4357,7 +4336,7 @@ CREATE INDEX xifprop_osid ON property
 
 CREATE INDEX xifprop_pval_acct_colid ON property
 ( 
-	property_value_account_coll_id
+	property_value_account_collection_id
 );
 
 CREATE INDEX xifprop_pval_pwdtyp ON property
@@ -4372,7 +4351,7 @@ CREATE INDEX xifprop_pval_swpkgid ON property
 
 CREATE INDEX xifprop_pval_tokcolid ON property
 ( 
-	property_value_token_col_id
+	property_value_token_collection_id
 );
 
 CREATE INDEX xifprop_site_code ON property
@@ -4402,12 +4381,12 @@ CREATE INDEX xif_property_person_id ON property
 
 CREATE INDEX xif_property_prop_coll_id ON property
 ( 
-	property_collection_id
+	property_name_collection_id
 );
 
 CREATE INDEX xif_property_pv_nblkcol_id ON property
 ( 
-	property_value_nblk_coll_id
+	property_value_netblock_collection_id
 );
 
 CREATE INDEX xif_property_val_prsnid ON property
@@ -4427,23 +4406,18 @@ CREATE INDEX xif_prop_os_snapshot ON property
 
 CREATE INDEX xif_prop_pv_devcolid ON property
 ( 
-	property_value_device_coll_id
-);
-
-CREATE INDEX xif_prop_svc_env_coll_id ON property
-( 
-	service_env_collection_id
+	property_value_device_collection_id
 );
 
 /***********************************************
- * Table: property_collection
+ * Table: property_name_collection
  ***********************************************/
 
-CREATE TABLE property_collection
+CREATE TABLE property_name_collection
 ( 
-	property_collection_id serial  NOT NULL ,
-	property_collection_name varchar(255)  NOT NULL ,
-	property_collection_type varchar(50)  NOT NULL ,
+	property_name_collection_id serial  NOT NULL ,
+	property_name_collection_name varchar(255)  NOT NULL ,
+	property_name_collection_type varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -4451,51 +4425,51 @@ CREATE TABLE property_collection
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE property_collection
-	ADD CONSTRAINT "pk_property_collection" PRIMARY KEY (property_collection_id);
+ALTER TABLE property_name_collection
+	ADD CONSTRAINT "pk_property_collection" PRIMARY KEY (property_name_collection_id);
 
-ALTER TABLE property_collection
-	ADD CONSTRAINT "ak_uqpropcoll_name_type" UNIQUE (property_collection_name,property_collection_type);
+ALTER TABLE property_name_collection
+	ADD CONSTRAINT "ak_uqpropcoll_name_type" UNIQUE (property_name_collection_name,property_name_collection_type);
 
-CREATE INDEX xif1property_collection ON property_collection
+CREATE INDEX xif1property_name_collection ON property_name_collection
 ( 
-	property_collection_type
+	property_name_collection_type
 );
 
 /***********************************************
- * Table: property_collection_hier
+ * Table: property_name_collection_hier
  ***********************************************/
 
-CREATE TABLE property_collection_hier
+CREATE TABLE property_name_collection_hier
 ( 
-	property_collection_id integer  NOT NULL ,
-	child_property_collection_id integer  NOT NULL ,
+	property_name_collection_id integer  NOT NULL ,
+	child_property_name_collection_id integer  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE property_collection_hier
-	ADD CONSTRAINT "pk_property_collection_hier" PRIMARY KEY (property_collection_id,child_property_collection_id);
+ALTER TABLE property_name_collection_hier
+	ADD CONSTRAINT "pk_property_collection_hier" PRIMARY KEY (property_name_collection_id,child_property_name_collection_id);
 
-CREATE INDEX xif1property_collection_hier ON property_collection_hier
+CREATE INDEX xif1property_name_collection_hier ON property_name_collection_hier
 ( 
-	property_collection_id
+	property_name_collection_id
 );
 
-CREATE INDEX xif2property_collection_hier ON property_collection_hier
+CREATE INDEX xif2property_name_collection_hier ON property_name_collection_hier
 ( 
-	child_property_collection_id
+	child_property_name_collection_id
 );
 
 /***********************************************
- * Table: property_collection_property
+ * Table: property_name_collection_property_name
  ***********************************************/
 
-CREATE TABLE property_collection_property
+CREATE TABLE property_name_collection_property_name
 ( 
-	property_collection_id integer  NOT NULL ,
+	property_name_collection_id integer  NOT NULL ,
 	property_name        character varying(255)  NOT NULL ,
 	property_type        character varying(50)  NOT NULL ,
 	property_id_rank     integer  NULL ,
@@ -4505,21 +4479,21 @@ CREATE TABLE property_collection_property
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE property_collection_property
-	ADD CONSTRAINT "pk_property_collection_property" PRIMARY KEY (property_collection_id,property_name,property_type);
+ALTER TABLE property_name_collection_property_name
+	ADD CONSTRAINT "pk_property_collection_property" PRIMARY KEY (property_name_collection_id,property_name,property_type);
 
-ALTER TABLE property_collection_property
-	ADD CONSTRAINT "xakprop_coll_prop_rank" UNIQUE (property_collection_id,property_id_rank);
+ALTER TABLE property_name_collection_property_name
+	ADD CONSTRAINT "xakprop_coll_prop_rank" UNIQUE (property_name_collection_id,property_id_rank);
 
-CREATE INDEX xifprop_coll_prop_namtyp ON property_collection_property
+CREATE INDEX xifprop_coll_prop_namtyp ON property_name_collection_property_name
 ( 
 	property_name,
 	property_type
 );
 
-CREATE INDEX xifprop_coll_prop_prop_coll_id ON property_collection_property
+CREATE INDEX xifprop_coll_prop_prop_coll_id ON property_name_collection_property_name
 ( 
-	property_collection_id
+	property_name_collection_id
 );
 
 /***********************************************
@@ -4627,42 +4601,14 @@ CREATE INDEX xif1service_environment ON service_environment
 );
 
 /***********************************************
- * Table: service_environment_coll_hier
- ***********************************************/
-
-CREATE TABLE service_environment_coll_hier
-( 
-	service_env_collection_id integer  NOT NULL ,
-	child_service_env_coll_id integer  NOT NULL ,
-	description          varchar(4000)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE service_environment_coll_hier
-	ADD CONSTRAINT "pk_service_environment_hier" PRIMARY KEY (service_env_collection_id,child_service_env_coll_id);
-
-CREATE INDEX xif1service_environment_coll_hier ON service_environment_coll_hier
-( 
-	child_service_env_coll_id
-);
-
-CREATE INDEX xif2service_environment_coll_hier ON service_environment_coll_hier
-( 
-	service_env_collection_id
-);
-
-/***********************************************
  * Table: service_environment_collection
  ***********************************************/
 
 CREATE TABLE service_environment_collection
 ( 
-	service_env_collection_id serial  NOT NULL ,
-	service_env_collection_name varchar(50)  NOT NULL ,
-	service_env_collection_type varchar(50)  NULL ,
+	service_environment_collection_id serial  NOT NULL ,
+	service_environment_collection_name varchar(50)  NOT NULL ,
+	service_environment_collection_type varchar(50)  NULL ,
 	description          varchar(4000)  NULL ,
 	external_id          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -4672,14 +4618,70 @@ CREATE TABLE service_environment_collection
 );
 
 ALTER TABLE service_environment_collection
-	ADD CONSTRAINT "pk_service_environment_collection" PRIMARY KEY (service_env_collection_id);
+	ADD CONSTRAINT "pk_service_environment_collection" PRIMARY KEY (service_environment_collection_id);
 
 ALTER TABLE service_environment_collection
-	ADD CONSTRAINT "ak_val_svc_env_name_type" UNIQUE (service_env_collection_name,service_env_collection_type);
+	ADD CONSTRAINT "ak_val_svc_env_name_type" UNIQUE (service_environment_collection_name,service_environment_collection_type);
 
 CREATE INDEX xif1service_environment_collection ON service_environment_collection
 ( 
-	service_env_collection_type
+	service_environment_collection_type
+);
+
+/***********************************************
+ * Table: service_environment_collection_hier
+ ***********************************************/
+
+CREATE TABLE service_environment_collection_hier
+( 
+	service_environment_collection_id integer  NOT NULL ,
+	child_service_environment_collection_id integer  NOT NULL ,
+	description          varchar(4000)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE service_environment_collection_hier
+	ADD CONSTRAINT "pk_service_environment_hier" PRIMARY KEY (service_environment_collection_id,child_service_environment_collection_id);
+
+CREATE INDEX xif1service_environment_collection_hier ON service_environment_collection_hier
+( 
+	child_service_environment_collection_id
+);
+
+CREATE INDEX xif2service_environment_collection_hier ON service_environment_collection_hier
+( 
+	service_environment_collection_id
+);
+
+/***********************************************
+ * Table: service_environment_collection_service_environment
+ ***********************************************/
+
+CREATE TABLE service_environment_collection_service_environment
+( 
+	service_environment_collection_id integer  NOT NULL ,
+	service_environment_id integer  NOT NULL ,
+	description          varchar(4000)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE service_environment_collection_service_environment
+	ADD CONSTRAINT "pk_svc_environment_coll_svc_env" PRIMARY KEY (service_environment_collection_id,service_environment_id);
+
+CREATE INDEX xif1service_environment_collection_service_environment ON service_environment_collection_service_environment
+( 
+	service_environment_id
+);
+
+CREATE INDEX xif2service_environment_collection_service_environment ON service_environment_collection_service_environment
+( 
+	service_environment_collection_id
 );
 
 /***********************************************
@@ -4715,13 +4717,13 @@ CREATE INDEX xif2shared_netblock ON shared_netblock
 );
 
 /***********************************************
- * Table: shared_netblock_network_int
+ * Table: shared_netblock_layer3_interface
  ***********************************************/
 
-CREATE TABLE shared_netblock_network_int
+CREATE TABLE shared_netblock_layer3_interface
 ( 
 	shared_netblock_id   integer  NOT NULL ,
-	network_interface_id integer  NOT NULL ,
+	layer3_interface_id  integer  NOT NULL ,
 	priority             integer  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -4729,17 +4731,17 @@ CREATE TABLE shared_netblock_network_int
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE shared_netblock_network_int
-	ADD CONSTRAINT "pk_ip_group_network_interface" PRIMARY KEY (shared_netblock_id,network_interface_id);
+ALTER TABLE shared_netblock_layer3_interface
+	ADD CONSTRAINT "pk_ip_group_network_interface" PRIMARY KEY (shared_netblock_id,layer3_interface_id);
 
-CREATE INDEX xif1shared_netblock_network_int ON shared_netblock_network_int
+CREATE INDEX xif1shared_netblock_layer3_interface ON shared_netblock_layer3_interface
 ( 
 	shared_netblock_id
 );
 
-CREATE INDEX xif2shared_netblock_network_int ON shared_netblock_network_int
+CREATE INDEX xif2shared_netblock_layer3_interface ON shared_netblock_layer3_interface
 ( 
-	network_interface_id
+	layer3_interface_id
 );
 
 /***********************************************
@@ -4783,8 +4785,8 @@ CREATE TABLE slot
 	slot_name            varchar(50)  NOT NULL ,
 	slot_index           integer  NULL ,
 	slot_type_id         integer  NOT NULL ,
-	component_type_slot_tmplt_id integer  NULL ,
-	is_enabled           boolean  NOT NULL ,
+	component_type_slot_template_id integer  NULL ,
+	is_enabled           char(1)  NOT NULL ,
 	physical_label       varchar(50)  NULL ,
 	mac_address          macaddr  NULL ,
 	description          varchar(255)  NULL ,
@@ -4805,11 +4807,11 @@ ALTER TABLE slot
 	ADD CONSTRAINT "ak_slot_slot_type_id" UNIQUE (slot_id,slot_type_id);
 
 ALTER TABLE slot
-	ADD CONSTRAINT "uq_slot_cmp_slt_tmplt_id" UNIQUE (component_id,component_type_slot_tmplt_id);
+	ADD CONSTRAINT "uq_slot_cmp_slt_tmplt_id" UNIQUE (component_id,component_type_slot_template_id);
 
 CREATE INDEX xif_slot_cmp_typ_tmp_id ON slot
 ( 
-	component_type_slot_tmplt_id
+	component_type_slot_template_id
 );
 
 CREATE INDEX xif_slot_component_id ON slot
@@ -4833,7 +4835,7 @@ CREATE TABLE slot_type
 	slot_function        character varying(50)  NOT NULL ,
 	slot_physical_interface_type character varying(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
-	remote_slot_permitted boolean  NOT NULL ,
+	remote_slot_permitted char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -4858,10 +4860,10 @@ CREATE INDEX xif_slot_type_slt_func ON slot_type
 );
 
 /***********************************************
- * Table: slot_type_prmt_comp_slot_type
+ * Table: slot_type_permitted_component_slot_type
  ***********************************************/
 
-CREATE TABLE slot_type_prmt_comp_slot_type
+CREATE TABLE slot_type_permitted_component_slot_type
 ( 
 	slot_type_id         integer  NOT NULL ,
 	component_slot_type_id integer  NOT NULL ,
@@ -4871,24 +4873,24 @@ CREATE TABLE slot_type_prmt_comp_slot_type
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE slot_type_prmt_comp_slot_type
+ALTER TABLE slot_type_permitted_component_slot_type
 	ADD CONSTRAINT "pk_slot_type_prmt_comp_slot_typ" PRIMARY KEY (slot_type_id,component_slot_type_id);
 
-CREATE INDEX xif_stpcst_cmp_slt_typ_id ON slot_type_prmt_comp_slot_type
+CREATE INDEX xif_stpcst_cmp_slt_typ_id ON slot_type_permitted_component_slot_type
 ( 
 	slot_type_id
 );
 
-CREATE INDEX xif_stpcst_slot_type_id ON slot_type_prmt_comp_slot_type
+CREATE INDEX xif_stpcst_slot_type_id ON slot_type_permitted_component_slot_type
 ( 
 	component_slot_type_id
 );
 
 /***********************************************
- * Table: slot_type_prmt_rem_slot_type
+ * Table: slot_type_permitted_remote_slot_type
  ***********************************************/
 
-CREATE TABLE slot_type_prmt_rem_slot_type
+CREATE TABLE slot_type_permitted_remote_slot_type
 ( 
 	slot_type_id         integer  NOT NULL ,
 	remote_slot_type_id  integer  NOT NULL ,
@@ -4898,51 +4900,17 @@ CREATE TABLE slot_type_prmt_rem_slot_type
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE slot_type_prmt_rem_slot_type
+ALTER TABLE slot_type_permitted_remote_slot_type
 	ADD CONSTRAINT "pk_slot_type_prmt_rem_slot_type" PRIMARY KEY (slot_type_id,remote_slot_type_id);
 
-CREATE INDEX xif_stprst_remote_slot_type_id ON slot_type_prmt_rem_slot_type
+CREATE INDEX xif_stprst_remote_slot_type_id ON slot_type_permitted_remote_slot_type
 ( 
 	remote_slot_type_id
 );
 
-CREATE INDEX xif_stprst_slot_type_id ON slot_type_prmt_rem_slot_type
+CREATE INDEX xif_stprst_slot_type_id ON slot_type_permitted_remote_slot_type
 ( 
 	slot_type_id
-);
-
-/***********************************************
- * Table: snmp_commstr
- ***********************************************/
-
-CREATE TABLE snmp_commstr
-( 
-	snmp_commstr_id      serial  NOT NULL ,
-	device_id            integer  NOT NULL ,
-	snmp_commstr_type    varchar(50)  NOT NULL ,
-	rd_string            varchar(255)  NULL ,
-	wr_string            varchar(255)  NULL ,
-	purpose              varchar(255)  NOT NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE snmp_commstr
-	ADD CONSTRAINT "pk_snmp_commstr" PRIMARY KEY (snmp_commstr_id);
-
-ALTER TABLE snmp_commstr
-	ADD CONSTRAINT "ak_uq_snmp_commstr_de_snmp_com" UNIQUE (device_id,snmp_commstr_type);
-
-CREATE INDEX ix_snmp_commstr_netdev_id ON snmp_commstr
-( 
-	device_id
-);
-
-CREATE INDEX ix_snmp_commstr_type_id ON snmp_commstr
-( 
-	snmp_commstr_type
 );
 
 /***********************************************
@@ -4989,8 +4957,8 @@ CREATE INDEX xif2ssh_key ON ssh_key
 CREATE TABLE static_route
 ( 
 	static_route_id      serial  NOT NULL ,
-	device_src_id        integer  NOT NULL ,
-	network_interface_dst_id integer  NOT NULL ,
+	device_source_id     integer  NOT NULL ,
+	network_interface_destination_id integer  NOT NULL ,
 	netblock_id          integer  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -5003,7 +4971,7 @@ ALTER TABLE static_route
 
 CREATE INDEX idx_staticrt_devsrcid ON static_route
 ( 
-	device_src_id
+	device_source_id
 );
 
 CREATE INDEX idx_staticrt_netblockid ON static_route
@@ -5013,7 +4981,7 @@ CREATE INDEX idx_staticrt_netblockid ON static_route
 
 CREATE INDEX idx_staticrt_netintdstid ON static_route
 ( 
-	network_interface_dst_id
+	network_interface_destination_id
 );
 
 /***********************************************
@@ -5023,8 +4991,8 @@ CREATE INDEX idx_staticrt_netintdstid ON static_route
 CREATE TABLE static_route_template
 ( 
 	static_route_template_id serial  NOT NULL ,
-	netblock_src_id      integer  NOT NULL ,
-	network_interface_dst_id integer  NOT NULL ,
+	netblock_source_id   integer  NOT NULL ,
+	network_interface_destination_id integer  NOT NULL ,
 	netblock_id          integer  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -5037,10 +5005,10 @@ ALTER TABLE static_route_template
 	ADD CONSTRAINT "pk_static_route_template" PRIMARY KEY (static_route_template_id);
 
 /***********************************************
- * Table: sudo_acct_col_device_collectio
+ * Table: sudo_account_collection_device_collection
  ***********************************************/
 
-CREATE TABLE sudo_acct_col_device_collectio
+CREATE TABLE sudo_account_collection_device_collection
 ( 
 	sudo_alias_name      character varying(50)  NOT NULL ,
 	device_collection_id integer  NOT NULL ,
@@ -5054,7 +5022,7 @@ CREATE TABLE sudo_acct_col_device_collectio
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE sudo_acct_col_device_collectio
+ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT "pk_sudo_acct_col_dev_coll" PRIMARY KEY (sudo_alias_name,device_collection_id,account_collection_id);
 
 /***********************************************
@@ -5073,34 +5041,6 @@ CREATE TABLE sudo_alias
 
 ALTER TABLE sudo_alias
 	ADD CONSTRAINT "pk_sudo_alias" PRIMARY KEY (sudo_alias_name);
-
-/***********************************************
- * Table: svc_environment_coll_svc_env
- ***********************************************/
-
-CREATE TABLE svc_environment_coll_svc_env
-( 
-	service_env_collection_id integer  NOT NULL ,
-	service_environment_id integer  NOT NULL ,
-	description          varchar(4000)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE svc_environment_coll_svc_env
-	ADD CONSTRAINT "pk_svc_environment_coll_svc_env" PRIMARY KEY (service_env_collection_id,service_environment_id);
-
-CREATE INDEX xif1svc_environment_coll_svc_env ON svc_environment_coll_svc_env
-( 
-	service_environment_id
-);
-
-CREATE INDEX xif2svc_environment_coll_svc_env ON svc_environment_coll_svc_env
-( 
-	service_env_collection_id
-);
 
 /***********************************************
  * Table: sw_package
@@ -5162,7 +5102,7 @@ CREATE TABLE token
 	encryption_key_id    integer  NULL ,
 	token_password       varchar(128)  NULL ,
 	expire_time          timestamp with time zone  NULL ,
-	is_token_locked      boolean  NOT NULL ,
+	is_token_locked      char(1)  NOT NULL ,
 	token_unlock_time    timestamp with time zone  NULL ,
 	bad_logins           integer  NULL ,
 	last_updated         timestamp with time zone  NOT NULL ,
@@ -5310,10 +5250,10 @@ CREATE UNIQUE INDEX xifunixgrp_uclass_id ON unix_group
 );
 
 /***********************************************
- * Table: val_account_collection_relatio
+ * Table: val_account_collection_relation
  ***********************************************/
 
-CREATE TABLE val_account_collection_relatio
+CREATE TABLE val_account_collection_relation
 ( 
 	account_collection_relation varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
@@ -5323,7 +5263,7 @@ CREATE TABLE val_account_collection_relatio
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_account_collection_relatio
+ALTER TABLE val_account_collection_relation
 	ADD CONSTRAINT "pk_val_account_collection_relation" PRIMARY KEY (account_collection_relation);
 
 /***********************************************
@@ -5334,10 +5274,10 @@ CREATE TABLE val_account_collection_type
 ( 
 	account_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_infrastructure_type boolean  NOT NULL ,
+	is_infrastructure_type char(1)  NOT NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	account_realm_id     integer  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -5360,7 +5300,7 @@ CREATE INDEX xif1val_account_collection_type ON val_account_collection_type
 CREATE TABLE val_account_role
 ( 
 	account_role         varchar(50)  NOT NULL ,
-	uid_gid_forced       boolean  NOT NULL ,
+	uid_gid_forced       char(1)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -5379,7 +5319,7 @@ CREATE TABLE val_account_type
 ( 
 	account_type         varchar(50)  NOT NULL ,
 	is_person            CHAR(1)  NOT NULL ,
-	uid_gid_forced       boolean  NOT NULL ,
+	uid_gid_forced       char(1)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -5454,10 +5394,10 @@ ALTER TABLE val_appaal_group_name
 	ADD CONSTRAINT "pk_val_appaal_group_name" PRIMARY KEY (appaal_group_name);
 
 /***********************************************
- * Table: val_approval_chain_resp_prd
+ * Table: val_approval_chain_response_period
  ***********************************************/
 
-CREATE TABLE val_approval_chain_resp_prd
+CREATE TABLE val_approval_chain_response_period
 ( 
 	approval_chain_response_period varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
@@ -5467,7 +5407,7 @@ CREATE TABLE val_approval_chain_resp_prd
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_approval_chain_resp_prd
+ALTER TABLE val_approval_chain_response_period
 	ADD CONSTRAINT "pk_val_approval_chain_resp_prd" PRIMARY KEY (approval_chain_response_period);
 
 /***********************************************
@@ -5631,10 +5571,10 @@ CREATE TABLE val_company_collection_type
 ( 
 	company_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_infrastructure_type boolean  NOT NULL ,
+	is_infrastructure_type char(1)  NOT NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5710,14 +5650,14 @@ CREATE TABLE val_component_property
 	component_property_name varchar(50)  NOT NULL ,
 	component_property_type character varying(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_multivalue        boolean  NOT NULL ,
+	is_multivalue        char(1)  NOT NULL ,
 	property_data_type   varchar(50)  NOT NULL ,
 	permit_component_type_id char(10)  NOT NULL ,
 	required_component_type_id integer  NULL ,
 	permit_component_function char(10)  NOT NULL ,
 	required_component_function character varying(50)  NULL ,
 	permit_component_id  char(10)  NOT NULL ,
-	permit_intcomp_conn_id char(10)  NOT NULL ,
+	permit_inter_component_connection_id char(10)  NOT NULL ,
 	permit_slot_type_id  char(10)  NOT NULL ,
 	required_slot_type_id integer  NULL ,
 	permit_slot_function char(10)  NOT NULL ,
@@ -5765,7 +5705,7 @@ CREATE TABLE val_component_property_type
 ( 
 	component_property_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_multivalue        boolean  NOT NULL ,
+	is_multivalue        char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5843,24 +5783,6 @@ CREATE INDEX xif1val_country_code ON val_country_code
 );
 
 /***********************************************
- * Table: val_device_auto_mgmt_protocol
- ***********************************************/
-
-CREATE TABLE val_device_auto_mgmt_protocol
-( 
-	auto_mgmt_protocol   varchar(50)  NOT NULL ,
-	connection_port      integer  NOT NULL ,
-	description          varchar(4000)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE val_device_auto_mgmt_protocol
-	ADD CONSTRAINT "pk_val_device_auto_mgmt_protoc" PRIMARY KEY (auto_mgmt_protocol);
-
-/***********************************************
  * Table: val_device_collection_type
  ***********************************************/
 
@@ -5870,7 +5792,7 @@ CREATE TABLE val_device_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5881,10 +5803,10 @@ ALTER TABLE val_device_collection_type
 	ADD CONSTRAINT "pk_val_device_collection_type" PRIMARY KEY (device_collection_type);
 
 /***********************************************
- * Table: val_device_mgmt_ctrl_type
+ * Table: val_device_management_controller_type
  ***********************************************/
 
-CREATE TABLE val_device_mgmt_ctrl_type
+CREATE TABLE val_device_management_controller_type
 ( 
 	device_mgmt_control_type varchar(255)  NOT NULL ,
 	description          varchar(4000)  NULL ,
@@ -5894,7 +5816,7 @@ CREATE TABLE val_device_mgmt_ctrl_type
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_device_mgmt_ctrl_type
+ALTER TABLE val_device_management_controller_type
 	ADD CONSTRAINT "pk_val_device_mgmt_ctrl_type" PRIMARY KEY (device_mgmt_control_type);
 
 /***********************************************
@@ -5957,7 +5879,7 @@ CREATE TABLE val_dns_domain_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5970,7 +5892,7 @@ ALTER TABLE val_dns_domain_collection_type
 CREATE TABLE val_dns_domain_type
 ( 
 	dns_domain_type      varchar(50)  NOT NULL ,
-	can_generate         boolean  NOT NULL ,
+	can_generate         char(1)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -6178,12 +6100,12 @@ ALTER TABLE val_iso_currency_code
 	ADD CONSTRAINT "pk_val_iso_currency_code" PRIMARY KEY (iso_currency_code);
 
 /***********************************************
- * Table: val_key_usg_reason_for_assgn
+ * Table: val_key_usage_reason_for_assignment
  ***********************************************/
 
-CREATE TABLE val_key_usg_reason_for_assgn
+CREATE TABLE val_key_usage_reason_for_assignment
 ( 
-	key_usage_reason_for_assign varchar(50)  NOT NULL ,
+	key_usage_reason_for_assignment varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -6191,47 +6113,47 @@ CREATE TABLE val_key_usg_reason_for_assgn
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_key_usg_reason_for_assgn
-	ADD CONSTRAINT "pk_reason_for_assignment" PRIMARY KEY (key_usage_reason_for_assign);
+ALTER TABLE val_key_usage_reason_for_assignment
+	ADD CONSTRAINT "pk_reason_for_assignment" PRIMARY KEY (key_usage_reason_for_assignment);
 
 /***********************************************
- * Table: val_layer2_network_coll_type
+ * Table: val_layer2_network_collection_type
  ***********************************************/
 
-CREATE TABLE val_layer2_network_coll_type
+CREATE TABLE val_layer2_network_collection_type
 ( 
 	layer2_network_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_layer2_network_coll_type
+ALTER TABLE val_layer2_network_collection_type
 	ADD CONSTRAINT "pk_val_layer2_network_coll_typ" PRIMARY KEY (layer2_network_collection_type);
 
 /***********************************************
- * Table: val_layer3_network_coll_type
+ * Table: val_layer3_network_collection_type
  ***********************************************/
 
-CREATE TABLE val_layer3_network_coll_type
+CREATE TABLE val_layer3_network_collection_type
 ( 
 	layer3_network_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_layer3_network_coll_type
+ALTER TABLE val_layer3_network_collection_type
 	ADD CONSTRAINT "pk_val_layer3_network_coll_type" PRIMARY KEY (layer3_network_collection_type);
 
 /***********************************************
@@ -6318,9 +6240,9 @@ CREATE TABLE val_netblock_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
-	netblock_single_addr_restrict varchar(3)  NOT NULL ,
-	netblock_ip_family_restrict integer  NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
+	netblock_is_single_address_restriction varchar(3)  NOT NULL ,
+	netblock_ip_family_restriction integer  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6355,8 +6277,8 @@ CREATE TABLE val_netblock_type
 ( 
 	netblock_type        varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	db_forced_hierarchy  boolean  NOT NULL ,
-	is_validated_hierarchy boolean  NOT NULL ,
+	db_forced_hierarchy  char(1)  NOT NULL ,
+	is_validated_hierarchy char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6411,8 +6333,8 @@ CREATE TABLE val_network_range_type
 	dns_domain_required  char(10)  NOT NULL ,
 	default_dns_prefix   varchar(50)  NULL ,
 	netblock_type        character varying(50)  NULL ,
-	can_overlap          boolean  NOT NULL ,
-	require_cidr_boundary boolean  NOT NULL ,
+	can_overlap          char(1)  NOT NULL ,
+	require_cidr_boundary char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6462,10 +6384,10 @@ ALTER TABLE val_operating_system_family
 	ADD CONSTRAINT "pk_val_operating_system_family" PRIMARY KEY (operating_system_family);
 
 /***********************************************
- * Table: val_os_snapshot_type
+ * Table: val_operating_system_snapshot_type
  ***********************************************/
 
-CREATE TABLE val_os_snapshot_type
+CREATE TABLE val_operating_system_snapshot_type
 ( 
 	operating_system_snapshot_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
@@ -6475,7 +6397,7 @@ CREATE TABLE val_os_snapshot_type
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_os_snapshot_type
+ALTER TABLE val_operating_system_snapshot_type
 	ADD CONSTRAINT "pk_val_os_snapshot_type" PRIMARY KEY (operating_system_snapshot_type);
 
 /***********************************************
@@ -6530,12 +6452,13 @@ ALTER TABLE val_password_type
 	ADD CONSTRAINT "pk_val_password_type" PRIMARY KEY (password_type);
 
 /***********************************************
- * Table: val_person_company_attr_dtype
+ * Table: val_person_company_attribute_name
  ***********************************************/
 
-CREATE TABLE val_person_company_attr_dtype
+CREATE TABLE val_person_company_attribute_name
 ( 
-	person_company_attr_data_type varchar(50)  NOT NULL ,
+	person_company_attribute_name varchar(50)  NOT NULL ,
+	person_company_attribute_data_type varchar(50)  NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -6543,40 +6466,22 @@ CREATE TABLE val_person_company_attr_dtype
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_person_company_attr_dtype
-	ADD CONSTRAINT "pk_val_pers_comp_attr_dataty" PRIMARY KEY (person_company_attr_data_type);
+ALTER TABLE val_person_company_attribute_name
+	ADD CONSTRAINT "pk_val_person_company_attr_name" PRIMARY KEY (person_company_attribute_name);
 
-/***********************************************
- * Table: val_person_company_attr_name
- ***********************************************/
-
-CREATE TABLE val_person_company_attr_name
+CREATE INDEX xifprescompattr_name_datatyp ON val_person_company_attribute_name
 ( 
-	person_company_attr_name varchar(50)  NOT NULL ,
-	person_company_attr_data_type varchar(50)  NULL ,
-	description          varchar(255)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE val_person_company_attr_name
-	ADD CONSTRAINT "pk_val_person_company_attr_name" PRIMARY KEY (person_company_attr_name);
-
-CREATE INDEX xifprescompattr_name_datatyp ON val_person_company_attr_name
-( 
-	person_company_attr_data_type
+	person_company_attribute_data_type
 );
 
 /***********************************************
- * Table: val_person_company_attr_value
+ * Table: val_person_company_attribute_value
  ***********************************************/
 
-CREATE TABLE val_person_company_attr_value
+CREATE TABLE val_person_company_attribute_value
 ( 
-	person_company_attr_name character varying(50)  NOT NULL ,
-	person_company_attr_value varchar(50)  NOT NULL ,
+	person_company_attribute_name character varying(50)  NOT NULL ,
+	person_company_attribute_value varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -6584,13 +6489,30 @@ CREATE TABLE val_person_company_attr_value
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_person_company_attr_value
-	ADD CONSTRAINT "pk_val_pers_company_attr_value" PRIMARY KEY (person_company_attr_name,person_company_attr_value);
+ALTER TABLE val_person_company_attribute_value
+	ADD CONSTRAINT "pk_val_pers_company_attr_value" PRIMARY KEY (person_company_attribute_name,person_company_attribute_value);
 
-CREATE INDEX xifpers_comp_attr_val_name ON val_person_company_attr_value
+CREATE INDEX xifpers_comp_attr_val_name ON val_person_company_attribute_value
 ( 
-	person_company_attr_name
+	person_company_attribute_name
 );
+
+/***********************************************
+ * Table: val_person_company_attrribute_data_type
+ ***********************************************/
+
+CREATE TABLE val_person_company_attrribute_data_type
+( 
+	person_company_attribute_data_type varchar(50)  NOT NULL ,
+	description          varchar(255)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE val_person_company_attrribute_data_type
+	ADD CONSTRAINT "pk_val_pers_comp_attr_dataty" PRIMARY KEY (person_company_attribute_data_type);
 
 /***********************************************
  * Table: val_person_company_relation
@@ -6610,10 +6532,10 @@ ALTER TABLE val_person_company_relation
 	ADD CONSTRAINT "pk_val_person_company_relation" PRIMARY KEY (person_company_relation);
 
 /***********************************************
- * Table: val_person_contact_loc_type
+ * Table: val_person_contact_location_type
  ***********************************************/
 
-CREATE TABLE val_person_contact_loc_type
+CREATE TABLE val_person_contact_location_type
 ( 
 	person_contact_location_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
@@ -6623,7 +6545,7 @@ CREATE TABLE val_person_contact_loc_type
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_person_contact_loc_type
+ALTER TABLE val_person_contact_location_type
 	ADD CONSTRAINT "pk_val_person_contact_loc_type" PRIMARY KEY (person_contact_location_type);
 
 /***********************************************
@@ -6673,7 +6595,7 @@ ALTER TABLE val_person_contact_type
 CREATE TABLE val_person_image_usage
 ( 
 	person_image_usage   varchar(50)  NOT NULL ,
-	is_multivalue        boolean  NOT NULL ,
+	is_multivalue        char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6708,10 +6630,10 @@ CREATE TABLE val_person_status
 ( 
 	person_status        varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_enabled           boolean  NOT NULL ,
-	propagate_from_person boolean  NOT NULL ,
-	is_forced            boolean  NOT NULL ,
-	is_db_enforced       boolean  NOT NULL ,
+	is_enabled           char(1)  NOT NULL ,
+	propagate_from_person char(1)  NOT NULL ,
+	is_forced            char(1)  NOT NULL ,
+	is_db_enforced       char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6754,6 +6676,23 @@ CREATE TABLE val_physicalish_volume_type
 
 ALTER TABLE val_physicalish_volume_type
 	ADD CONSTRAINT "pk_val_physicalish_volume_type" PRIMARY KEY (physicalish_volume_type);
+
+/***********************************************
+ * Table: val_private_key_encryption_type
+ ***********************************************/
+
+CREATE TABLE val_private_key_encryption_type
+( 
+	private_key_encryption_type varchar(50)  NOT NULL ,
+	description          varchar(255)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE val_private_key_encryption_type
+	ADD CONSTRAINT "pk_val_pvt_key_encryption_type" PRIMARY KEY (private_key_encryption_type);
 
 /***********************************************
  * Table: val_processor_architecture
@@ -6807,12 +6746,12 @@ CREATE TABLE val_property
 	layer3_network_collection_type varchar(50)  NULL ,
 	netblock_collection_type varchar(50)  NULL ,
 	network_range_type   varchar(50)  NULL ,
-	property_collection_type varchar(50)  NULL ,
-	service_env_collection_type varchar(50)  NULL ,
+	property_name_collection_type varchar(50)  NULL ,
+	service_environment_collection_type varchar(50)  NULL ,
 	is_multivalue        CHAR(1)  NOT NULL ,
-	prop_val_acct_coll_type_rstrct character varying(50)  NULL ,
-	prop_val_dev_coll_type_rstrct character varying(50)  NULL ,
-	prop_val_nblk_coll_type_rstrct varchar(50)  NULL ,
+	property_value_account_collection_type_restriction character varying(50)  NULL ,
+	property_value_device_collection_type_restriction character varying(50)  NULL ,
+	property_value_netblock_collection_type_restriction varchar(50)  NULL ,
 	property_data_type   varchar(50)  NOT NULL ,
 	property_value_json_schema jsonb  NULL ,
 	permit_account_collection_id CHAR(10)  NOT NULL ,
@@ -6821,18 +6760,18 @@ CREATE TABLE val_property
 	permit_company_id    CHAR(10)  NOT NULL ,
 	permit_company_collection_id char(10)  NOT NULL ,
 	permit_device_collection_id CHAR(10)  NOT NULL ,
-	permit_dns_domain_coll_id char(10)  NOT NULL ,
-	permit_layer2_network_coll_id char(10)  NOT NULL ,
-	permit_layer3_network_coll_id char(10)  NOT NULL ,
+	permit_dns_domain_collection_id char(10)  NOT NULL ,
+	permit_layer2_network_collection_id char(10)  NOT NULL ,
+	permit_layer3_network_collection_id char(10)  NOT NULL ,
 	permit_netblock_collection_id char(10)  NOT NULL ,
 	permit_network_range_id char(10)  NOT NULL ,
 	permit_operating_system_id char(10)  NOT NULL ,
-	permit_os_snapshot_id char(10)  NOT NULL ,
+	permit_operating_system_snapshot_id char(10)  NOT NULL ,
 	permit_person_id     char(10)  NOT NULL ,
 	permit_property_collection_id char(10)  NOT NULL ,
-	permit_service_env_collection char(10)  NOT NULL ,
+	permit_service_environment_collection char(10)  NOT NULL ,
 	permit_site_code     CHAR(10)  NOT NULL ,
-	permit_x509_signed_cert_id char(10)  NOT NULL ,
+	permit_x509_signed_certificate_id char(10)  NOT NULL ,
 	permit_property_rank char(10)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -6845,17 +6784,17 @@ ALTER TABLE val_property
 
 CREATE INDEX xif3val_property ON val_property
 ( 
-	prop_val_acct_coll_type_rstrct
+	property_value_account_collection_type_restriction
 );
 
 CREATE INDEX xif4val_property ON val_property
 ( 
-	prop_val_nblk_coll_type_rstrct
+	property_value_netblock_collection_type_restriction
 );
 
 CREATE INDEX xif5val_property ON val_property
 ( 
-	prop_val_dev_coll_type_rstrct
+	property_value_device_collection_type_restriction
 );
 
 CREATE INDEX xif6val_property ON val_property
@@ -6885,12 +6824,12 @@ CREATE INDEX xif10val_property ON val_property
 
 CREATE INDEX xif11val_property ON val_property
 ( 
-	property_collection_type
+	property_name_collection_type
 );
 
 CREATE INDEX xif12val_property ON val_property
 ( 
-	service_env_collection_type
+	service_environment_collection_type
 );
 
 CREATE INDEX xif13val_property ON val_property
@@ -6919,26 +6858,6 @@ CREATE INDEX xif2val_property ON val_property
 );
 
 /***********************************************
- * Table: val_property_collection_type
- ***********************************************/
-
-CREATE TABLE val_property_collection_type
-( 
-	property_collection_type varchar(50)  NOT NULL ,
-	description          varchar(4000)  NULL ,
-	max_num_members      integer  NULL ,
-	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE val_property_collection_type
-	ADD CONSTRAINT "pk_property_collction_type" PRIMARY KEY (property_collection_type);
-
-/***********************************************
  * Table: val_property_data_type
  ***********************************************/
 
@@ -6956,6 +6875,26 @@ ALTER TABLE val_property_data_type
 	ADD CONSTRAINT "pk_val_property_data_type" PRIMARY KEY (property_data_type);
 
 /***********************************************
+ * Table: val_property_name_collection_type
+ ***********************************************/
+
+CREATE TABLE val_property_name_collection_type
+( 
+	property_name_collection_type varchar(50)  NOT NULL ,
+	description          varchar(4000)  NULL ,
+	max_num_members      integer  NULL ,
+	max_num_collections  integer  NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE val_property_name_collection_type
+	ADD CONSTRAINT "pk_property_collction_type" PRIMARY KEY (property_name_collection_type);
+
+/***********************************************
  * Table: val_property_type
  ***********************************************/
 
@@ -6963,7 +6902,7 @@ CREATE TABLE val_property_type
 ( 
 	property_type        varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
-	prop_val_acct_coll_type_rstrct character varying(50)  NULL ,
+	property_value_account_collection_type_restriction character varying(50)  NULL ,
 	is_multivalue        CHAR(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -6976,7 +6915,7 @@ ALTER TABLE val_property_type
 
 CREATE INDEX xif1val_property_type ON val_property_type
 ( 
-	prop_val_acct_coll_type_rstrct
+	property_value_account_collection_type_restriction
 );
 
 CREATE TABLE val_property_value
@@ -6999,23 +6938,6 @@ CREATE INDEX xifvalproval_namtyp ON val_property_value
 	property_name,
 	property_type
 );
-
-/***********************************************
- * Table: val_pvt_key_encryption_type
- ***********************************************/
-
-CREATE TABLE val_pvt_key_encryption_type
-( 
-	private_key_encryption_type varchar(50)  NOT NULL ,
-	description          varchar(255)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE val_pvt_key_encryption_type
-	ADD CONSTRAINT "pk_val_pvt_key_encryption_type" PRIMARY KEY (private_key_encryption_type);
 
 /***********************************************
  * Table: val_rack_type
@@ -7055,23 +6977,23 @@ ALTER TABLE val_raid_type
 	ADD CONSTRAINT "pk_raid_type" PRIMARY KEY (raid_type);
 
 /***********************************************
- * Table: val_service_env_coll_type
+ * Table: val_service_environment_collection_type
  ***********************************************/
 
-CREATE TABLE val_service_env_coll_type
+CREATE TABLE val_service_environment_collection_type
 ( 
 	service_env_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_service_env_coll_type
+ALTER TABLE val_service_environment_collection_type
 	ADD CONSTRAINT "pk_val_service_env_coll_type" PRIMARY KEY (service_env_collection_type);
 
 /***********************************************
@@ -7098,7 +7020,7 @@ CREATE TABLE val_slot_function
 ( 
 	slot_function        varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	can_have_mac_address boolean  NOT NULL ,
+	can_have_mac_address char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -7129,23 +7051,6 @@ CREATE INDEX xif_slot_phys_int_slot_func ON val_slot_physical_interface
 ( 
 	slot_function
 );
-
-/***********************************************
- * Table: val_snmp_commstr_type
- ***********************************************/
-
-CREATE TABLE val_snmp_commstr_type
-( 
-	snmp_commstr_type    varchar(50)  NOT NULL ,
-	description          varchar(4000)  NOT NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE val_snmp_commstr_type
-	ADD CONSTRAINT "pk_snmp_commstr_type" PRIMARY KEY (snmp_commstr_type);
 
 /***********************************************
  * Table: val_ssh_key_type
@@ -7191,7 +7096,7 @@ CREATE TABLE val_token_collection_type
 	description          varchar(255)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   boolean  NOT NULL ,
+	can_have_hierarchy   char(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -7288,12 +7193,12 @@ ALTER TABLE val_volume_group_type
 	ADD CONSTRAINT "pk_volume_group_type" PRIMARY KEY (volume_group_type);
 
 /***********************************************
- * Table: val_x509_certificate_file_fmt
+ * Table: val_x509_certificate_file_format
  ***********************************************/
 
-CREATE TABLE val_x509_certificate_file_fmt
+CREATE TABLE val_x509_certificate_file_format
 ( 
-	x509_file_format     varchar(50)  NOT NULL ,
+	x509_certificate_file_format varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -7301,8 +7206,8 @@ CREATE TABLE val_x509_certificate_file_fmt
 	data_upd_date        timestamp with time zone  NULL 
 );
 
-ALTER TABLE val_x509_certificate_file_fmt
-	ADD CONSTRAINT "pk_certificate_file_format" PRIMARY KEY (x509_file_format);
+ALTER TABLE val_x509_certificate_file_format
+	ADD CONSTRAINT "pk_certificate_file_format" PRIMARY KEY (x509_certificate_file_format);
 
 /***********************************************
  * Table: val_x509_certificate_type
@@ -7327,7 +7232,7 @@ ALTER TABLE val_x509_certificate_type
 
 CREATE TABLE val_x509_key_usage
 ( 
-	x509_key_usg         varchar(50)  NOT NULL ,
+	x509_key_usage       varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	is_extended          CHAR(1)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -7337,7 +7242,7 @@ CREATE TABLE val_x509_key_usage
 );
 
 ALTER TABLE val_x509_key_usage
-	ADD CONSTRAINT "pk_x509_key_usage" PRIMARY KEY (x509_key_usg);
+	ADD CONSTRAINT "pk_x509_key_usage" PRIMARY KEY (x509_key_usage);
 
 /***********************************************
  * Table: val_x509_key_usage_category
@@ -7345,7 +7250,7 @@ ALTER TABLE val_x509_key_usage
 
 CREATE TABLE val_x509_key_usage_category
 ( 
-	x509_key_usg_cat     varchar(50)  NOT NULL ,
+	x509_key_usage_category varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -7354,7 +7259,7 @@ CREATE TABLE val_x509_key_usage_category
 );
 
 ALTER TABLE val_x509_key_usage_category
-	ADD CONSTRAINT "pk_x509_key_usage_category" PRIMARY KEY (x509_key_usg_cat);
+	ADD CONSTRAINT "pk_x509_key_usage_category" PRIMARY KEY (x509_key_usage_category);
 
 /***********************************************
  * Table: val_x509_revocation_reason
@@ -7438,8 +7343,8 @@ CREATE TABLE volume_group_physicalish_vol
 	physicalish_volume_id integer  NOT NULL ,
 	volume_group_id      integer  NOT NULL ,
 	device_id            integer  NULL ,
-	volume_group_primary_pos integer  NULL ,
-	volume_group_secondary_pos integer  NULL ,
+	volume_group_primary_position integer  NULL ,
+	volume_group_secondary_position integer  NULL ,
 	volume_group_relation varchar(50)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -7451,7 +7356,7 @@ ALTER TABLE volume_group_physicalish_vol
 	ADD CONSTRAINT "pk_volume_group_physicalish_vol" PRIMARY KEY (physicalish_volume_id,volume_group_id);
 
 ALTER TABLE volume_group_physicalish_vol
-	ADD CONSTRAINT "uq_volgrp_pv_position" UNIQUE (volume_group_id,volume_group_primary_pos)
+	ADD CONSTRAINT "uq_volgrp_pv_position" UNIQUE (volume_group_id,volume_group_primary_position)
 	DEFERRABLE  ;
 
 CREATE INDEX xif_physvol_vg_phsvol_dvid ON volume_group_physicalish_vol
@@ -7484,7 +7389,7 @@ CREATE INDEX xif_vg_physvol_vgrel ON volume_group_physicalish_vol
 CREATE INDEX xiq_volgrp_pv_position ON volume_group_physicalish_vol
 ( 
 	volume_group_id ASC,
-	volume_group_primary_pos ASC
+	volume_group_primary_position ASC
 );
 
 /***********************************************
@@ -7521,9 +7426,9 @@ CREATE INDEX xif_val_volgrp_purp_vgpurp ON volume_group_purpose
 
 CREATE TABLE x509_key_usage_attribute
 ( 
-	x509_cert_id         integer  NOT NULL ,
-	x509_key_usg         character varying(50)  NOT NULL ,
-	x509_key_usg_cat     varchar(50)  NOT NULL ,
+	x509_signed_certificate_id integer  NOT NULL ,
+	x509_key_usage       character varying(50)  NOT NULL ,
+	x509_key_usgage_category varchar(50)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -7531,7 +7436,7 @@ CREATE TABLE x509_key_usage_attribute
 );
 
 ALTER TABLE x509_key_usage_attribute
-	ADD CONSTRAINT "pk_key_usage_attribute" PRIMARY KEY (x509_cert_id,x509_key_usg);
+	ADD CONSTRAINT "pk_key_usage_attribute" PRIMARY KEY (x509_signed_certificate_id,x509_key_usage);
 
 /***********************************************
  * Table: x509_key_usage_categorization
@@ -7539,8 +7444,8 @@ ALTER TABLE x509_key_usage_attribute
 
 CREATE TABLE x509_key_usage_categorization
 ( 
-	x509_key_usg_cat     character varying(50)  NOT NULL ,
-	x509_key_usg         character varying(50)  NOT NULL ,
+	x509_key_usage_category character varying(50)  NOT NULL ,
+	x509_key_usage       character varying(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -7549,7 +7454,7 @@ CREATE TABLE x509_key_usage_categorization
 );
 
 ALTER TABLE x509_key_usage_categorization
-	ADD CONSTRAINT "pk_key_usage_cat" PRIMARY KEY (x509_key_usg_cat,x509_key_usg);
+	ADD CONSTRAINT "pk_key_usage_cat" PRIMARY KEY (x509_key_usage_category,x509_key_usage);
 
 /***********************************************
  * Table: x509_key_usage_default
@@ -7558,7 +7463,7 @@ ALTER TABLE x509_key_usage_categorization
 CREATE TABLE x509_key_usage_default
 ( 
 	x509_signed_certificate_id integer  NOT NULL ,
-	x509_key_usg         character varying(50)  NOT NULL ,
+	x509_key_usage       character varying(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -7567,11 +7472,11 @@ CREATE TABLE x509_key_usage_default
 );
 
 ALTER TABLE x509_key_usage_default
-	ADD CONSTRAINT "pk_x509_key_usage_default" PRIMARY KEY (x509_signed_certificate_id,x509_key_usg);
+	ADD CONSTRAINT "pk_x509_key_usage_default" PRIMARY KEY (x509_signed_certificate_id,x509_key_usage);
 
 CREATE INDEX xif2x509_key_usage_default ON x509_key_usage_default
 ( 
-	x509_key_usg
+	x509_key_usage
 );
 
 CREATE INDEX fk_x509keyusgdef_signcertid ON x509_key_usage_default
@@ -7590,8 +7495,8 @@ CREATE TABLE x509_signed_certificate
 	subject              varchar(255)  NOT NULL ,
 	friendly_name        varchar(255)  NOT NULL ,
 	subject_key_identifier varchar(255)  NULL ,
-	is_active            boolean  NOT NULL ,
-	is_certificate_authority boolean  NOT NULL ,
+	is_active            char(1)  NOT NULL ,
+	is_certificate_authority char(1)  NOT NULL ,
 	signing_cert_id      integer  NULL ,
 	x509_ca_cert_serial_number numeric  NULL ,
 	public_key           text  NULL ,
@@ -7637,6 +7542,10 @@ CREATE INDEX xif6x509_signed_certificate ON x509_signed_certificate
 
 
 ALTER TABLE account
+	ADD CONSTRAINT check_yes_no_707724729 CHECK  ( is_enabled IN ('Y', 'N') ) ;
+
+
+ALTER TABLE account
 	ADD CONSTRAINT "fk_account_acct_rlm_id" FOREIGN KEY (account_realm_id) REFERENCES account_realm(account_realm_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -7673,28 +7582,32 @@ COMMENT ON COLUMN account.is_enabled IS 'This column is trigger enforced to matc
 COMMENT ON COLUMN account.external_id IS 'opaque id used in remote system to identifty this object.  Used for syncing an authoritative copy.';
 
 
-ALTER TABLE account_assignd_cert
-	ADD CONSTRAINT "fk_x509_key_usg_attrbt_usr" FOREIGN KEY (x509_cert_id,x509_key_usg) REFERENCES x509_key_usage_attribute(x509_cert_id,x509_key_usg)
+ALTER TABLE account_assigned_certificate
+	ADD CONSTRAINT "fk_x509_key_usg_attrbt_usr" FOREIGN KEY (x509_cert_id,x509_key_usg) REFERENCES x509_key_usage_attribute(x509_signed_certificate_id,x509_key_usage)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE account_assignd_cert
-	ADD CONSTRAINT "fk_key_usg_reason_for_assgn_u" FOREIGN KEY (key_usage_reason_for_assign) REFERENCES val_key_usg_reason_for_assgn(key_usage_reason_for_assign)
+ALTER TABLE account_assigned_certificate
+	ADD CONSTRAINT "fk_key_usg_reason_for_assgn_u" FOREIGN KEY (key_usage_reason_for_assign) REFERENCES val_key_usage_reason_for_assignment(key_usage_reason_for_assignment)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE account_assignd_cert
+ALTER TABLE account_assigned_certificate
 	ADD CONSTRAINT "fk_acct_asdcrt_acctid" FOREIGN KEY (account_id) REFERENCES account(account_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-COMMENT ON TABLE account_assignd_cert IS 'Actual  assignment of the usage category USER Certificates to System Users.';
+COMMENT ON TABLE account_assigned_certificate IS 'Actual  assignment of the usage category USER Certificates to System Users.';
 
-COMMENT ON COLUMN account_assignd_cert.x509_key_usg IS 'Name of the Certificate.';
+COMMENT ON COLUMN account_assigned_certificate.x509_key_usg IS 'Name of the Certificate.';
 
-COMMENT ON COLUMN account_assignd_cert.x509_cert_id IS 'Uniquely identifies Certificate';
+COMMENT ON COLUMN account_assigned_certificate.x509_cert_id IS 'Uniquely identifies Certificate';
 
-COMMENT ON COLUMN account_assignd_cert.key_usage_reason_for_assign IS 'Uniquely identifies and indicates reason for assignment.';
+COMMENT ON COLUMN account_assigned_certificate.key_usage_reason_for_assign IS 'Uniquely identifies and indicates reason for assignment.';
+
+
+ALTER TABLE account_auth_log
+	ADD CONSTRAINT check_yes_no_1972033909 CHECK  ( was_auth_success IN ('Y', 'N') ) ;
 
 
 ALTER TABLE account_auth_log
@@ -7716,19 +7629,6 @@ COMMENT ON COLUMN account_auth_log.auth_resource_instance IS 'Keeps track of the
 COMMENT ON COLUMN account_auth_log.auth_origin IS 'Keeps track of where the request for authentication originated from.';
 
 
-ALTER TABLE account_coll_type_relation
-	ADD CONSTRAINT "fk_acct_coll_rel_type_rel" FOREIGN KEY (account_collection_relation) REFERENCES val_account_collection_relatio(account_collection_relation)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE account_coll_type_relation
-	ADD CONSTRAINT "fk_acct_coll_rel_type_type" FOREIGN KEY (account_collection_type) REFERENCES val_account_collection_type(account_collection_type)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-COMMENT ON TABLE account_coll_type_relation IS 'Defines types of account collection relations that are permitted for a given account collection type.  This is trigger enforced, and ''direct'' is added here as part of an insert trigger on val_account_collection_type.';
-
-
 ALTER TABLE account_collection
 	ADD CONSTRAINT "fk_acctcol_usrcoltyp" FOREIGN KEY (account_collection_type) REFERENCES val_account_collection_type(account_collection_type)
 		ON UPDATE NO ACTION
@@ -7742,7 +7642,7 @@ ALTER TABLE account_collection_account
 
 
 ALTER TABLE account_collection_account
-	ADD CONSTRAINT "fk_acctcollacct_ac_relate" FOREIGN KEY (account_collection_relation) REFERENCES val_account_collection_relatio(account_collection_relation)
+	ADD CONSTRAINT "fk_acctcollacct_ac_relate" FOREIGN KEY (account_collection_relation) REFERENCES val_account_collection_relation(account_collection_relation)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -7766,6 +7666,19 @@ ALTER TABLE account_collection_hier
 	ADD CONSTRAINT "fk_acctcolhier_cldacctcolid" FOREIGN KEY (child_account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
+
+
+ALTER TABLE account_collection_type_relation
+	ADD CONSTRAINT "fk_acct_coll_rel_type_rel" FOREIGN KEY (account_collection_relation) REFERENCES val_account_collection_relation(account_collection_relation)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE account_collection_type_relation
+	ADD CONSTRAINT "fk_acct_coll_rel_type_type" FOREIGN KEY (account_collection_type) REFERENCES val_account_collection_type(account_collection_type)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+COMMENT ON TABLE account_collection_type_relation IS 'Defines types of account collection relations that are permitted for a given account collection type.  This is trigger enforced, and ''direct'' is added here as part of an insert trigger on val_account_collection_type.';
 
 
 ALTER TABLE account_password
@@ -7797,12 +7710,12 @@ COMMENT ON COLUMN account_password.unlock_time IS 'indicates the time that the p
 COMMENT ON COLUMN account_password.account_realm_id IS 'Set to allow enforcement of password type/account_realm_id.   Largely managed in the background by trigger';
 
 
-ALTER TABLE account_realm_acct_coll_type
+ALTER TABLE account_realm_account_collection_type
 	ADD CONSTRAINT "fk_acct_realm_acct_coll_typ" FOREIGN KEY (account_collection_type) REFERENCES val_account_collection_type(account_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE account_realm_acct_coll_type
+ALTER TABLE account_realm_account_collection_type
 	ADD CONSTRAINT "fk_acct_realm_acct_coll_arid" FOREIGN KEY (account_realm_id) REFERENCES account_realm(account_realm_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -7856,12 +7769,12 @@ COMMENT ON COLUMN account_token.account_token_id IS 'This is its own PK in order
 
 
 ALTER TABLE account_unix_info
-	ADD CONSTRAINT "fk_auxifo_unxgrp_acctcolid" FOREIGN KEY (unix_group_acct_collection_id) REFERENCES account_collection(account_collection_id)
+	ADD CONSTRAINT "fk_auxifo_unxgrp_acctcolid" FOREIGN KEY (unix_group_account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE account_unix_info
-	ADD CONSTRAINT "fk_acct_unx_info_ac_acct" FOREIGN KEY (unix_group_acct_collection_id,account_id) REFERENCES account_collection_account(account_collection_id,account_id)
+	ADD CONSTRAINT "fk_acct_unx_info_ac_acct" FOREIGN KEY (unix_group_account_collection_id,account_id) REFERENCES account_collection_account(account_collection_id,account_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -7891,17 +7804,17 @@ ALTER TABLE appaal_instance
 		ON DELETE NO ACTION;
 
 ALTER TABLE appaal_instance
-	ADD CONSTRAINT "fk_appaal_inst_filgrpacctcolid" FOREIGN KEY (file_group_acct_collection_id) REFERENCES account_collection(account_collection_id)
+	ADD CONSTRAINT "fk_appaal_inst_filgrpacctcolid" FOREIGN KEY (file_group_account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE appaal_instance_device_coll
+ALTER TABLE appaal_instance_device_collection
 	ADD CONSTRAINT "fk_appaalins_ref_appaalinsdcol" FOREIGN KEY (appaal_instance_id) REFERENCES appaal_instance(appaal_instance_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE appaal_instance_device_coll
+ALTER TABLE appaal_instance_device_collection
 	ADD CONSTRAINT "fk_devcoll_ref_appaalinstdcoll" FOREIGN KEY (device_collection_id) REFERENCES device_collection(device_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -7941,6 +7854,10 @@ ALTER TABLE approval_instance
 
 
 ALTER TABLE approval_instance_item
+	ADD CONSTRAINT check_yes_no_1852849955 CHECK  ( is_approved IN ('Y', 'N') ) ;
+
+
+ALTER TABLE approval_instance_item
 	ADD CONSTRAINT "fk_appinstitem_appinststep" FOREIGN KEY (approval_instance_step_id) REFERENCES approval_instance_step(approval_instance_step_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -7960,13 +7877,17 @@ ALTER TABLE approval_instance_item
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE approval_instance_step
+	ADD CONSTRAINT check_yes_no_1566117395 CHECK  ( is_completed IN ('Y', 'N') ) ;
+
 ALTER TABLE approval_instance_step
 	ALTER COLUMN approval_instance_step_start
 		SET DEFAULT now();
 
 ALTER TABLE approval_instance_step
 	ALTER COLUMN is_completed
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE approval_instance_step
@@ -8007,7 +7928,7 @@ ALTER TABLE approval_instance_step_notify
 
 
 ALTER TABLE approval_process
-	ADD CONSTRAINT "fk_app_prc_propcoll_id" FOREIGN KEY (property_collection_id) REFERENCES property_collection(property_collection_id)
+	ADD CONSTRAINT "fk_app_prc_propcoll_id" FOREIGN KEY (property_name_collection_id) REFERENCES property_name_collection(property_name_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -8027,9 +7948,13 @@ ALTER TABLE approval_process
 		ON DELETE NO ACTION;
 
 ALTER TABLE approval_process
-	ADD CONSTRAINT "fk_app_proc_1st_app_proc_chnid" FOREIGN KEY (first_apprvl_process_chain_id) REFERENCES approval_process_chain(approval_process_chain_id)
+	ADD CONSTRAINT "fk_app_proc_1st_app_proc_chnid" FOREIGN KEY (first_approval_process_chain_id) REFERENCES approval_process_chain(approval_process_chain_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
+
+
+ALTER TABLE approval_process_chain
+	ADD CONSTRAINT check_yes_no_960168 CHECK  ( refresh_all_data IN ('Y', 'N') ) ;
 
 ALTER TABLE approval_process_chain
 	ALTER COLUMN approval_chain_response_period
@@ -8037,11 +7962,11 @@ ALTER TABLE approval_process_chain
 
 ALTER TABLE approval_process_chain
 	ALTER COLUMN refresh_all_data
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE approval_process_chain
-	ADD CONSTRAINT "fk_appproc_chn_resp_period" FOREIGN KEY (approval_chain_response_period) REFERENCES val_approval_chain_resp_prd(approval_chain_response_period)
+	ADD CONSTRAINT "fk_appproc_chn_resp_period" FOREIGN KEY (approval_chain_response_period) REFERENCES val_approval_chain_response_period(approval_chain_response_period)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -8126,6 +8051,10 @@ ALTER TABLE chassis_location
 COMMENT ON COLUMN chassis_location.chassis_device_type_id IS 'Device Type of the Container Device (Chassis)';
 
 COMMENT ON COLUMN chassis_location.device_type_module_name IS 'Name used to describe the module programatically.';
+
+
+ALTER TABLE circuit
+	ADD CONSTRAINT check_yes_no_1766081229 CHECK  ( is_locally_managed IN ('Y', 'N') ) ;
 
 
 ALTER TABLE circuit
@@ -8269,9 +8198,22 @@ ALTER TABLE component_property
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE component_type
+	ADD CONSTRAINT check_yes_no_1178386392 CHECK  ( is_removable IN ('Y', 'N') ) ;
+
+ALTER TABLE component_type
+	ADD CONSTRAINT check_yes_no_606817185 CHECK  ( asset_permitted IN ('Y', 'N') ) ;
+
+ALTER TABLE component_type
+	ADD CONSTRAINT check_yes_no_1115790481 CHECK  ( is_rack_mountable IN ('Y', 'N') ) ;
+
+ALTER TABLE component_type
+	ADD CONSTRAINT check_yes_no_1683679475 CHECK  ( is_virtual_component IN ('Y', 'N') ) ;
+
 ALTER TABLE component_type
 	ALTER COLUMN is_removable
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE component_type
 	ALTER COLUMN size_units
@@ -8279,15 +8221,15 @@ ALTER TABLE component_type
 
 ALTER TABLE component_type
 	ALTER COLUMN asset_permitted
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE component_type
 	ALTER COLUMN is_rack_mountable
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE component_type
 	ALTER COLUMN is_virtual_component
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE component_type
@@ -8301,29 +8243,29 @@ ALTER TABLE component_type
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE component_type_component_func
+ALTER TABLE component_type_component_function
 	ADD CONSTRAINT "fk_cmptypcf_comp_func" FOREIGN KEY (component_function) REFERENCES val_component_function(component_function)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE component_type_component_func
+ALTER TABLE component_type_component_function
 	ADD CONSTRAINT "fk_cmptypecf_comp_typ_id" FOREIGN KEY (component_type_id) REFERENCES component_type(component_type_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
 
-ALTER TABLE component_type_slot_tmplt
+ALTER TABLE component_type_slot_template
 	ALTER COLUMN slot_side
 		SET DEFAULT 'FRONT';
 
 
-ALTER TABLE component_type_slot_tmplt
+ALTER TABLE component_type_slot_template
 	ADD CONSTRAINT "fk_comp_typ_slt_tmplt_cmptypid" FOREIGN KEY (component_type_id) REFERENCES component_type(component_type_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
 
-ALTER TABLE component_type_slot_tmplt
+ALTER TABLE component_type_slot_template
 	ADD CONSTRAINT "fk_comp_typ_slt_tmplt_slttypid" FOREIGN KEY (slot_type_id) REFERENCES slot_type(slot_type_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -8346,9 +8288,13 @@ ALTER TABLE contract_type
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE department
+	ADD CONSTRAINT check_yes_no_dept_isact CHECK  ( is_active IN ('Y', 'N') ) ;
+
 ALTER TABLE department
 	ALTER COLUMN is_active
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE department
@@ -8372,21 +8318,24 @@ ALTER TABLE department
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
 
+
+ALTER TABLE device
+	ADD CONSTRAINT check_yes_no_1955318701 CHECK  ( is_virtual_device IN ('Y', 'N') ) ;
+
+ALTER TABLE device
+	ADD CONSTRAINT check_yes_no_1952460860 CHECK  ( is_locally_managed IN ('Y', 'N') ) ;
+
 ALTER TABLE device
 	ALTER COLUMN operating_system_id
 		SET DEFAULT 0;
 
 ALTER TABLE device
 	ALTER COLUMN is_virtual_device
-		SET DEFAULT false;
-
-ALTER TABLE device
-	ALTER COLUMN should_fetch_config
-		SET DEFAULT true;
+		SET DEFAULT 'N';
 
 ALTER TABLE device
 	ALTER COLUMN is_locally_managed
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE device
@@ -8447,11 +8396,6 @@ ALTER TABLE device
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE device
-	ADD CONSTRAINT "fk_dev_ref_mgmt_proto" FOREIGN KEY (auto_mgmt_protocol) REFERENCES val_device_auto_mgmt_protocol(auto_mgmt_protocol)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
 COMMENT ON COLUMN device.external_id IS 'opaque id used in remote system to identifty this object.  Used for syncing an authoritative copy.';
 
 
@@ -8463,55 +8407,55 @@ ALTER TABLE device_collection
 COMMENT ON COLUMN device_collection.external_id IS 'opaque id used in remote system to identifty this object.  Used for syncing an authoritative copy.';
 
 
-ALTER TABLE device_collection_assignd_cert
+ALTER TABLE device_collection_assigned_certificate
 	ADD CONSTRAINT "fk_devcolascrt_devcolid" FOREIGN KEY (device_collection_id) REFERENCES device_collection(device_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE device_collection_assignd_cert
-	ADD CONSTRAINT "fk_x509_certificate_file_fmt" FOREIGN KEY (x509_file_format) REFERENCES val_x509_certificate_file_fmt(x509_file_format)
+ALTER TABLE device_collection_assigned_certificate
+	ADD CONSTRAINT "fk_x509_certificate_file_fmt" FOREIGN KEY (x509_file_format) REFERENCES val_x509_certificate_file_format(x509_certificate_file_format)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE device_collection_assignd_cert
-	ADD CONSTRAINT "fk_devcol_asscrt_acctcolid" FOREIGN KEY (file_group_acct_collection_id) REFERENCES account_collection(account_collection_id)
+ALTER TABLE device_collection_assigned_certificate
+	ADD CONSTRAINT "fk_devcol_asscrt_acctcolid" FOREIGN KEY (file_group_account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE device_collection_assignd_cert
-	ADD CONSTRAINT "fk_x509_key_usg_attrbt_dvc" FOREIGN KEY (x509_cert_id,x509_key_usg) REFERENCES x509_key_usage_attribute(x509_cert_id,x509_key_usg)
+ALTER TABLE device_collection_assigned_certificate
+	ADD CONSTRAINT "fk_x509_key_usg_attrbt_dvc" FOREIGN KEY (x509_signed_certificate_id,x509_key_usage) REFERENCES x509_key_usage_attribute(x509_signed_certificate_id,x509_key_usage)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE device_collection_assignd_cert
-	ADD CONSTRAINT "fk_key_usg_reason_for_assng_d" FOREIGN KEY (key_usage_reason_for_assign) REFERENCES val_key_usg_reason_for_assgn(key_usage_reason_for_assign)
+ALTER TABLE device_collection_assigned_certificate
+	ADD CONSTRAINT "fk_key_usg_reason_for_assng_d" FOREIGN KEY (key_usage_reason_for_assignment) REFERENCES val_key_usage_reason_for_assignment(key_usage_reason_for_assignment)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE device_collection_assignd_cert
+ALTER TABLE device_collection_assigned_certificate
 	ADD CONSTRAINT "fk_devcolascrt_flownacctid" FOREIGN KEY (file_owner_account_id) REFERENCES account(account_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-COMMENT ON TABLE device_collection_assignd_cert IS 'Actual  assignment of the usage category APPLICATION Certificates to Device Collections.';
+COMMENT ON TABLE device_collection_assigned_certificate IS 'Actual  assignment of the usage category APPLICATION Certificates to Device Collections.';
 
-COMMENT ON COLUMN device_collection_assignd_cert.x509_cert_id IS 'Uniquely identifies Certificate';
+COMMENT ON COLUMN device_collection_assigned_certificate.x509_signed_certificate_id IS 'Uniquely identifies Certificate';
 
-COMMENT ON COLUMN device_collection_assignd_cert.x509_key_usg IS 'Name of the Certificate.';
+COMMENT ON COLUMN device_collection_assigned_certificate.x509_key_usage IS 'Name of the Certificate.';
 
-COMMENT ON COLUMN device_collection_assignd_cert.x509_file_format IS 'Format Name of the file containing Certificate information. Example; keytool, rsa';
+COMMENT ON COLUMN device_collection_assigned_certificate.x509_file_format IS 'Format Name of the file containing Certificate information. Example; keytool, rsa';
 
-COMMENT ON COLUMN device_collection_assignd_cert.file_location_path IS 'Alphanumeric representation of the path leading to the file.';
+COMMENT ON COLUMN device_collection_assigned_certificate.file_location_path IS 'Alphanumeric representation of the path leading to the file.';
 
-COMMENT ON COLUMN device_collection_assignd_cert.key_tool_label IS 'Alphanumeric representation of the label attached to the certificate by Key Tool';
+COMMENT ON COLUMN device_collection_assigned_certificate.key_tool_label IS 'Alphanumeric representation of the label attached to the certificate by Key Tool';
 
-COMMENT ON COLUMN device_collection_assignd_cert.file_access_mode IS 'Numeric representation of the File Access Mode.';
+COMMENT ON COLUMN device_collection_assigned_certificate.file_access_mode IS 'Numeric representation of the File Access Mode.';
 
-COMMENT ON COLUMN device_collection_assignd_cert.file_owner_account_id IS 'Identifier of the file owner.';
+COMMENT ON COLUMN device_collection_assigned_certificate.file_owner_account_id IS 'Identifier of the file owner.';
 
-COMMENT ON COLUMN device_collection_assignd_cert.file_group_acct_collection_id IS 'Identifies user collection that corresponds to a unix group for the file to be owned by';
+COMMENT ON COLUMN device_collection_assigned_certificate.file_group_account_collection_id IS 'Identifies user collection that corresponds to a unix group for the file to be owned by';
 
-COMMENT ON COLUMN device_collection_assignd_cert.key_usage_reason_for_assign IS 'Uniquely identifies and indicates reason for assignment.';
+COMMENT ON COLUMN device_collection_assigned_certificate.key_usage_reason_for_assignment IS 'Uniquely identifies and indicates reason for assignment.';
 
 
 ALTER TABLE device_collection_device
@@ -8596,7 +8540,7 @@ ALTER TABLE device_management_controller
 		ON DELETE NO ACTION;
 
 ALTER TABLE device_management_controller
-	ADD CONSTRAINT "fk_dev_mgmt_cntrl_val_ctrl_typ" FOREIGN KEY (device_mgmt_control_type) REFERENCES val_device_mgmt_ctrl_type(device_mgmt_control_type)
+	ADD CONSTRAINT "fk_dev_mgmt_cntrl_val_ctrl_typ" FOREIGN KEY (device_management_control_type) REFERENCES val_device_management_controller_type(device_mgmt_control_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -8638,21 +8582,34 @@ COMMENT ON COLUMN device_ticket.ticket_number IS 'trouble ticketing system id';
 
 COMMENT ON COLUMN device_ticket.device_ticket_notes IS 'free form notes about the ticket/device association';
 
+
+ALTER TABLE device_type
+	ADD CONSTRAINT check_yes_no_279922778 CHECK  ( has_802_3_interface IN ('Y', 'N') ) ;
+
+ALTER TABLE device_type
+	ADD CONSTRAINT check_yes_no_956213646 CHECK  ( has_802_11_interface IN ('Y', 'N') ) ;
+
+ALTER TABLE device_type
+	ADD CONSTRAINT check_yes_no_1419559865 CHECK  ( snmp_capable IN ('Y', 'N') ) ;
+
+ALTER TABLE device_type
+	ADD CONSTRAINT check_yes_no_1345939137 CHECK  ( is_chassis IN ('Y', 'N') ) ;
+
 ALTER TABLE device_type
 	ALTER COLUMN has_802_3_interface
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE device_type
 	ALTER COLUMN has_802_11_interface
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE device_type
 	ALTER COLUMN snmp_capable
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE device_type
 	ALTER COLUMN is_chassis
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE device_type
@@ -8771,12 +8728,12 @@ ALTER TABLE dns_domain_collection
 COMMENT ON COLUMN dns_domain_collection.external_id IS 'opaque id used in remote system to identifty this object.  Used for syncing an authoritative copy.';
 
 
-ALTER TABLE dns_domain_collection_dns_dom
+ALTER TABLE dns_domain_collection_dns_domain
 	ADD CONSTRAINT "fk_dns_dom_coll_dns_domid" FOREIGN KEY (dns_domain_id) REFERENCES dns_domain(dns_domain_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE dns_domain_collection_dns_dom
+ALTER TABLE dns_domain_collection_dns_domain
 	ADD CONSTRAINT "fk_dns_dom_coll_dns_dom_dns_dom_id" FOREIGN KEY (dns_domain_collection_id) REFERENCES dns_domain_collection(dns_domain_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -8791,6 +8748,10 @@ ALTER TABLE dns_domain_collection_hier
 	ADD CONSTRAINT "fk_dns_domain_coll_id" FOREIGN KEY (dns_domain_collection_id) REFERENCES dns_domain_collection(dns_domain_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
+
+
+ALTER TABLE dns_domain_ip_universe
+	ADD CONSTRAINT check_yes_no_417925201 CHECK  ( should_generate IN ('Y', 'N') ) ;
 
 ALTER TABLE dns_domain_ip_universe
 	ALTER COLUMN soa_serial
@@ -8812,16 +8773,22 @@ ALTER TABLE dns_record
 	ADD CONSTRAINT ckc_dns_srv_protocol_dns_reco CHECK  ( DNS_SRV_PROTOCOL is null or (DNS_SRV_PROTOCOL in ('tcp','udp') and DNS_SRV_PROTOCOL = lower(DNS_SRV_PROTOCOL)) ) ;
 
 ALTER TABLE dns_record
+	ADD CONSTRAINT check_yes_no_689258637 CHECK  ( should_generate_ptr IN ('Y', 'N') ) ;
+
+ALTER TABLE dns_record
+	ADD CONSTRAINT check_yes_no_1295081792 CHECK  ( is_enabled IN ('Y', 'N') ) ;
+
+ALTER TABLE dns_record
 	ALTER COLUMN dns_class
 		SET DEFAULT 'IN';
 
 ALTER TABLE dns_record
 	ALTER COLUMN should_generate_ptr
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 ALTER TABLE dns_record
 	ALTER COLUMN is_enabled
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE dns_record
@@ -8938,6 +8905,10 @@ ALTER TABLE inter_component_connection
 
 
 ALTER TABLE ip_universe
+	ADD CONSTRAINT check_yes_no_739095954 CHECK  ( should_generate_dns IN ('Y', 'N') ) ;
+
+
+ALTER TABLE ip_universe
 	ADD CONSTRAINT "fk_ip_universe_namespace" FOREIGN KEY (ip_namespace) REFERENCES val_ip_namespace(ip_namespace)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -8946,9 +8917,13 @@ COMMENT ON COLUMN ip_universe.ip_namespace IS 'defeines the namespace for a give
 
 COMMENT ON COLUMN ip_universe.should_generate_dns IS 'Indicates if any zones should generated rooted in this universe.   Primarily used to turn off DNS generation for universes that exist as shims between two networks (such as the internet can see, inside can not, for inbound NAT''d addresses).';
 
+
+ALTER TABLE ip_universe_visibility
+	ADD CONSTRAINT check_yes_no_1997260291 CHECK  ( propagate_dns IN ('Y', 'N') ) ;
+
 ALTER TABLE ip_universe_visibility
 	ALTER COLUMN propagate_dns
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE ip_universe_visibility
@@ -8968,7 +8943,7 @@ ALTER TABLE klogin
 		ON DELETE NO ACTION;
 
 ALTER TABLE klogin
-	ADD CONSTRAINT "fk_klgn_acct_dst_id" FOREIGN KEY (dest_account_id) REFERENCES account(account_id)
+	ADD CONSTRAINT "fk_klgn_acct_dst_id" FOREIGN KEY (destination_account_id) REFERENCES account(account_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -8994,28 +8969,6 @@ ALTER TABLE klogin_mclass
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE l2_network_coll_l2_network
-	ADD CONSTRAINT "fk_l2netcl2net_collid" FOREIGN KEY (layer2_network_collection_id) REFERENCES layer2_network_collection(layer2_network_collection_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE l2_network_coll_l2_network
-	ADD CONSTRAINT "fk_l2netcl2net_l2netid" FOREIGN KEY (layer2_network_id) REFERENCES layer2_network(layer2_network_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-
-ALTER TABLE l3_network_coll_l3_network
-	ADD CONSTRAINT "fk_l3netcol_l3_net_l3netcolid" FOREIGN KEY (layer3_network_collection_id) REFERENCES layer3_network_collection(layer3_network_collection_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE l3_network_coll_l3_network
-	ADD CONSTRAINT "fk_l3netcol_l3_net_l3netid" FOREIGN KEY (layer3_network_id) REFERENCES layer3_network(layer3_network_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-
 ALTER TABLE layer2_connection
 	ADD CONSTRAINT "fk_l2_conn_l1port" FOREIGN KEY (logical_port1_id) REFERENCES logical_port(logical_port_id)
 		ON UPDATE NO ACTION
@@ -9027,22 +8980,22 @@ ALTER TABLE layer2_connection
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE layer2_connection_l2_network
+ALTER TABLE layer2_connection_layer2_network
 	ADD CONSTRAINT "fk_l2cl2n_l2net_id_encap_typ" FOREIGN KEY (layer2_network_id,encapsulation_type) REFERENCES layer2_network(layer2_network_id,encapsulation_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE layer2_connection_l2_network
+ALTER TABLE layer2_connection_layer2_network
 	ADD CONSTRAINT "fk_l2c_l2n_encap_mode_type" FOREIGN KEY (encapsulation_mode,encapsulation_type) REFERENCES val_encapsulation_mode(encapsulation_mode,encapsulation_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE layer2_connection_l2_network
+ALTER TABLE layer2_connection_layer2_network
 	ADD CONSTRAINT "fk_l2c_l2n_l2connid" FOREIGN KEY (layer2_connection_id) REFERENCES layer2_connection(layer2_connection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE layer2_connection_l2_network
+ALTER TABLE layer2_connection_layer2_network
 	ADD CONSTRAINT "fk_l2c_l2n_l2netid" FOREIGN KEY (layer2_network_id) REFERENCES layer2_network(layer2_network_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -9064,7 +9017,7 @@ COMMENT ON COLUMN layer2_network.external_id IS 'opaque id used in remote system
 
 
 ALTER TABLE layer2_network_collection
-	ADD CONSTRAINT "fk_l2netcoll_type" FOREIGN KEY (layer2_network_collection_type) REFERENCES val_layer2_network_coll_type(layer2_network_collection_type)
+	ADD CONSTRAINT "fk_l2netcoll_type" FOREIGN KEY (layer2_network_collection_type) REFERENCES val_layer2_network_collection_type(layer2_network_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9072,7 +9025,7 @@ COMMENT ON COLUMN layer2_network_collection.external_id IS 'opaque id used in re
 
 
 ALTER TABLE layer2_network_collection_hier
-	ADD CONSTRAINT "fk_l2net_collhier_chldl2net" FOREIGN KEY (child_l2_network_coll_id) REFERENCES layer2_network_collection(layer2_network_collection_id)
+	ADD CONSTRAINT "fk_l2net_collhier_chldl2net" FOREIGN KEY (child_layer2_network_collection_id) REFERENCES layer2_network_collection(layer2_network_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9080,6 +9033,107 @@ ALTER TABLE layer2_network_collection_hier
 	ADD CONSTRAINT "fk_l2net_collhier_l2net" FOREIGN KEY (layer2_network_collection_id) REFERENCES layer2_network_collection(layer2_network_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
+
+
+ALTER TABLE layer2_network_collection_layer2_network
+	ADD CONSTRAINT "fk_l2netcl2net_collid" FOREIGN KEY (layer2_network_collection_id) REFERENCES layer2_network_collection(layer2_network_collection_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE layer2_network_collection_layer2_network
+	ADD CONSTRAINT "fk_l2netcl2net_l2netid" FOREIGN KEY (layer2_network_id) REFERENCES layer2_network(layer2_network_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT check_yes_no_712537714 CHECK  ( is_interface_up IN ('Y', 'N') ) ;
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT check_yes_no_472235856 CHECK  ( should_monitor IN ('Y', 'N') ) ;
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT check_yes_no_403095919 CHECK  ( should_manage IN ('Y', 'N') ) ;
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT ckc_netint_parent_role_1026598895 CHECK  ( parent_relation_type IN ('NONE', 'SUBINTERFACE', 'SECONDARY') ) ;
+
+ALTER TABLE layer3_interface
+	ALTER COLUMN is_interface_up
+		SET DEFAULT 'Y';
+
+ALTER TABLE layer3_interface
+	ALTER COLUMN should_monitor
+		SET DEFAULT 'Y';
+
+ALTER TABLE layer3_interface
+	ALTER COLUMN should_manage
+		SET DEFAULT 'Y';
+
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "fk_net_int_lgl_port_id" FOREIGN KEY (logical_port_id,device_id) REFERENCES logical_port(logical_port_id,device_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "fk_netint_device_id" FOREIGN KEY (device_id) REFERENCES device(device_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "fk_netint_ref_parentnetint" FOREIGN KEY (parent_layer3_interface_id) REFERENCES layer3_interface(layer3_interface_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "fk_netint_slot_id" FOREIGN KEY (slot_id) REFERENCES slot(slot_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE layer3_interface
+	ADD CONSTRAINT "fk_netint_netinttyp_id" FOREIGN KEY (layer3_interface_type) REFERENCES val_network_interface_type(network_interface_type)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+COMMENT ON COLUMN layer3_interface.slot_id IS 'to be dropped after transition to logical_ports are complete.';
+
+ALTER TABLE layer3_interface_netblock
+	ALTER COLUMN network_interface_rank
+		SET DEFAULT 0;
+
+
+ALTER TABLE layer3_interface_netblock
+	ADD CONSTRAINT "fk_netint_nb_nblk_id" FOREIGN KEY (layer3_interface_id,device_id) REFERENCES layer3_interface(layer3_interface_id,device_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION
+	DEFERRABLE  ;
+
+ALTER TABLE layer3_interface_netblock
+	ADD CONSTRAINT "fk_netint_nb_netint_id" FOREIGN KEY (netblock_id) REFERENCES netblock(netblock_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION
+	DEFERRABLE  ;
+
+COMMENT ON COLUMN layer3_interface_netblock.network_interface_rank IS 'specifies the order of priority for the ip address.  generally only the highest priority matters (or highest priority v4 and v6) and is the "primary" if the underlying device supports it.';
+
+
+ALTER TABLE layer3_interface_purpose
+	ADD CONSTRAINT "fk_netint_purpose_device_id" FOREIGN KEY (device_id) REFERENCES device(device_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION
+	DEFERRABLE  ;
+
+ALTER TABLE layer3_interface_purpose
+	ADD CONSTRAINT "fk_netint_purpose_val_netint_purp" FOREIGN KEY (network_interface_purpose) REFERENCES val_network_interface_purpose(network_interface_purpose)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE layer3_interface_purpose
+	ADD CONSTRAINT "fk_netint_purp_dev_ni_id" FOREIGN KEY (layer3_interface_id,device_id) REFERENCES layer3_interface(layer3_interface_id,device_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION
+	DEFERRABLE  ;
 
 
 ALTER TABLE layer3_network
@@ -9108,7 +9162,7 @@ COMMENT ON COLUMN layer3_network.external_id IS 'opaque id used in remote system
 
 
 ALTER TABLE layer3_network_collection
-	ADD CONSTRAINT "fk_l3_netcol_netcol_type" FOREIGN KEY (layer3_network_collection_type) REFERENCES val_layer3_network_coll_type(layer3_network_collection_type)
+	ADD CONSTRAINT "fk_l3_netcol_netcol_type" FOREIGN KEY (layer3_network_collection_type) REFERENCES val_layer3_network_collection_type(layer3_network_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9121,7 +9175,18 @@ ALTER TABLE layer3_network_collection_hier
 		ON DELETE NO ACTION;
 
 ALTER TABLE layer3_network_collection_hier
-	ADD CONSTRAINT "fk_l3nethier_chld_l3netid" FOREIGN KEY (child_l3_network_coll_id) REFERENCES layer3_network_collection(layer3_network_collection_id)
+	ADD CONSTRAINT "fk_l3nethier_chld_l3netid" FOREIGN KEY (child_layer3_network_collection_id) REFERENCES layer3_network_collection(layer3_network_collection_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+
+ALTER TABLE layer3_network_collection_layer3_network
+	ADD CONSTRAINT "fk_l3netcol_l3_net_l3netcolid" FOREIGN KEY (layer3_network_collection_id) REFERENCES layer3_network_collection(layer3_network_collection_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE layer3_network_collection_layer3_network
+	ADD CONSTRAINT "fk_l3netcol_l3_net_l3netid" FOREIGN KEY (layer3_network_id) REFERENCES layer3_network(layer3_network_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9234,6 +9299,13 @@ ALTER TABLE mlag_peering
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE netblock
+	ADD CONSTRAINT check_yes_no_896740574 CHECK  ( is_single_address IN ('Y', 'N') ) ;
+
+ALTER TABLE netblock
+	ADD CONSTRAINT check_yes_no_356293545 CHECK  ( can_subnet IN ('Y', 'N') ) ;
+
 ALTER TABLE netblock
 	ALTER COLUMN netblock_type
 		SET DEFAULT 'default';
@@ -9265,15 +9337,9 @@ COMMENT ON COLUMN netblock.external_id IS 'opaque id used in remote system to id
 
 
 ALTER TABLE netblock_collection
-	ADD CONSTRAINT check_ip_family_1277961641 CHECK  ( netblock_ip_family_restrict IN (4,6) ) ;
-
-
-ALTER TABLE netblock_collection
 	ADD CONSTRAINT "fk_nblk_coll_v_nblk_c_typ" FOREIGN KEY (netblock_collection_type) REFERENCES val_netblock_collection_type(netblock_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
-
-COMMENT ON COLUMN netblock_collection.netblock_ip_family_restrict IS 'member netblocks must have  and netblock collections must match this restriction, if set.';
 
 COMMENT ON COLUMN netblock_collection.external_id IS 'opaque id used in remote system to identifty this object.  Used for syncing an authoritative copy.';
 
@@ -9298,94 +9364,6 @@ ALTER TABLE netblock_collection_netblock
 	ADD CONSTRAINT "fk_nblk_col_nblk_nbcolid" FOREIGN KEY (netblock_collection_id) REFERENCES netblock_collection(netblock_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
-
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT ckc_netint_parent_role_1052290724 CHECK  ( parent_relation_type IN ('NONE', 'SUBINTERFACE', 'SECONDARY') ) ;
-
-ALTER TABLE network_interface
-	ALTER COLUMN is_interface_up
-		SET DEFAULT true;
-
-ALTER TABLE network_interface
-	ALTER COLUMN should_monitor
-		SET DEFAULT true;
-
-ALTER TABLE network_interface
-	ALTER COLUMN should_manage
-		SET DEFAULT true;
-
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "fk_net_int_lgl_port_id" FOREIGN KEY (logical_port_id,device_id) REFERENCES logical_port(logical_port_id,device_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "fk_netint_device_id" FOREIGN KEY (device_id) REFERENCES device(device_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "fk_netint_ref_parentnetint" FOREIGN KEY (parent_network_interface_id) REFERENCES network_interface(network_interface_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "fk_netint_slot_id" FOREIGN KEY (slot_id) REFERENCES slot(slot_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "fk_netint_netinttyp_id" FOREIGN KEY (network_interface_type) REFERENCES val_network_interface_type(network_interface_type)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE network_interface
-	ADD CONSTRAINT "fk_net_int_phys_port_id" FOREIGN KEY (physical_port_id) REFERENCES slot(slot_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-COMMENT ON COLUMN network_interface.physical_port_id IS 'historical column to be dropped in the next release after tools use slot_id.  matches slot_id by trigger.';
-
-COMMENT ON COLUMN network_interface.slot_id IS 'to be dropped after transition to logical_ports are complete.';
-
-ALTER TABLE network_interface_netblock
-	ALTER COLUMN network_interface_rank
-		SET DEFAULT 0;
-
-
-ALTER TABLE network_interface_netblock
-	ADD CONSTRAINT "fk_netint_nb_nblk_id" FOREIGN KEY (network_interface_id,device_id) REFERENCES network_interface(network_interface_id,device_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION
-	DEFERRABLE  ;
-
-ALTER TABLE network_interface_netblock
-	ADD CONSTRAINT "fk_netint_nb_netint_id" FOREIGN KEY (netblock_id) REFERENCES netblock(netblock_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION
-	DEFERRABLE  ;
-
-COMMENT ON COLUMN network_interface_netblock.network_interface_rank IS 'specifies the order of priority for the ip address.  generally only the highest priority matters (or highest priority v4 and v6) and is the "primary" if the underlying device supports it.';
-
-
-ALTER TABLE network_interface_purpose
-	ADD CONSTRAINT "fk_netint_purpose_device_id" FOREIGN KEY (device_id) REFERENCES device(device_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION
-	DEFERRABLE  ;
-
-ALTER TABLE network_interface_purpose
-	ADD CONSTRAINT "fk_netint_purpose_val_netint_purp" FOREIGN KEY (network_interface_purpose) REFERENCES val_network_interface_purpose(network_interface_purpose)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE network_interface_purpose
-	ADD CONSTRAINT "fk_netint_purp_dev_ni_id" FOREIGN KEY (network_interface_id,device_id) REFERENCES network_interface(network_interface_id,device_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION
-	DEFERRABLE  ;
 
 
 ALTER TABLE network_range
@@ -9417,6 +9395,10 @@ COMMENT ON COLUMN network_range.parent_netblock_id IS 'The netblock where the ra
 
 
 ALTER TABLE network_service
+	ADD CONSTRAINT check_yes_no_667542475 CHECK  ( is_monitored IN ('Y', 'N') ) ;
+
+
+ALTER TABLE network_service
 	ADD CONSTRAINT "fk_netsvc_netsvctyp_id" FOREIGN KEY (network_service_type) REFERENCES val_network_service_type(network_service_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -9437,7 +9419,7 @@ ALTER TABLE network_service
 		ON DELETE NO ACTION;
 
 ALTER TABLE network_service
-	ADD CONSTRAINT "fk_netsvc_netint_id" FOREIGN KEY (network_interface_id) REFERENCES network_interface(network_interface_id)
+	ADD CONSTRAINT "fk_netsvc_netint_id" FOREIGN KEY (network_interface_id) REFERENCES layer3_interface(layer3_interface_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9460,7 +9442,7 @@ ALTER TABLE operating_system_snapshot
 		ON DELETE NO ACTION;
 
 ALTER TABLE operating_system_snapshot
-	ADD CONSTRAINT "fk_os_snap_snap_type" FOREIGN KEY (operating_system_snapshot_type) REFERENCES val_os_snapshot_type(operating_system_snapshot_type)
+	ADD CONSTRAINT "fk_os_snap_snap_type" FOREIGN KEY (operating_system_snapshot_type) REFERENCES val_operating_system_snapshot_type(operating_system_snapshot_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9508,6 +9490,10 @@ ALTER TABLE person_account_realm_company
 
 
 ALTER TABLE person_auth_question
+	ADD CONSTRAINT check_yes_no_1358904229 CHECK  ( is_active IN ('Y', 'N') ) ;
+
+
+ALTER TABLE person_auth_question
 	ADD CONSTRAINT "fk_person_auth_question_prsnid" FOREIGN KEY (person_id) REFERENCES person(person_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -9523,17 +9509,27 @@ COMMENT ON COLUMN person_auth_question.auth_question_id IS 'Uniquely identifies 
 
 COMMENT ON COLUMN person_auth_question.user_answer IS 'Records system user answer to the authentication question.';
 
+
+ALTER TABLE person_company
+	ADD CONSTRAINT check_yes_no_1404165584 CHECK  ( is_exempt IN ('Y', 'N') ) ;
+
+ALTER TABLE person_company
+	ADD CONSTRAINT check_yes_no_prsncmpy_mgmt CHECK  ( is_management IN ('Y', 'N') ) ;
+
+ALTER TABLE person_company
+	ADD CONSTRAINT check_yes_no_676772835 CHECK  ( is_full_time IN ('Y', 'N') ) ;
+
 ALTER TABLE person_company
 	ALTER COLUMN is_exempt
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 ALTER TABLE person_company
 	ALTER COLUMN is_management
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE person_company
 	ALTER COLUMN is_full_time
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE person_company
@@ -9565,25 +9561,25 @@ ALTER TABLE person_company
 COMMENT ON COLUMN person_company.nickname IS 'Nickname in the context of a given company.  This is less likely to be used, the value in person is preferrred.';
 
 
-ALTER TABLE person_company_attr
+ALTER TABLE person_company_attribute
 	ADD CONSTRAINT "fk_pers_comp_attr_person_comp_id" FOREIGN KEY (company_id,person_id) REFERENCES person_company(company_id,person_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
 
-ALTER TABLE person_company_attr
+ALTER TABLE person_company_attribute
 	ADD CONSTRAINT "fk_person_comp_att_pers_personid" FOREIGN KEY (attribute_value_person_id) REFERENCES person(person_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE person_company_attr
-	ADD CONSTRAINT "fk_person_comp_attr_val_name" FOREIGN KEY (person_company_attr_name) REFERENCES val_person_company_attr_name(person_company_attr_name)
+ALTER TABLE person_company_attribute
+	ADD CONSTRAINT "fk_person_comp_attr_val_name" FOREIGN KEY (person_company_attribute_name) REFERENCES val_person_company_attribute_name(person_company_attribute_name)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-COMMENT ON COLUMN person_company_attr.attribute_value_person_id IS 'person_id value of the attribute.';
+COMMENT ON COLUMN person_company_attribute.attribute_value_person_id IS 'person_id value of the attribute.';
 
-COMMENT ON COLUMN person_company_attr.attribute_value IS 'string value of the attribute.';
+COMMENT ON COLUMN person_company_attribute.attribute_value IS 'string value of the attribute.';
 
 
 ALTER TABLE person_company_badge
@@ -9601,12 +9597,12 @@ ALTER TABLE person_contact
 
 
 ALTER TABLE person_contact
-	ADD CONSTRAINT "fk_prsn_cntct_prscn_loc" FOREIGN KEY (person_contact_location_type) REFERENCES val_person_contact_loc_type(person_contact_location_type)
+	ADD CONSTRAINT "fk_prsn_cntct_prscn_loc" FOREIGN KEY (person_contact_location_type) REFERENCES val_person_contact_location_type(person_contact_location_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE person_contact
-	ADD CONSTRAINT "fk_prsn_contect_cr_cmpyid" FOREIGN KEY (person_contact_cr_company_id) REFERENCES company(company_id)
+	ADD CONSTRAINT "fk_prsn_contect_cr_cmpyid" FOREIGN KEY (person_contact_carrier_company_id) REFERENCES company(company_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
@@ -9626,7 +9622,7 @@ ALTER TABLE person_contact
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-COMMENT ON COLUMN person_contact.person_contact_cr_company_id IS 'The Contact''s Carrier Company Id';
+COMMENT ON COLUMN person_contact.person_contact_carrier_company_id IS 'The Contact''s Carrier Company Id';
 
 COMMENT ON COLUMN person_contact.person_contact_technology IS 'technology sub-type or protocol(phone,mobile,fax,voicemail,conference)';
 
@@ -9718,16 +9714,6 @@ ALTER TABLE physical_address
 
 
 ALTER TABLE physical_connection
-	ADD CONSTRAINT "fk_physconn_physport1_id" FOREIGN KEY (physical_port1_id) REFERENCES slot(slot_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE physical_connection
-	ADD CONSTRAINT "fk_physconn_physport2_id" FOREIGN KEY (physical_port2_id) REFERENCES slot(slot_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE physical_connection
 	ADD CONSTRAINT "fk_physconn_slot1_id" FOREIGN KEY (slot1_id) REFERENCES slot(slot_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -9767,9 +9753,13 @@ ALTER TABLE physicalish_volume
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
 
+
+ALTER TABLE private_key
+	ADD CONSTRAINT check_yes_no_1732013376 CHECK  ( is_active IN ('Y', 'N') ) ;
+
 ALTER TABLE private_key
 	ALTER COLUMN is_active
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE private_key
@@ -9778,7 +9768,7 @@ ALTER TABLE private_key
 		ON DELETE NO ACTION;
 
 ALTER TABLE private_key
-	ADD CONSTRAINT "fk_pctkey_enctype" FOREIGN KEY (private_key_encryption_type) REFERENCES val_pvt_key_encryption_type(private_key_encryption_type)
+	ADD CONSTRAINT "fk_pctkey_enctype" FOREIGN KEY (private_key_encryption_type) REFERENCES val_private_key_encryption_type(private_key_encryption_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9799,9 +9789,13 @@ COMMENT ON COLUMN private_key.subject_key_identifier IS 'colon seperate byte hex
 COMMENT ON COLUMN private_key.private_key_encryption_type IS 'encryption tyof private key (rsa, dsa, ec, etc).  
 ';
 
+
+ALTER TABLE property
+	ADD CONSTRAINT ckc_prop_isenbld CHECK  ( is_enabled IN ('Y', 'N') ) ;
+
 ALTER TABLE property
 	ALTER COLUMN is_enabled
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE property
@@ -9821,6 +9815,11 @@ ALTER TABLE property
 
 ALTER TABLE property
 	ADD CONSTRAINT "fk_prop_x509_crt_id" FOREIGN KEY (x509_signed_certificate_id) REFERENCES x509_signed_certificate(x509_signed_certificate_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE property
+	ADD CONSTRAINT "fk_prop_svc_env_coll_id" FOREIGN KEY (service_environment_collection_id) REFERENCES service_environment_collection(service_environment_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9856,7 +9855,7 @@ ALTER TABLE property
 		ON DELETE NO ACTION;
 
 ALTER TABLE property
-	ADD CONSTRAINT "fk_property_pval_acct_colid" FOREIGN KEY (property_value_account_coll_id) REFERENCES account_collection(account_collection_id)
+	ADD CONSTRAINT "fk_property_pval_acct_colid" FOREIGN KEY (property_value_account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9871,7 +9870,7 @@ ALTER TABLE property
 		ON DELETE NO ACTION;
 
 ALTER TABLE property
-	ADD CONSTRAINT "fk_property_pval_tokcolid" FOREIGN KEY (property_value_token_col_id) REFERENCES token_collection(token_collection_id)
+	ADD CONSTRAINT "fk_property_pval_tokcolid" FOREIGN KEY (property_value_token_collection_id) REFERENCES token_collection(token_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9901,12 +9900,12 @@ ALTER TABLE property
 		ON DELETE NO ACTION;
 
 ALTER TABLE property
-	ADD CONSTRAINT "fk_property_prop_coll_id" FOREIGN KEY (property_collection_id) REFERENCES property_collection(property_collection_id)
+	ADD CONSTRAINT "fk_property_prop_coll_id" FOREIGN KEY (property_name_collection_id) REFERENCES property_name_collection(property_name_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE property
-	ADD CONSTRAINT "fk_property_pv_nblkcol_id" FOREIGN KEY (property_value_nblk_coll_id) REFERENCES netblock_collection(netblock_collection_id)
+	ADD CONSTRAINT "fk_property_pv_nblkcol_id" FOREIGN KEY (property_value_netblock_collection_id) REFERENCES netblock_collection(netblock_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9926,12 +9925,7 @@ ALTER TABLE property
 		ON DELETE NO ACTION;
 
 ALTER TABLE property
-	ADD CONSTRAINT "fk_prop_pv_devcolid" FOREIGN KEY (property_value_device_coll_id) REFERENCES device_collection(device_collection_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE property
-	ADD CONSTRAINT "fk_prop_svc_env_coll_id" FOREIGN KEY (service_env_collection_id) REFERENCES service_environment_collection(service_env_collection_id)
+	ADD CONSTRAINT "fk_prop_pv_devcolid" FOREIGN KEY (property_value_device_collection_id) REFERENCES device_collection(device_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9947,7 +9941,7 @@ COMMENT ON COLUMN property.account_id IS 'LHS settable based on val_property';
 
 COMMENT ON COLUMN property.account_collection_id IS 'LHS settable based on val_property';
 
-COMMENT ON COLUMN property.property_value_account_coll_id IS 'RHS, fk to account_collection,    permitted based on val_property.property_data_type.';
+COMMENT ON COLUMN property.property_value_account_collection_id IS 'RHS, fk to account_collection,    permitted based on val_property.property_data_type.';
 
 COMMENT ON COLUMN property.site_code IS 'LHS settable based on val_property';
 
@@ -9965,7 +9959,7 @@ COMMENT ON COLUMN property.finish_date IS 'date/time that the assignment ceases 
 
 COMMENT ON COLUMN property.property_value_password_type IS 'RHS - fk to val_password_type.     permitted based on val_property.property_data_type.';
 
-COMMENT ON COLUMN property.property_value_token_col_id IS 'RHS - fk to token_collection_id.     permitted based on val_property.property_data_type.';
+COMMENT ON COLUMN property.property_value_token_collection_id IS 'RHS - fk to token_collection_id.     permitted based on val_property.property_data_type.';
 
 COMMENT ON COLUMN property.is_enabled IS 'indiciates if the property is temporarily disabled or not.  The view v_property filters this out.';
 
@@ -9977,61 +9971,59 @@ COMMENT ON COLUMN property.property_value_person_id IS 'RHS - fk to person.     
 
 COMMENT ON COLUMN property.person_id IS 'LHS settable based on val_property';
 
-COMMENT ON COLUMN property.property_value_nblk_coll_id IS 'RHS - fk to network_collection.    permitted based on val_property.property_data_type.';
+COMMENT ON COLUMN property.property_value_netblock_collection_id IS 'RHS - fk to network_collection.    permitted based on val_property.property_data_type.';
 
 COMMENT ON COLUMN property.netblock_collection_id IS 'LHS settable based on val_property';
 
 COMMENT ON COLUMN property.property_rank IS 'for multivalues, specifies the order.  If set, this basically becomes part of the "ak" for the lhs.';
 
-COMMENT ON COLUMN property.service_env_collection_id IS 'LHS settable based on val_property';
-
 COMMENT ON COLUMN property.account_realm_id IS 'LHS settable based on val_property';
 
-COMMENT ON COLUMN property.property_collection_id IS 'LHS settable based on val_property.  NOTE, this is actually collections of property_name,property_type';
+COMMENT ON COLUMN property.property_name_collection_id IS 'LHS settable based on val_property.  NOTE, this is actually collections of property_name,property_type';
 
 COMMENT ON COLUMN property.operating_system_snapshot_id IS 'LHS settable based on val_property';
 
-COMMENT ON COLUMN property.property_value_device_coll_id IS 'RHS - fk to device_collection.    permitted based on val_property.property_data_type.';
+COMMENT ON COLUMN property.property_value_device_collection_id IS 'RHS - fk to device_collection.    permitted based on val_property.property_data_type.';
 
 COMMENT ON COLUMN property.dns_domain_collection_id IS 'LHS settable based on val_property';
 
 COMMENT ON COLUMN property.x509_signed_certificate_id IS 'Uniquely identifies Certificate';
 
 
-ALTER TABLE property_collection
-	ADD CONSTRAINT "fk_propcol_propcoltype" FOREIGN KEY (property_collection_type) REFERENCES val_property_collection_type(property_collection_type)
+ALTER TABLE property_name_collection
+	ADD CONSTRAINT "fk_propcol_propcoltype" FOREIGN KEY (property_name_collection_type) REFERENCES val_property_name_collection_type(property_name_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-COMMENT ON TABLE property_collection IS 'Collections of Property Name/Types.  Used for grouping properties for different purposes';
+COMMENT ON TABLE property_name_collection IS 'Collections of Property Name/Types.  Used for grouping properties for different purposes';
 
 
-ALTER TABLE property_collection_hier
-	ADD CONSTRAINT "fk_propcollhier_propcolid" FOREIGN KEY (property_collection_id) REFERENCES property_collection(property_collection_id)
+ALTER TABLE property_name_collection_hier
+	ADD CONSTRAINT "fk_propcollhier_propcolid" FOREIGN KEY (property_name_collection_id) REFERENCES property_name_collection(property_name_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE property_collection_hier
-	ADD CONSTRAINT "fk_propcollhier_chldpropcoll_id" FOREIGN KEY (child_property_collection_id) REFERENCES property_collection(property_collection_id)
+ALTER TABLE property_name_collection_hier
+	ADD CONSTRAINT "fk_propcollhier_chldpropcoll_id" FOREIGN KEY (child_property_name_collection_id) REFERENCES property_name_collection(property_name_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE property_collection_property
+ALTER TABLE property_name_collection_property_name
 	ADD CONSTRAINT "fk_prop_col_propnamtyp" FOREIGN KEY (property_name,property_type) REFERENCES val_property(property_name,property_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE property_collection_property
-	ADD CONSTRAINT "fk_prop_coll_prop_prop_coll_id" FOREIGN KEY (property_collection_id) REFERENCES property_collection(property_collection_id)
+ALTER TABLE property_name_collection_property_name
+	ADD CONSTRAINT "fk_prop_coll_prop_prop_coll_id" FOREIGN KEY (property_name_collection_id) REFERENCES property_name_collection(property_name_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-COMMENT ON TABLE property_collection_property IS 'name,type members of a property collection';
+COMMENT ON TABLE property_name_collection_property_name IS 'name,type members of a property collection';
 
-COMMENT ON COLUMN property_collection_property.property_name IS 'property name for validation purposes';
+COMMENT ON COLUMN property_name_collection_property_name.property_name IS 'property name for validation purposes';
 
-COMMENT ON COLUMN property_collection_property.property_type IS 'property type for validation purposes';
+COMMENT ON COLUMN property_name_collection_property_name.property_type IS 'property type for validation purposes';
 
 
 ALTER TABLE pseudo_klogin
@@ -10042,6 +10034,9 @@ ALTER TABLE pseudo_klogin
 
 ALTER TABLE rack
 	ADD CONSTRAINT ckc_rack_style_rack CHECK  ( RACK_STYLE in ('RELAY','CABINET') and RACK_STYLE = upper(RACK_STYLE) ) ;
+
+ALTER TABLE rack
+	ADD CONSTRAINT check_yes_no_1604632020 CHECK  ( display_from_bottom IN ('Y', 'N') ) ;
 
 
 ALTER TABLE rack
@@ -10077,23 +10072,34 @@ ALTER TABLE service_environment
 COMMENT ON COLUMN service_environment.external_id IS 'opaque id used in remote system to identifty this object.  Used for syncing an authoritative copy.';
 
 
-ALTER TABLE service_environment_coll_hier
-	ADD CONSTRAINT "fk_svcenv_coll_child_svccollid" FOREIGN KEY (child_service_env_coll_id) REFERENCES service_environment_collection(service_env_collection_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE service_environment_coll_hier
-	ADD CONSTRAINT "fk_svc_env_hier_svc_env_coll_id" FOREIGN KEY (service_env_collection_id) REFERENCES service_environment_collection(service_env_collection_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-
 ALTER TABLE service_environment_collection
-	ADD CONSTRAINT "fk_svc_env_col_v_svc_env_type" FOREIGN KEY (service_env_collection_type) REFERENCES val_service_env_coll_type(service_env_collection_type)
+	ADD CONSTRAINT "fk_svc_env_col_v_svc_env_type" FOREIGN KEY (service_environment_collection_type) REFERENCES val_service_environment_collection_type(service_env_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 COMMENT ON COLUMN service_environment_collection.external_id IS 'opaque id used in remote system to identifty this object.  Used for syncing an authoritative copy.';
+
+
+ALTER TABLE service_environment_collection_hier
+	ADD CONSTRAINT "fk_svcenv_coll_child_svccollid" FOREIGN KEY (child_service_environment_collection_id) REFERENCES service_environment_collection(service_environment_collection_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE service_environment_collection_hier
+	ADD CONSTRAINT "fk_svc_env_hier_svc_env_coll_id" FOREIGN KEY (service_environment_collection_id) REFERENCES service_environment_collection(service_environment_collection_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+
+ALTER TABLE service_environment_collection_service_environment
+	ADD CONSTRAINT "fk_svc_env_col_svc_env" FOREIGN KEY (service_environment_id) REFERENCES service_environment(service_environment_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE service_environment_collection_service_environment
+	ADD CONSTRAINT "fk_svc_env_coll_svc_coll_id" FOREIGN KEY (service_environment_collection_id) REFERENCES service_environment_collection(service_environment_collection_id)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
 
 
 ALTER TABLE shared_netblock
@@ -10107,13 +10113,13 @@ ALTER TABLE shared_netblock
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE shared_netblock_network_int
+ALTER TABLE shared_netblock_layer3_interface
 	ADD CONSTRAINT "fk_shrdnet_netint_shrdnet_id" FOREIGN KEY (shared_netblock_id) REFERENCES shared_netblock(shared_netblock_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE shared_netblock_network_int
-	ADD CONSTRAINT "fk_shrdnet_netint_netint_id" FOREIGN KEY (network_interface_id) REFERENCES network_interface(network_interface_id)
+ALTER TABLE shared_netblock_layer3_interface
+	ADD CONSTRAINT "fk_shrdnet_netint_netint_id" FOREIGN KEY (layer3_interface_id) REFERENCES layer3_interface(layer3_interface_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10135,15 +10141,18 @@ ALTER TABLE site
 
 
 ALTER TABLE slot
+	ADD CONSTRAINT checkslot_enbled__yes_no CHECK  ( is_enabled IN ('Y', 'N') ) ;
+
+ALTER TABLE slot
 	ADD CONSTRAINT ckc_slot_slot_side CHECK  ( slot_side in ('FRONT','BACK') ) ;
 
 ALTER TABLE slot
 	ALTER COLUMN is_enabled
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE slot
-	ADD CONSTRAINT "fk_slot_cmp_typ_tmp_id" FOREIGN KEY (component_type_slot_tmplt_id) REFERENCES component_type_slot_tmplt(component_type_slot_tmplt_id)
+	ADD CONSTRAINT "fk_slot_cmp_typ_tmp_id" FOREIGN KEY (component_type_slot_template_id) REFERENCES component_type_slot_template(component_type_slot_tmplt_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10157,9 +10166,13 @@ ALTER TABLE slot
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE slot_type
+	ADD CONSTRAINT check_yes_no_1060412074 CHECK  ( remote_slot_permitted IN ('Y', 'N') ) ;
+
 ALTER TABLE slot_type
 	ALTER COLUMN remote_slot_permitted
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE slot_type
@@ -10173,35 +10186,24 @@ ALTER TABLE slot_type
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE slot_type_prmt_comp_slot_type
+ALTER TABLE slot_type_permitted_component_slot_type
 	ADD CONSTRAINT "fk_stpcst_cmp_slt_typ_id" FOREIGN KEY (slot_type_id) REFERENCES slot_type(slot_type_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE slot_type_prmt_comp_slot_type
+ALTER TABLE slot_type_permitted_component_slot_type
 	ADD CONSTRAINT "fk_stpcst_slot_type_id" FOREIGN KEY (component_slot_type_id) REFERENCES slot_type(slot_type_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE slot_type_prmt_rem_slot_type
+ALTER TABLE slot_type_permitted_remote_slot_type
 	ADD CONSTRAINT "fk_stprst_remote_slot_type_id" FOREIGN KEY (remote_slot_type_id) REFERENCES slot_type(slot_type_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE slot_type_prmt_rem_slot_type
+ALTER TABLE slot_type_permitted_remote_slot_type
 	ADD CONSTRAINT "fk_stprst_slot_type_id" FOREIGN KEY (slot_type_id) REFERENCES slot_type(slot_type_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-
-ALTER TABLE snmp_commstr
-	ADD CONSTRAINT "fk_snmpstr_device_id" FOREIGN KEY (device_id) REFERENCES device(device_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE snmp_commstr
-	ADD CONSTRAINT "fk_snmpstr_snmpstrtyp_id" FOREIGN KEY (snmp_commstr_type) REFERENCES val_snmp_commstr_type(snmp_commstr_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10218,7 +10220,7 @@ ALTER TABLE ssh_key
 
 
 ALTER TABLE static_route
-	ADD CONSTRAINT "fk_statrt_devsrc_id" FOREIGN KEY (device_src_id) REFERENCES device(device_id)
+	ADD CONSTRAINT "fk_statrt_devsrc_id" FOREIGN KEY (device_source_id) REFERENCES device(device_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10228,18 +10230,18 @@ ALTER TABLE static_route
 		ON DELETE NO ACTION;
 
 ALTER TABLE static_route
-	ADD CONSTRAINT "fk_statrt_netintdst_id" FOREIGN KEY (network_interface_dst_id) REFERENCES network_interface(network_interface_id)
+	ADD CONSTRAINT "fk_statrt_netintdst_id" FOREIGN KEY (network_interface_destination_id) REFERENCES layer3_interface(layer3_interface_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 
 ALTER TABLE static_route_template
-	ADD CONSTRAINT "fk_netblock_st_rt_src_net" FOREIGN KEY (netblock_src_id) REFERENCES netblock(netblock_id)
+	ADD CONSTRAINT "fk_netblock_st_rt_src_net" FOREIGN KEY (netblock_source_id) REFERENCES netblock(netblock_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE static_route_template
-	ADD CONSTRAINT "fk_static_rt_net_interface" FOREIGN KEY (network_interface_dst_id) REFERENCES network_interface(network_interface_id)
+	ADD CONSTRAINT "fk_static_rt_net_interface" FOREIGN KEY (network_interface_destination_id) REFERENCES layer3_interface(layer3_interface_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10249,26 +10251,32 @@ ALTER TABLE static_route_template
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE sudo_acct_col_device_collectio
+ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT ckc_sudo_alias_name_sudo_ucl CHECK  ( sudo_alias_name ~ '^[A-Z][A-Z0-9_]*$'::text ) ;
 
+ALTER TABLE sudo_account_collection_device_collection
+	ADD CONSTRAINT check_yes_no_620272763 CHECK  ( requires_password IN ('Y', 'N') ) ;
 
-ALTER TABLE sudo_acct_col_device_collectio
+ALTER TABLE sudo_account_collection_device_collection
+	ADD CONSTRAINT check_yes_no_1479273988 CHECK  ( can_exec_child IN ('Y', 'N') ) ;
+
+
+ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT "fk_sudoaccoll_fk_sudo_u_actcl" FOREIGN KEY (account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE sudo_acct_col_device_collectio
+ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT "fk_acctcol_ref_sudoaccldcl_ra" FOREIGN KEY (run_as_account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE sudo_acct_col_device_collectio
+ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT "fk_sudo_ucl_fk_dev_co_device_c" FOREIGN KEY (device_collection_id) REFERENCES device_collection(device_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-ALTER TABLE sudo_acct_col_device_collectio
+ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT "fk_sudo_acl_fk_sudo_u_sudo_ali" FOREIGN KEY (sudo_alias_name) REFERENCES sudo_alias(sudo_alias_name)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
@@ -10279,25 +10287,18 @@ ALTER TABLE sudo_alias
 	ADD CONSTRAINT ckc_sudo_alias_name_sudo_ali CHECK  ( sudo_alias_name ~ '^[A-Z][A-Z0-9_]*$'::text ) ;
 
 
-ALTER TABLE svc_environment_coll_svc_env
-	ADD CONSTRAINT "fk_svc_env_col_svc_env" FOREIGN KEY (service_environment_id) REFERENCES service_environment(service_environment_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-ALTER TABLE svc_environment_coll_svc_env
-	ADD CONSTRAINT "fk_svc_env_coll_svc_coll_id" FOREIGN KEY (service_env_collection_id) REFERENCES service_environment_collection(service_env_collection_id)
-		ON UPDATE NO ACTION
-		ON DELETE NO ACTION;
-
-
 ALTER TABLE sw_package
 	ADD CONSTRAINT "fk_swpkg_ref_vswpkgtype" FOREIGN KEY (sw_package_type) REFERENCES val_sw_package_type(sw_package_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE token
+	ADD CONSTRAINT check_yes_no_tkn_islckd CHECK  ( is_token_locked IN ('Y', 'N') ) ;
+
 ALTER TABLE token
 	ALTER COLUMN is_token_locked
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE token
@@ -10368,15 +10369,22 @@ ALTER TABLE unix_group
 		ON DELETE NO ACTION;
 
 
-COMMENT ON TABLE val_account_collection_relatio IS 'Defines type of relationship';
+COMMENT ON TABLE val_account_collection_relation IS 'Defines type of relationship';
+
+
+ALTER TABLE val_account_collection_type
+	ADD CONSTRAINT check_yes_no_1430080190 CHECK  ( is_infrastructure_type IN ('Y', 'N') ) ;
+
+ALTER TABLE val_account_collection_type
+	ADD CONSTRAINT check_yes_no_act_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
 
 ALTER TABLE val_account_collection_type
 	ALTER COLUMN is_infrastructure_type
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE val_account_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE val_account_collection_type
@@ -10395,7 +10403,18 @@ COMMENT ON COLUMN val_account_collection_type.max_num_collections IS 'Maximum nu
 COMMENT ON COLUMN val_account_collection_type.account_realm_id IS 'If set, all accounts in this collection must be of this realm, and all child account collections of this one must have the realm set to be the same.';
 
 
+ALTER TABLE val_account_role
+	ADD CONSTRAINT check_yes_no_769504641 CHECK  ( uid_gid_forced IN ('Y', 'N') ) ;
+
+
 COMMENT ON TABLE val_account_role IS 'Defines the role for the account, such as primary, administrator, privileged/superuser, test, etc';
+
+
+ALTER TABLE val_account_type
+	ADD CONSTRAINT check_yes_no_726744778 CHECK  ( is_person IN ('Y', 'N') ) ;
+
+ALTER TABLE val_account_type
+	ADD CONSTRAINT check_yes_no_836614027 CHECK  ( uid_gid_forced IN ('Y', 'N') ) ;
 
 
 COMMENT ON TABLE val_account_type IS 'Defines the type of the account (pseudouser or person).  is_person is probably unnecessary and will be dropped in the future.';
@@ -10412,13 +10431,20 @@ ALTER TABLE val_app_key_values
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE val_company_collection_type
+	ADD CONSTRAINT check_yes_no_1632390060 CHECK  ( is_infrastructure_type IN ('Y', 'N') ) ;
+
+ALTER TABLE val_company_collection_type
+	ADD CONSTRAINT check_yes_no_206713558 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
 ALTER TABLE val_company_collection_type
 	ALTER COLUMN is_infrastructure_type
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE val_company_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 COMMENT ON COLUMN val_company_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
@@ -10444,6 +10470,9 @@ COMMENT ON TABLE val_company_type_purpose IS 'Mechanism to group company types t
 
 
 ALTER TABLE val_component_property
+	ADD CONSTRAINT check_yes_no_1492573689 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
+
+ALTER TABLE val_component_property
 	ADD CONSTRAINT check_prp_prmt_2069511743 CHECK  ( permit_component_type_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_component_property
@@ -10462,7 +10491,7 @@ ALTER TABLE val_component_property
 	ADD CONSTRAINT check_prp_prmt_186225764 CHECK  ( permit_slot_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_component_property
-	ADD CONSTRAINT check_prp_prmt_369274580 CHECK  ( permit_intcomp_conn_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_1651930730 CHECK  ( permit_inter_component_connection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_component_property
 	ALTER COLUMN permit_component_type_id
@@ -10489,7 +10518,7 @@ ALTER TABLE val_component_property
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_component_property
-	ALTER COLUMN permit_intcomp_conn_id
+	ALTER COLUMN permit_inter_component_connection_id
 		SET DEFAULT 'PROHIBITED';
 
 
@@ -10521,9 +10550,13 @@ ALTER TABLE val_component_property
 
 COMMENT ON TABLE val_component_property IS 'Contains a list of all valid properties for component tables (component, component_type, component_function, slot, slot_type, slot_function)';
 
+
+ALTER TABLE val_component_property_type
+	ADD CONSTRAINT check_yes_no_1637846134 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
+
 ALTER TABLE val_component_property_type
 	ALTER COLUMN is_multivalue
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 COMMENT ON TABLE val_component_property_type IS 'Contains list of valid component_property_types';
@@ -10540,9 +10573,13 @@ ALTER TABLE val_country_code
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE val_device_collection_type
+	ADD CONSTRAINT check_yes_no_dct_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
 ALTER TABLE val_device_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 COMMENT ON COLUMN val_device_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
@@ -10553,9 +10590,13 @@ COMMENT ON COLUMN val_device_collection_type.can_have_hierarchy IS 'Indicates if
 COMMENT ON COLUMN val_device_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
 ';
 
+
+ALTER TABLE val_dns_domain_collection_type
+	ADD CONSTRAINT check_yes_no_dnsdom_coll_canhier CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
 ALTER TABLE val_dns_domain_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 COMMENT ON COLUMN val_dns_domain_collection_type.max_num_members IS 'Maximum INTEGER of members in a given collection of this type';
@@ -10566,7 +10607,7 @@ COMMENT ON COLUMN val_dns_domain_collection_type.can_have_hierarchy IS 'Indicate
 
 ALTER TABLE val_dns_domain_type
 	ALTER COLUMN can_generate
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE val_dns_type
@@ -10585,34 +10626,42 @@ COMMENT ON TABLE val_encryption_key_purpose IS 'Valid purpose of encryption used
 COMMENT ON TABLE val_encryption_method IS 'List of text representations of methods of encryption.  Format is the same as Kerberos uses such as in rfc3962';
 
 
-COMMENT ON TABLE val_key_usg_reason_for_assgn IS 'Identifies a reason why certificate has been assigned a given key usage attribute.';
+COMMENT ON TABLE val_key_usage_reason_for_assignment IS 'Identifies a reason why certificate has been assigned a given key usage attribute.';
 
-COMMENT ON COLUMN val_key_usg_reason_for_assgn.key_usage_reason_for_assign IS 'Uniquely identifies and indicates reason for assignment.';
+COMMENT ON COLUMN val_key_usage_reason_for_assignment.key_usage_reason_for_assignment IS 'Uniquely identifies and indicates reason for assignment.';
 
-ALTER TABLE val_layer2_network_coll_type
+
+ALTER TABLE val_layer2_network_collection_type
+	ADD CONSTRAINT check_yes_no_516965998 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
+ALTER TABLE val_layer2_network_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
-COMMENT ON COLUMN val_layer2_network_coll_type.max_num_members IS 'Maximum number of members in a given collection of this type
+COMMENT ON COLUMN val_layer2_network_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
 ';
 
-COMMENT ON COLUMN val_layer2_network_coll_type.can_have_hierarchy IS 'Indicates if the collections can have other collections to make it hierarchical.';
+COMMENT ON COLUMN val_layer2_network_collection_type.can_have_hierarchy IS 'Indicates if the collections can have other collections to make it hierarchical.';
 
-COMMENT ON COLUMN val_layer2_network_coll_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
+COMMENT ON COLUMN val_layer2_network_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
 ';
 
-ALTER TABLE val_layer3_network_coll_type
+
+ALTER TABLE val_layer3_network_collection_type
+	ADD CONSTRAINT check_yes_no_l3nc_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
+ALTER TABLE val_layer3_network_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
-COMMENT ON COLUMN val_layer3_network_coll_type.max_num_members IS 'Maximum number of members in a given collection of this type
+COMMENT ON COLUMN val_layer3_network_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
 ';
 
-COMMENT ON COLUMN val_layer3_network_coll_type.can_have_hierarchy IS 'Indicates if the collections can have other collections to make it hierarchical.';
+COMMENT ON COLUMN val_layer3_network_collection_type.can_have_hierarchy IS 'Indicates if the collections can have other collections to make it hierarchical.';
 
-COMMENT ON COLUMN val_layer3_network_coll_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
+COMMENT ON COLUMN val_layer3_network_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
 ';
 
 
@@ -10623,17 +10672,20 @@ ALTER TABLE val_logical_volume_property
 
 
 ALTER TABLE val_netblock_collection_type
-	ADD CONSTRAINT check_any_yes_no_nc_singaddr_rst CHECK  ( netblock_single_addr_restrict IN ('Y', 'N', 'ANY') ) ;
+	ADD CONSTRAINT check_yes_no_nct_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
 
 ALTER TABLE val_netblock_collection_type
-	ADD CONSTRAINT check_ip_family_v_nblk_col CHECK  ( netblock_ip_family_restrict IN (4,6) ) ;
+	ADD CONSTRAINT check_any_yes_no_nc_singaddr_rst CHECK  ( netblock_is_single_address_restriction IN ('Y', 'N', 'ANY') ) ;
+
+ALTER TABLE val_netblock_collection_type
+	ADD CONSTRAINT check_ip_family_v_nblk_col CHECK  ( netblock_ip_family_restriction IN (4,6) ) ;
 
 ALTER TABLE val_netblock_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 ALTER TABLE val_netblock_collection_type
-	ALTER COLUMN netblock_single_addr_restrict
+	ALTER COLUMN netblock_is_single_address_restriction
 		SET DEFAULT 'ANY';
 
 
@@ -10645,13 +10697,26 @@ COMMENT ON COLUMN val_netblock_collection_type.can_have_hierarchy IS 'Indicates 
 COMMENT ON COLUMN val_netblock_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
 ';
 
-COMMENT ON COLUMN val_netblock_collection_type.netblock_single_addr_restrict IS 'all collections of this types'' member netblocks must have is_single_address = ''Y''';
+COMMENT ON COLUMN val_netblock_collection_type.netblock_is_single_address_restriction IS 'all collections of this types'' member netblocks must have is_single_address = ''Y''';
 
-COMMENT ON COLUMN val_netblock_collection_type.netblock_ip_family_restrict IS 'all collections of this types'' member netblocks must have  and netblock collections must match this restriction, if set.';
+COMMENT ON COLUMN val_netblock_collection_type.netblock_ip_family_restriction IS 'all collections of this types'' member netblocks must have  and netblock collections must match this restriction, if set.';
+
+
+ALTER TABLE val_netblock_type
+	ADD CONSTRAINT check_yes_no_2942501 CHECK  ( db_forced_hierarchy IN ('Y', 'N') ) ;
+
+ALTER TABLE val_netblock_type
+	ADD CONSTRAINT check_yes_no_364552564 CHECK  ( is_validated_hierarchy IN ('Y', 'N') ) ;
 
 
 ALTER TABLE val_network_range_type
 	ADD CONSTRAINT check_prp_prmt_nrngty_ddom CHECK  ( dns_domain_required IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+
+ALTER TABLE val_network_range_type
+	ADD CONSTRAINT check_yes_no_canoverlap CHECK  ( can_overlap IN ('Y', 'N') ) ;
+
+ALTER TABLE val_network_range_type
+	ADD CONSTRAINT check_yes_no_cidrboundary CHECK  ( require_cidr_boundary IN ('Y', 'N') ) ;
 
 ALTER TABLE val_network_range_type
 	ALTER COLUMN dns_domain_required
@@ -10659,11 +10724,11 @@ ALTER TABLE val_network_range_type
 
 ALTER TABLE val_network_range_type
 	ALTER COLUMN can_overlap
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE val_network_range_type
 	ALTER COLUMN require_cidr_boundary
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE val_network_range_type
@@ -10676,14 +10741,14 @@ COMMENT ON COLUMN val_network_range_type.default_dns_prefix IS 'default dns pref
 COMMENT ON COLUMN val_network_range_type.dns_domain_required IS 'indicates how dns_domain_id is required on network_range (thus a NOT NULL constraint)';
 
 
-ALTER TABLE val_person_company_attr_name
-	ADD CONSTRAINT "fk_prescompattr_name_datatyp" FOREIGN KEY (person_company_attr_data_type) REFERENCES val_person_company_attr_dtype(person_company_attr_data_type)
+ALTER TABLE val_person_company_attribute_name
+	ADD CONSTRAINT "fk_prescompattr_name_datatyp" FOREIGN KEY (person_company_attribute_data_type) REFERENCES val_person_company_attrribute_data_type(person_company_attribute_data_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 
-ALTER TABLE val_person_company_attr_value
-	ADD CONSTRAINT "fk_pers_comp_attr_val_name" FOREIGN KEY (person_company_attr_name) REFERENCES val_person_company_attr_name(person_company_attr_name)
+ALTER TABLE val_person_company_attribute_value
+	ADD CONSTRAINT "fk_pers_comp_attr_val_name" FOREIGN KEY (person_company_attribute_name) REFERENCES val_person_company_attribute_name(person_company_attribute_name)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10692,7 +10757,7 @@ COMMENT ON TABLE val_person_company_relation IS 'person''s relationship to the c
 ';
 
 
-COMMENT ON TABLE val_person_contact_loc_type IS 'The location type of the contact (personal, home, office)';
+COMMENT ON TABLE val_person_contact_location_type IS 'The location type of the contact (personal, home, office)';
 
 
 ALTER TABLE val_person_contact_technology
@@ -10707,13 +10772,24 @@ COMMENT ON COLUMN val_person_contact_technology.person_contact_technology IS 'te
 
 COMMENT ON TABLE val_person_contact_type IS 'Contact Type -- chat, phone, etc.  This essentially details if phone or account is used as the identifier and should be triggered.';
 
+
+ALTER TABLE val_person_image_usage
+	ADD CONSTRAINT check_yes_no_2030957813 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
+
+
+ALTER TABLE val_person_status
+	ADD CONSTRAINT check_yes_no_233685577 CHECK  ( propagate_from_person IN ('Y', 'N') ) ;
+
+ALTER TABLE val_person_status
+	ADD CONSTRAINT check_yes_no_vpers_stat_enabled CHECK  ( is_enabled IN ('Y', 'N') ) ;
+
 ALTER TABLE val_person_status
 	ALTER COLUMN is_forced
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE val_person_status
 	ALTER COLUMN is_db_enforced
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 COMMENT ON COLUMN val_person_status.is_forced IS 'apps external can use this to indicate that the status is an override that should generally not be chagned.';
@@ -10721,9 +10797,18 @@ COMMENT ON COLUMN val_person_status.is_forced IS 'apps external can use this to 
 COMMENT ON COLUMN val_person_status.is_db_enforced IS 'If set, account and person rows with this setting can not be updated directly should go through stored procedures.';
 
 
+COMMENT ON TABLE val_private_key_encryption_type IS 'Encryption method for private keys.  This may want to merge with val_encryption_method.';
+
+COMMENT ON COLUMN val_private_key_encryption_type.private_key_encryption_type IS 'encryption tyof private key (rsa, dsa, ec, etc).  
+';
+
+
 ALTER TABLE val_processor_architecture
 	ADD CONSTRAINT ckc_kernel_bits_val_proc CHECK  ( KERNEL_BITS in (0,32,64) ) ;
 
+
+ALTER TABLE val_property
+	ADD CONSTRAINT check_yes_no_910695618 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
 
 ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_733000589 CHECK  ( permit_company_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
@@ -10741,7 +10826,7 @@ ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_842506143 CHECK  ( permit_site_code IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT check_prp_prmt_2011626440 CHECK  ( permit_service_env_collection IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_1338302111 CHECK  ( permit_service_environment_collection IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
 	ADD CONSTRAINT ckc_val_prop_osid CHECK  ( permit_operating_system_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
@@ -10759,32 +10844,32 @@ ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_151657048 CHECK  ( permit_account_realm_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT check_prp_prmt_1934432061 CHECK  ( permit_layer2_network_coll_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_1430936437 CHECK  ( permit_layer2_network_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT check_prp_prmt_1934366525 CHECK  ( permit_layer3_network_coll_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_1430936438 CHECK  ( permit_layer3_network_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_1911550439 CHECK  ( permit_property_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT check_prp_prmt_1390997245 CHECK  ( permit_os_snapshot_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_1315394496 CHECK  ( permit_operating_system_snapshot_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_2002842082 CHECK  ( permit_company_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT check_prp_prmt_143358273 CHECK  ( permit_dns_domain_coll_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_439888051 CHECK  ( permit_dns_domain_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_504174938 CHECK  ( permit_network_range_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT check_prp_prmt_1228751707 CHECK  ( permit_x509_signed_cert_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_618591244 CHECK  ( permit_x509_signed_certificate_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
 	ALTER COLUMN is_multivalue
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE val_property
 	ALTER COLUMN permit_company_id
@@ -10807,7 +10892,7 @@ ALTER TABLE val_property
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
-	ALTER COLUMN permit_service_env_collection
+	ALTER COLUMN permit_service_environment_collection
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
@@ -10831,11 +10916,11 @@ ALTER TABLE val_property
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
-	ALTER COLUMN permit_layer2_network_coll_id
+	ALTER COLUMN permit_layer2_network_collection_id
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
-	ALTER COLUMN permit_layer3_network_coll_id
+	ALTER COLUMN permit_layer3_network_collection_id
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
@@ -10843,7 +10928,7 @@ ALTER TABLE val_property
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
-	ALTER COLUMN permit_os_snapshot_id
+	ALTER COLUMN permit_operating_system_snapshot_id
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
@@ -10851,7 +10936,7 @@ ALTER TABLE val_property
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
-	ALTER COLUMN permit_dns_domain_coll_id
+	ALTER COLUMN permit_dns_domain_collection_id
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
@@ -10859,22 +10944,22 @@ ALTER TABLE val_property
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
-	ALTER COLUMN permit_x509_signed_cert_id
+	ALTER COLUMN permit_x509_signed_certificate_id
 		SET DEFAULT 'PROHIBITED';
 
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_valprop_pv_actyp_rst" FOREIGN KEY (prop_val_acct_coll_type_rstrct) REFERENCES val_account_collection_type(account_collection_type)
+	ADD CONSTRAINT "fk_valprop_pv_actyp_rst" FOREIGN KEY (property_value_account_collection_type_restriction) REFERENCES val_account_collection_type(account_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_val_prop_nblk_coll_type" FOREIGN KEY (prop_val_nblk_coll_type_rstrct) REFERENCES val_netblock_collection_type(netblock_collection_type)
+	ADD CONSTRAINT "fk_val_prop_nblk_coll_type" FOREIGN KEY (property_value_netblock_collection_type_restriction) REFERENCES val_netblock_collection_type(netblock_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_prop_val_devcol_typ_rstr_dc" FOREIGN KEY (prop_val_dev_coll_type_rstrct) REFERENCES val_device_collection_type(device_collection_type)
+	ADD CONSTRAINT "fk_prop_val_devcol_typ_rstr_dc" FOREIGN KEY (property_value_device_collection_type_restriction) REFERENCES val_device_collection_type(device_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10904,22 +10989,22 @@ ALTER TABLE val_property
 		ON DELETE NO ACTION;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_vla_property_val_propcolltype" FOREIGN KEY (property_collection_type) REFERENCES val_property_collection_type(property_collection_type)
+	ADD CONSTRAINT "fk_vla_property_val_propcolltype" FOREIGN KEY (property_name_collection_type) REFERENCES val_property_name_collection_type(property_name_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_prop_svcemvcoll_type" FOREIGN KEY (service_env_collection_type) REFERENCES val_service_env_coll_type(service_env_collection_type)
+	ADD CONSTRAINT "fk_prop_svcemvcoll_type" FOREIGN KEY (service_environment_collection_type) REFERENCES val_service_environment_collection_type(service_env_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_val_prop_l3netwok_type" FOREIGN KEY (layer3_network_collection_type) REFERENCES val_layer3_network_coll_type(layer3_network_collection_type)
+	ADD CONSTRAINT "fk_val_prop_l3netwok_type" FOREIGN KEY (layer3_network_collection_type) REFERENCES val_layer3_network_collection_type(layer3_network_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_val_prop_l2netype" FOREIGN KEY (layer2_network_collection_type) REFERENCES val_layer2_network_coll_type(layer2_network_collection_type)
+	ADD CONSTRAINT "fk_val_prop_l2netype" FOREIGN KEY (layer2_network_collection_type) REFERENCES val_layer2_network_collection_type(layer2_network_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10958,15 +11043,15 @@ COMMENT ON COLUMN val_property.permit_account_collection_id IS 'defines permissi
 
 COMMENT ON COLUMN val_property.permit_site_code IS 'defines permissibility/requirement of site_code on LHS of property';
 
-COMMENT ON COLUMN val_property.prop_val_acct_coll_type_rstrct IS 'if property_value is account_collection_Id, this limits the account_collection_types that can be used in that column.';
+COMMENT ON COLUMN val_property.property_value_account_collection_type_restriction IS 'if property_value is account_collection_Id, this limits the account_collection_types that can be used in that column.';
 
-COMMENT ON COLUMN val_property.permit_service_env_collection IS 'defines permissibility/requirement of service_env_collection_id on LHS of property';
+COMMENT ON COLUMN val_property.permit_service_environment_collection IS 'defines permissibility/requirement of service_env_collection_id on LHS of property';
 
 COMMENT ON COLUMN val_property.permit_operating_system_id IS 'defines permissibility/requirement of operating_system_id on LHS of property';
 
 COMMENT ON COLUMN val_property.permit_person_id IS 'defines permissibility/requirement of person_id on LHS of property';
 
-COMMENT ON COLUMN val_property.prop_val_nblk_coll_type_rstrct IS 'if property_value isnetblockt_collection_Id, this limits the netblockt_collection_types that can be used in that column.';
+COMMENT ON COLUMN val_property.property_value_netblock_collection_type_restriction IS 'if property_value isnetblockt_collection_Id, this limits the netblockt_collection_types that can be used in that column.';
 
 COMMENT ON COLUMN val_property.permit_netblock_collection_id IS 'defines permissibility/requirement of netblock_collection_id on LHS of property';
 
@@ -10974,15 +11059,15 @@ COMMENT ON COLUMN val_property.permit_property_rank IS 'defines permissibility o
 
 COMMENT ON COLUMN val_property.permit_account_realm_id IS 'defines permissibility/requirement of account_realm_id on LHS of property';
 
-COMMENT ON COLUMN val_property.permit_layer2_network_coll_id IS 'defines permissibility/requirement of layer2_network_id on LHS of property';
+COMMENT ON COLUMN val_property.permit_layer2_network_collection_id IS 'defines permissibility/requirement of layer2_network_id on LHS of property';
 
-COMMENT ON COLUMN val_property.permit_layer3_network_coll_id IS 'defines permissibility/requirement of layer3_network_id on LHS of property';
+COMMENT ON COLUMN val_property.permit_layer3_network_collection_id IS 'defines permissibility/requirement of layer3_network_id on LHS of property';
 
 COMMENT ON COLUMN val_property.permit_property_collection_id IS 'defines permissibility/requirement of property_collection_id on LHS of property';
 
-COMMENT ON COLUMN val_property.permit_os_snapshot_id IS 'defines permissibility/requirement of operating_system_snapshot_id on LHS of property';
+COMMENT ON COLUMN val_property.permit_operating_system_snapshot_id IS 'defines permissibility/requirement of operating_system_snapshot_id on LHS of property';
 
-COMMENT ON COLUMN val_property.prop_val_dev_coll_type_rstrct IS 'if property_value is devicet_collection_Id, this limits the devicet_collection_types that can be used in that column.';
+COMMENT ON COLUMN val_property.property_value_device_collection_type_restriction IS 'if property_value is devicet_collection_Id, this limits the devicet_collection_types that can be used in that column.';
 
 COMMENT ON COLUMN val_property.account_collection_type IS 'type restriction of the account_collection_id on LHS';
 
@@ -10994,37 +11079,45 @@ COMMENT ON COLUMN val_property.dns_domain_collection_type IS 'type restriction o
 
 COMMENT ON COLUMN val_property.netblock_collection_type IS 'type restriction of netblock_collection_id on LHS';
 
-COMMENT ON COLUMN val_property.property_collection_type IS 'type restriction of property_collection_id on LHS';
+COMMENT ON COLUMN val_property.property_name_collection_type IS 'type restriction of property_collection_id on LHS';
 
-COMMENT ON COLUMN val_property.service_env_collection_type IS 'type restriction of service_enviornment_collection_id on LHS';
+COMMENT ON COLUMN val_property.service_environment_collection_type IS 'type restriction of service_enviornment_collection_id on LHS';
 
 COMMENT ON COLUMN val_property.permit_company_collection_id IS 'defines permissibility/requirement of company_collection_id on LHS of property';
 
-COMMENT ON COLUMN val_property.permit_dns_domain_coll_id IS 'defines permissibility/requirement of dns_domain_collection_id on LHS of property';
-
-ALTER TABLE val_property_collection_type
-	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
-
-
-COMMENT ON COLUMN val_property_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
-';
-
-COMMENT ON COLUMN val_property_collection_type.can_have_hierarchy IS 'Indicates if the collections can have other collections to make it hierarchical.';
-
-COMMENT ON COLUMN val_property_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
-';
+COMMENT ON COLUMN val_property.permit_dns_domain_collection_id IS 'defines permissibility/requirement of dns_domain_collection_id on LHS of property';
 
 
 COMMENT ON TABLE val_property_data_type IS 'valid data types for property (name,type) pairs.  This maps to property.property_value_* columns.';
 
+
+ALTER TABLE val_property_name_collection_type
+	ADD CONSTRAINT check_yes_no_1802219937 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
+ALTER TABLE val_property_name_collection_type
+	ALTER COLUMN can_have_hierarchy
+		SET DEFAULT 'Y';
+
+
+COMMENT ON COLUMN val_property_name_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
+';
+
+COMMENT ON COLUMN val_property_name_collection_type.can_have_hierarchy IS 'Indicates if the collections can have other collections to make it hierarchical.';
+
+COMMENT ON COLUMN val_property_name_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
+';
+
+
+ALTER TABLE val_property_type
+	ADD CONSTRAINT check_yes_no_1294052013 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
+
 ALTER TABLE val_property_type
 	ALTER COLUMN is_multivalue
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 ALTER TABLE val_property_type
-	ADD CONSTRAINT "fk_prop_typ_pv_uctyp_rst" FOREIGN KEY (prop_val_acct_coll_type_rstrct) REFERENCES val_account_collection_type(account_collection_type)
+	ADD CONSTRAINT "fk_prop_typ_pv_uctyp_rst" FOREIGN KEY (property_value_account_collection_type_restriction) REFERENCES val_account_collection_type(account_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -11047,25 +11140,27 @@ COMMENT ON COLUMN val_property_value.property_type IS 'property type for validat
 COMMENT ON COLUMN val_property_value.valid_property_value IS 'if applicatable, servves as a fk for valid property_values.  This depends on val_property.property_data_type being set to list.';
 
 
-COMMENT ON TABLE val_pvt_key_encryption_type IS 'Encryption method for private keys.  This may want to merge with val_encryption_method.';
-
-COMMENT ON COLUMN val_pvt_key_encryption_type.private_key_encryption_type IS 'encryption tyof private key (rsa, dsa, ec, etc).  
-';
-
-
 COMMENT ON COLUMN val_raid_type.primary_raid_level IS 'Common RAID Disk Data Format Specification primary raid level.';
 
 COMMENT ON COLUMN val_raid_type.secondary_raid_level IS 'Common RAID Disk Data Format Specification secondary raid level.';
 
 COMMENT ON COLUMN val_raid_type.raid_level_qualifier IS 'Common RAID Disk Data Format Specification''s integer number that describes the raid.  Arguably, this should be split out to distinct fields and constructed, and maybe one day it will be and this field will go away.';
 
-ALTER TABLE val_service_env_coll_type
+
+ALTER TABLE val_service_environment_collection_type
+	ADD CONSTRAINT check_yes_nosect_hier CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
+ALTER TABLE val_service_environment_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
+
+
+ALTER TABLE val_slot_function
+	ADD CONSTRAINT check_yes_no_slotfunc_macaddr CHECK  ( can_have_mac_address IN ('Y', 'N') ) ;
 
 ALTER TABLE val_slot_function
 	ALTER COLUMN can_have_mac_address
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 
 ALTER TABLE val_slot_physical_interface
@@ -11073,9 +11168,13 @@ ALTER TABLE val_slot_physical_interface
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
+
+ALTER TABLE val_token_collection_type
+	ADD CONSTRAINT check_yes_no_2041826759 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
+
 ALTER TABLE val_token_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 
 COMMENT ON TABLE val_token_collection_type IS 'Assign purposes to arbitrary groupings';
@@ -11090,9 +11189,9 @@ COMMENT ON COLUMN val_token_collection_type.max_num_collections IS 'Maximum numb
 COMMENT ON COLUMN val_token_type.token_digit_count IS 'number of digits that the token displays';
 
 
-COMMENT ON TABLE val_x509_certificate_file_fmt IS 'Format of the file containing certificate.';
+COMMENT ON TABLE val_x509_certificate_file_format IS 'Format of the file containing certificate.';
 
-COMMENT ON COLUMN val_x509_certificate_file_fmt.x509_file_format IS 'Format Name of the file containing Certificate information. Example; keytool, rsa';
+COMMENT ON COLUMN val_x509_certificate_file_format.x509_certificate_file_format IS 'Format Name of the file containing Certificate information. Example; keytool, rsa';
 
 
 COMMENT ON TABLE val_x509_certificate_type IS 'Type of signed certificate; this is defined by a business rule and used for human clarity.';
@@ -11101,9 +11200,13 @@ COMMENT ON COLUMN val_x509_certificate_type.x509_certificate_type IS 'encryption
 ';
 
 
+ALTER TABLE val_x509_key_usage
+	ADD CONSTRAINT check_yes_no_220000651 CHECK  ( is_extended IN ('Y', 'N') ) ;
+
+
 COMMENT ON TABLE val_x509_key_usage IS 'Captures possible usage of the certificate key. Example: Client, Server, CA.';
 
-COMMENT ON COLUMN val_x509_key_usage.x509_key_usg IS 'Name of the Certificate.';
+COMMENT ON COLUMN val_x509_key_usage.x509_key_usage IS 'Name of the Certificate.';
 
 COMMENT ON COLUMN val_x509_key_usage.description IS 'Textual Description of the certificate key usage.';
 
@@ -11112,7 +11215,7 @@ COMMENT ON COLUMN val_x509_key_usage.is_extended IS 'Indicates if certificate ke
 
 COMMENT ON TABLE val_x509_key_usage_category IS 'Categorizes Certificates based on the technology object the usage can be assigned to. Currently: Application, User.';
 
-COMMENT ON COLUMN val_x509_key_usage_category.x509_key_usg_cat IS 'Category Name. Example: Application.';
+COMMENT ON COLUMN val_x509_key_usage_category.x509_key_usage_category IS 'Category Name. Example: Application.';
 
 COMMENT ON COLUMN val_x509_key_usage_category.description IS 'Textual description of the category.';
 
@@ -11181,9 +11284,9 @@ ALTER TABLE volume_group_physicalish_vol
 COMMENT ON COLUMN volume_group_physicalish_vol.volume_group_relation IS 'purpose of volume in raid (member, hotspare, etc, based on val table)
 ';
 
-COMMENT ON COLUMN volume_group_physicalish_vol.volume_group_primary_pos IS 'position within the primary raid, sometimes called span by at least one raid vendor.';
+COMMENT ON COLUMN volume_group_physicalish_vol.volume_group_primary_position IS 'position within the primary raid, sometimes called span by at least one raid vendor.';
 
-COMMENT ON COLUMN volume_group_physicalish_vol.volume_group_secondary_pos IS 'position within the secondary raid, sometimes called arm by at least one raid vendor.';
+COMMENT ON COLUMN volume_group_physicalish_vol.volume_group_secondary_position IS 'position within the secondary raid, sometimes called arm by at least one raid vendor.';
 
 
 ALTER TABLE volume_group_purpose
@@ -11200,43 +11303,43 @@ ALTER TABLE volume_group_purpose
 
 
 ALTER TABLE x509_key_usage_attribute
-	ADD CONSTRAINT "fk_x509_key_usg_categorization" FOREIGN KEY (x509_key_usg_cat,x509_key_usg) REFERENCES x509_key_usage_categorization(x509_key_usg_cat,x509_key_usg)
+	ADD CONSTRAINT "fk_x509_key_usg_categorization" FOREIGN KEY (x509_key_usgage_category,x509_key_usage) REFERENCES x509_key_usage_categorization(x509_key_usage_category,x509_key_usage)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE x509_key_usage_attribute
-	ADD CONSTRAINT "fk_x509_certificate" FOREIGN KEY (x509_cert_id) REFERENCES x509_signed_certificate(x509_signed_certificate_id)
+	ADD CONSTRAINT "fk_x509_certificate" FOREIGN KEY (x509_signed_certificate_id) REFERENCES x509_signed_certificate(x509_signed_certificate_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 COMMENT ON TABLE x509_key_usage_attribute IS 'Actual attribute of certificate key usage.';
 
-COMMENT ON COLUMN x509_key_usage_attribute.x509_key_usg_cat IS 'Category Name. Example: Application.';
+COMMENT ON COLUMN x509_key_usage_attribute.x509_key_usgage_category IS 'Category Name. Example: Application.';
 
-COMMENT ON COLUMN x509_key_usage_attribute.x509_key_usg IS 'Name of the Certificate.';
+COMMENT ON COLUMN x509_key_usage_attribute.x509_key_usage IS 'Name of the Certificate.';
 
-COMMENT ON COLUMN x509_key_usage_attribute.x509_cert_id IS 'Uniquely identifies Certificate';
+COMMENT ON COLUMN x509_key_usage_attribute.x509_signed_certificate_id IS 'Uniquely identifies Certificate';
 
 
 ALTER TABLE x509_key_usage_categorization
-	ADD CONSTRAINT "fk_key_usage_category" FOREIGN KEY (x509_key_usg_cat) REFERENCES val_x509_key_usage_category(x509_key_usg_cat)
+	ADD CONSTRAINT "fk_key_usage_category" FOREIGN KEY (x509_key_usage_category) REFERENCES val_x509_key_usage_category(x509_key_usage_category)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 ALTER TABLE x509_key_usage_categorization
-	ADD CONSTRAINT "fk_x509_key_usage" FOREIGN KEY (x509_key_usg) REFERENCES val_x509_key_usage(x509_key_usg)
+	ADD CONSTRAINT "fk_x509_key_usage" FOREIGN KEY (x509_key_usage) REFERENCES val_x509_key_usage(x509_key_usage)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
 COMMENT ON TABLE x509_key_usage_categorization IS 'Captures certificate key usage categorization. Example: Client key usage can be assigned to USER, but CA usage can not.';
 
-COMMENT ON COLUMN x509_key_usage_categorization.x509_key_usg_cat IS 'Category Name. Example: Application.';
+COMMENT ON COLUMN x509_key_usage_categorization.x509_key_usage_category IS 'Category Name. Example: Application.';
 
-COMMENT ON COLUMN x509_key_usage_categorization.x509_key_usg IS 'Name of the Certificate.';
+COMMENT ON COLUMN x509_key_usage_categorization.x509_key_usage IS 'Name of the Certificate.';
 
 
 ALTER TABLE x509_key_usage_default
-	ADD CONSTRAINT "fk_keyusgdefault_keyusg" FOREIGN KEY (x509_key_usg) REFERENCES val_x509_key_usage(x509_key_usg)
+	ADD CONSTRAINT "fk_keyusgdefault_keyusg" FOREIGN KEY (x509_key_usage) REFERENCES val_x509_key_usage(x509_key_usage)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -11247,19 +11350,26 @@ ALTER TABLE x509_key_usage_default
 
 COMMENT ON TABLE x509_key_usage_default IS 'X509 Key Usage attributes set for certificates signed by a given CA.  Entries for this table for non-CAs make no sense.';
 
-COMMENT ON COLUMN x509_key_usage_default.x509_key_usg IS 'key usage assigned by default for certificates signed by a given CA.';
+COMMENT ON COLUMN x509_key_usage_default.x509_key_usage IS 'key usage assigned by default for certificates signed by a given CA.';
 
 COMMENT ON COLUMN x509_key_usage_default.description IS 'Textual Description of the certificate key usage.';
 
 COMMENT ON COLUMN x509_key_usage_default.x509_signed_certificate_id IS 'Uniquely identifies Certificate';
 
+
+ALTER TABLE x509_signed_certificate
+	ADD CONSTRAINT check_yes_no_1406267665 CHECK  ( is_certificate_authority IN ('Y', 'N') ) ;
+
+ALTER TABLE x509_signed_certificate
+	ADD CONSTRAINT check_yes_no_1640078270 CHECK  ( is_active IN ('Y', 'N') ) ;
+
 ALTER TABLE x509_signed_certificate
 	ALTER COLUMN is_certificate_authority
-		SET DEFAULT false;
+		SET DEFAULT 'N';
 
 ALTER TABLE x509_signed_certificate
 	ALTER COLUMN is_active
-		SET DEFAULT true;
+		SET DEFAULT 'Y';
 
 ALTER TABLE x509_signed_certificate
 	ALTER COLUMN x509_certificate_type
