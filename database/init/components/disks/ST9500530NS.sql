@@ -54,7 +54,7 @@ BEGIN
 			2
 		) RETURNING component_type_id INTO ctid;
 
-		INSERT INTO component_type_component_func 
+		INSERT INTO component_type_component_function 
 			(component_type_id, component_function)
 		VALUES 
 			(ctid, 'disk'),

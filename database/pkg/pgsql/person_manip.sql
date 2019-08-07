@@ -481,7 +481,7 @@ BEGIN
 	INSERT INTO account_unix_info (
 		account_id,
 		unix_uid,
-		unix_group_acct_collection_id,
+		unix_group_account_collection_id,
 		shell
 	) values (
 		in_account_id,
@@ -628,7 +628,7 @@ BEGIN
 		PERFORM person_manip.purge_account ( aid );
 	END LOOP;
 
-	DELETE FROM person_company_attr WHERE person_id = in_person_id;
+	DELETE FROM person_company_attribute WHERE person_id = in_person_id;
 	DELETE FROM person_contact WHERE person_id = in_person_id;
 	DELETE FROM person_location WHERE person_id = in_person_id;
 	DELETE FROM v_person_company WHERE person_id = in_person_id;
@@ -702,7 +702,7 @@ BEGIN
 	SELECT account_realm_id INTO _account_realm_id FROM account_realm_company WHERE company_id = tpc.company_id;
 	INSERT INTO person_account_realm_company (person_id, company_id, account_realm_id) VALUES ( fpc.person_id , tpc.company_id, _account_realm_id);
 	UPDATE account SET account_realm_id = _account_realm_id, person_id = fpc.person_id WHERE person_id = tpc.person_id AND company_id = fpc.company_id;
-	DELETE FROM person_company_attr WHERE person_id = tpc.person_id AND company_id = tpc.company_id;
+	DELETE FROM person_company_attribute WHERE person_id = tpc.person_id AND company_id = tpc.company_id;
 	DELETE FROM person_company WHERE person_id = tpc.person_id AND company_id = tpc.company_id;
 	DELETE FROM person_account_realm_company WHERE person_id = tpc.person_id AND company_id = tpc.company_id;
 	UPDATE person_image SET person_id = fpc.person_id WHERE person_id = tpc.person_id;
@@ -760,7 +760,7 @@ BEGIN
 	WHERE company_id = initial_company_id
 	AND person_id = _person_id;
 
-	UPDATE person_company_attr
+	UPDATE person_company_attribute
 	SET company_id = final_company_id
 	WHERE company_id = initial_company_id
 	AND person_id = _person_id;

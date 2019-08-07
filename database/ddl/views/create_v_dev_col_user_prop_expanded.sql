@@ -56,7 +56,7 @@ SELECT
 	CASE WHEN upn.is_multivalue = 'N' THEN 0
 		ELSE 1 END is_multivalue,
 	CASE WHEN pdt.property_data_type = 'boolean' THEN 1 ELSE 0 END is_boolean
-FROM	v_acct_coll_acct_expanded_detail uued
+FROM	v_account_collection_account_expanded_detail uued
 	INNER JOIN Account_Collection u 
 		USING (account_collection_id)
 	INNER JOIN v_property upo ON 
@@ -72,7 +72,7 @@ FROM	v_acct_coll_acct_expanded_detail uued
 		ON upn.property_data_type = pdt.property_data_type
 	INNER JOIN account a ON uued.account_id = a.account_id
 	INNER JOIN account_realm ar ON a.account_realm_id = ar.account_realm_id
-	LEFT JOIN v_device_coll_hier_detail dchd
+	LEFT JOIN v_device_collection_hier_detail dchd
   		ON (dchd.parent_device_collection_id = upo.device_collection_id)
 ORDER BY device_collection_level,
    CASE WHEN u.Account_Collection_type = 'per-account' THEN 0

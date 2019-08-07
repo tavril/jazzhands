@@ -26,7 +26,7 @@ SELECT
                     INNER JOIN v_device_coll_device_expanded dc
                         USING (device_collection_id)
                     INNER JOIN device d USING (device_id)
-                    INNER JOIN network_interface_netblock ni USING (device_id)
+                    INNER JOIN layer3_interface_netblock ni USING (device_id)
                     INNER JOIN netblock USING (netblock_id)
             WHERE     property_name = 'RadiusSharedSecret'
             AND     property_type = 'HOTPants';

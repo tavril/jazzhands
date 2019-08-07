@@ -84,7 +84,7 @@ BEGIN
 		  SET	account_collection_name =
 				replace(account_collection_name, $6, $7)
 		WHERE	account_collection_id IN (
-				SELECT property_value_account_coll_id
+				SELECT property_value_account_collection_id
 				FROM	property
 				WHERE	property_name IN ($3, $4)
 				AND		property_type = $5
@@ -158,7 +158,7 @@ BEGIN
 			AND		account_realm_id = $2
 		), agg AS ( SELECT reports.*, managers.account_id as manager_account_id,
 				managers.login as manager_login, p.property_name,
-				p.property_value_account_coll_id as account_collection_id
+				p.property_value_account_collection_id as account_collection_id
 			FROM peeps reports
 			INNER JOIN peeps managers
 				ON managers.person_id = reports.manager_person_id
@@ -224,7 +224,7 @@ BEGIN
 	EXECUTE 'SELECT ac.account_collection_id
 			FROM account_collection ac
 				INNER JOIN v_property p
-					ON p.property_value_account_coll_id = ac.account_collection_id
+					ON p.property_value_account_collection_id = ac.account_collection_id
 		   WHERE ac.account_collection_name = $1
 		    AND	ac.account_collection_type = $2
 			AND	p.property_name = $3
@@ -257,7 +257,7 @@ BEGIN
 				account_realm_id,
 				property_name,
 				property_type,
-				property_value_account_coll_id
+				property_value_account_collection_id
 			)  VALUES ( $1, $2, $3, $4, $5)'
 			USING account_id, account_realm_id,
 				ac_type, 'auto_acct_coll', _acid;
@@ -379,7 +379,7 @@ BEGIN
 			AND		a.is_enabled = ''Y''
 		), agg AS ( SELECT reports.*, managers.account_id as manager_account_id,
 				managers.login as manager_login, p.property_name,
-				p.property_value_account_coll_id as account_collection_id
+				p.property_value_account_collection_id as account_collection_id
 			FROM peeps reports
 			INNER JOIN peeps managers
 				ON managers.person_id = reports.manager_person_id
@@ -493,7 +493,7 @@ BEGIN
 	EXECUTE '
 		DELETE FROM account_collection_account
 		WHERE account_collection_ID IN (
-			SELECT	property_value_account_coll_id
+			SELECT	property_value_account_collection_id
 			FROM	property
 			WHERE	property_name = $3
 			AND		property_type = $4
@@ -503,7 +503,7 @@ BEGIN
 
 	EXECUTE '
 		WITH p AS (
-			SELECT	property_value_account_coll_id AS account_collection_id
+			SELECT	property_value_account_collection_id AS account_collection_id
 			FROM	property
 			WHERE	property_name = $3
 			AND		property_type = $4
@@ -518,7 +518,7 @@ BEGIN
 
 	EXECUTE '
 		WITH list AS (
-			SELECT	property_value_account_coll_id as account_collection_id,
+			SELECT	property_value_account_collection_id as account_collection_id,
 					property_id
 			FROM	property
 			WHERE	property_name = $3
@@ -529,7 +529,7 @@ BEGIN
 			DELETE FROM property WHERE property_id IN
 				(select property_id FROM list ) RETURNING *
 		) DELETE FROM account_collection WHERE account_collection_id IN
-				(select property_value_account_coll_id FROM props )
+				(select property_value_account_collection_id FROM props )
 		' USING account_id, account_realm_id, ac_type, 'auto_acct_coll';
 
 END;

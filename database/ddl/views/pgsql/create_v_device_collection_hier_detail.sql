@@ -1,4 +1,4 @@
--- Copyright (c) 2011-2014, Todd M. Kover
+-- Copyright (c) 2011-2019, Todd M. Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@
 --
 -- $Id$
 --
-create or replace view v_device_coll_hier_detail as 
+create or replace view v_device_collection_hier_detail as 
 WITH RECURSIVE var_recurse (
 	root_device_collection_id,
 	device_collection_id,
@@ -55,15 +55,15 @@ WITH RECURSIVE var_recurse (
 	FROM	device_collection
 UNION  ALL
 	SELECT	x.root_device_collection_id	as root_device_collection_id,
-		dch.device_collection_id,
-		dch.parent_device_collection_id,
+		dch.child_device_collection_id AS device_collection_id,
+		dch.device_collection_id AS parent_device_collection_id,
 		x.device_collection_level + 1 as device_collection_level,
-		dch.parent_device_collection_id || x.array_path AS array_path,
-		dch.parent_device_collection_id = ANY(x.array_path)
+		dch.device_collection_id || x.array_path AS array_path,
+		dch.device_collection_id = ANY(x.array_path)
 	 FROM	var_recurse x
-		inner join v_device_collection_hier_trans dch
+		inner join device_collection_hier dch
 			on x.parent_device_collection_id = 
-				dch.device_collection_id
+				dch.child_device_collection_id
 	WHERE
 		NOT x.cycle
 ) SELECT

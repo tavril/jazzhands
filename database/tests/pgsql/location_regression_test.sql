@@ -90,13 +90,13 @@ BEGIN
 	INSERT INTO device (
 		device_type_id, device_name, device_status, site_code,
 		service_environment_id, 
-		operating_system_id, is_monitored,
+		operating_system_id,
 		rack_location_id
 	) values (
 		_chassis_dt.device_type_id, 'JHTEST chassis', 'up', 'JHTEST01',
 		(select service_environment_id from service_environment
 		 where service_environment_name = 'production'),
-		0, 'Y',
+		0,
 		_chassisloc.rack_location_id
 	) RETURNING * into _chassis;
 	RAISE NOTICE '++ Done inserting Test Data';
@@ -203,13 +203,13 @@ BEGIN
 		INSERT INTO device (
 			device_type_id, device_name, device_status, site_code,
 			service_environment_id, 
-			operating_system_id, is_monitored,
+			operating_system_id,
 			chassis_location_id
 		) values (
 			_sled_dt.device_type_id, 'JHTEST sled', 'up', 'JHTEST01',
 			(select service_environment_id from service_environment
 		 	where service_environment_name = 'production'),
-			0, 'Y',
+			0,
 			_sledloc.chassis_location_id
 		) RETURNING * into _sled;
 		RAISE EXCEPTION '... IT DID NOT.';
@@ -222,14 +222,14 @@ BEGIN
 		INSERT INTO device (
 			device_type_id, device_name, device_status, site_code,
 			service_environment_id, operating_system_id,
-			is_monitored, parent_device_id,
+			parent_device_id,
 			rack_location_id, chassis_location_id
 		) values (
 			_sled_dt.device_type_id, 'JHTEST sled', 'up', 'JHTEST01',
 			(select service_environment_id from service_environment
 		 	where service_environment_name = 'production'),
 			0,
-			'Y', _chassis.device_Id,
+			_chassis.device_Id,
 			_chassisloc.rack_location_id, _sledloc.chassis_location_id
 		) RETURNING * into _sled;
 		RAISE EXCEPTION '... IT DID NOT.';
@@ -241,14 +241,14 @@ BEGIN
 	INSERT INTO device (
 		device_type_id, device_name, device_status, site_code,
 		service_environment_id, operating_system_id,
-		is_monitored, parent_device_id,
+		parent_device_id,
 		chassis_location_id
 	) values (
 		_sled_dt.device_type_id, 'JHTEST sled', 'up', 'JHTEST01',
 		(select service_environment_id from service_environment
 			where service_environment_name = 'production'),
 		0,
-		'Y', _chassis.device_id,
+		_chassis.device_id,
 		_sledloc.chassis_location_id
 	) RETURNING * into _sled;
 

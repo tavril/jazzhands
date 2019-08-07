@@ -80,7 +80,7 @@ begin;
 \ir tests/pgsql/ip_universe_validation_regression.sql
 \ir tests/pgsql/netblock_defaults_regression.sql
 -- will be in a point release
-\ir tests/pgsql/network_interface_regression_test.sql
+\ir tests/pgsql/layer3_interface_regression_test.sql
 \ir tests/pgsql/property_regression_test.sql
 \ir tests/pgsql/device_ticket_regression.sql
 \ir tests/pgsql/device_power_regression.sql

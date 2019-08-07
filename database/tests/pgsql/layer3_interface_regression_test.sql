@@ -20,20 +20,20 @@
 
 \t on
 
-CREATE OR REPLACE FUNCTION validate_network_interface_triggers() 
+CREATE OR REPLACE FUNCTION validate_layer3_interface_triggers() 
 RETURNS BOOLEAN AS $$
 DECLARE
 	_tally		integer;
 	_dev1		device%ROWTYPE;
-	_ni			network_interface%ROWTYPE;
-	_nin		network_interface_netblock%ROWTYPE;
+	_ni			layer3_interface%ROWTYPE;
+	_nin		layer3_interface_netblock%ROWTYPE;
 	_blk		netblock%ROWTYPE;
 	_nb			netblock%ROWTYPE;
 	_other		netblock%ROWTYPE;
 BEGIN
 	RAISE NOTICE 'Cleanup Records from Previous Tests';
-	DELETE FROM network_interface where network_interface_name like 'JHTEST%';
-	DELETE FROM network_interface where description like 'JHTEST%';
+	DELETE FROM layer3_interface where layer3_interface_name like 'JHTEST%';
+	DELETE FROM layer3_interface where description like 'JHTEST%';
 	DELETE FROM device where device_name like 'JHTEST%';
 	DELETE from netblock where description like 'JHTEST%';
 	DELETE from site where site_code like 'JHTEST%';
@@ -44,14 +44,12 @@ BEGIN
 
 	INSERT INTO device (
 		device_type_id, device_name, device_status, site_code,
-		service_environment_id, operating_system_id,
-		is_monitored
+		service_environment_id, operating_system_id
 	) values (
 		1, 'JHTEST one', 'up', 'JHTEST01',
 		(select service_environment_id from service_environment
 		where service_environment_name = 'production'),
-		0,
-		'Y'
+		0
 	) RETURNING * into _dev1;
 
 
@@ -84,16 +82,16 @@ BEGIN
 
 	RAISE NOTICE 'Testing to see if is_single_address = Y works...';
 	WITH ni AS (
-		INSERT INTO network_interface (
-			device_id, network_interface_name, network_interface_type,
+		INSERT INTO layer3_interface (
+			device_id, layer3_interface_name, layer3_interface_type,
 			description, should_monitor
 		) VALUES (
 			_dev1.device_id, 'JHTEST0', 'broadcast', 
 			'JHTEST0', 'Y'
 		) RETURNING *
-	),z AS ( INSERT INTO network_interface_netblock
-			(network_interface_id, netblock_id)
-		SELECT network_interface_id, _nb.netblock_id
+	),z AS ( INSERT INTO layer3_interface_netblock
+			(layer3_interface_id, netblock_id)
+		SELECT layer3_interface_id, _nb.netblock_id
 		FROM ni
 	) SELECT * INTO _ni FROM ni;
 	RAISE NOTICE '... it did!';
@@ -120,8 +118,8 @@ BEGIN
 	RAISE NOTICE 'Testing to see if is_single_address = N fails...';
 	BEGIN
 		WITH ni AS (
-			INSERT INTO network_interface (
-				device_id, network_interface_name, network_interface_type,
+			INSERT INTO layer3_interface (
+				device_id, layer3_interface_name, layer3_interface_type,
 				description,
 				should_monitor
 			) VALUES (
@@ -129,9 +127,9 @@ BEGIN
 				'JHTEST1',
 				'Y' 
 			) RETURNING * 
-		),z AS ( INSERT INTO network_interface_netblock
-				(network_interface_id, netblock_id)
-			SELECT network_interface_id, _blk.netblock_id
+		),z AS ( INSERT INTO layer3_interface_netblock
+				(layer3_interface_id, netblock_id)
+			SELECT layer3_interface_id, _blk.netblock_id
 			FROM ni
 		) SELECT * INTO _ni FROM ni;
 		RAISE EXCEPTION '... it did not (!)';
@@ -139,20 +137,20 @@ BEGIN
 		RAISE NOTICE '... It did, as expected';
 	END;
 
-	RAISE NOTICE 'Testing to see if network_interface_type != default fails...';
+	RAISE NOTICE 'Testing to see if layer3_interface_type != default fails...';
 	BEGIN
 		WITH ni AS (
-			INSERT INTO network_interface (
-				device_id, network_interface_name, network_interface_type,
+			INSERT INTO layer3_interface (
+				device_id, layer3_interface_name, layer3_interface_type,
 				description, should_monitor
 			) VALUES (
 				_dev1.device_id, 'JHTEST2', 'broadcast', 
 				'JHTEST2',
 				'Y'
 			) RETURNING *
-		),z AS ( INSERT INTO network_interface_netblock
-				(network_interface_id, netblock_id)
-			SELECT network_interface_id, _other.netblock_id
+		),z AS ( INSERT INTO layer3_interface_netblock
+				(layer3_interface_id, netblock_id)
+			SELECT layer3_interface_id, _other.netblock_id
 			FROM ni
 		) SELECT * INTO _ni FROM ni;
 		RAISE EXCEPTION '... it did not (!)';
@@ -161,12 +159,12 @@ BEGIN
 	END;
 
 	RAISE NOTICE 'Cleanup Records';
-	DELETE FROM network_interface_netblock where network_interface_id IN (
-		SELECT network_interface_id FROM network_interface
-		WHERE network_interface_name like 'JHTEST%'
+	DELETE FROM layer3_interface_netblock where layer3_interface_id IN (
+		SELECT layer3_interface_id FROM layer3_interface
+		WHERE layer3_interface_name like 'JHTEST%'
 	);
-	DELETE FROM network_interface where network_interface_name like 'JHTEST%';
-	DELETE FROM network_interface where description like 'JHTEST%';
+	DELETE FROM layer3_interface where layer3_interface_name like 'JHTEST%';
+	DELETE FROM layer3_interface where description like 'JHTEST%';
 	DELETE FROM device where device_name like 'JHTEST%';
 	DELETE from netblock where description like 'JHTEST%';
 	DELETE from site where site_code like 'JHTEST%';
@@ -174,7 +172,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT jazzhands.validate_network_interface_triggers();
-DROP FUNCTION validate_network_interface_triggers();
+SELECT jazzhands.validate_layer3_interface_triggers();
+DROP FUNCTION validate_layer3_interface_triggers();
 
 \t off

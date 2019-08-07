@@ -34,10 +34,10 @@
 CREATE OR REPLACE VIEW v_device_col_acct_col_unixlogin AS
 SELECT DISTINCT dchd.device_collection_id, dcu.account_collection_id, 
 	vuue.account_id
-FROM v_device_coll_hier_detail dchd
+FROM v_device_collection_hier_detail dchd
 JOIN v_property dcu ON dcu.device_collection_id = 
 	dchd.parent_device_collection_id
-JOIN v_acct_coll_acct_expanded vuue 
+JOIN v_account_collection_account_expanded vuue 
 	on vuue.account_collection_id = dcu.account_collection_id
 WHERE dcu.property_name in ('UnixLogin')
 and dcu.property_type = 'MclassUnixProp';

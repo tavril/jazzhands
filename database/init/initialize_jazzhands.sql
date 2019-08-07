@@ -20,7 +20,7 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
--- Copyright (c) 2010-2017, Todd M. Kover
+-- Copyright (c) 2010-2019, Todd M. Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +49,7 @@
 -- for now, there is no account_collection by-coll-type; need to sort out how
 -- the account_realm_id restrictions fit into those.
 --
-insert into val_account_collection_relatio
+insert into val_account_collection_relation
 	(account_collection_relation, description)
 values
 	('direct', 'Direct Assignment');
@@ -87,22 +87,22 @@ INSERT INTO val_dns_domain_collection_type (
 	'by-coll-type', 'automated collection for dns_domains of this type',
 	1, 0
 );
-INSERT INTO val_layer2_network_coll_type (
+INSERT INTO val_layer2_network_collection_type (
 	layer2_network_collection_type, description,
 	max_num_collections, max_num_members
 ) VALUES (
 	'by-coll-type', 'automated collection for layer2_networks of this type',
 	1, 0
 );
-INSERT INTO val_layer3_network_coll_type (
+INSERT INTO val_layer3_network_collection_type (
 	layer3_network_collection_type, description,
 	max_num_collections, max_num_members
 ) VALUES (
 	'by-coll-type', 'automated collection for layer3_networks of this type',
 	1, 0
 );
-INSERT INTO val_service_env_coll_type (
-	service_env_collection_type, description,
+INSERT INTO val_service_environment_collection_type (
+	service_environment_collection_type, description,
 	max_num_collections, max_num_members
 ) VALUES (
 	'by-coll-type', 'automated collection for service_environments of this type',
@@ -216,8 +216,8 @@ insert into val_production_state (production_state)
 insert into val_production_state (production_state)
 	values ('unallocated');
 
-insert into val_service_env_coll_type
-	( service_env_collection_type ) values ('per-environment');
+insert into val_service_environment_collection_type
+	( service_environment_collection_type ) values ('per-environment');
 
 INSERT INTO service_environment (service_environment_name, production_state)
 	VALUES ('unspecified', 'unspecified');
@@ -266,11 +266,11 @@ INSERT INTO val_person_contact_Technology (Person_Contact_Technology,
 	Person_Contact_Type)
 	VALUES ('conference', 'phone');
 
-INSERT INTO val_person_contact_loc_type (Person_Contact_Location_Type)
+INSERT INTO val_person_contact_location_type (Person_Contact_Location_Type)
 	VALUES ('home');
-INSERT INTO val_person_contact_loc_type (Person_Contact_Location_Type)
+INSERT INTO val_person_contact_location_type (Person_Contact_Location_Type)
 	VALUES ('personal');
-INSERT INTO val_person_contact_loc_type (Person_Contact_Location_Type)
+INSERT INTO val_person_contact_location_type (Person_Contact_Location_Type)
 	VALUES ('office');
 
 --INSERT INTO VAL_User_Location_Type (System_User_Location_Type)
@@ -459,16 +459,6 @@ insert into val_power_plug_style (power_plug_style) values ('NEMA L6-20P');
 insert into val_power_plug_style (power_plug_style) values ('NEMA L6-30P');
  */
 
-insert into VAL_DEVICE_AUTO_MGMT_PROTOCOL
-	(AUTO_MGMT_PROTOCOL, CONNECTION_PORT, DESCRIPTION)
-values
-	('ssh', 22, 'standard ssh');
-
-insert into VAL_DEVICE_AUTO_MGMT_PROTOCOL
-	(AUTO_MGMT_PROTOCOL, CONNECTION_PORT, DESCRIPTION)
-values
-	('telnet', 23, 'standard telnet');
-
 insert into val_CABLE_TYPE (CABLE_TYPE) values ('straight');
 insert into val_CABLE_TYPE (CABLE_TYPE) values ('rollover');
 insert into val_CABLE_TYPE (CABLE_TYPE) values ('crossover');
@@ -501,7 +491,7 @@ insert into val_property_data_type (PROPERTY_DATA_TYPE) values
 	('account_collection_id'),
 	('sw_package_id');
 
-insert into val_person_company_attr_dtype (person_company_attr_data_type) values
+insert into val_person_company_attribute_data_type (person_company_attribute_data_type) values
 	('boolean'),
 	('number'),
 	('string'),
@@ -1013,8 +1003,8 @@ INSERT INTO val_property(
 	property_name, property_type, description, is_multivalue,
 	property_data_type,
 	permit_device_collection_id,
-	permit_layer2_network_coll_id,
-	permit_layer3_network_coll_id,
+	permit_layer2_network_collection_id,
+	permit_layer3_network_collection_id,
 	permit_netblock_collection_id,
 	permit_network_range_id,
 	permit_site_code
@@ -1337,7 +1327,7 @@ values ('serial-connection', 'characteristics of serial connections');
 
 insert into val_component_property (
 	component_property_name, component_property_type, is_multivalue,
-	property_data_type, permit_intcomp_conn_id
+	property_data_type, permit_inter_component_connection_id
 ) values (
 	'baud', 'serial-connection', 'N',
 	'list', 'REQUIRED');
@@ -1348,7 +1338,7 @@ insert into val_component_property_value (
 
 insert into val_component_property (
 	component_property_name, component_property_type, is_multivalue,
-	property_data_type, permit_intcomp_conn_id
+	property_data_type, permit_inter_component_connection_id
 ) values (
 	'flow-control', 'serial-connection', 'N',
 	'list', 'REQUIRED');
@@ -1363,7 +1353,7 @@ insert into val_component_property_value (
 
 insert into val_component_property (
 	component_property_name, component_property_type, is_multivalue,
-	property_data_type, permit_intcomp_conn_id
+	property_data_type, permit_inter_component_connection_id
 ) values (
 	'stop-bits', 'serial-connection', 'N',
 	'list', 'REQUIRED');
@@ -1375,7 +1365,7 @@ insert into val_component_property_value (
 
 insert into val_component_property (
 	component_property_name, component_property_type, is_multivalue,
-	property_data_type, permit_intcomp_conn_id
+	property_data_type, permit_inter_component_connection_id
 ) values (
 	'data-bits', 'serial-connection', 'N',
 	'list', 'REQUIRED');
@@ -1387,7 +1377,7 @@ insert into val_component_property_value (
 
 insert into val_component_property (
 	component_property_name, component_property_type, is_multivalue,
-	property_data_type, permit_intcomp_conn_id
+	property_data_type, permit_inter_component_connection_id
 ) values (
 	'parity', 'serial-connection', 'N',
 	'list', 'REQUIRED');
@@ -1405,7 +1395,7 @@ values ('tcpsrv-connections', 'rtty tcpsrv connection properties');
 -- to be hard
 insert into val_component_property (
 	component_property_name, component_property_type, is_multivalue,
-	property_data_type, permit_intcomp_conn_id, permit_component_id
+	property_data_type, permit_inter_component_connection_id, permit_component_id
 ) values (
 	'tcpsrv_device_id', 'tcpsrv-connections', 'N',
 	'none', 'REQUIRED', 'REQUIRED')
@@ -1413,7 +1403,7 @@ insert into val_component_property (
 
 insert into val_component_property (
 	component_property_name, component_property_type, is_multivalue,
-	property_data_type, permit_intcomp_conn_id
+	property_data_type, permit_inter_component_connection_id
 ) values (
 	'tcpsrv_enabled', 'tcpsrv-connections', 'N',
 	'boolean', 'REQUIRED')
@@ -1491,7 +1481,7 @@ insert into val_property_type (
 	property_type, is_multivalue,
 	description
 ) values (
-	'auto_acct_coll', 'Y',
+	'auto_account_coll', 'Y',
 	'properties that define how people are added to account collections automatically based on column changes'
 );
 
@@ -1504,7 +1494,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'exempt', 'auto_acct_coll',
+	'exempt', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1522,7 +1512,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'non_exempt', 'auto_acct_coll',
+	'non_exempt', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1540,7 +1530,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'male', 'auto_acct_coll',
+	'male', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1558,7 +1548,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'female', 'auto_acct_coll',
+	'female', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1576,7 +1566,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'unspecified_gender', 'auto_acct_coll',
+	'unspecified_gender', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1594,7 +1584,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'management', 'auto_acct_coll',
+	'management', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1612,7 +1602,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'non_management', 'auto_acct_coll',
+	'non_management', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1630,7 +1620,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'full_time', 'auto_acct_coll',
+	'full_time', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1648,7 +1638,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'non_full_time', 'auto_acct_coll',
+	'non_full_time', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1666,7 +1656,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'account_type', 'auto_acct_coll',
+	'account_type', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1678,13 +1668,13 @@ insert into val_property (
 insert into val_property_value (
 	property_name, property_type, valid_property_value
 ) values (
-	'account_type', 'auto_acct_coll', 'person'
+	'account_type', 'auto_account_coll', 'person'
 );
 
 insert into val_property_value (
 	property_name, property_type, valid_property_value
 ) values (
-	'account_type', 'auto_acct_coll', 'pseudouser'
+	'account_type', 'auto_account_coll', 'pseudouser'
 );
 
 insert into val_property (
@@ -1696,7 +1686,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'site', 'auto_acct_coll',
+	'site', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'ALLOWED',
@@ -1712,7 +1702,7 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'AutomatedDirectsAC', 'auto_acct_coll',
+	'AutomatedDirectsAC', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'account_collection_id',
@@ -1726,15 +1716,15 @@ insert into val_property (
 	property_data_type,
 	is_multivalue
 ) values (
-	'AutomatedRollupsAC', 'auto_acct_coll',
+	'AutomatedRollupsAC', 'auto_account_coll',
 	'REQUIRED',
 	'REQUIRED',
 	'account_collection_id',
 	'N'
 );
 
-INSERT INTO val_property_collection_type (
-	property_collection_type, description
+INSERT INTO val_property_name_collection_type (
+	property_name_collection_type, description
 ) VALUES
 	('auto_ac_assignment',
 		'defines which properties to setup for a company by default'),
@@ -1742,16 +1732,16 @@ INSERT INTO val_property_collection_type (
 		'internal jazzhands automations, in triggers/functions');
 
 WITH i AS (
-	INSERT INTO property_collection (
-		property_collection_name, property_collection_type
+	INSERT INTO property_name_collection (
+		property_name_collection_name, property_name_collection_type
 	) VALUES (
 		'corporate family', 'auto_ac_assignment'
 	) RETURNING *
-)  INSERT INTO property_collection_property
-	(property_collection_id, property_name, property_type)
-SELECT i.property_collection_id, p.property_name, p.property_type
+)  INSERT INTO property_name_collection_property_name
+	(property_name_collection_id, property_name, property_type)
+SELECT i.property_name_collection_id, p.property_name, p.property_type
 FROM i, val_property p
-WHERE p.property_type = 'auto_acct_coll'
+WHERE p.property_type = 'auto_account_coll'
 AND p.property_data_type = 'none';
 ;
 
@@ -1789,8 +1779,8 @@ INSERT INTO val_property (
 -------------------------------------------------------------------------
 -- BEGIN certificate
 
-insert into val_x509_certificate_file_fmt
-	(x509_file_format, description)
+insert into val_x509_certificate_file_format
+	(x509_certificate_file_format, description)
 values
 	('pem', 'human readable rsa certificate'),
 	('der', 'binary representation'),
@@ -1799,7 +1789,7 @@ values
 ;
 
 insert into val_x509_key_usage
-	(x509_key_usg, description, is_extended)
+	(x509_key_usage, description, is_extended)
 values
 	('digitalSignature',	'verifying digital signatures other than other certs/CRLs,  such as those used in an entity authentication service, a data origin authentication service, and/or an integrity service', 'N'),
 	('nonRepudiation',	'verifying digital signatures other than other certs/CRLs, to provide a non-repudiation service that protects against the signing entity falsely denying some action.  Also known as contentCommitment', 'N'),
@@ -1819,7 +1809,7 @@ values
 ;
 
 insert into val_x509_key_usage_category
-	(x509_key_usg_cat, description)
+	(x509_key_usage_category, description)
 values
 	('ca', 'used to identify a certificate authority'),
 	('revocation', 'Used to identify entity that signs crl/ocsp responses'),
@@ -1830,7 +1820,7 @@ values
 ;
 
 insert into x509_key_usage_categorization
-	(x509_key_usg_cat, x509_key_usg)
+	(x509_key_usage_category, x509_key_usage)
 values
 	('ca',  'keyCertSign'),
 	('revocation',  'cRLSign'),
@@ -1864,7 +1854,7 @@ values
 	('default')
 ;
 
-INSERT INTO val_pvt_key_encryption_type
+INSERT INTO val_private_key_encryption_type
 	(private_key_encryption_type)
 values
 	('rsa'),

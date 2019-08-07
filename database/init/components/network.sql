@@ -46,7 +46,7 @@ BEGIN
 		-- a slot, a specific linkage must exist in either
 		-- slot_type_permitted_component_type for internal connections (i.e. the
 		-- component becomes a logical sub-component of the parent) or in
-		-- slot_type_prmt_rem_slot_type for an external connection (i.e.
+		-- slot_type_permitted_remote_slot_type for an external connection (i.e.
 		-- a connection to a separate component entirely, such as a network or
 		-- power connection)
 		--
@@ -103,7 +103,7 @@ BEGIN
 		-- themselves.  SFP+ can take SFP or SFP+.
 		-- 
 
-		INSERT INTO slot_type_prmt_comp_slot_type (
+		INSERT INTO slot_type_permitted_component_slot_type (
 			slot_type_id,
 			component_slot_type_id
 		) SELECT
@@ -136,7 +136,7 @@ BEGIN
 		-- connect to itself, the RJ45 types all interconnect, and the
 		-- 10GSFP+Cu only connects to itself
 		-- 
-		INSERT INTO slot_type_prmt_rem_slot_type (
+		INSERT INTO slot_type_permitted_remote_slot_type (
 			slot_type_id,
 			remote_slot_type_id
 		) SELECT

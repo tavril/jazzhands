@@ -292,14 +292,14 @@ BEGIN
 	);
 
 	--
-	-- Delete network_interfaces
+	-- Delete layer3_interfaces
 	--
-	PERFORM device_utils.remove_network_interfaces(
-		network_interface_id_list := ARRAY(
+	PERFORM device_utils.remove_layer3_interfaces(
+		layer3_interface_id_list := ARRAY(
 			SELECT
-				network_interface_id
+				layer3_interface_id
 			FROM
-				network_interface ni
+				layer3_interface ni
 			WHERE
 				ni.device_id = ANY(device_id_list)
 		)
@@ -509,53 +509,53 @@ $$ LANGUAGE plpgsql set search_path=jazzhands SECURITY DEFINER;
 -------------------------------------------------------------------
 
 -------------------------------------------------------------------
---begin remove_network_interface
+--begin remove_layer3_interface
 -------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION device_utils.remove_network_interface (
-	network_interface_id	jazzhands.network_interface.network_interface_id%TYPE DEFAULT NULL,
+CREATE OR REPLACE FUNCTION device_utils.remove_layer3_interface (
+	layer3_interface_id	jazzhands.layer3_interface.layer3_interface_id%TYPE DEFAULT NULL,
 	device_id				device.device_id%TYPE DEFAULT NULL,
-	network_interface_name	jazzhands.network_interface.network_interface_name%TYPE DEFAULT NULL
+	layer3_interface_name	jazzhands.layer3_interface.layer3_interface_name%TYPE DEFAULT NULL
 ) RETURNS boolean AS $$
 DECLARE
-	ni_id		ALIAS FOR network_interface_id;
+	ni_id		ALIAS FOR layer3_interface_id;
 	dev_id		ALIAS FOR device_id;
-	ni_name		ALIAS FOR network_interface_name;
+	ni_name		ALIAS FOR layer3_interface_name;
 BEGIN
-	IF network_interface_id IS NULL THEN
-		IF device_id IS NULL OR network_interface_name IS NULL THEN
-			RAISE 'Must pass either network_interface_id or device_id and network_interface_name to device_utils.delete_network_interface'
+	IF layer3_interface_id IS NULL THEN
+		IF device_id IS NULL OR layer3_interface_name IS NULL THEN
+			RAISE 'Must pass either layer3_interface_id or device_id and layer3_interface_name to device_utils.delete_layer3_interface'
 				USING ERRCODE = 'invalid_parameter_value';
 		END IF;
 
 		SELECT
-			ni.network_interface_id INTO ni_id
+			ni.layer3_interface_id INTO ni_id
 		FROM
-			network_interface ni
+			layer3_interface ni
 		WHERE
 			ni.device_id = dev_id AND
-			ni.network_interface_name = ni_name;
+			ni.layer3_interface_name = ni_name;
 
 		IF NOT FOUND THEN
 			RETURN false;
 		END IF;
 	END IF;
 
-	PERFORM * FROM device_utils.remove_network_interfaces(
-			network_interface_id_list := ARRAY[ network_interface_id ]
+	PERFORM * FROM device_utils.remove_layer3_interfaces(
+			layer3_interface_id_list := ARRAY[ layer3_interface_id ]
 		);
 
 	RETURN true;
 END;
 $$ LANGUAGE plpgsql set search_path=jazzhands SECURITY DEFINER;
 -------------------------------------------------------------------
---end of remove_network_interface
+--end of remove_layer3_interface
 -------------------------------------------------------------------
 
 -------------------------------------------------------------------
---begin remove_network_interfaces
+--begin remove_layer3_interfaces
 -------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION device_utils.remove_network_interfaces (
-	network_interface_id_list	integer[]
+CREATE OR REPLACE FUNCTION device_utils.remove_layer3_interfaces (
+	layer3_interface_id_list	integer[]
 ) RETURNS boolean AS $$
 DECLARE
 	nb_list		integer[];
@@ -567,24 +567,24 @@ BEGIN
 	-- Save off some netblock information for now
 	--
 
-	RAISE LOG 'Removing network_interfaces with ids %',
-		array_to_string(network_interface_id_list, ', ');
+	RAISE LOG 'Removing layer3_interfaces with ids %',
+		array_to_string(layer3_interface_id_list, ', ');
 
 	RAISE LOG 'Retrieving netblock information...';
 
 	SELECT
 		array_agg(nin.netblock_id) INTO nb_list
 	FROM
-		network_interface_netblock nin
+		layer3_interface_netblock nin
 	WHERE
-		nin.network_interface_id = ANY(network_interface_id_list);
+		nin.layer3_interface_id = ANY(layer3_interface_id_list);
 
 	SELECT DISTINCT
 		array_agg(shared_netblock_id) INTO sn_list
 	FROM
 		shared_netblock_network_int snni
 	WHERE
-		snni.network_interface_id = ANY(network_interface_id_list);
+		snni.layer3_interface_id = ANY(layer3_interface_id_list);
 
 	--
 	-- Clean up network bits
@@ -593,13 +593,13 @@ BEGIN
 	RAISE LOG 'Removing shared netblocks...';
 
 	DELETE FROM shared_netblock_network_int WHERE
-		network_interface_id IN (
+		layer3_interface_id IN (
 			SELECT
-				network_interface_id
+				layer3_interface_id
 			FROM
-				network_interface ni
+				layer3_interface ni
 			WHERE
-				ni.network_interface_id = ANY(network_interface_id_list)
+				ni.layer3_interface_id = ANY(layer3_interface_id_list)
 		);
 
 	--
@@ -615,7 +615,7 @@ BEGIN
 		shared_netblock_network_int USING (shared_netblock_id)
 	WHERE
 		shared_netblock_id = ANY(sn_list) AND
-		network_interface_id IS NULL
+		layer3_interface_id IS NULL
 	LOOP
 		BEGIN
 			DELETE FROM dns_record dr WHERE
@@ -635,22 +635,22 @@ BEGIN
 
 	RAISE LOG 'Removing directly-assigned netblocks...';
 
-	DELETE FROM network_interface_netblock WHERE network_interface_id IN (
+	DELETE FROM layer3_interface_netblock WHERE layer3_interface_id IN (
 		SELECT
-			network_interface_id
+			layer3_interface_id
 	 	FROM
-			network_interface ni
+			layer3_interface ni
 		WHERE
-			ni.network_interface_id = ANY (network_interface_id_list)
+			ni.layer3_interface_id = ANY (layer3_interface_id_list)
 	);
 
-	RAISE LOG 'Removing network_interfaces...';
+	RAISE LOG 'Removing layer3_interfaces...';
 
-	DELETE FROM network_interface_purpose nip WHERE
-		nip.network_interface_id = ANY(network_interface_id_list);
+	DELETE FROM layer3_interface_purpose nip WHERE
+		nip.layer3_interface_id = ANY(layer3_interface_id_list);
 
-	DELETE FROM network_interface ni WHERE ni.network_interface_id =
-		ANY(network_interface_id_list);
+	DELETE FROM layer3_interface ni WHERE ni.layer3_interface_id =
+		ANY(layer3_interface_id_list);
 
 	RAISE LOG 'Removing netblocks (%) ... ', nb_list; 
 	IF nb_list IS NOT NULL THEN
@@ -670,7 +670,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql set search_path=jazzhands SECURITY DEFINER;
 -------------------------------------------------------------------
---end of remove_network_interfaces
+--end of remove_layer3_interfaces
 -------------------------------------------------------------------
 
 -------------------------------------------------------------------

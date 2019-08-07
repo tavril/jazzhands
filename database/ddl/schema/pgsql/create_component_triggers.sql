@@ -515,12 +515,12 @@ BEGIN
 		END IF;
 	END IF;
 
-	IF v_comp_prop.permit_intcomp_conn_id = 'REQUIRED' THEN
+	IF v_comp_prop.permit_inter_component_connection_id = 'REQUIRED' THEN
 		IF NEW.inter_component_connection_id IS NULL THEN
 			RAISE 'inter_component_connection_id is required.'
 				USING ERRCODE = 'invalid_parameter_value';
 		END IF;
-	ELSIF v_comp_prop.permit_intcomp_conn_id = 'PROHIBITED' THEN
+	ELSIF v_comp_prop.permit_inter_component_connection_id = 'PROHIBITED' THEN
 		IF NEW.inter_component_connection_id IS NOT NULL THEN
 			RAISE 'inter_component_connection_id is prohibited.'
 				USING ERRCODE = 'invalid_parameter_value';
@@ -583,7 +583,7 @@ BEGIN
 				component_type_id,
 				array_agg(component_function) as component_function
 			FROM
-				component_type_component_func
+				component_type_component_function
 			GROUP BY
 				component_type_id
 		) SELECT
@@ -671,7 +671,7 @@ BEGIN
 			component_attrs
 		FROM
 			component c JOIN
-			component_type_component_func ctcf USING (component_type_id)
+			component_type_component_function ctcf USING (component_type_id)
 		WHERE
 			component_id = NEW.component_id
 		GROUP BY
@@ -705,7 +705,7 @@ BEGIN
 		INTO
 			component_attrs
 		FROM
-			component_type_component_func ctcf
+			component_type_component_function ctcf
 		WHERE
 			component_type_id = NEW.component_type_id
 		GROUP BY

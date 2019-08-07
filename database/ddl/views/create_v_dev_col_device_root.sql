@@ -24,7 +24,7 @@ WITH x AS (
 		p.device_collection_name AS root_name,
 		p.device_collection_type AS root_type,
 		dch.device_collection_level
-	FROM jazzhands.v_device_coll_hier_detail dch
+	FROM jazzhands.v_device_collection_hier_detail dch
 	INNER JOIN jazzhands.device_collection_device dcd USING (device_collection_id)
 	INNER JOIN jazzhands.device_collection c ON dch.device_collection_id = c.device_collection_id
 	INNER JOIN jazzhands.device_collection p ON dch.parent_device_collection_id = p.device_collection_id

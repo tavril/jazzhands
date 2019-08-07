@@ -214,7 +214,7 @@ BEGIN
 	WHERE (account_collection_id, account_id)
 	IN (
 		SELECT	a.account_collection_id, a.account_id
-		FROM	v_acct_coll_acct_expanded a
+		FROM	v_account_collection_account_expanded a
 				JOIN account_collection ac USING (account_collection_id)
 				JOIN property p USING (account_collection_id)
 		WHERE	p.property_type = 'UserMgmt'

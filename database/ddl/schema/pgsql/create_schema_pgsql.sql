@@ -6452,6 +6452,23 @@ ALTER TABLE val_password_type
 	ADD CONSTRAINT "pk_val_password_type" PRIMARY KEY (password_type);
 
 /***********************************************
+ * Table: val_person_company_attribute_data_type
+ ***********************************************/
+
+CREATE TABLE val_person_company_attribute_data_type
+( 
+	person_company_attribute_data_type varchar(50)  NOT NULL ,
+	description          varchar(255)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE val_person_company_attribute_data_type
+	ADD CONSTRAINT "pk_val_pers_comp_attr_dataty" PRIMARY KEY (person_company_attribute_data_type);
+
+/***********************************************
  * Table: val_person_company_attribute_name
  ***********************************************/
 
@@ -6496,23 +6513,6 @@ CREATE INDEX xifpers_comp_attr_val_name ON val_person_company_attribute_value
 ( 
 	person_company_attribute_name
 );
-
-/***********************************************
- * Table: val_person_company_attrribute_data_type
- ***********************************************/
-
-CREATE TABLE val_person_company_attrribute_data_type
-( 
-	person_company_attribute_data_type varchar(50)  NOT NULL ,
-	description          varchar(255)  NULL ,
-	data_ins_user        varchar(255)  NULL ,
-	data_ins_date        timestamp with time zone  NULL ,
-	data_upd_user        varchar(255)  NULL ,
-	data_upd_date        timestamp with time zone  NULL 
-);
-
-ALTER TABLE val_person_company_attrribute_data_type
-	ADD CONSTRAINT "pk_val_pers_comp_attr_dataty" PRIMARY KEY (person_company_attribute_data_type);
 
 /***********************************************
  * Table: val_person_company_relation
@@ -6768,7 +6768,7 @@ CREATE TABLE val_property
 	permit_operating_system_id char(10)  NOT NULL ,
 	permit_operating_system_snapshot_id char(10)  NOT NULL ,
 	permit_person_id     char(10)  NOT NULL ,
-	permit_property_collection_id char(10)  NOT NULL ,
+	permit_property_name_collection_id char(10)  NOT NULL ,
 	permit_service_environment_collection char(10)  NOT NULL ,
 	permit_site_code     CHAR(10)  NOT NULL ,
 	permit_x509_signed_certificate_id char(10)  NOT NULL ,
@@ -6982,7 +6982,7 @@ ALTER TABLE val_raid_type
 
 CREATE TABLE val_service_environment_collection_type
 ( 
-	service_env_collection_type varchar(50)  NOT NULL ,
+	service_environment_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
@@ -6994,7 +6994,7 @@ CREATE TABLE val_service_environment_collection_type
 );
 
 ALTER TABLE val_service_environment_collection_type
-	ADD CONSTRAINT "pk_val_service_env_coll_type" PRIMARY KEY (service_env_collection_type);
+	ADD CONSTRAINT "pk_val_service_env_coll_type" PRIMARY KEY (service_environment_collection_type);
 
 /***********************************************
  * Table: val_shared_netblock_protocol
@@ -10073,7 +10073,7 @@ COMMENT ON COLUMN service_environment.external_id IS 'opaque id used in remote s
 
 
 ALTER TABLE service_environment_collection
-	ADD CONSTRAINT "fk_svc_env_col_v_svc_env_type" FOREIGN KEY (service_environment_collection_type) REFERENCES val_service_environment_collection_type(service_env_collection_type)
+	ADD CONSTRAINT "fk_svc_env_col_v_svc_env_type" FOREIGN KEY (service_environment_collection_type) REFERENCES val_service_environment_collection_type(service_environment_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10742,7 +10742,7 @@ COMMENT ON COLUMN val_network_range_type.dns_domain_required IS 'indicates how d
 
 
 ALTER TABLE val_person_company_attribute_name
-	ADD CONSTRAINT "fk_prescompattr_name_datatyp" FOREIGN KEY (person_company_attribute_data_type) REFERENCES val_person_company_attrribute_data_type(person_company_attribute_data_type)
+	ADD CONSTRAINT "fk_prescompattr_name_datatyp" FOREIGN KEY (person_company_attribute_data_type) REFERENCES val_person_company_attribute_data_type(person_company_attribute_data_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -10850,7 +10850,7 @@ ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_1430936438 CHECK  ( permit_layer3_network_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT check_prp_prmt_1911550439 CHECK  ( permit_property_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
+	ADD CONSTRAINT check_prp_prmt_1581934381 CHECK  ( permit_property_name_collection_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
 
 ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_1315394496 CHECK  ( permit_operating_system_snapshot_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
@@ -10924,7 +10924,7 @@ ALTER TABLE val_property
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
-	ALTER COLUMN permit_property_collection_id
+	ALTER COLUMN permit_property_name_collection_id
 		SET DEFAULT 'PROHIBITED';
 
 ALTER TABLE val_property
@@ -10994,7 +10994,7 @@ ALTER TABLE val_property
 		ON DELETE NO ACTION;
 
 ALTER TABLE val_property
-	ADD CONSTRAINT "fk_prop_svcemvcoll_type" FOREIGN KEY (service_environment_collection_type) REFERENCES val_service_environment_collection_type(service_env_collection_type)
+	ADD CONSTRAINT "fk_prop_svcemvcoll_type" FOREIGN KEY (service_environment_collection_type) REFERENCES val_service_environment_collection_type(service_environment_collection_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -11063,7 +11063,7 @@ COMMENT ON COLUMN val_property.permit_layer2_network_collection_id IS 'defines p
 
 COMMENT ON COLUMN val_property.permit_layer3_network_collection_id IS 'defines permissibility/requirement of layer3_network_id on LHS of property';
 
-COMMENT ON COLUMN val_property.permit_property_collection_id IS 'defines permissibility/requirement of property_collection_id on LHS of property';
+COMMENT ON COLUMN val_property.permit_property_name_collection_id IS 'defines permissibility/requirement of property_collection_id on LHS of property';
 
 COMMENT ON COLUMN val_property.permit_operating_system_snapshot_id IS 'defines permissibility/requirement of operating_system_snapshot_id on LHS of property';
 

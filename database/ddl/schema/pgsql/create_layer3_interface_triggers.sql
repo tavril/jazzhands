@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Todd Kover
+ * Copyright (c) 2014-2019 Todd Kover
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ BEGIN
 		AND netblock_type = 'default';
 
 		IF _tally = 0 THEN
-			RAISE EXCEPTION 'network interfaces must refer to single ip addresses of type default (%,%)', NEW.network_interface_id, NEW.netblock_id
+			RAISE EXCEPTION 'network interfaces must refer to single ip addresses of type default (%,%)', NEW.layer3_interface_id, NEW.netblock_id
 				USING errcode = 'foreign_key_violation';
 		END IF;
 	END IF;
@@ -43,15 +43,15 @@ SET search_path=jazzhands
 LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_net_int_nb_single_address ON
-	network_interface_netblock;
+	layer3_interface_netblock;
 CREATE TRIGGER trigger_net_int_nb_single_address
 	BEFORE INSERT OR UPDATE OF netblock_id
-	ON network_interface_netblock
+	ON layer3_interface_netblock
 	FOR EACH ROW
 	EXECUTE PROCEDURE net_int_nb_single_address();
 
 ---------------------------------------------------------------------------
--- sync device_id on network_interface on network_interface_netblock changes
+-- sync device_id on layer3_interface on layer3_interface_netblock changes
 ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION net_int_nb_device_id_ins()
@@ -61,8 +61,8 @@ BEGIN
 	IF NEW.device_id IS NULL OR TG_OP = 'UPDATE' THEN
 		SELECT device_id
 		INTO	NEW.device_id
-		FROM	network_interface
-		WHERE	network_interface_id = NEW.network_interface_id;
+		FROM	layer3_interface
+		WHERE	layer3_interface_id = NEW.layer3_interface_id;
 	END IF;
 	RETURN NEW;
 END;
@@ -71,10 +71,10 @@ SET search_path=jazzhands
 LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_net_int_nb_device_id_ins ON
-	network_interface_netblock;
+	layer3_interface_netblock;
 CREATE TRIGGER trigger_net_int_nb_device_id_ins
-	BEFORE INSERT OR UPDATE OF network_interface_id
-	ON network_interface_netblock
+	BEFORE INSERT OR UPDATE OF layer3_interface_id
+	ON layer3_interface_netblock
 	FOR EACH ROW
 	EXECUTE PROCEDURE net_int_nb_device_id_ins();
 
@@ -90,15 +90,15 @@ SET search_path=jazzhands
 LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_net_int_nb_device_id_ins_after ON
-	network_interface_netblock;
+	layer3_interface_netblock;
 CREATE TRIGGER trigger_net_int_nb_device_id_ins_after
-	AFTER INSERT OR UPDATE OF network_interface_id
-	ON network_interface_netblock
+	AFTER INSERT OR UPDATE OF layer3_interface_id
+	ON layer3_interface_netblock
 	FOR EACH ROW
 	EXECUTE PROCEDURE net_int_nb_device_id_ins_after();
 
 ------------------------------------------------------------------------------
--- sync device_id on network_interface_netblock on network_interface changes
+-- sync device_id on layer3_interface_netblock on layer3_interface changes
 --
 -- XXX - This needs to properly handle deferring triggers if appropriate XXX
 ------------------------------------------------------------------------------
@@ -114,19 +114,19 @@ SET search_path=jazzhands
 LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_net_int_nb_device_id_ins_before ON
-	network_interface;
+	layer3_interface;
 CREATE TRIGGER trigger_net_int_nb_device_id_ins_before
 	BEFORE UPDATE OF device_id
-	ON network_interface
+	ON layer3_interface
 	FOR EACH ROW
 	EXECUTE PROCEDURE net_int_nb_device_id_ins_before();
 
 CREATE OR REPLACE FUNCTION net_int_device_id_upd()
 RETURNS TRIGGER AS $$
 BEGIN
-	UPDATE network_interface_netblock
+	UPDATE layer3_interface_netblock
 	SET device_id = NEW.device_id
-	WHERE	network_interface_id = NEW.network_interface_id;
+	WHERE	layer3_interface_id = NEW.layer3_interface_id;
 	SET CONSTRAINTS fk_netint_nb_nblk_id IMMEDIATE;
 	RETURN NEW;
 END;
@@ -135,10 +135,10 @@ SET search_path=jazzhands
 LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_net_int_device_id_upd ON
-	network_interface;
+	layer3_interface;
 CREATE TRIGGER trigger_net_int_device_id_upd
 	AFTER UPDATE OF device_id
-	ON network_interface
+	ON layer3_interface
 	FOR EACH ROW
 	EXECUTE PROCEDURE net_int_device_id_upd();
 

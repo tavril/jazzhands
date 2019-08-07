@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Todd Kover
+ * Copyright (c) 2016-2019 Todd Kover
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,11 @@
 -- $Id$
 --
 
-CREATE OR REPLACE FUNCTION property_collection_after_hooks()
+CREATE OR REPLACE FUNCTION property_name_collection_after_hooks()
 RETURNS TRIGGER AS $$
 BEGIN
 	BEGIN
-		PERFORM local_hooks.property_collection_after_hooks();
+		PERFORM local_hooks.property_name_collection_after_hooks();
 	EXCEPTION WHEN invalid_schema_name OR undefined_function THEN
 			PERFORM 1;
 	END;
@@ -35,16 +35,16 @@ $$
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path=jazzhands;
 
-DROP TRIGGER IF EXISTS trigger_hier_property_collection_after_hooks
-	 ON property_collection_hier;
-CREATE TRIGGER trigger_hier_property_collection_after_hooks
+DROP TRIGGER IF EXISTS trigger_hier_property_name_collection_after_hooks
+	 ON property_name_collection_hier;
+CREATE TRIGGER trigger_hier_property_name_collection_after_hooks
 	AFTER INSERT OR UPDATE OR DELETE
-	ON property_collection_hier
-	EXECUTE PROCEDURE property_collection_after_hooks();
+	ON property_name_collection_hier
+	EXECUTE PROCEDURE property_name_collection_after_hooks();
 
-DROP TRIGGER IF EXISTS trigger_member_property_collection_after_hooks
-	 ON property_collection_property;
-CREATE TRIGGER trigger_member_property_collection_after_hooks
+DROP TRIGGER IF EXISTS trigger_member_property_name_collection_after_hooks
+	 ON property_name_collection_property_name;
+CREATE TRIGGER trigger_member_property_name_collection_after_hooks
 	AFTER INSERT OR UPDATE OR DELETE
-	ON property_collection_property
-	EXECUTE PROCEDURE property_collection_after_hooks();
+	ON property_name_collection_property_name
+	EXECUTE PROCEDURE property_name_collection_after_hooks();

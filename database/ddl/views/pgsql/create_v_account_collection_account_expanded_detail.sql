@@ -1,4 +1,5 @@
 -- Copyright (c) 2013, Matthew Ragan
+-- Copyright (c) 2019, Todd Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +23,7 @@
 -- accounts that are part of this account collection")
 --
 -- the nomenclature probably comes from oracle's connect by root
-CREATE OR REPLACE VIEW v_acct_coll_acct_expanded_detail AS
+CREATE OR REPLACE VIEW v_account_collection_account_expanded_detail AS
 WITH RECURSIVE var_recurse(
 	account_collection_id,
 	root_account_collection_id,

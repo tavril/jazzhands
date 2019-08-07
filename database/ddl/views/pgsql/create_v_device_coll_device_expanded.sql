@@ -1,4 +1,4 @@
--- Copyright (c) 2015-2016 Todd M. Kover
+-- Copyright (c) 2015-2019 Todd M. Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@
 -- limitations under the License.
 
 --
--- NOTE:  THis works like v_acct_coll_acct_expanded which pulls up, rather than
+-- NOTE:  THis works like v_account_collection_account_expanded which pulls up, rather than
 -- inherits, like mclasses do.  This could be confusing.
 --
 
@@ -36,15 +36,15 @@ WITH RECURSIVE var_recurse (
 	FROM	device_collection
 UNION  ALL
 	SELECT	x.root_device_collection_id	as root_device_collection_id,
-		dch.device_collection_id,
-		dch.parent_device_collection_id,
+		dch.child_device_collection_id AS device_collection_id,
+		dch.device_collection_id AS parent_device_colletion_id,
 		x.device_collection_level + 1 as device_collection_level,
-		dch.parent_device_collection_id || x.array_path AS array_path,
-		dch.parent_device_collection_id = ANY(x.array_path)
+		dch.device_collection_id || x.array_path AS array_path,
+		dch.device_collection_id = ANY(x.array_path)
 	 FROM	var_recurse x
-		inner join v_device_collection_hier_trans dch
+		inner join device_collection_hier dch
 			on x.device_collection_id = 
-				dch.parent_device_collection_id
+				dch.device_collection_id
 	WHERE
 		NOT x.cycle
 ) SELECT	DISTINCT root_device_collection_id as device_collection_id,
