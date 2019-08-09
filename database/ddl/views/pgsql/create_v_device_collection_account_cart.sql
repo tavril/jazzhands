@@ -1,4 +1,4 @@
--- Copyright (c) 2014-2017, Todd M. Kover
+-- Copyright (c) 2014-2019, Todd M. Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@
 -- sluggish.  A materilized view of the restricted v_device_col_account_cart
 -- here speeds things up but not enough to be worth the overhead
 --
-create or replace view v_device_col_account_cart AS
+create or replace view v_device_collection_account_cart AS
 SELECT device_collection_id, account_id, setting
 FROM (
 	SELECT x.*,

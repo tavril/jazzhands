@@ -68,7 +68,7 @@ FROM (
 							ORDER BY dchd.device_collection_level, assign_rank,
 								property_id
 					) AS ord
-			FROM    v_acct_coll_prop_expanded acpe
+			FROM    v_account_collection_property_expanded acpe
 				INNER JOIN unix_group ug USING (account_collection_id)
 				INNER JOIN v_property p USING (property_id)
 				INNER JOIN dcmap dchd

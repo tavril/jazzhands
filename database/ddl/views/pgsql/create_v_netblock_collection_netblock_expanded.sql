@@ -16,7 +16,7 @@
 -- $Id$
 --
 
-CREATE OR REPLACE VIEW v_nblk_coll_netblock_expanded AS
+CREATE OR REPLACE VIEW v_netblock_collection_netblock_expanded AS
 WITH RECURSIVE var_recurse (
 	level,
 	root_collection_id,

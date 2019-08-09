@@ -38,7 +38,7 @@
 -- limitations under the License.
 
 \ir pgsql/create_v_property.sql
-\ir pgsql/create_v_nblk_coll_netblock_expanded.sql
+\ir pgsql/create_v_netblock_collection_netblock_expanded.sql
 \ir pgsql/create_v_person_company_expanded.sql
 \ir pgsql/create_v_department_company_expanded.sql
 -- \ir pgsql/create_v_acct_collection_user_expanded_detail.sql
@@ -64,24 +64,21 @@
 \ir create_device_power_connection.sql
 \ir create_device_power_interface.sql
 
-\ir pgsql/create_v_device_coll_device_expanded.sql
+\ir pgsql/create_v_device_collection_device_expanded.sql
 \ir pgsql/create_v_device_collection_hier_detail.sql
 \ir pgsql/create_v_account_collection_account.sql
 \ir pgsql/create_v_account_collection_expanded.sql
-\ir pgsql/create_v_acct_coll_expanded_detail.sql
-\ir pgsql/create_v_acct_coll_expanded.sql
+\ir pgsql/create_v_account_collection_expanded_detail.sql
 \ir pgsql/create_v_account_collection_account_expanded.sql
 \ir pgsql/create_v_account_collection_account_expanded_detail.sql
 \ir create_v_device_collection_account_property_expanded.sql
-\ir pgsql/create_v_acct_coll_prop_expanded.sql
+\ir pgsql/create_v_account_collection_property_expanded.sql
 
-\ir pgsql/create_v_device_coll_device_expanded.sql
-\ir pgsql/create_v_netblock_coll_expanded.sql
+\ir pgsql/create_v_device_collection_device_expanded.sql
+\ir pgsql/create_v_netblock_collection_expanded.sql
 
 \ir create_v_device_collection_root.sql
 \ir create_v_dev_col_device_root.sql
-
-\ir pgsql/create_v_account_collection_expanded.sql
 
 \ir pgsql/create_v_application_role.sql
 
@@ -110,12 +107,12 @@
 \ir pgsql/create_v_unix_mclass_settings.sql
 
 \ir pgsql/create_v_unix_account_overrides.sql
-\ir pgsql/create_v_device_col_account_cart.sql
+\ir pgsql/create_v_device_collection_account_cart.sql
 \ir pgsql/create_v_unix_passwd_mappings.sql
 
 -- group file generation
 \ir pgsql/create_v_unix_group_overrides.sql
-\ir pgsql/create_v_device_col_account_col_cart.sql
+\ir pgsql/create_v_device_collection_account_collection_cart.sql
 \ir pgsql/create_v_unix_group_mappings.sql
 
 -- dns
@@ -137,8 +134,8 @@
 \ir create_v_hotpants_account_attribute.sql
 \ir create_v_hotpants_device_collection_attribute.sql
 
-\ir pgsql/create_v_l2_network_coll_expanded.sql
-\ir pgsql/create_v_l3_network_coll_expanded.sql
+\ir pgsql/create_v_layer2_network_collection_expanded.sql
+\ir pgsql/create_v_layer3_network_collection_expanded.sql
 \ir pgsql/create_v_layerx_network_expanded.sql
 \ir pgsql/create_v_network_range_expanded.sql
 

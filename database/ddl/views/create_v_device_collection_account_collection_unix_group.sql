@@ -36,7 +36,7 @@ SELECT DISTINCT dchd.device_collection_id, ace.account_collection_id
 FROM v_device_collection_hier_detail dchd
 JOIN v_property dcu ON dcu.device_collection_id =
         dchd.parent_device_collection_id
-JOIN v_acct_coll_expanded ace
+JOIN v_account_collection_expanded ace
         on dcu.account_collection_id = ace.root_account_collection_id
 WHERE dcu.property_name in ('UnixGroup')
 and dcu.property_type = 'MclassUnixProp';

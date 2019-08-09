@@ -1,4 +1,5 @@
 -- Copyright (c) 2013 Matthew Ragan
+-- Copyright (c) 2019 Todd Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-CREATE OR REPLACE VIEW v_acct_coll_expanded_detail AS
+CREATE OR REPLACE VIEW v_account_collection_expanded_detail AS
 WITH RECURSIVE var_recurse (
 	root_account_collection_id,
 	account_collection_id,

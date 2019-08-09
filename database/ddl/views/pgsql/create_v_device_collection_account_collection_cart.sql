@@ -25,7 +25,7 @@
 -- device collection, account_collection mappings in property.  This may need
 -- to be reconsidered
 --
-CREATE OR REPLACE VIEW v_device_col_account_col_cart AS
+CREATE OR REPLACE VIEW v_device_collection_account_collection_cart AS
 SELECT device_collection_Id, account_collection_id, setting
 FROM (SELECT x.*,
 	row_number() OVER (partition by device_collection_id,

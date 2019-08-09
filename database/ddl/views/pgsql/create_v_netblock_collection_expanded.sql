@@ -1,5 +1,6 @@
 --
 -- Copyright (c) 2015 Matthew Ragan
+-- Copyright (c) 2019 Todd Kover
 -- All rights reserved.
 -- 
 -- Licensed under the Apnche License, Version 2.0 (the "License");
@@ -14,7 +15,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-CREATE OR REPLACE VIEW jazzhands.v_netblock_coll_expanded AS
+CREATE OR REPLACE VIEW jazzhands.v_netblock_collection_expanded AS
 WITH RECURSIVE netblock_coll_recurse (
     level,
     root_netblock_collection_id,

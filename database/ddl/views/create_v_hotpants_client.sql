@@ -23,7 +23,7 @@ SELECT
 		ip_address,
 		p.property_value as radius_secret
             FROM    v_property p
-                    INNER JOIN v_device_coll_device_expanded dc
+                    INNER JOIN v_device_collection_device_expanded dc
                         USING (device_collection_id)
                     INNER JOIN device d USING (device_id)
                     INNER JOIN layer3_interface_netblock ni USING (device_id)

@@ -72,7 +72,7 @@ FROM	device_collection dc
 			) ugmap USING (device_collection_id)
 		JOIN account_collection ac USING (account_collection_id)
 		JOIN unix_group USING (account_collection_id)
-		LEFT JOIN v_device_col_account_col_cart o
+		LEFT JOIN v_device_collection_account_collection_cart o
 			USING (device_collection_id,account_collection_id)
 		LEFT JOIN (
 			SELECT	g.* 

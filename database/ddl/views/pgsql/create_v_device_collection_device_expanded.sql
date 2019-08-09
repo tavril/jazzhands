@@ -18,7 +18,7 @@
 -- inherits, like mclasses do.  This could be confusing.
 --
 
-CREATE OR REPLACE VIEW v_device_coll_device_expanded as 
+CREATE OR REPLACE VIEW v_device_collection_device_expanded as 
 WITH RECURSIVE var_recurse (
 	root_device_collection_id,
 	device_collection_id,

@@ -1,4 +1,4 @@
--- Copyright (c) 2012-2017, Todd M. Kover
+-- Copyright (c) 2012-2019, Todd M. Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-CREATE OR REPLACE VIEW v_acct_coll_prop_expanded AS
+CREATE OR REPLACE VIEW v_account_collection_property_expanded AS
 	SELECT
 		root_account_collection_id as account_collection_id,
 		property_id,
@@ -49,7 +49,7 @@ CREATE OR REPLACE VIEW v_acct_coll_prop_expanded AS
 				ELSE 999
 			END END as assign_rank
 	FROM
-		v_acct_coll_expanded_detail JOIN
+		v_account_collection_expanded_detail JOIN
 		account_collection ac USING (account_collection_id) JOIN
 		v_property USING (account_collection_id) JOIN
 		val_property USING (property_name, property_type);

@@ -125,7 +125,7 @@ FROM
 					INNER JOIN account_unix_info aui using (account_id)
 			WHERE a.is_enabled = 'Y'
 		) a
-			JOIN v_device_col_account_cart o using (account_id)
+			JOIN v_device_collection_account_cart o using (account_id)
 			JOIN device_collection dc USING (device_collection_id)
 			JOIN person p USING (person_id)
 			JOIN unix_group ug on (a.unix_group_account_collection_id
