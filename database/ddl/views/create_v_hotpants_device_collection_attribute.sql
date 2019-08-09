@@ -16,7 +16,7 @@
 -- This likely needs to die in favor of making hotpants less aware of device
 -- collection
 
-CREATE OR REPLACE VIEW v_hotpants_dc_attribute AS
+CREATE OR REPLACE VIEW v_hotpants_device_collection_attribute AS
 SELECT  property_id,
 	device_collection_id,
 	property_name,

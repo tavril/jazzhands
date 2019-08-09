@@ -38,15 +38,15 @@ FROM (
 	FROM (
 
 		SELECT	device_collection_id, account_id, NULL as setting
-		FROM	v_device_col_acct_col_unixlogin 
+		FROM	v_device_collection_account_collection_unix_login 
 				INNER JOIN account USING (account_id)
 				INNER JOIN account_unix_info USING (account_id)
 		UNION ALL select device_collection_id, account_id, setting
  			from v_unix_account_overrides
 				INNER JOIN account USING (account_id)
 				INNER JOIN account_unix_info USING (account_id)
-				INNER JOIN v_device_col_acct_col_unixlogin USING 
-					(device_collection_id, account_id)
+				INNER JOIN v_device_collection_account_collection_unix_login
+					USING (device_collection_id, account_id)
 	) x
 ) xx
 WHERE rn = 1;

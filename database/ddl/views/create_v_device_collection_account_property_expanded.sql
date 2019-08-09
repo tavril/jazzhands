@@ -42,7 +42,7 @@
 -- This view maps users to device collections and lists properties
 -- assigned to the users in order of their priorities.
 
-CREATE OR REPLACE VIEW v_dev_col_user_prop_expanded AS
+CREATE OR REPLACE VIEW v_device_collection_account_property_expanded AS
 SELECT	
 	property_id,
 	dchd.device_collection_id,

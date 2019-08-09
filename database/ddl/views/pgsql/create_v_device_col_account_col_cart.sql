@@ -1,4 +1,4 @@
--- Copyright (c) 2014-2017, Todd M. Kover
+-- Copyright (c) 2014-2019, Todd M. Kover
 -- All rights reserved.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ FROM (SELECT x.*,
 		account_collection_id ORDER BY setting) AS rn
 	FROM (
 		SELECT	device_collection_id, account_collection_id, NULL as setting
-		FROM	v_device_col_acct_col_unixgroup
+		FROM	v_device_collection_account_collection_unix_group
 			INNER JOIN account_collection USING (account_collection_id)
 			INNER JOIN unix_group USING (account_collection_id)
 		UNION

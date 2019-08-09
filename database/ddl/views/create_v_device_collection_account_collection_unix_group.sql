@@ -20,27 +20,25 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
---
 -- $Id$
 --
--- This is just a join between the expanded Account_Collection view (details) and the user and Account_Collection tables.  Needed for the rights web page.
 
-CREATE OR REPLACE FORCE VIEW v_joined_user_col_user_detail
-(Account_Collection_id,
-NAME,
-account_id,
-login,
-assign_method,
-Account_Collection_is_leaf,
-Account_Collection_inherit_path,
-dept_is_leaf,
-dept_inherit_path
-)
-AS
-   SELECT v.Account_Collection_id, u.NAME, v.account_id, su.login, v.assign_method,
-          v.Account_Collection_is_leaf, v.Account_Collection_inherit_path, v.dept_is_leaf,
-          v.dept_inherit_path
-     FROM v_Account_Collection_user_expanded_detail v, account su, Account_Collection u
-    WHERE su.account_id = v.account_id AND u.Account_Collection_id = v.Account_Collection_id;
+-- This view shows which users are mapped to which device collections,
+-- which is particularly important for generating passwd files. Please
+-- note that the same account_id can be mapped to the same
+-- device_collection multiple times via different account_collections. The
+-- user_collection_id column is important mostly to join the results of the
+-- view back to the account_collection table, and select only certain account_collection
+-- types (such as 'system' and 'per-user') to be expanded.
+
+CREATE OR REPLACE VIEW v_device_collection_account_collection_unix_group AS
+SELECT DISTINCT dchd.device_collection_id, ace.account_collection_id
+FROM v_device_collection_hier_detail dchd
+JOIN v_property dcu ON dcu.device_collection_id =
+        dchd.parent_device_collection_id
+JOIN v_acct_coll_expanded ace
+        on dcu.account_collection_id = ace.root_account_collection_id
+WHERE dcu.property_name in ('UnixGroup')
+and dcu.property_type = 'MclassUnixProp';
 
 

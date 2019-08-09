@@ -19,60 +19,25 @@
 -- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--
+-- $Id$
+--
 
+-- This view shows which users are mapped to which device collections,
+-- which is particularly important for generating passwd files. Please
+-- note that the same account_id can be mapped to the same
+-- device_collection multiple times via different account_collections. The
+-- user_collection_id column is important mostly to join the results of the
+-- view back to the account_collection table, and select only certain account_collection
+-- types (such as 'system' and 'per-user') to be expanded.
 
-create or replace view v_account
-as
-select
-a.account_id,
-ps.external_hr_id,
-ps.payroll_id,
-login,
-first_name,
-middle_name,
-last_name,
-name_suffix,
-preferred_first_name,
-preferred_last_name,
-account_status,
-account_type,
-employee_id,
-position_title,
-a.company_id person_company_id,
-c.company_code person_company_code,
-c.company_name person_company_name,
-badge_id,
-gender,
-hire_date,
-pc.termination_date,
-dmd.dept_id,
-dmd.dept_code,
-dmd.cost_center,
-dmd.dept_company_id,
-dmd.dept_company_code,
-dmd.dept_company_name,
-dmd.reporting_type,
-dmd.name dept_name,
-dmd.dept_start_date,
-dmd.dept_finish_date,
-a.dn_name,
-a.manager_account_id
-FROM
-  account a
-  left join person_company pc
-	on a.person_id = pc.person_id
-  left join company c
-	on pc.company_id = c.company_id
-  left join
-  ( select dm.account_id,dm.reporting_type,dm.dept_id, d.dept_code,d.cost_center, d.company_id dept_company_id,
-	c2.company_code dept_company_code, c2.company_name  dept_company_name,
-	d.name,dm.start_date dept_start_date, dm.finish_date dept_finish_date
-	from Account_Collection_account uu, department d, 
-		Account_Collection u, company c2
-	where dm.dept_id=d.dept_id
-	and d.company_id=c2.company_id
-	and dm.reporting_type='direct'
-   ) dmd
-	on s.account_id= dmd.account_id 
-;
-
+CREATE OR REPLACE VIEW v_device_collection_account_collection_unix_login AS
+SELECT DISTINCT dchd.device_collection_id, dcu.account_collection_id, 
+	vuue.account_id
+FROM v_device_collection_hier_detail dchd
+JOIN v_property dcu ON dcu.device_collection_id = 
+	dchd.parent_device_collection_id
+JOIN v_account_collection_account_expanded vuue 
+	on vuue.account_collection_id = dcu.account_collection_id
+WHERE dcu.property_name in ('UnixLogin')
+and dcu.property_type = 'MclassUnixProp';

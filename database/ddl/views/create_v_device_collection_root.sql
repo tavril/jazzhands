@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-CREATE OR REPLACE VIEW v_dev_col_root AS
+CREATE OR REPLACE VIEW v_device_collection_root AS
 WITH x AS (
 	SELECT
 		c.device_collection_id AS leaf_id,
