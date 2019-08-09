@@ -78,7 +78,7 @@
 \ir pgsql/create_v_netblock_collection_expanded.sql
 
 \ir create_v_device_collection_root.sql
-\ir create_v_dev_col_device_root.sql
+\ir create_v_device_collection_device_root.sql
 
 \ir pgsql/create_v_application_role.sql
 

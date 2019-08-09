@@ -31,23 +31,23 @@ CREATE OR REPLACE VIEW v_account_collection_property_expanded AS
 			is_multivalue,
 		CASE ac.account_collection_type
 			WHEN 'per-account' THEN 0
-			ELSE CASE assign_method
+			ELSE CASE assignment_method
 				WHEN 'DirectAccountCollectionAssignment' THEN 10
 				WHEN 'DirectDepartmentAssignment' THEN 200
 				WHEN 'DepartmentAssignedToAccountCollection' THEN 300
-						+ dept_level + acct_coll_level
+						+ department_level + account_collection_level
 				WHEN 'AccountAssignedToChildDepartment' THEN 400
-						+ dept_level 
+						+ department_level 
 				WHEN 'AccountAssignedToChildAccountCollection' THEN 500
-						+ acct_coll_level
+						+ account_collection_level
 				WHEN 'DepartmentAssignedToChildAccountCollection' THEN 600
-						+ dept_level + acct_coll_level
+						+ department_level + account_collection_level
 				WHEN 'ChildDepartmentAssignedToAccountCollection' THEN 700
-						+ dept_level + acct_coll_level
+						+ department_level + account_collection_level
 				WHEN 'ChildDepartmentAssignedToChildAccountCollection' THEN 800
-						+ dept_level + acct_coll_level
+						+ department_level + account_collection_level
 				ELSE 999
-			END END as assign_rank
+			END END as assignment_rank
 	FROM
 		v_account_collection_expanded_detail JOIN
 		account_collection ac USING (account_collection_id) JOIN

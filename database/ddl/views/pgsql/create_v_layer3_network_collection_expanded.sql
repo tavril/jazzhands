@@ -15,7 +15,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-CREATE OR REPLACE VIEW jazzhands.v_layer3_network_collection_expanded AS
+CREATE OR REPLACE VIEW v_layer3_network_collection_expanded AS
 WITH RECURSIVE layer3_network_collection_recurse (
     level,
     root_layer3_network_collection_id,

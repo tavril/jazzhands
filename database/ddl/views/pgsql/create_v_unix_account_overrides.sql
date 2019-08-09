@@ -49,7 +49,7 @@ FROM (
 							dchd.device_collection_id,
 							acae.account_id,
 							acpe.property_name
-							ORDER BY dchd.device_collection_level, assign_rank,
+							ORDER BY dchd.device_collection_level, assignment_rank,
 								property_id
 					) AS ord
 			FROM    v_account_collection_property_expanded acpe

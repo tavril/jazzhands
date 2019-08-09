@@ -118,6 +118,6 @@ COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
 -- Backwards compatability for a few revisions
 --
 -- temporary comment out. This needs to be reconciled.
--- \ir ddl/legacy.sql
+\ir ddl/legacy.sql
 
 select now();
