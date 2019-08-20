@@ -4422,9 +4422,9 @@ ALTER TABLE jazzhands.network_interface
 
 -- FOREIGN KEYS TO
 -- consider FK logical_port and mlag_peering
-ALTER TABLE jazzhands.logical_port
-	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
-	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
+-- ALTER TABLE jazzhands.logical_port
+--	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
+--	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
 -- consider FK logical_port and device
 ALTER TABLE jazzhands.logical_port
 	ADD CONSTRAINT fk_logical_port_device_id
