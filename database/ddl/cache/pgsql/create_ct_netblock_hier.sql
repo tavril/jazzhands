@@ -43,7 +43,8 @@ SELECT * FROM schema_support.create_cache_table(
         cache_table_schema := 'jazzhands_cache',
         cache_table := 'ct_netblock_hier',
         defining_view_schema := 'jazzhands_cache',
-        defining_view := 'v_netblock_hier'
+        defining_view := 'v_netblock_hier',
+	force := true
 );
 
 
@@ -142,60 +143,50 @@ BEGIN
 		LOOP
 			RAISE DEBUG 'nb/ins up %', to_json(_r);
 			INSERT INTO jazzhands_cache.ct_netblock_hier (
-				root_netblock_id, intermediate_netblock_id, 
+				root_netblock_id, intermediate_netblock_id,
 				netblock_id, path
 			) VALUES (
-				_r.root_netblock_id, _r.intermediate_netblock_id, 
+				_r.root_netblock_id, _r.intermediate_netblock_id,
 				_r.netblock_id, _r.path
 			);
 		END LOOP;
-
 	ELSIF (TG_OP = 'UPDATE' AND NEW.parent_netblock_id IS NOT NULL) THEN
-
+		RAISE DEBUG 'Updating reference for new netblock %->% into cache [%->%]',
+			OLD.netblock_id, NEW.netblock_id, OLD.parent_netblock_id,
+			NEW.parent_netblock_id;
 		FOR _r IN
-		WITH base AS (
-			SELECT *
-			FROM jazzhands_cache.ct_netblock_hier
-			WHERE NEW.netblock_id = ANY (path)
-			AND array_length(path, 1) > 2
-
-		), inew AS (
-			INSERT INTO jazzhands_cache.ct_netblock_hier (
-				root_netblock_id,
-				intermediate_netblock_id,
-				netblock_id,
-				path
-			)  SELECT
-				base.root_netblock_id,
-				NEW.parent_netblock_id,
-				netblock_id,
-				array_cat(
-					array_cat(
-						path[: (array_position(path, NEW.netblock_id)-1)],
-						ARRAY[NEW.netblock_id, NEW.parent_netblock_id]
-					),
-					path[(array_position(path, NEW.netblock_id)+1) :]
-				)
-				FROM base
-				RETURNING *
-		), uold AS (
-			UPDATE jazzhands_cache.ct_netblock_hier n
-			SET root_netblock_id = base.root_netblock_id,
-				intermediate_netblock_id = NEW.parent_netblock_id,
-			path = array_replace(base.path, base.root_netblock_id, NEW.parent_netblock_id)
-			FROM base
-			WHERE n.path = base.path
-				RETURNING n.*
-		) SELECT 'ins' as "what", * FROM inew
-			UNION
-			SELECT 'upd' as "what", * FROM uold
-
+			WITH r AS (
+			UPDATE jazzhands_cache.ct_netblock_hier
+				SET root_netblock_id = NEW.parent_netblock_id
+				WHERE root_netblock_id = OLD.parent_netblock_id
+				AND root_netblock_id != NEW.parent_netblock_id
+				AND netblock_id = OLD.netblock_id
+				AND path != ARRAY[OLD.netblock_id]
+			RETURNING *
+		), i AS (
+			UPDATE jazzhands_cache.ct_netblock_hier
+				SET intermediate_netblock_id = NEW.parent_netblock_id
+				WHERE intermediate_netblock_id = OLD.parent_netblock_id
+				AND intermediate_netblock_id != NEW.parent_netblock_id
+				AND netblock_id = OLD.netblock_id
+			RETURNING *
+		), p AS (
+			UPDATE jazzhands_cache.ct_netblock_hier
+				SET path = array_replace(
+					array_replace(path,
+						OLD.netblock_id, NEW.netblock_id),
+					OLD.parent_netblock_id, NEW.parent_netblock_id)
+			WHERE OLD.netblock_id = ANY(path)
+			RETURNING *
+		) SELECT 'r'AS what, r.* FROM r UNION ALL
+			SELECT 'i', i.* FROM i UNION ALL
+			SELECT 'p', p.* FROM p
 		LOOP
 			RAISE DEBUG 'down:%', to_json(_r);
 		END LOOP;
 
 		get diagnostics _cnt = row_count;
-		RAISE DEBUG 'Inserting upstream references down for updated netblock %/% into cache == %',
+		RAISE DEBUG 'Updating upstream references down for updated netblock %/% into cache == %',
 			NEW.netblock_id, NEW.parent_netblock_id, _cnt;
 
 		-- walk up and install rows for all the things above due to change
@@ -215,7 +206,7 @@ BEGIN
             FROM netblock WHERE netblock_id = NEW.netblock_id
         UNION ALL
             SELECT n.parent_netblock_id,
-                n.netblock_Id,
+                tier.intermediate_netblock_Id,
                 tier.netblock_id,
                 array_append(tier.path, n.parent_netblock_id),
                 n.parent_netblock_id = ANY(path)
@@ -256,7 +247,8 @@ DROP TRIGGER IF EXISTS zaa_ta_cache_netblock_hier_handler
 	ON jazzhands.netblock;
 
 CREATE TRIGGER zaa_ta_cache_netblock_hier_handler
-	AFTER INSERT OR DELETE OR UPDATE OF parent_netblock_id
+	AFTER INSERT OR DELETE OR
+		UPDATE OF parent_netblock_id, ip_address, is_single_address
 	ON jazzhands.netblock
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_cache.cache_netblock_hier_handler();
@@ -278,7 +270,7 @@ SECURITY DEFINER
 ;
 
 DROP TRIGGER IF EXISTS trigger_cache_netblock_hier_truncate
-	ON jazzhands.netbock;
+	ON jazzhands.netblock;
 
 CREATE TRIGGER  trigger_cache_netblock_hier_truncate
 	AFTER TRUNCATE
