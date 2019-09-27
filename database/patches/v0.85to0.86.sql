@@ -25,6 +25,10 @@ Invoked:
 	--scan
 	mlag_peering
 	logical_port
+	v_site_netblock_expanded
+	v_netblock_hier_expanded
+	--post
+	post
 */
 
 \set ON_ERROR_STOP
@@ -71,6 +75,125 @@ BEGIN
 	END LOOP;
 
 END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'create_cache_table');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.create_cache_table ( cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean );
+CREATE OR REPLACE FUNCTION schema_support.create_cache_table(cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	param_cache_table_schema	ALIAS FOR cache_table_schema;
+	param_cache_table			ALIAS FOR cache_table;
+	param_defining_view_schema	ALIAS FOR defining_view_schema;
+	param_defining_view			ALIAS FOR defining_view;
+	ct_rec						RECORD;
+BEGIN
+	--
+	-- Ensure that the defining view exists
+	--
+	PERFORM *
+	FROM
+		information_schema.views
+	WHERE
+		table_schema = defining_view_schema AND
+		table_name = defining_view;
+
+	IF NOT FOUND THEN
+		RAISE 'view %.% does not exist',
+			defining_view_schema,
+			defining_view
+			USING ERRCODE = 'foreign_key_violation';
+	END IF;
+
+	--
+	-- Verify that the cache table does not exist, or if it does that
+	-- we have an entry for it in schema_support.cache_table and
+	-- force is being passed.
+	--
+
+	PERFORM *
+	FROM
+		information_schema.tables
+	WHERE
+		table_schema = cache_table_schema AND
+		table_name = cache_table;
+
+	IF FOUND THEN
+		IF NOT force THEN
+			RAISE 'cache table %.% already exists',
+				cache_table_schema,
+				cache_table
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM *
+		FROM
+			schema_support.cache_table ct
+		WHERE
+			ct.cache_table_schema = param_cache_table_schema AND
+			ct.cache_table = param_cache_table;
+
+		IF NOT FOUND THEN
+			RAISE '%', concat(
+				'cache table ', cache_table_schema, '.', cache_table,
+				' already exists, but there is no tracking ',
+				'information for it in schema_support.cache_table.  ',
+				'This must be corrected manually.')
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM schema_support.save_grants_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		PERFORM schema_support.save_dependent_objects_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		EXECUTE 'DROP TABLE '
+			|| quote_ident(cache_table_schema) || '.'
+			|| quote_ident(cache_table);
+	END IF;
+
+	SELECT * INTO ct_rec
+	FROM
+		schema_support.cache_table ct
+	WHERE
+		ct.cache_table_schema = param_cache_table_schema AND
+		ct.cache_table = param_cache_table;
+
+	IF NOT FOUND THEN
+		INSERT INTO schema_support.cache_table(
+			cache_table_schema,
+			cache_table,
+			defining_view_schema,
+			defining_view,
+			updates_enabled
+		) VALUES (
+			param_cache_table_schema,
+			param_cache_table,
+			param_defining_view_schema,
+			param_defining_view,
+			'true'
+		);
+	END IF;
+
+	EXECUTE format('CREATE TABLE %I.%I AS SELECT * FROM %I.%I',
+		cache_table_schema,
+		cache_table,
+		defining_view_schema,
+		defining_view
+	);
+	IF force THEN
+		PERFORM schema_support.replay_object_recreates();
+		PERFORM schema_support.replay_saved_grants();
+	END IF;
+END
 $function$
 ;
 
@@ -242,40 +365,48 @@ BEGIN
 	--
 	IF _t1 != _t2 THEN
 		RAISE NOTICE 'table % has % rows; table % has % rows (%)', old_rel, _t1, new_rel, _t2, _t1 - _t2;
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
 			quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
-				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' )) ';
-
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InOld/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
-
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' EXCEPT ( '
 				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
 				quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' )) ';
+			' )) ';
 
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InNew/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InOld/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
 
+	IF _cnt > 0  THEN
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+			' EXCEPT ( '
+				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+			' )) ';
+
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InNew/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
+
+	IF _cnt > 0  THEN
 		_rv := false;
 	END IF;
 
@@ -288,7 +419,6 @@ BEGIN
 
 	-- At this point, the same number of rows appear in both, so need to
 	-- figure out rows that are different between them.
-
 
 	-- SELECT row_to_json(o) as old, row_to_json(n) as new
 	-- FROM ( SELECT cols FROM old WHERE prikeys in Vv ) old,
@@ -338,6 +468,7 @@ BEGIN
 		RAISE NOTICE 'NEW: %', _nj;
 		_rv := false;
 	END LOOP;
+
 
 	IF NOT _rv AND raise_exception THEN
 		RAISE EXCEPTION 'Relations do not match (% rows)', _t1;
@@ -745,6 +876,145 @@ BEGIN
 	END LOOP;
 
 END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'synchronize_cache_tables');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.synchronize_cache_tables ( cache_table_schema text, cache_table text );
+CREATE OR REPLACE FUNCTION schema_support.synchronize_cache_tables(cache_table_schema text DEFAULT NULL::text, cache_table text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	ct_rec			RECORD;
+	query			text;
+	inserted_rows	integer;
+	deleted_rows	integer;
+BEGIN
+	IF cache_table_schema IS NULL THEN
+		IF cache_table IS NOT NULL THEN
+			RAISE 'Must specify cache_table_schema if cache_table is passed'
+				USING ERRCODE = 'null_value_not_allowed';
+		END IF;
+		query := '
+			SELECT
+				*
+			FROM
+				schema_support.cache_table
+			WHERE
+				updates_enabled = true
+			';
+	ELSE
+		IF cache_table IS NOT NULL THEN
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					quote_ident(cache_table) = '%I'
+				$query$,
+				cache_table_schema,
+				cache_table
+			);
+		ELSE
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					updates_enabled = true
+				$query$,
+				cache_table_schema
+			);
+		END IF;
+	END IF;
+	FOR ct_rec IN EXECUTE query LOOP
+		RAISE DEBUG 'Processing %.%',
+			quote_ident(ct_rec.cache_table_schema),
+			quote_ident(ct_rec.cache_table);
+
+		--
+		-- Insert rows that exist in the view that do not exist in the cache
+		-- table
+		--
+		query := format($query$
+			INSERT INTO %I.%I
+			SELECT * FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS inserted_rows := ROW_COUNT;
+
+		--
+		-- Delete rows that exist in the cache table that do not exist in the
+		-- defining view
+		--
+		query := format($query$
+			DELETE FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS deleted_rows := ROW_COUNT;
+
+		IF (inserted_rows > 0 OR deleted_rows > 0) THEN
+			INSERT INTO schema_support.cache_table_update_log (
+				cache_table_schema,
+				cache_table,
+				update_timestamp,
+				rows_inserted,
+				rows_deleted,
+				forced
+			) VALUES (
+				ct_rec.cache_table_schema,
+				ct_rec.cache_table,
+				current_timestamp,
+				inserted_rows,
+				deleted_rows,
+				false
+			);
+		END IF;
+	END LOOP;
+END
 $function$
 ;
 
@@ -881,6 +1151,125 @@ $function$
 ;
 
 -- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'create_cache_table');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.create_cache_table ( cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean );
+CREATE OR REPLACE FUNCTION schema_support.create_cache_table(cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	param_cache_table_schema	ALIAS FOR cache_table_schema;
+	param_cache_table			ALIAS FOR cache_table;
+	param_defining_view_schema	ALIAS FOR defining_view_schema;
+	param_defining_view			ALIAS FOR defining_view;
+	ct_rec						RECORD;
+BEGIN
+	--
+	-- Ensure that the defining view exists
+	--
+	PERFORM *
+	FROM
+		information_schema.views
+	WHERE
+		table_schema = defining_view_schema AND
+		table_name = defining_view;
+
+	IF NOT FOUND THEN
+		RAISE 'view %.% does not exist',
+			defining_view_schema,
+			defining_view
+			USING ERRCODE = 'foreign_key_violation';
+	END IF;
+
+	--
+	-- Verify that the cache table does not exist, or if it does that
+	-- we have an entry for it in schema_support.cache_table and
+	-- force is being passed.
+	--
+
+	PERFORM *
+	FROM
+		information_schema.tables
+	WHERE
+		table_schema = cache_table_schema AND
+		table_name = cache_table;
+
+	IF FOUND THEN
+		IF NOT force THEN
+			RAISE 'cache table %.% already exists',
+				cache_table_schema,
+				cache_table
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM *
+		FROM
+			schema_support.cache_table ct
+		WHERE
+			ct.cache_table_schema = param_cache_table_schema AND
+			ct.cache_table = param_cache_table;
+
+		IF NOT FOUND THEN
+			RAISE '%', concat(
+				'cache table ', cache_table_schema, '.', cache_table,
+				' already exists, but there is no tracking ',
+				'information for it in schema_support.cache_table.  ',
+				'This must be corrected manually.')
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM schema_support.save_grants_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		PERFORM schema_support.save_dependent_objects_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		EXECUTE 'DROP TABLE '
+			|| quote_ident(cache_table_schema) || '.'
+			|| quote_ident(cache_table);
+	END IF;
+
+	SELECT * INTO ct_rec
+	FROM
+		schema_support.cache_table ct
+	WHERE
+		ct.cache_table_schema = param_cache_table_schema AND
+		ct.cache_table = param_cache_table;
+
+	IF NOT FOUND THEN
+		INSERT INTO schema_support.cache_table(
+			cache_table_schema,
+			cache_table,
+			defining_view_schema,
+			defining_view,
+			updates_enabled
+		) VALUES (
+			param_cache_table_schema,
+			param_cache_table,
+			param_defining_view_schema,
+			param_defining_view,
+			'true'
+		);
+	END IF;
+
+	EXECUTE format('CREATE TABLE %I.%I AS SELECT * FROM %I.%I',
+		cache_table_schema,
+		cache_table,
+		defining_view_schema,
+		defining_view
+	);
+	IF force THEN
+		PERFORM schema_support.replay_object_recreates();
+		PERFORM schema_support.replay_saved_grants();
+	END IF;
+END
+$function$
+;
+
+-- Changed function
 SELECT schema_support.save_grants_for_replay('schema_support', 'get_columns');
 -- Dropped in case type changes.
 DROP FUNCTION IF EXISTS schema_support.get_columns ( _schema text, _table text );
@@ -1048,40 +1437,48 @@ BEGIN
 	--
 	IF _t1 != _t2 THEN
 		RAISE NOTICE 'table % has % rows; table % has % rows (%)', old_rel, _t1, new_rel, _t2, _t1 - _t2;
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
 			quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
-				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' )) ';
-
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InOld/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
-
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' EXCEPT ( '
 				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
 				quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' )) ';
+			' )) ';
 
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InNew/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InOld/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
 
+	IF _cnt > 0  THEN
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+			' EXCEPT ( '
+				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+			' )) ';
+
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InNew/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
+
+	IF _cnt > 0  THEN
 		_rv := false;
 	END IF;
 
@@ -1094,7 +1491,6 @@ BEGIN
 
 	-- At this point, the same number of rows appear in both, so need to
 	-- figure out rows that are different between them.
-
 
 	-- SELECT row_to_json(o) as old, row_to_json(n) as new
 	-- FROM ( SELECT cols FROM old WHERE prikeys in Vv ) old,
@@ -1144,6 +1540,7 @@ BEGIN
 		RAISE NOTICE 'NEW: %', _nj;
 		_rv := false;
 	END LOOP;
+
 
 	IF NOT _rv AND raise_exception THEN
 		RAISE EXCEPTION 'Relations do not match (% rows)', _t1;
@@ -1551,6 +1948,145 @@ BEGIN
 	END LOOP;
 
 END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'synchronize_cache_tables');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.synchronize_cache_tables ( cache_table_schema text, cache_table text );
+CREATE OR REPLACE FUNCTION schema_support.synchronize_cache_tables(cache_table_schema text DEFAULT NULL::text, cache_table text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	ct_rec			RECORD;
+	query			text;
+	inserted_rows	integer;
+	deleted_rows	integer;
+BEGIN
+	IF cache_table_schema IS NULL THEN
+		IF cache_table IS NOT NULL THEN
+			RAISE 'Must specify cache_table_schema if cache_table is passed'
+				USING ERRCODE = 'null_value_not_allowed';
+		END IF;
+		query := '
+			SELECT
+				*
+			FROM
+				schema_support.cache_table
+			WHERE
+				updates_enabled = true
+			';
+	ELSE
+		IF cache_table IS NOT NULL THEN
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					quote_ident(cache_table) = '%I'
+				$query$,
+				cache_table_schema,
+				cache_table
+			);
+		ELSE
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					updates_enabled = true
+				$query$,
+				cache_table_schema
+			);
+		END IF;
+	END IF;
+	FOR ct_rec IN EXECUTE query LOOP
+		RAISE DEBUG 'Processing %.%',
+			quote_ident(ct_rec.cache_table_schema),
+			quote_ident(ct_rec.cache_table);
+
+		--
+		-- Insert rows that exist in the view that do not exist in the cache
+		-- table
+		--
+		query := format($query$
+			INSERT INTO %I.%I
+			SELECT * FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS inserted_rows := ROW_COUNT;
+
+		--
+		-- Delete rows that exist in the cache table that do not exist in the
+		-- defining view
+		--
+		query := format($query$
+			DELETE FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS deleted_rows := ROW_COUNT;
+
+		IF (inserted_rows > 0 OR deleted_rows > 0) THEN
+			INSERT INTO schema_support.cache_table_update_log (
+				cache_table_schema,
+				cache_table,
+				update_timestamp,
+				rows_inserted,
+				rows_deleted,
+				forced
+			) VALUES (
+				ct_rec.cache_table_schema,
+				ct_rec.cache_table,
+				current_timestamp,
+				inserted_rows,
+				deleted_rows,
+				false
+			);
+		END IF;
+	END LOOP;
+END
 $function$
 ;
 
@@ -1650,6 +2186,1096 @@ $function$
 -- Process middle (non-trigger) schema jazzhands_cache
 --
 --
+-- Process middle (non-trigger) schema lv_manip
+--
+--
+-- Process middle (non-trigger) schema approval_utils
+--
+--
+-- Process middle (non-trigger) schema account_collection_manip
+--
+--
+-- Process middle (non-trigger) schema script_hooks
+--
+--
+-- Process middle (non-trigger) schema backend_utils
+--
+--
+-- Process middle (non-trigger) schema schema_support
+--
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'build_audit_table_other_indexes');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.build_audit_table_other_indexes ( aud_schema character varying, tbl_schema character varying, table_name character varying );
+CREATE OR REPLACE FUNCTION schema_support.build_audit_table_other_indexes(aud_schema character varying, tbl_schema character varying, table_name character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_r	RECORD;
+	sch	TEXT;
+BEGIN
+	-- one day, I will want to construct the list of columns by hand rather
+	-- than use pg_get_constraintdef.  watch me...
+
+	sch := quote_ident( aud_schema );
+	FOR _r IN
+		SELECT c2.relname, pg_get_indexdef(i.indexrelid) as def, con.contype
+	FROM pg_catalog.pg_class c
+	    INNER JOIN pg_namespace n
+		ON relnamespace = n.oid
+	    INNER JOIN pg_catalog.pg_index i
+		ON c.oid = i.indrelid
+	    INNER JOIN pg_catalog.pg_class c2
+		ON i.indexrelid = c2.oid
+	   LEFT JOIN pg_catalog.pg_constraint con ON
+		(con.conrelid = i.indrelid
+		AND con.conindid = i.indexrelid )
+	WHERE c.relname =  table_name
+	AND      n.nspname = tbl_schema
+	AND	con.contype IS NULL
+
+	LOOP
+		_r.def := regexp_replace(_r.def, ' ON ', ' ON ' || sch || '.');
+		EXECUTE _r.def;
+	END LOOP;
+
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'create_cache_table');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.create_cache_table ( cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean );
+CREATE OR REPLACE FUNCTION schema_support.create_cache_table(cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	param_cache_table_schema	ALIAS FOR cache_table_schema;
+	param_cache_table			ALIAS FOR cache_table;
+	param_defining_view_schema	ALIAS FOR defining_view_schema;
+	param_defining_view			ALIAS FOR defining_view;
+	ct_rec						RECORD;
+BEGIN
+	--
+	-- Ensure that the defining view exists
+	--
+	PERFORM *
+	FROM
+		information_schema.views
+	WHERE
+		table_schema = defining_view_schema AND
+		table_name = defining_view;
+
+	IF NOT FOUND THEN
+		RAISE 'view %.% does not exist',
+			defining_view_schema,
+			defining_view
+			USING ERRCODE = 'foreign_key_violation';
+	END IF;
+
+	--
+	-- Verify that the cache table does not exist, or if it does that
+	-- we have an entry for it in schema_support.cache_table and
+	-- force is being passed.
+	--
+
+	PERFORM *
+	FROM
+		information_schema.tables
+	WHERE
+		table_schema = cache_table_schema AND
+		table_name = cache_table;
+
+	IF FOUND THEN
+		IF NOT force THEN
+			RAISE 'cache table %.% already exists',
+				cache_table_schema,
+				cache_table
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM *
+		FROM
+			schema_support.cache_table ct
+		WHERE
+			ct.cache_table_schema = param_cache_table_schema AND
+			ct.cache_table = param_cache_table;
+
+		IF NOT FOUND THEN
+			RAISE '%', concat(
+				'cache table ', cache_table_schema, '.', cache_table,
+				' already exists, but there is no tracking ',
+				'information for it in schema_support.cache_table.  ',
+				'This must be corrected manually.')
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM schema_support.save_grants_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		PERFORM schema_support.save_dependent_objects_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		EXECUTE 'DROP TABLE '
+			|| quote_ident(cache_table_schema) || '.'
+			|| quote_ident(cache_table);
+	END IF;
+
+	SELECT * INTO ct_rec
+	FROM
+		schema_support.cache_table ct
+	WHERE
+		ct.cache_table_schema = param_cache_table_schema AND
+		ct.cache_table = param_cache_table;
+
+	IF NOT FOUND THEN
+		INSERT INTO schema_support.cache_table(
+			cache_table_schema,
+			cache_table,
+			defining_view_schema,
+			defining_view,
+			updates_enabled
+		) VALUES (
+			param_cache_table_schema,
+			param_cache_table,
+			param_defining_view_schema,
+			param_defining_view,
+			'true'
+		);
+	END IF;
+
+	EXECUTE format('CREATE TABLE %I.%I AS SELECT * FROM %I.%I',
+		cache_table_schema,
+		cache_table,
+		defining_view_schema,
+		defining_view
+	);
+	IF force THEN
+		PERFORM schema_support.replay_object_recreates();
+		PERFORM schema_support.replay_saved_grants();
+	END IF;
+END
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'get_columns');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.get_columns ( _schema text, _table text );
+CREATE OR REPLACE FUNCTION schema_support.get_columns(_schema text, _table text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	cols		text[];
+	_r			record;
+BEGIN
+	FOR _r IN SELECT  a.attname as colname,
+	    pg_catalog.format_type(a.atttypid, a.atttypmod) as coltype,
+	    a.attnotnull, a.attnum
+	FROM    pg_catalog.pg_attribute a
+				INNER JOIN pg_class c on a.attrelid = c.oid
+				INNER JOIN pg_namespace n on n.oid = c.relnamespace
+	WHERE   c.relname = _table
+		  AND	n.nspname = _schema
+	  AND   a.attnum > 0
+	  AND   NOT a.attisdropped
+		  AND	lower(a.attname) not like 'data_%'
+	ORDER BY a.attnum
+	LOOP
+		SELECT array_append(cols, _r.colname::text) INTO cols;
+	END LOOP;
+	RETURN cols;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'get_common_columns');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.get_common_columns ( _schema text, _table1 text, _table2 text );
+CREATE OR REPLACE FUNCTION schema_support.get_common_columns(_schema text, _table1 text, _table2 text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_q			text;
+    cols	text[];
+BEGIN
+    _q := 'WITH cols AS (
+	SELECT  n.nspname as schema, c.relname as relation, a.attname as colname, t.typoutput as type,
+		a.attnum
+	    FROM    pg_catalog.pg_attribute a
+		INNER JOIN pg_catalog.pg_class c
+		    ON a.attrelid = c.oid
+		INNER JOIN pg_catalog.pg_namespace n
+		    ON c.relnamespace = n.oid
+				INNER JOIN pg_catalog.pg_type t
+					ON  t.oid = a.atttypid
+	    WHERE   a.attnum > 0
+	    AND   NOT a.attisdropped
+	    ORDER BY a.attnum
+       ) SELECT array_agg(colname ORDER BY attnum) as cols
+	FROM ( SELECT CASE WHEN ( o.type::text ~ ''enum'' OR n.type::text ~ ''enum'')  AND o.type != n.type THEN concat(quote_ident(n.colname), ''::text'')
+					ELSE quote_ident(n.colname)
+					END  AS colname,
+				o.attnum
+			FROM cols  o
+	    INNER JOIN cols n USING (schema, colname)
+		WHERE
+			o.schema = $1
+		and o.relation = $2
+		and n.relation = $3
+		) as prett
+	';
+	EXECUTE _q INTO cols USING _schema, _table1, _table2;
+	RETURN cols;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'get_pk_columns');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.get_pk_columns ( _schema text, _table text );
+CREATE OR REPLACE FUNCTION schema_support.get_pk_columns(_schema text, _table text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	cols		text[];
+	_r			RECORD;
+BEGIN
+	for _r IN SELECT a.attname
+			FROM pg_class c
+				INNER JOIN pg_namespace n on n.oid = c.relnamespace
+				INNER JOIN pg_index i ON i.indrelid = c.oid
+				INNER JOIN pg_attribute  a ON   a.attrelid = c.oid AND
+								a.attnum = any(i.indkey)
+			WHERE	c.relname = _table
+			AND		n.nspname = _schema
+			AND		indisprimary
+	LOOP
+		SELECT array_append(cols, _r.attname::text) INTO cols;
+	END LOOP;
+	RETURN cols;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'relation_diff');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.relation_diff ( schema text, old_rel text, new_rel text, key_relation text, prikeys text[], raise_exception boolean );
+CREATE OR REPLACE FUNCTION schema_support.relation_diff(schema text, old_rel text, new_rel text, key_relation text DEFAULT NULL::text, prikeys text[] DEFAULT NULL::text[], raise_exception boolean DEFAULT true)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_r		RECORD;
+	_t1		integer;
+	_t2		integer;
+	_cnt	integer;
+	_cols	TEXT[];
+	_pkcol	TEXT[];
+	_q		TEXT;
+	_f		TEXT;
+	_c		RECORD;
+	_w		TEXT[];
+	_ctl		TEXT[];
+	_rv	boolean;
+	_oj		jsonb;
+	_nj		jsonb;
+BEGIN
+	-- do a simple row count
+	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || old_rel || '"' INTO _t1;
+	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || new_rel || '"' INTO _t2;
+
+	_rv := true;
+
+	IF _t1 IS NULL THEN
+		RAISE NOTICE 'table %.% does not seem to exist', schema, old_rel;
+		_rv := false;
+	END IF;
+	IF _t2 IS NULL THEN
+		RAISE NOTICE 'table %.% does not seem to exist', schema, new_rel;
+		_rv := false;
+	END IF;
+
+	IF prikeys IS NULL THEN
+		-- read into prikeys the primary key for the table
+		IF key_relation IS NULL THEN
+			key_relation := old_rel;
+		END IF;
+		prikeys := schema_support.get_pk_columns(schema, key_relation);
+	END IF;
+
+	-- read into _cols the column list in common between old_rel and new_rel
+	_cols := schema_support.get_common_columns(schema, old_rel, new_rel);
+
+	_ctl := NULL;
+	FOREACH _f IN ARRAY prikeys
+	LOOP
+		SELECT array_append(_ctl, quote_ident(_f) ) INTO _ctl;
+	END LOOP;
+	_pkcol := _ctl;
+
+	--
+	-- Number of rows mismatch.  Show the missing rows based on the
+	-- primary key.
+	--
+	IF _t1 != _t2 THEN
+		RAISE NOTICE 'table % has % rows; table % has % rows (%)', old_rel, _t1, new_rel, _t2, _t1 - _t2;
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+			' EXCEPT ( '
+				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+			' )) ';
+
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InOld/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
+
+	IF _cnt > 0  THEN
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+			' EXCEPT ( '
+				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+			' )) ';
+
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InNew/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
+
+	IF _cnt > 0  THEN
+		_rv := false;
+	END IF;
+
+	IF NOT _rv THEN
+		IF raise_exception THEN
+			RAISE EXCEPTION 'Relations do not match';
+		END IF;
+		RETURN false;
+	END IF;
+
+	-- At this point, the same number of rows appear in both, so need to
+	-- figure out rows that are different between them.
+
+	-- SELECT row_to_json(o) as old, row_to_json(n) as new
+	-- FROM ( SELECT cols FROM old WHERE prikeys in Vv ) old,
+	-- JOIN ( SELECT cols FROM new WHERE prikeys in Vv ) new
+	-- USING (prikeys);
+	-- WHERE (prikeys) IN
+	-- ( SELECT  prikeys FROM (
+	--		( SELECT cols FROM old EXCEPT ( SELECT cols FROM new ) )
+	-- ))
+
+	_q := ' SELECT row_to_json(old) as old, row_to_json(new) as new FROM ' ||
+		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(old_rel) || ' ) old ' ||
+		' JOIN ' ||
+		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(new_rel) || ' ) new ' ||
+		' USING ( ' ||  array_to_string(_pkcol,',') ||
+		' ) WHERE (' || array_to_string(_pkcol,',') || ' ) IN (' ||
+		'SELECT ' || array_to_string(_pkcol,',')  || ' FROM ( ' ||
+			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(old_rel) ||
+			' EXCEPT ' ||
+			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(new_rel) || ' )) ' ||
+		' ) subq) ORDER BY ' || array_to_string(_pkcol,',')
+	;
+
+	_t1 := 0;
+	FOR _r IN EXECUTE _q
+	LOOP
+		_t1 := _t1 + 1;
+		FOR _f IN SELECT json_object_keys(_r.new)
+		LOOP
+			IF _f = ANY ( prikeys ) OR _r.old->>_f IS DISTINCT FROM _r.new->>_f
+			THEN
+				IF _oj IS NULL THEN
+					_oj := jsonb_build_object(_f, _r.old->>_f);
+					_nj := jsonb_build_object(_f, _r.new->>_f);
+				ELSE
+					_oj := _oj || jsonb_build_object(_f, _r.old->>_f);
+					_nj := _nj || jsonb_build_object(_f, _r.new->>_f);
+				END IF;
+			END IF;
+		END LOOP;
+		RAISE NOTICE 'mismatched row:';
+		RAISE NOTICE 'OLD: %', _oj;
+		RAISE NOTICE 'NEW: %', _nj;
+		_rv := false;
+	END LOOP;
+
+
+	IF NOT _rv AND raise_exception THEN
+		RAISE EXCEPTION 'Relations do not match (% rows)', _t1;
+	ELSE
+		RAISE NOTICE '% rows mismatch', _t1;
+	END IF;
+	return _rv;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'relation_last_changed');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.relation_last_changed ( relation text, schema text, debug boolean );
+CREATE OR REPLACE FUNCTION schema_support.relation_last_changed(relation text, schema text DEFAULT 'jazzhands'::text, debug boolean DEFAULT false)
+ RETURNS timestamp without time zone
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	audsch	text;
+	rk	char;
+	rv	timestamp;
+	ts	timestamp;
+	obj	text;
+	objaud text;
+	objkind text;
+	objschema text;
+BEGIN
+	SELECT	audit_schema
+	INTO	audsch
+	FROM	schema_support.schema_audit_map m
+	WHERE	m.schema = relation_last_changed.schema;
+
+	IF NOT FOUND THEN
+		RAISE EXCEPTION 'Schema % not configured for this', schema;
+	END IF;
+
+	SELECT	relkind
+	INTO	rk
+	FROM	pg_catalog.pg_class c
+		JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+	WHERE	n.nspname = relation_last_changed.schema
+	AND	c.relname = relation_last_changed.relation;
+
+	IF NOT FOUND THEN
+		RAISE EXCEPTION 'No such object %.%', schema, relation;
+	END IF;
+
+	IF rk = 'r' THEN
+		EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
+			FROM '||quote_ident(audsch)||'.'|| quote_ident(relation)
+		INTO rv;
+		IF rv IS NULL THEN
+			EXECUTE '
+				SELECT	max("aud#timestamp")
+				FROM	'||quote_ident(audsch)||'.'||quote_ident(relation)
+			INTO rv;
+		END IF;
+
+		IF rv IS NULL THEN
+			RETURN '-infinity'::timestamp;
+		ELSE
+			RETURN rv;
+		END IF;
+	END IF;
+
+	IF rk = 'v' OR rk = 'm' THEN
+		FOR obj,objaud,objkind, objschema IN WITH RECURSIVE recur AS (
+		SELECT distinct rewrite.ev_class as root_oid, d.refobjid as oid
+		FROM pg_depend d
+		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
+		    JOIN pg_class c on rewrite.ev_class = c.oid
+		    JOIN pg_namespace n on n.oid = c.relnamespace
+		WHERE c.relname = relation
+		AND n.nspname = relation_last_changed.schema
+		AND d.refobjsubid > 0
+	    UNION ALL
+		SELECT recur.root_oid, d.refobjid as oid
+		FROM pg_depend d
+		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
+		    JOIN pg_class c on rewrite.ev_class = c.oid
+		JOIN recur ON recur.oid = rewrite.ev_class
+		AND d.refobjsubid > 0
+		AND c.relkind != 'm'
+	    ), list AS ( select distinct m.audit_schema, c.relname, c.relkind, n.nspname as relschema, recur.*
+		FROM pg_class c
+		    JOIN recur on recur.oid = c.oid
+		    JOIN pg_namespace n on c.relnamespace = n.oid
+		    JOIN schema_support.schema_audit_map m
+			ON m.schema = n.nspname
+		WHERE relkind IN ('r', 'm')
+		) SELECT relname, audit_schema, relkind, relschema from list
+		LOOP
+			-- if there is no audit table, assume its kept current.  This is
+			-- likely some sort of cache table.  XXX - should probably be
+			-- updated to use the materialized view update bits
+			BEGIN
+				IF objkind = 'r' THEN
+					EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
+						FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) ||'
+						WHERE "aud#timestamp" > (
+								SELECT max("aud#timestamp")
+								FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) || '
+							) - ''10 day''::interval'
+						INTO ts;
+					IF ts IS NULL THEN
+						EXECUTE 'SELECT max("aud#timestamp")
+							FROM '||quote_ident(objaud)||'.'|| quote_ident(obj)
+							INTO ts;
+					END IF;
+				ELSIF objkind = 'm' THEN
+					SELECT refresh INTO ts FROM schema_support.mv_refresh m WHERE m.schema = objschema
+						AND m.view = obj;
+				ELSE
+					RAISE NOTICE 'Unknown object kind % for %.%', objkind, objaud, obj;
+				END IF;
+				IF debug THEN
+					RAISE NOTICE 'schema_support.relation_last_changed(): %.% -> %', objaud, obj, ts;
+				END IF;
+				IF rv IS NULL OR ts > rv THEN
+					rv := ts;
+				END IF;
+			EXCEPTION WHEN undefined_table THEN
+				IF debug THEN
+					RAISE NOTICE 'schema_support.relation_last_changed(): skipping %.%', schema, obj;
+				END IF;
+			END;
+		END LOOP;
+		RETURN rv;
+	END IF;
+
+	RAISE EXCEPTION 'Unable to process relkind %', rk;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'reset_table_sequence');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.reset_table_sequence ( schema character varying, table_name character varying );
+CREATE OR REPLACE FUNCTION schema_support.reset_table_sequence(schema character varying, table_name character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	_r	RECORD;
+	m	BIGINT;
+BEGIN
+	FOR _r IN
+		WITH s AS (
+			SELECT	pg_get_serial_sequence(schema||'.'||table_name,
+				a.attname) as seq, a.attname as column
+			FROM	pg_attribute a
+			JOIN pg_class c ON c.oid = a.attrelid
+			JOIN pg_namespace n ON n.oid = c.relnamespace
+			WHERE	c.relname = table_name
+			AND	n.nspname = schema
+				AND	a.attnum > 0
+				AND	NOT a.attisdropped
+		) SELECT s.*, nextval(s.seq) as nv FROM s WHERE seq IS NOT NULL
+	LOOP
+		EXECUTE 'SELECT max('||quote_ident(_r.column)||')+1 FROM  '
+			|| quote_ident(schema)||'.'||quote_ident(table_name)
+			INTO m;
+		IF m IS NOT NULL THEN
+			IF _r.nv > m THEN
+				m := _r.nv;
+			END IF;
+			EXECUTE 'ALTER SEQUENCE ' || _r.seq || ' RESTART WITH '
+				|| m;
+		END IF;
+	END LOOP;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'save_constraint_for_replay');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.save_constraint_for_replay ( schema character varying, object character varying, dropit boolean );
+CREATE OR REPLACE FUNCTION schema_support.save_constraint_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_r		RECORD;
+	_cmd	TEXT;
+	_ddl	TEXT;
+BEGIN
+	PERFORM schema_support.prepare_for_object_replay();
+
+	FOR _r in	SELECT n.nspname, c.relname, con.conname,
+				pg_get_constraintdef(con.oid, true) as def
+		FROM pg_constraint con
+			INNER JOIN pg_class c on (c.relnamespace, c.oid) =
+				(con.connamespace, con.conrelid)
+			INNER JOIN pg_namespace n on n.oid = c.relnamespace
+		WHERE con.confrelid in (
+			select c.oid
+			from pg_class c
+				inner join pg_namespace n on n.oid = c.relnamespace
+			WHERE c.relname = object
+			AND n.nspname = schema
+		) AND n.nspname != schema
+	LOOP
+		_ddl := 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
+			' ADD CONSTRAINT ' || _r.conname || ' ' || _r.def;
+		IF _ddl is NULL THEN
+			RAISE EXCEPTION 'Unable to define constraint for %', _r;
+		END IF;
+		INSERT INTO __recreate (schema, object, type, ddl )
+			VALUES (
+				_r.nspname, _r.relname, 'constraint', _ddl
+			);
+		IF dropit  THEN
+			_cmd = 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
+				' DROP CONSTRAINT ' || _r.conname || ';';
+			EXECUTE _cmd;
+		END IF;
+	END LOOP;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'save_dependent_objects_for_replay');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.save_dependent_objects_for_replay ( schema character varying, object character varying, dropit boolean, doobjectdeps boolean );
+CREATE OR REPLACE FUNCTION schema_support.save_dependent_objects_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true, doobjectdeps boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	_r		RECORD;
+	_cmd	TEXT;
+	_ddl	TEXT;
+BEGIN
+	RAISE DEBUG 'processing %.%', schema, object;
+	-- process stored procedures
+	FOR _r in SELECT  distinct np.nspname::text, dependent.proname::text
+		FROM   pg_depend dep
+			INNER join pg_type dependee on dependee.oid = dep.refobjid
+			INNER join pg_namespace n on n.oid = dependee.typnamespace
+			INNER join pg_proc dependent on dependent.oid = dep.objid
+			INNER join pg_namespace np on np.oid = dependent.pronamespace
+			WHERE   dependee.typname = object
+			  AND	  n.nspname = schema
+	LOOP
+		-- RAISE NOTICE '1 dealing with  %.%', _r.nspname, _r.proname;
+		PERFORM schema_support.save_constraint_for_replay(_r.nspname, _r.proname, dropit);
+		PERFORM schema_support.save_dependent_objects_for_replay(_r.nspname, _r.proname, dropit);
+		PERFORM schema_support.save_function_for_replay(_r.nspname, _r.proname, dropit);
+	END LOOP;
+
+	-- save any triggers on the view
+	FOR _r in SELECT distinct n.nspname::text, dependee.relname::text, dependee.relkind
+		FROM pg_depend
+		JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
+		JOIN pg_class as dependee ON pg_rewrite.ev_class = dependee.oid
+		JOIN pg_class as dependent ON pg_depend.refobjid = dependent.oid
+		JOIN pg_namespace n on n.oid = dependee.relnamespace
+		JOIN pg_namespace sn on sn.oid = dependent.relnamespace
+		JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
+			AND pg_depend.refobjsubid = pg_attribute.attnum
+		WHERE dependent.relname = object
+		AND sn.nspname = schema
+	LOOP
+		IF _r.relkind = 'v' OR _r.relkind = 'm' THEN
+			-- RAISE NOTICE '2 dealing with  %.%', _r.nspname, _r.relname;
+			PERFORM * FROM save_dependent_objects_for_replay(_r.nspname, _r.relname, dropit);
+			PERFORM schema_support.save_view_for_replay(_r.nspname, _r.relname, dropit);
+		END IF;
+	END LOOP;
+	IF doobjectdeps THEN
+		PERFORM schema_support.save_trigger_for_replay(schema, object, dropit);
+		PERFORM schema_support.save_constraint_for_replay('jazzhands', 'table');
+	END IF;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'save_grants_for_replay_relations');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.save_grants_for_replay_relations ( schema character varying, object character varying, newname character varying );
+CREATE OR REPLACE FUNCTION schema_support.save_grants_for_replay_relations(schema character varying, object character varying, newname character varying DEFAULT NULL::character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_schema		varchar;
+	_object	varchar;
+	_tabs		RECORD;
+	_perm		RECORD;
+	_grant		varchar;
+	_fullgrant		varchar;
+	_role		varchar;
+BEGIN
+	_schema := schema;
+	_object := object;
+	if newname IS NULL THEN
+		newname := _object;
+	END IF;
+	PERFORM schema_support.prepare_for_grant_replay();
+
+	-- Handle table wide grants
+	FOR _tabs IN SELECT  n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'm' THEN 'view'
+				WHEN 'v' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as "Type",
+			c.relacl as privs
+		FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+		WHERE c.relkind IN ('r', 'v', 'S', 'f')
+		  AND c.relname = _object
+		  AND n.nspname = _schema
+		ORDER BY 1, 2
+	LOOP
+		-- NOTE:  We lose who granted it.  Oh Well.
+		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
+		LOOP
+			--  grantor | grantee | privilege_type | is_grantable
+			IF _perm.is_grantable THEN
+				_grant = ' WITH GRANT OPTION';
+			ELSE
+				_grant = '';
+			END IF;
+			IF _perm.grantee = 0 THEN
+				_role := 'PUBLIC';
+			ELSE
+				_role := pg_get_userbyid(_perm.grantee);
+			END IF;
+			_fullgrant := 'GRANT ' ||
+				_perm.privilege_type || ' on ' ||
+				_schema || '.' ||
+				newname || ' to ' ||
+				_role || _grant;
+			IF _fullgrant IS NULL THEN
+				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
+					schema, object, newname;
+	    END IF;
+			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
+		END LOOP;
+	END LOOP;
+
+	-- Handle column specific wide grants
+	FOR _tabs IN SELECT  n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'v' THEN 'view'
+				WHEN 'mv' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as "Type",
+			a.attname as col,
+			a.attacl as privs
+		FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+			INNER JOIN pg_attribute a
+		ON a.attrelid = c.oid
+		WHERE c.relkind IN ('r', 'v', 'S', 'f')
+		  AND a.attacl IS NOT NULL
+		  AND c.relname = _object
+		  AND n.nspname = _schema
+		ORDER BY 1, 2
+	LOOP
+		-- NOTE:  We lose who granted it.  Oh Well.
+		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
+		LOOP
+			--  grantor | grantee | privilege_type | is_grantable
+			IF _perm.is_grantable THEN
+				_grant = ' WITH GRANT OPTION';
+			ELSE
+				_grant = '';
+			END IF;
+			IF _perm.grantee = 0 THEN
+				_role := 'PUBLIC';
+			ELSE
+				_role := pg_get_userbyid(_perm.grantee);
+			END IF;
+			_fullgrant := 'GRANT ' ||
+				_perm.privilege_type || '(' || _tabs.col || ')'
+				' on ' ||
+				_schema || '.' ||
+				newname || ' to ' ||
+				_role || _grant;
+			IF _fullgrant IS NULL THEN
+				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
+					schema, object, newname;
+	    END IF;
+			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
+		END LOOP;
+	END LOOP;
+
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'synchronize_cache_tables');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.synchronize_cache_tables ( cache_table_schema text, cache_table text );
+CREATE OR REPLACE FUNCTION schema_support.synchronize_cache_tables(cache_table_schema text DEFAULT NULL::text, cache_table text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	ct_rec			RECORD;
+	query			text;
+	inserted_rows	integer;
+	deleted_rows	integer;
+BEGIN
+	IF cache_table_schema IS NULL THEN
+		IF cache_table IS NOT NULL THEN
+			RAISE 'Must specify cache_table_schema if cache_table is passed'
+				USING ERRCODE = 'null_value_not_allowed';
+		END IF;
+		query := '
+			SELECT
+				*
+			FROM
+				schema_support.cache_table
+			WHERE
+				updates_enabled = true
+			';
+	ELSE
+		IF cache_table IS NOT NULL THEN
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					quote_ident(cache_table) = '%I'
+				$query$,
+				cache_table_schema,
+				cache_table
+			);
+		ELSE
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					updates_enabled = true
+				$query$,
+				cache_table_schema
+			);
+		END IF;
+	END IF;
+	FOR ct_rec IN EXECUTE query LOOP
+		RAISE DEBUG 'Processing %.%',
+			quote_ident(ct_rec.cache_table_schema),
+			quote_ident(ct_rec.cache_table);
+
+		--
+		-- Insert rows that exist in the view that do not exist in the cache
+		-- table
+		--
+		query := format($query$
+			INSERT INTO %I.%I
+			SELECT * FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS inserted_rows := ROW_COUNT;
+
+		--
+		-- Delete rows that exist in the cache table that do not exist in the
+		-- defining view
+		--
+		query := format($query$
+			DELETE FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS deleted_rows := ROW_COUNT;
+
+		IF (inserted_rows > 0 OR deleted_rows > 0) THEN
+			INSERT INTO schema_support.cache_table_update_log (
+				cache_table_schema,
+				cache_table,
+				update_timestamp,
+				rows_inserted,
+				rows_deleted,
+				forced
+			) VALUES (
+				ct_rec.cache_table_schema,
+				ct_rec.cache_table,
+				current_timestamp,
+				inserted_rows,
+				deleted_rows,
+				false
+			);
+		END IF;
+	END LOOP;
+END
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION schema_support.migrate_grants(username text, direction text, old_schema text DEFAULT 'jazzhands'::text, new_schema text DEFAULT 'jazzhands_legacy'::text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	_rv	TEXT[];
+	_r	RECORD;
+	_q	TEXT;
+BEGIN
+	IF lower(direction) NOT IN ('grant','revoke') THEN
+		RAISE EXCEPTION 'direction must be grant or revoke';
+	END IF;
+
+	FOR _r IN
+		WITH x AS (
+		SELECT *
+			FROM (
+		SELECT oid, schema, name,  typ,
+			p->>'privilege_type' as privilege_type,
+			col,
+			r.usename as grantor, e.usename as grantee,
+			r.usesysid as rid,  e.usesysid as eid,
+			e.useconfig
+		FROM (
+			SELECT  c.oid, n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'm' THEN 'view'
+				WHEN 'v' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as typ,
+				NULL::text as col,
+			to_jsonb(pg_catalog.aclexplode(acl := c.relacl)) as p
+			FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+			WHERE c.relkind IN ('r', 'v', 'S', 'f')
+		UNION ALL
+		SELECT  c.oid, n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'v' THEN 'view'
+				WHEN 'mv' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as typ,
+			a.attname as col,
+			to_jsonb(pg_catalog.aclexplode(a.attacl)) as p
+			FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+			INNER JOIN pg_attribute a
+				ON a.attrelid = c.oid
+			WHERE c.relkind IN ('r', 'v', 'S', 'f')
+			AND a.attacl IS NOT NULL
+		) x
+		LEFT JOIN pg_user r ON r.usesysid = (p->>'grantor')::oid
+		LEFT JOIN pg_user e ON e.usesysid = (p->>'grantee')::oid
+		) i
+		) select *
+		FROM x
+		WHERE ( schema = old_schema )
+		AND grantee = username
+		AND typ IN ('table', 'view', 'mview', 'foreign table')
+		order by name, col
+	LOOP
+		IF _r.col IS NOT NULL THEN
+			_q = concat(' (', _r.col, ') ');
+		ELSE
+			_q := NULL;
+		END IF;
+		IF lower(direction) = 'grant' THEN
+			_q := concat('GRANT ', _r.privilege_type, _q, ' ON ', new_schema, '.', _r.name, ' TO ', _r.grantee);
+		ELSIF lower(direction) = 'revoke' THEN
+			_q := concat('REVOKE ', _r.privilege_type, _q, ' ON ', old_schema, '.', _r.name, ' FROM ', _r.grantee);
+		END IF;
+
+
+		_rv := array_append(_rv, _q);
+		EXECUTE _q;
+	END LOOP;
+	RETURN _rv;
+END;
+$function$
+;
+
+--
 -- Process middle (non-trigger) schema jazzhands
 --
 --
@@ -1668,16 +3294,10 @@ $function$
 -- Process middle (non-trigger) schema person_manip
 --
 --
--- Process middle (non-trigger) schema layerx_network_manip
---
---
 -- Process middle (non-trigger) schema auto_ac_manip
 --
 --
 -- Process middle (non-trigger) schema company_manip
---
---
--- Process middle (non-trigger) schema component_connection_utils
 --
 --
 -- Process middle (non-trigger) schema token_utils
@@ -2555,818 +4175,6 @@ $function$
 ;
 
 --
--- Process middle (non-trigger) schema rack_utils
---
---
--- Process middle (non-trigger) schema schema_support
---
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'build_audit_table_other_indexes');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.build_audit_table_other_indexes ( aud_schema character varying, tbl_schema character varying, table_name character varying );
-CREATE OR REPLACE FUNCTION schema_support.build_audit_table_other_indexes(aud_schema character varying, tbl_schema character varying, table_name character varying)
- RETURNS void
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_r	RECORD;
-	sch	TEXT;
-BEGIN
-	-- one day, I will want to construct the list of columns by hand rather
-	-- than use pg_get_constraintdef.  watch me...
-
-	sch := quote_ident( aud_schema );
-	FOR _r IN
-		SELECT c2.relname, pg_get_indexdef(i.indexrelid) as def, con.contype
-	FROM pg_catalog.pg_class c
-	    INNER JOIN pg_namespace n
-		ON relnamespace = n.oid
-	    INNER JOIN pg_catalog.pg_index i
-		ON c.oid = i.indrelid
-	    INNER JOIN pg_catalog.pg_class c2
-		ON i.indexrelid = c2.oid
-	   LEFT JOIN pg_catalog.pg_constraint con ON
-		(con.conrelid = i.indrelid
-		AND con.conindid = i.indexrelid )
-	WHERE c.relname =  table_name
-	AND      n.nspname = tbl_schema
-	AND	con.contype IS NULL
-
-	LOOP
-		_r.def := regexp_replace(_r.def, ' ON ', ' ON ' || sch || '.');
-		EXECUTE _r.def;
-	END LOOP;
-
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'get_columns');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.get_columns ( _schema text, _table text );
-CREATE OR REPLACE FUNCTION schema_support.get_columns(_schema text, _table text)
- RETURNS text[]
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	cols		text[];
-	_r			record;
-BEGIN
-	FOR _r IN SELECT  a.attname as colname,
-	    pg_catalog.format_type(a.atttypid, a.atttypmod) as coltype,
-	    a.attnotnull, a.attnum
-	FROM    pg_catalog.pg_attribute a
-				INNER JOIN pg_class c on a.attrelid = c.oid
-				INNER JOIN pg_namespace n on n.oid = c.relnamespace
-	WHERE   c.relname = _table
-		  AND	n.nspname = _schema
-	  AND   a.attnum > 0
-	  AND   NOT a.attisdropped
-		  AND	lower(a.attname) not like 'data_%'
-	ORDER BY a.attnum
-	LOOP
-		SELECT array_append(cols, _r.colname::text) INTO cols;
-	END LOOP;
-	RETURN cols;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'get_common_columns');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.get_common_columns ( _schema text, _table1 text, _table2 text );
-CREATE OR REPLACE FUNCTION schema_support.get_common_columns(_schema text, _table1 text, _table2 text)
- RETURNS text[]
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_q			text;
-    cols	text[];
-BEGIN
-    _q := 'WITH cols AS (
-	SELECT  n.nspname as schema, c.relname as relation, a.attname as colname, t.typoutput as type,
-		a.attnum
-	    FROM    pg_catalog.pg_attribute a
-		INNER JOIN pg_catalog.pg_class c
-		    ON a.attrelid = c.oid
-		INNER JOIN pg_catalog.pg_namespace n
-		    ON c.relnamespace = n.oid
-				INNER JOIN pg_catalog.pg_type t
-					ON  t.oid = a.atttypid
-	    WHERE   a.attnum > 0
-	    AND   NOT a.attisdropped
-	    ORDER BY a.attnum
-       ) SELECT array_agg(colname ORDER BY attnum) as cols
-	FROM ( SELECT CASE WHEN ( o.type::text ~ ''enum'' OR n.type::text ~ ''enum'')  AND o.type != n.type THEN concat(quote_ident(n.colname), ''::text'')
-					ELSE quote_ident(n.colname)
-					END  AS colname,
-				o.attnum
-			FROM cols  o
-	    INNER JOIN cols n USING (schema, colname)
-		WHERE
-			o.schema = $1
-		and o.relation = $2
-		and n.relation = $3
-		) as prett
-	';
-	EXECUTE _q INTO cols USING _schema, _table1, _table2;
-	RETURN cols;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'get_pk_columns');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.get_pk_columns ( _schema text, _table text );
-CREATE OR REPLACE FUNCTION schema_support.get_pk_columns(_schema text, _table text)
- RETURNS text[]
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	cols		text[];
-	_r			RECORD;
-BEGIN
-	for _r IN SELECT a.attname
-			FROM pg_class c
-				INNER JOIN pg_namespace n on n.oid = c.relnamespace
-				INNER JOIN pg_index i ON i.indrelid = c.oid
-				INNER JOIN pg_attribute  a ON   a.attrelid = c.oid AND
-								a.attnum = any(i.indkey)
-			WHERE	c.relname = _table
-			AND		n.nspname = _schema
-			AND		indisprimary
-	LOOP
-		SELECT array_append(cols, _r.attname::text) INTO cols;
-	END LOOP;
-	RETURN cols;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'relation_diff');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.relation_diff ( schema text, old_rel text, new_rel text, key_relation text, prikeys text[], raise_exception boolean );
-CREATE OR REPLACE FUNCTION schema_support.relation_diff(schema text, old_rel text, new_rel text, key_relation text DEFAULT NULL::text, prikeys text[] DEFAULT NULL::text[], raise_exception boolean DEFAULT true)
- RETURNS boolean
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_r		RECORD;
-	_t1		integer;
-	_t2		integer;
-	_cnt	integer;
-	_cols	TEXT[];
-	_pkcol	TEXT[];
-	_q		TEXT;
-	_f		TEXT;
-	_c		RECORD;
-	_w		TEXT[];
-	_ctl		TEXT[];
-	_rv	boolean;
-	_oj		jsonb;
-	_nj		jsonb;
-BEGIN
-	-- do a simple row count
-	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || old_rel || '"' INTO _t1;
-	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || new_rel || '"' INTO _t2;
-
-	_rv := true;
-
-	IF _t1 IS NULL THEN
-		RAISE NOTICE 'table %.% does not seem to exist', schema, old_rel;
-		_rv := false;
-	END IF;
-	IF _t2 IS NULL THEN
-		RAISE NOTICE 'table %.% does not seem to exist', schema, new_rel;
-		_rv := false;
-	END IF;
-
-	IF prikeys IS NULL THEN
-		-- read into prikeys the primary key for the table
-		IF key_relation IS NULL THEN
-			key_relation := old_rel;
-		END IF;
-		prikeys := schema_support.get_pk_columns(schema, key_relation);
-	END IF;
-
-	-- read into _cols the column list in common between old_rel and new_rel
-	_cols := schema_support.get_common_columns(schema, old_rel, new_rel);
-
-	_ctl := NULL;
-	FOREACH _f IN ARRAY prikeys
-	LOOP
-		SELECT array_append(_ctl, quote_ident(_f) ) INTO _ctl;
-	END LOOP;
-	_pkcol := _ctl;
-
-	--
-	-- Number of rows mismatch.  Show the missing rows based on the
-	-- primary key.
-	--
-	IF _t1 != _t2 THEN
-		RAISE NOTICE 'table % has % rows; table % has % rows (%)', old_rel, _t1, new_rel, _t2, _t1 - _t2;
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
-				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' )) ';
-
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InOld/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
-
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
-				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' )) ';
-
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InNew/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
-
-		_rv := false;
-	END IF;
-
-	IF NOT _rv THEN
-		IF raise_exception THEN
-			RAISE EXCEPTION 'Relations do not match';
-		END IF;
-		RETURN false;
-	END IF;
-
-	-- At this point, the same number of rows appear in both, so need to
-	-- figure out rows that are different between them.
-
-
-	-- SELECT row_to_json(o) as old, row_to_json(n) as new
-	-- FROM ( SELECT cols FROM old WHERE prikeys in Vv ) old,
-	-- JOIN ( SELECT cols FROM new WHERE prikeys in Vv ) new
-	-- USING (prikeys);
-	-- WHERE (prikeys) IN
-	-- ( SELECT  prikeys FROM (
-	--		( SELECT cols FROM old EXCEPT ( SELECT cols FROM new ) )
-	-- ))
-
-	_q := ' SELECT row_to_json(old) as old, row_to_json(new) as new FROM ' ||
-		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(old_rel) || ' ) old ' ||
-		' JOIN ' ||
-		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(new_rel) || ' ) new ' ||
-		' USING ( ' ||  array_to_string(_pkcol,',') ||
-		' ) WHERE (' || array_to_string(_pkcol,',') || ' ) IN (' ||
-		'SELECT ' || array_to_string(_pkcol,',')  || ' FROM ( ' ||
-			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(old_rel) ||
-			' EXCEPT ' ||
-			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(new_rel) || ' )) ' ||
-		' ) subq) ORDER BY ' || array_to_string(_pkcol,',')
-	;
-
-	_t1 := 0;
-	FOR _r IN EXECUTE _q
-	LOOP
-		_t1 := _t1 + 1;
-		FOR _f IN SELECT json_object_keys(_r.new)
-		LOOP
-			IF _f = ANY ( prikeys ) OR _r.old->>_f IS DISTINCT FROM _r.new->>_f
-			THEN
-				IF _oj IS NULL THEN
-					_oj := jsonb_build_object(_f, _r.old->>_f);
-					_nj := jsonb_build_object(_f, _r.new->>_f);
-				ELSE
-					_oj := _oj || jsonb_build_object(_f, _r.old->>_f);
-					_nj := _nj || jsonb_build_object(_f, _r.new->>_f);
-				END IF;
-			END IF;
-		END LOOP;
-		RAISE NOTICE 'mismatched row:';
-		RAISE NOTICE 'OLD: %', _oj;
-		RAISE NOTICE 'NEW: %', _nj;
-		_rv := false;
-	END LOOP;
-
-	IF NOT _rv AND raise_exception THEN
-		RAISE EXCEPTION 'Relations do not match (% rows)', _t1;
-	ELSE
-		RAISE NOTICE '% rows mismatch', _t1;
-	END IF;
-	return _rv;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'relation_last_changed');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.relation_last_changed ( relation text, schema text, debug boolean );
-CREATE OR REPLACE FUNCTION schema_support.relation_last_changed(relation text, schema text DEFAULT 'jazzhands'::text, debug boolean DEFAULT false)
- RETURNS timestamp without time zone
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	audsch	text;
-	rk	char;
-	rv	timestamp;
-	ts	timestamp;
-	obj	text;
-	objaud text;
-	objkind text;
-	objschema text;
-BEGIN
-	SELECT	audit_schema
-	INTO	audsch
-	FROM	schema_support.schema_audit_map m
-	WHERE	m.schema = relation_last_changed.schema;
-
-	IF NOT FOUND THEN
-		RAISE EXCEPTION 'Schema % not configured for this', schema;
-	END IF;
-
-	SELECT	relkind
-	INTO	rk
-	FROM	pg_catalog.pg_class c
-		JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-	WHERE	n.nspname = relation_last_changed.schema
-	AND	c.relname = relation_last_changed.relation;
-
-	IF NOT FOUND THEN
-		RAISE EXCEPTION 'No such object %.%', schema, relation;
-	END IF;
-
-	IF rk = 'r' THEN
-		EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
-			FROM '||quote_ident(audsch)||'.'|| quote_ident(relation)
-		INTO rv;
-		IF rv IS NULL THEN
-			EXECUTE '
-				SELECT	max("aud#timestamp")
-				FROM	'||quote_ident(audsch)||'.'||quote_ident(relation)
-			INTO rv;
-		END IF;
-
-		IF rv IS NULL THEN
-			RETURN '-infinity'::timestamp;
-		ELSE
-			RETURN rv;
-		END IF;
-	END IF;
-
-	IF rk = 'v' OR rk = 'm' THEN
-		FOR obj,objaud,objkind, objschema IN WITH RECURSIVE recur AS (
-		SELECT distinct rewrite.ev_class as root_oid, d.refobjid as oid
-		FROM pg_depend d
-		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
-		    JOIN pg_class c on rewrite.ev_class = c.oid
-		    JOIN pg_namespace n on n.oid = c.relnamespace
-		WHERE c.relname = relation
-		AND n.nspname = relation_last_changed.schema
-		AND d.refobjsubid > 0
-	    UNION ALL
-		SELECT recur.root_oid, d.refobjid as oid
-		FROM pg_depend d
-		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
-		    JOIN pg_class c on rewrite.ev_class = c.oid
-		JOIN recur ON recur.oid = rewrite.ev_class
-		AND d.refobjsubid > 0
-		AND c.relkind != 'm'
-	    ), list AS ( select distinct m.audit_schema, c.relname, c.relkind, n.nspname as relschema, recur.*
-		FROM pg_class c
-		    JOIN recur on recur.oid = c.oid
-		    JOIN pg_namespace n on c.relnamespace = n.oid
-		    JOIN schema_support.schema_audit_map m
-			ON m.schema = n.nspname
-		WHERE relkind IN ('r', 'm')
-		) SELECT relname, audit_schema, relkind, relschema from list
-		LOOP
-			-- if there is no audit table, assume its kept current.  This is
-			-- likely some sort of cache table.  XXX - should probably be
-			-- updated to use the materialized view update bits
-			BEGIN
-				IF objkind = 'r' THEN
-					EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
-						FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) ||'
-						WHERE "aud#timestamp" > (
-								SELECT max("aud#timestamp")
-								FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) || '
-							) - ''10 day''::interval'
-						INTO ts;
-					IF ts IS NULL THEN
-						EXECUTE 'SELECT max("aud#timestamp")
-							FROM '||quote_ident(objaud)||'.'|| quote_ident(obj)
-							INTO ts;
-					END IF;
-				ELSIF objkind = 'm' THEN
-					SELECT refresh INTO ts FROM schema_support.mv_refresh m WHERE m.schema = objschema
-						AND m.view = obj;
-				ELSE
-					RAISE NOTICE 'Unknown object kind % for %.%', objkind, objaud, obj;
-				END IF;
-				IF debug THEN
-					RAISE NOTICE 'schema_support.relation_last_changed(): %.% -> %', objaud, obj, ts;
-				END IF;
-				IF rv IS NULL OR ts > rv THEN
-					rv := ts;
-				END IF;
-			EXCEPTION WHEN undefined_table THEN
-				IF debug THEN
-					RAISE NOTICE 'schema_support.relation_last_changed(): skipping %.%', schema, obj;
-				END IF;
-			END;
-		END LOOP;
-		RETURN rv;
-	END IF;
-
-	RAISE EXCEPTION 'Unable to process relkind %', rk;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'reset_table_sequence');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.reset_table_sequence ( schema character varying, table_name character varying );
-CREATE OR REPLACE FUNCTION schema_support.reset_table_sequence(schema character varying, table_name character varying)
- RETURNS void
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	_r	RECORD;
-	m	BIGINT;
-BEGIN
-	FOR _r IN
-		WITH s AS (
-			SELECT	pg_get_serial_sequence(schema||'.'||table_name,
-				a.attname) as seq, a.attname as column
-			FROM	pg_attribute a
-			JOIN pg_class c ON c.oid = a.attrelid
-			JOIN pg_namespace n ON n.oid = c.relnamespace
-			WHERE	c.relname = table_name
-			AND	n.nspname = schema
-				AND	a.attnum > 0
-				AND	NOT a.attisdropped
-		) SELECT s.*, nextval(s.seq) as nv FROM s WHERE seq IS NOT NULL
-	LOOP
-		EXECUTE 'SELECT max('||quote_ident(_r.column)||')+1 FROM  '
-			|| quote_ident(schema)||'.'||quote_ident(table_name)
-			INTO m;
-		IF m IS NOT NULL THEN
-			IF _r.nv > m THEN
-				m := _r.nv;
-			END IF;
-			EXECUTE 'ALTER SEQUENCE ' || _r.seq || ' RESTART WITH '
-				|| m;
-		END IF;
-	END LOOP;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'save_constraint_for_replay');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.save_constraint_for_replay ( schema character varying, object character varying, dropit boolean );
-CREATE OR REPLACE FUNCTION schema_support.save_constraint_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true)
- RETURNS void
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_r		RECORD;
-	_cmd	TEXT;
-	_ddl	TEXT;
-BEGIN
-	PERFORM schema_support.prepare_for_object_replay();
-
-	FOR _r in	SELECT n.nspname, c.relname, con.conname,
-				pg_get_constraintdef(con.oid, true) as def
-		FROM pg_constraint con
-			INNER JOIN pg_class c on (c.relnamespace, c.oid) =
-				(con.connamespace, con.conrelid)
-			INNER JOIN pg_namespace n on n.oid = c.relnamespace
-		WHERE con.confrelid in (
-			select c.oid
-			from pg_class c
-				inner join pg_namespace n on n.oid = c.relnamespace
-			WHERE c.relname = object
-			AND n.nspname = schema
-		) AND n.nspname != schema
-	LOOP
-		_ddl := 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
-			' ADD CONSTRAINT ' || _r.conname || ' ' || _r.def;
-		IF _ddl is NULL THEN
-			RAISE EXCEPTION 'Unable to define constraint for %', _r;
-		END IF;
-		INSERT INTO __recreate (schema, object, type, ddl )
-			VALUES (
-				_r.nspname, _r.relname, 'constraint', _ddl
-			);
-		IF dropit  THEN
-			_cmd = 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
-				' DROP CONSTRAINT ' || _r.conname || ';';
-			EXECUTE _cmd;
-		END IF;
-	END LOOP;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'save_dependent_objects_for_replay');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.save_dependent_objects_for_replay ( schema character varying, object character varying, dropit boolean, doobjectdeps boolean );
-CREATE OR REPLACE FUNCTION schema_support.save_dependent_objects_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true, doobjectdeps boolean DEFAULT false)
- RETURNS void
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	_r		RECORD;
-	_cmd	TEXT;
-	_ddl	TEXT;
-BEGIN
-	RAISE DEBUG 'processing %.%', schema, object;
-	-- process stored procedures
-	FOR _r in SELECT  distinct np.nspname::text, dependent.proname::text
-		FROM   pg_depend dep
-			INNER join pg_type dependee on dependee.oid = dep.refobjid
-			INNER join pg_namespace n on n.oid = dependee.typnamespace
-			INNER join pg_proc dependent on dependent.oid = dep.objid
-			INNER join pg_namespace np on np.oid = dependent.pronamespace
-			WHERE   dependee.typname = object
-			  AND	  n.nspname = schema
-	LOOP
-		-- RAISE NOTICE '1 dealing with  %.%', _r.nspname, _r.proname;
-		PERFORM schema_support.save_constraint_for_replay(_r.nspname, _r.proname, dropit);
-		PERFORM schema_support.save_dependent_objects_for_replay(_r.nspname, _r.proname, dropit);
-		PERFORM schema_support.save_function_for_replay(_r.nspname, _r.proname, dropit);
-	END LOOP;
-
-	-- save any triggers on the view
-	FOR _r in SELECT distinct n.nspname::text, dependee.relname::text, dependee.relkind
-		FROM pg_depend
-		JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
-		JOIN pg_class as dependee ON pg_rewrite.ev_class = dependee.oid
-		JOIN pg_class as dependent ON pg_depend.refobjid = dependent.oid
-		JOIN pg_namespace n on n.oid = dependee.relnamespace
-		JOIN pg_namespace sn on sn.oid = dependent.relnamespace
-		JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
-			AND pg_depend.refobjsubid = pg_attribute.attnum
-		WHERE dependent.relname = object
-		AND sn.nspname = schema
-	LOOP
-		IF _r.relkind = 'v' OR _r.relkind = 'm' THEN
-			-- RAISE NOTICE '2 dealing with  %.%', _r.nspname, _r.relname;
-			PERFORM * FROM save_dependent_objects_for_replay(_r.nspname, _r.relname, dropit);
-			PERFORM schema_support.save_view_for_replay(_r.nspname, _r.relname, dropit);
-		END IF;
-	END LOOP;
-	IF doobjectdeps THEN
-		PERFORM schema_support.save_trigger_for_replay(schema, object, dropit);
-		PERFORM schema_support.save_constraint_for_replay('jazzhands', 'table');
-	END IF;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'save_grants_for_replay_relations');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.save_grants_for_replay_relations ( schema character varying, object character varying, newname character varying );
-CREATE OR REPLACE FUNCTION schema_support.save_grants_for_replay_relations(schema character varying, object character varying, newname character varying DEFAULT NULL::character varying)
- RETURNS void
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_schema		varchar;
-	_object	varchar;
-	_tabs		RECORD;
-	_perm		RECORD;
-	_grant		varchar;
-	_fullgrant		varchar;
-	_role		varchar;
-BEGIN
-	_schema := schema;
-	_object := object;
-	if newname IS NULL THEN
-		newname := _object;
-	END IF;
-	PERFORM schema_support.prepare_for_grant_replay();
-
-	-- Handle table wide grants
-	FOR _tabs IN SELECT  n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'm' THEN 'view'
-				WHEN 'v' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as "Type",
-			c.relacl as privs
-		FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-		WHERE c.relkind IN ('r', 'v', 'S', 'f')
-		  AND c.relname = _object
-		  AND n.nspname = _schema
-		ORDER BY 1, 2
-	LOOP
-		-- NOTE:  We lose who granted it.  Oh Well.
-		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
-		LOOP
-			--  grantor | grantee | privilege_type | is_grantable
-			IF _perm.is_grantable THEN
-				_grant = ' WITH GRANT OPTION';
-			ELSE
-				_grant = '';
-			END IF;
-			IF _perm.grantee = 0 THEN
-				_role := 'PUBLIC';
-			ELSE
-				_role := pg_get_userbyid(_perm.grantee);
-			END IF;
-			_fullgrant := 'GRANT ' ||
-				_perm.privilege_type || ' on ' ||
-				_schema || '.' ||
-				newname || ' to ' ||
-				_role || _grant;
-			IF _fullgrant IS NULL THEN
-				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
-					schema, object, newname;
-	    END IF;
-			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
-		END LOOP;
-	END LOOP;
-
-	-- Handle column specific wide grants
-	FOR _tabs IN SELECT  n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'v' THEN 'view'
-				WHEN 'mv' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as "Type",
-			a.attname as col,
-			a.attacl as privs
-		FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-			INNER JOIN pg_attribute a
-		ON a.attrelid = c.oid
-		WHERE c.relkind IN ('r', 'v', 'S', 'f')
-		  AND a.attacl IS NOT NULL
-		  AND c.relname = _object
-		  AND n.nspname = _schema
-		ORDER BY 1, 2
-	LOOP
-		-- NOTE:  We lose who granted it.  Oh Well.
-		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
-		LOOP
-			--  grantor | grantee | privilege_type | is_grantable
-			IF _perm.is_grantable THEN
-				_grant = ' WITH GRANT OPTION';
-			ELSE
-				_grant = '';
-			END IF;
-			IF _perm.grantee = 0 THEN
-				_role := 'PUBLIC';
-			ELSE
-				_role := pg_get_userbyid(_perm.grantee);
-			END IF;
-			_fullgrant := 'GRANT ' ||
-				_perm.privilege_type || '(' || _tabs.col || ')'
-				' on ' ||
-				_schema || '.' ||
-				newname || ' to ' ||
-				_role || _grant;
-			IF _fullgrant IS NULL THEN
-				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
-					schema, object, newname;
-	    END IF;
-			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
-		END LOOP;
-	END LOOP;
-
-END;
-$function$
-;
-
--- New function
-CREATE OR REPLACE FUNCTION schema_support.migrate_grants(username text, direction text, old_schema text DEFAULT 'jazzhands'::text, new_schema text DEFAULT 'jazzhands_legacy'::text)
- RETURNS text[]
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	_rv	TEXT[];
-	_r	RECORD;
-	_q	TEXT;
-BEGIN
-	IF lower(direction) NOT IN ('grant','revoke') THEN
-		RAISE EXCEPTION 'direction must be grant or revoke';
-	END IF;
-
-	FOR _r IN
-		WITH x AS (
-		SELECT *
-			FROM (
-		SELECT oid, schema, name,  typ,
-			p->>'privilege_type' as privilege_type,
-			col,
-			r.usename as grantor, e.usename as grantee,
-			r.usesysid as rid,  e.usesysid as eid,
-			e.useconfig
-		FROM (
-			SELECT  c.oid, n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'm' THEN 'view'
-				WHEN 'v' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as typ,
-				NULL::text as col,
-			to_jsonb(pg_catalog.aclexplode(acl := c.relacl)) as p
-			FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-			WHERE c.relkind IN ('r', 'v', 'S', 'f')
-		UNION ALL
-		SELECT  c.oid, n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'v' THEN 'view'
-				WHEN 'mv' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as typ,
-			a.attname as col,
-			to_jsonb(pg_catalog.aclexplode(a.attacl)) as p
-			FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-			INNER JOIN pg_attribute a
-				ON a.attrelid = c.oid
-			WHERE c.relkind IN ('r', 'v', 'S', 'f')
-			AND a.attacl IS NOT NULL
-		) x
-		LEFT JOIN pg_user r ON r.usesysid = (p->>'grantor')::oid
-		LEFT JOIN pg_user e ON e.usesysid = (p->>'grantee')::oid
-		) i
-		) select *
-		FROM x
-		WHERE ( schema = old_schema )
-		AND grantee = username
-		AND typ IN ('table', 'view', 'mview', 'foreign table')
-		order by name, col
-	LOOP
-		IF _r.col IS NOT NULL THEN
-			_q = concat(' (', _r.col, ') ');
-		ELSE
-			_q := NULL;
-		END IF;
-		IF lower(direction) = 'grant' THEN
-			_q := concat('GRANT ', _r.privilege_type, _q, ' ON ', new_schema, '.', _r.name, ' TO ', _r.grantee);
-		ELSIF lower(direction) = 'revoke' THEN
-			_q := concat('REVOKE ', _r.privilege_type, _q, ' ON ', old_schema, '.', _r.name, ' FROM ', _r.grantee);
-		END IF;
-
-
-		_rv := array_append(_rv, _q);
-		EXECUTE _q;
-	END LOOP;
-	RETURN _rv;
-END;
-$function$
-;
-
---
 -- Process middle (non-trigger) schema property_utils
 --
 --
@@ -3454,24 +4262,231 @@ END; $function$
 -- Process middle (non-trigger) schema component_utils
 --
 --
+-- Process middle (non-trigger) schema rack_utils
+--
+--
+-- Process middle (non-trigger) schema layerx_network_manip
+--
+--
+-- Process middle (non-trigger) schema component_connection_utils
+--
+--
 -- Process middle (non-trigger) schema snapshot_manip
 --
---
--- Process middle (non-trigger) schema lv_manip
---
---
--- Process middle (non-trigger) schema approval_utils
---
---
--- Process middle (non-trigger) schema account_collection_manip
---
---
--- Process middle (non-trigger) schema script_hooks
---
---
--- Process middle (non-trigger) schema backend_utils
---
+-- Changed function
+SELECT schema_support.save_grants_for_replay('snapshot_manip', 'add_snapshot');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS snapshot_manip.add_snapshot ( os_name character varying, os_version character varying, snapshot_name character varying, snapshot_type character varying );
+CREATE OR REPLACE FUNCTION snapshot_manip.add_snapshot(os_name character varying, os_version character varying, snapshot_name character varying, snapshot_type character varying)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	major_version text;
+	companyid     company.company_id%type;
+	osid          operating_system.operating_system_id%type;
+	snapid        operating_system_snapshot.operating_system_snapshot_id%type;
+	dcid          device_collection.device_collection_id%type;
+
+BEGIN
+	SELECT company.company_id INTO companyid FROM company
+		INNER JOIN company_type USING (company_id)
+		WHERE lower(company_short_name) = lower(os_name)
+		AND company_type = 'os provider';
+
+	IF NOT FOUND THEN
+		RAISE 'Operating system vendor not found';
+	END IF;
+
+	SELECT operating_system_id INTO osid FROM operating_system
+		WHERE operating_system_name = os_name
+		AND version = os_version;
+
+	IF NOT FOUND THEN
+		major_version := substring(os_version, '^[^.]+');
+
+		INSERT INTO operating_system (
+			operating_system_name,
+			company_id,
+			major_version,
+			version,
+			operating_system_family
+		) VALUES (
+			os_name,
+			companyid,
+			major_version,
+			os_version,
+			'linux'
+		) RETURNING * INTO osid;
+
+		INSERT INTO property (
+			property_type,
+			property_name,
+			operating_system_id,
+			property_value
+		) VALUES (
+			'OperatingSystem',
+			'AllowOSDeploy',
+			osid,
+			'N'
+		);
+	END IF;
+
+	INSERT INTO operating_system_snapshot (
+		operating_system_snapshot_name,
+		operating_system_snapshot_type,
+		operating_system_id
+	) VALUES (
+		snapshot_name,
+		snapshot_type,
+		osid
+	) RETURNING * INTO snapid;
+
+	INSERT INTO device_collection (
+		device_collection_name,
+		device_collection_type,
+		description
+	) VALUES (
+		CONCAT(os_name, '-', os_version, '-', snapshot_name),
+		'os-snapshot',
+		NULL
+	) RETURNING * INTO dcid;
+
+	INSERT INTO property (
+		property_type,
+		property_name,
+		device_collection_id,
+		operating_system_snapshot_id,
+		property_value
+	) VALUES (
+		'OperatingSystem',
+		'DeviceCollection',
+		dcid,
+		snapid,
+		NULL
+	), (
+		'OperatingSystem',
+		'AllowSnapDeploy',
+		NULL,
+		snapid,
+		'N'
+	);
+
+	RETURN snapid;
+END;
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION snapshot_manip.get_default_os_version(os_name character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	osid          operating_system.operating_system_id%type;
+	os_version    operating_system.version%type;
+
+BEGIN
+	SELECT os.operating_system_id INTO osid FROM operating_system os
+		WHERE operating_system_name = os_name;
+
+	IF NOT FOUND THEN
+		RAISE 'Operating system not found';
+	END IF;
+
+	SELECT os.version INTO os_version FROM operating_system os
+		INNER JOIN property USING (operating_system_id)
+		WHERE operating_system_name = os_name
+		AND property_type = 'OperatingSystem'
+		AND property_name = 'DefaultVersion';
+
+	IF NOT FOUND THEN
+		RAISE 'Default version not found for operating system';
+	END IF;
+
+	RETURN os_version;
+END;
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION snapshot_manip.get_default_snapshot(os_name character varying, os_version character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	major_version text;
+	companyid     company.company_id%type;
+	osid          operating_system.operating_system_id%type;
+	snapname      operating_system_snapshot.operating_system_snapshot_name%type;
+
+BEGIN
+	SELECT operating_system_id INTO osid FROM operating_system
+		WHERE operating_system_name = os_name
+		AND version = os_version;
+
+	IF NOT FOUND THEN
+		RAISE 'Operating system not found';
+	END IF;
+
+	SELECT operating_system_snapshot_name INTO snapname FROM operating_system_snapshot oss
+		INNER JOIN property p USING (operating_system_snapshot_id)
+		WHERE oss.operating_system_id = osid
+		AND property_type = 'OperatingSystem'
+		AND property_name = 'DefaultSnapshot';
+
+	IF NOT FOUND THEN
+		RAISE 'Default snapshot not found';
+	END IF;
+
+	RETURN snapname;
+END;
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION snapshot_manip.get_device_snapshot(input_device integer)
+ RETURNS character varying
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	snapname      operating_system_snapshot.operating_system_snapshot_name%type;
+
+BEGIN
+	SELECT oss.operating_system_snapshot_name INTO snapname FROM device d
+	INNER JOIN device_collection_device dcd USING (device_id)
+	INNER JOIN device_collection dc USING (device_collection_id)
+	INNER JOIN property p USING (device_collection_id)
+	INNER JOIN operating_system_snapshot oss USING (operating_system_snapshot_id)
+	INNER JOIN operating_system os ON os.operating_system_id = oss.operating_system_id
+	WHERE dc.device_collection_type::text = 'os-snapshot'::text
+		AND p.property_type::text = 'OperatingSystem'::text
+		AND p.property_name::text = 'DeviceCollection'::text
+		AND device_id = input_device;
+
+	IF NOT FOUND THEN
+		RAISE 'Snapshot not set for device';
+	END IF;
+
+	RETURN snapname;
+END;
+$function$
+;
+
 -- Creating new sequences....
+CREATE SEQUENCE device_note_note_id_seq;
 CREATE SEQUENCE encapsulation_range_encapsulation_range_id_seq;
 CREATE SEQUENCE layer2_connection_layer2_connection_id_seq;
 CREATE SEQUENCE person_parking_pass_person_parking_pass_id_seq;
@@ -3930,6 +4945,163 @@ SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'val_person_st
 DROP TABLE IF EXISTS val_person_status_v86;
 DROP TABLE IF EXISTS audit.val_person_status_v86;
 -- DONE DEALING WITH TABLE val_person_status (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE account_auth_log
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'account_auth_log', 'account_auth_log');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+ALTER TABLE jazzhands.account_auth_log DROP CONSTRAINT IF EXISTS fk_acctauthlog_accid;
+ALTER TABLE jazzhands.account_auth_log DROP CONSTRAINT IF EXISTS fk_auth_resource;
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'account_auth_log');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.account_auth_log DROP CONSTRAINT IF EXISTS pk_account_auth_log;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands"."xieacctauthlog_ts_arsrc";
+-- CHECK CONSTRAINTS, etc
+ALTER TABLE jazzhands.account_auth_log DROP CONSTRAINT IF EXISTS check_yes_no_1416198228;
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_account_auth_log ON jazzhands.account_auth_log;
+DROP TRIGGER IF EXISTS trigger_audit_account_auth_log ON jazzhands.account_auth_log;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'account_auth_log');
+---- BEGIN audit.account_auth_log TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'account_auth_log', 'account_auth_log');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'account_auth_log');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.account_auth_log DROP CONSTRAINT IF EXISTS account_auth_log_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."account_auth_log_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."account_auth_log_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."account_auth_log_aud#txid_idx";
+DROP INDEX IF EXISTS "audit"."aud_account_auth_log_pk_account_auth_log";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.account_auth_log TEARDOWN
+
+
+ALTER TABLE account_auth_log RENAME TO account_auth_log_v86;
+ALTER TABLE audit.account_auth_log RENAME TO account_auth_log_v86;
+
+CREATE TABLE jazzhands.account_auth_log
+(
+	account_id	integer NOT NULL,
+	account_auth_ts	timestamp without time zone NOT NULL,
+	auth_resource	varchar(50) NOT NULL,
+	account_auth_seq	integer NOT NULL,
+	was_auth_success	character(1) NOT NULL,
+	auth_resource_instance	varchar(50) NOT NULL,
+	auth_origin	varchar(50) NOT NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_ins_user	varchar(255)  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'account_auth_log', false);
+INSERT INTO account_auth_log (
+	account_id,
+	account_auth_ts,
+	auth_resource,
+	account_auth_seq,
+	was_auth_success,
+	auth_resource_instance,
+	auth_origin,
+	data_ins_date,
+	data_ins_user
+) SELECT
+	account_id,
+	account_auth_ts,
+	auth_resource,
+	account_auth_seq,
+	was_auth_success,
+	auth_resource_instance,
+	auth_origin,
+	data_ins_date,
+	data_ins_user
+FROM account_auth_log_v86;
+
+INSERT INTO audit.account_auth_log (
+	account_id,
+	account_auth_ts,
+	auth_resource,
+	account_auth_seq,
+	was_auth_success,
+	auth_resource_instance,
+	auth_origin,
+	data_ins_date,
+	data_ins_user,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	account_id,
+	account_auth_ts,
+	auth_resource,
+	account_auth_seq,
+	was_auth_success,
+	auth_resource_instance,
+	auth_origin,
+	data_ins_date,
+	data_ins_user,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.account_auth_log_v86;
+
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.account_auth_log ADD CONSTRAINT pk_account_auth_log PRIMARY KEY (account_id, account_auth_ts, auth_resource, account_auth_seq);
+
+-- Table/Column Comments
+COMMENT ON TABLE jazzhands.account_auth_log IS 'Captures all system user authorizations for access to Vonage resources.';
+COMMENT ON COLUMN jazzhands.account_auth_log.account_auth_seq IS 'This sequence is to support table PK with timestamps recived rounded to the secend and generating duplicates.';
+COMMENT ON COLUMN jazzhands.account_auth_log.auth_resource_instance IS 'Keeps track of the server where a user was authenticating for a given resource';
+COMMENT ON COLUMN jazzhands.account_auth_log.auth_origin IS 'Keeps track of where the request for authentication originated from.';
+-- INDEXES
+CREATE INDEX xieacctauthlog_ts_arsrc ON jazzhands.account_auth_log USING btree (account_auth_ts, auth_resource);
+
+-- CHECK CONSTRAINTS
+ALTER TABLE jazzhands.account_auth_log ADD CONSTRAINT check_yes_no_1416198228
+	CHECK (was_auth_success = ANY (ARRAY['Y'::bpchar, 'N'::bpchar]));
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+-- consider FK account_auth_log and account
+ALTER TABLE jazzhands.account_auth_log
+	ADD CONSTRAINT fk_acctauthlog_accid
+	FOREIGN KEY (account_id) REFERENCES jazzhands.account(account_id);
+-- consider FK account_auth_log and val_auth_resource
+ALTER TABLE jazzhands.account_auth_log
+	ADD CONSTRAINT fk_auth_resource
+	FOREIGN KEY (auth_resource) REFERENCES jazzhands.val_auth_resource(auth_resource);
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'account_auth_log');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'account_auth_log');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'account_auth_log');
+DROP TABLE IF EXISTS account_auth_log_v86;
+DROP TABLE IF EXISTS audit.account_auth_log_v86;
+-- DONE DEALING WITH TABLE account_auth_log (jazzhands)
 --------------------------------------------------------------------
 --------------------------------------------------------------------
 -- DEALING WITH TABLE encapsulation_range
@@ -4422,7 +5594,7 @@ ALTER TABLE jazzhands.network_interface
 
 -- FOREIGN KEYS TO
 -- consider FK logical_port and mlag_peering
--- ALTER TABLE jazzhands.logical_port
+--ALTER TABLE jazzhands.logical_port
 --	ADD CONSTRAINT fk_logcal_port_mlag_peering_id
 --	FOREIGN KEY (mlag_peering_id) REFERENCES jazzhands.mlag_peering(mlag_peering_id);
 -- consider FK logical_port and device
@@ -4503,8 +5675,8 @@ ALTER TABLE audit.mlag_peering RENAME TO mlag_peering_v86;
 CREATE TABLE jazzhands.mlag_peering
 (
 	mlag_peering_id	integer NOT NULL,
-	device1_id	integer NOT NULL,
-	device2_id	integer NOT NULL,
+	device1_id	integer  NULL,
+	device2_id	integer  NULL,
 	domain_id	varchar(50)  NULL,
 	system_id	macaddr  NULL,
 	data_ins_user	varchar(255)  NULL,
@@ -5113,10 +6285,991 @@ DROP TABLE IF EXISTS snmp_commstr_v86;
 DROP TABLE IF EXISTS audit.snmp_commstr_v86;
 -- DONE DEALING WITH TABLE snmp_commstr (jazzhands)
 --------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE x509_signed_certificate
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'x509_signed_certificate', 'x509_signed_certificate');
+
+-- FOREIGN KEYS FROM
+ALTER TABLE x509_key_usage_default DROP CONSTRAINT IF EXISTS fk_keyusg_deflt_x509crtid;
+ALTER TABLE property DROP CONSTRAINT IF EXISTS fk_prop_x509_crt_id;
+ALTER TABLE x509_key_usage_attribute DROP CONSTRAINT IF EXISTS fk_x509_certificate;
+
+-- FOREIGN KEYS TO
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS fk_csr_pvtkeyid;
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS fk_pvtkey_x509crt;
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS fk_x509_cert_cert;
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS fk_x509_cert_revoc_reason;
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS fk_x509crtid_crttype;
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands', 'x509_signed_certificate');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS ak_x509_cert_cert_ca_ser;
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS pk_x509_certificate;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands"."xif3x509_signed_certificate";
+DROP INDEX IF EXISTS "jazzhands"."xif4x509_signed_certificate";
+DROP INDEX IF EXISTS "jazzhands"."xif5x509_signed_certificate";
+DROP INDEX IF EXISTS "jazzhands"."xif6x509_signed_certificate";
+-- CHECK CONSTRAINTS, etc
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS check_yes_no_1566384929;
+ALTER TABLE jazzhands.x509_signed_certificate DROP CONSTRAINT IF EXISTS check_yes_no_715951406;
+-- TRIGGERS, etc
+DROP TRIGGER IF EXISTS trig_userlog_x509_signed_certificate ON jazzhands.x509_signed_certificate;
+DROP TRIGGER IF EXISTS trigger_audit_x509_signed_certificate ON jazzhands.x509_signed_certificate;
+DROP TRIGGER IF EXISTS trigger_x509_signed_ski_pvtkey_validate ON jazzhands.x509_signed_certificate;
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'x509_signed_certificate');
+---- BEGIN audit.x509_signed_certificate TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'x509_signed_certificate', 'x509_signed_certificate');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('audit', 'x509_signed_certificate');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE audit.x509_signed_certificate DROP CONSTRAINT IF EXISTS x509_signed_certificate_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "audit"."aud_x509_signed_certificate_ak_x509_cert_cert_ca_ser";
+DROP INDEX IF EXISTS "audit"."aud_x509_signed_certificate_pk_x509_certificate";
+DROP INDEX IF EXISTS "audit"."x509_signed_certificate_aud#realtime_idx";
+DROP INDEX IF EXISTS "audit"."x509_signed_certificate_aud#timestamp_idx";
+DROP INDEX IF EXISTS "audit"."x509_signed_certificate_aud#txid_idx";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+---- DONE audit.x509_signed_certificate TEARDOWN
+
+
+ALTER TABLE x509_signed_certificate RENAME TO x509_signed_certificate_v86;
+ALTER TABLE audit.x509_signed_certificate RENAME TO x509_signed_certificate_v86;
+
+CREATE TABLE jazzhands.x509_signed_certificate
+(
+	x509_signed_certificate_id	integer NOT NULL,
+	x509_certificate_type	varchar(50)  NULL,
+	subject	varchar(255) NOT NULL,
+	friendly_name	varchar(255) NOT NULL,
+	subject_key_identifier	varchar(255)  NULL,
+	is_active	character(1) NOT NULL,
+	is_certificate_authority	character(1) NOT NULL,
+	signing_cert_id	integer  NULL,
+	x509_ca_cert_serial_number	numeric  NULL,
+	public_key	text  NULL,
+	private_key_id	integer  NULL,
+	certificate_signing_request_id	integer  NULL,
+	valid_from	timestamp without time zone NOT NULL,
+	valid_to	timestamp without time zone NOT NULL,
+	x509_revocation_date	timestamp with time zone  NULL,
+	x509_revocation_reason	varchar(50)  NULL,
+	ocsp_uri	varchar(255)  NULL,
+	crl_uri	varchar(255)  NULL,
+	data_ins_user	varchar(255)  NULL,
+	data_ins_date	timestamp with time zone  NULL,
+	data_upd_user	varchar(255)  NULL,
+	data_upd_date	timestamp with time zone  NULL
+);
+SELECT schema_support.build_audit_table('audit', 'jazzhands', 'x509_signed_certificate', false);
+ALTER TABLE x509_signed_certificate
+	ALTER x509_signed_certificate_id
+	SET DEFAULT nextval('jazzhands.x509_signed_certificate_x509_signed_certificate_id_seq'::regclass);
+ALTER TABLE x509_signed_certificate
+	ALTER x509_certificate_type
+	SET DEFAULT 'default'::character varying;
+ALTER TABLE x509_signed_certificate
+	ALTER is_active
+	SET DEFAULT 'Y'::bpchar;
+ALTER TABLE x509_signed_certificate
+	ALTER is_certificate_authority
+	SET DEFAULT 'N'::bpchar;
+INSERT INTO x509_signed_certificate (
+	x509_signed_certificate_id,
+	x509_certificate_type,
+	subject,
+	friendly_name,
+	subject_key_identifier,
+	is_active,
+	is_certificate_authority,
+	signing_cert_id,
+	x509_ca_cert_serial_number,
+	public_key,
+	private_key_id,
+	certificate_signing_request_id,
+	valid_from,
+	valid_to,
+	x509_revocation_date,
+	x509_revocation_reason,
+	ocsp_uri,
+	crl_uri,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+) SELECT
+	x509_signed_certificate_id,
+	x509_certificate_type,
+	subject,
+	friendly_name,
+	subject_key_identifier,
+	is_active,
+	is_certificate_authority,
+	signing_cert_id,
+	x509_ca_cert_serial_number,
+	public_key,
+	private_key_id,
+	certificate_signing_request_id,
+	valid_from,
+	valid_to,
+	x509_revocation_date,
+	x509_revocation_reason,
+	ocsp_uri,
+	crl_uri,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM x509_signed_certificate_v86;
+
+INSERT INTO audit.x509_signed_certificate (
+	x509_signed_certificate_id,
+	x509_certificate_type,
+	subject,
+	friendly_name,
+	subject_key_identifier,
+	is_active,
+	is_certificate_authority,
+	signing_cert_id,
+	x509_ca_cert_serial_number,
+	public_key,
+	private_key_id,
+	certificate_signing_request_id,
+	valid_from,
+	valid_to,
+	x509_revocation_date,
+	x509_revocation_reason,
+	ocsp_uri,
+	crl_uri,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+) SELECT
+	x509_signed_certificate_id,
+	x509_certificate_type,
+	subject,
+	friendly_name,
+	subject_key_identifier,
+	is_active,
+	is_certificate_authority,
+	signing_cert_id,
+	x509_ca_cert_serial_number,
+	public_key,
+	private_key_id,
+	certificate_signing_request_id,
+	valid_from,
+	valid_to,
+	x509_revocation_date,
+	x509_revocation_reason,
+	ocsp_uri,
+	crl_uri,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date,
+	"aud#action",
+	"aud#timestamp",
+	"aud#realtime",
+	"aud#txid",
+	"aud#user",
+	"aud#seq"
+FROM audit.x509_signed_certificate_v86;
+
+ALTER TABLE jazzhands.x509_signed_certificate
+	ALTER x509_signed_certificate_id
+	SET DEFAULT nextval('jazzhands.x509_signed_certificate_x509_signed_certificate_id_seq'::regclass);
+ALTER TABLE jazzhands.x509_signed_certificate
+	ALTER x509_certificate_type
+	SET DEFAULT 'default'::character varying;
+ALTER TABLE jazzhands.x509_signed_certificate
+	ALTER is_active
+	SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands.x509_signed_certificate
+	ALTER is_certificate_authority
+	SET DEFAULT 'N'::bpchar;
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands.x509_signed_certificate ADD CONSTRAINT ak_x509_cert_cert_ca_ser UNIQUE (signing_cert_id, x509_ca_cert_serial_number);
+ALTER TABLE jazzhands.x509_signed_certificate ADD CONSTRAINT pk_x509_certificate PRIMARY KEY (x509_signed_certificate_id);
+
+-- Table/Column Comments
+COMMENT ON TABLE jazzhands.x509_signed_certificate IS 'Signed X509 Certificate';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.x509_signed_certificate_id IS 'Uniquely identifies Certificate';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.x509_certificate_type IS 'business rule; default set but should be set to something else.
+';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.subject IS 'Textual representation of a certificate subject. Certificate subject is a part of X509 certificate specifications.  This is the full subject from the certificate.  Friendly Name provides a human readable one.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.friendly_name IS 'human readable name for certificate.  often just the CN.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.subject_key_identifier IS 'x509 ski (hash, usually sha1 of public key).  must match private_key column if private key is set.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.is_active IS 'indicates certificate is in active use.  This is used by tools to decide how to show it; does not indicate revocation';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.signing_cert_id IS 'x509_cert_id for the certificate that has signed this one.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.x509_ca_cert_serial_number IS 'Serial number assigned to the certificate within Certificate Authority. It uniquely identifies certificate within the realm of the CA.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.public_key IS 'Textual representation of Certificate Public Key. Public Key is a component of X509 standard and is used for encryption.  This will become mandatory in a future release.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.private_key_id IS 'Uniquely identifies Certificate';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.certificate_signing_request_id IS 'Uniquely identifies Certificate';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.valid_from IS 'Timestamp indicating when the certificate becomes valid and can be used.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.valid_to IS 'Timestamp indicating when the certificate becomes invalid and can''t be used.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.x509_revocation_date IS 'if certificate was revoked, when it was revokeed.  reason must also be set.   NULL means not revoked';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.x509_revocation_reason IS 'if certificate was revoked, why iit was revokeed.  date must also be set.   NULL means not revoked';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.ocsp_uri IS 'The URI (without URI: prefix) of the OCSP server for certs signed by this CA.  This is only valid for CAs.  This URI will be included in said certificates.';
+COMMENT ON COLUMN jazzhands.x509_signed_certificate.crl_uri IS 'The URI (without URI: prefix) of the CRL for certs signed by this CA.  This is only valid for CAs.  This URI will be included in said certificates.';
+-- INDEXES
+CREATE INDEX xif3x509_signed_certificate ON jazzhands.x509_signed_certificate USING btree (x509_revocation_reason);
+CREATE INDEX xif4x509_signed_certificate ON jazzhands.x509_signed_certificate USING btree (private_key_id);
+CREATE INDEX xif5x509_signed_certificate ON jazzhands.x509_signed_certificate USING btree (certificate_signing_request_id);
+CREATE INDEX xif6x509_signed_certificate ON jazzhands.x509_signed_certificate USING btree (x509_certificate_type);
+
+-- CHECK CONSTRAINTS
+ALTER TABLE jazzhands.x509_signed_certificate ADD CONSTRAINT check_yes_no_1566384929
+	CHECK (is_active = ANY (ARRAY['Y'::bpchar, 'N'::bpchar]));
+ALTER TABLE jazzhands.x509_signed_certificate ADD CONSTRAINT check_yes_no_715951406
+	CHECK (is_certificate_authority = ANY (ARRAY['Y'::bpchar, 'N'::bpchar]));
+
+-- FOREIGN KEYS FROM
+-- consider FK between x509_signed_certificate and jazzhands.x509_key_usage_default
+ALTER TABLE jazzhands.x509_key_usage_default
+	ADD CONSTRAINT fk_keyusg_deflt_x509crtid
+	FOREIGN KEY (x509_signed_certificate_id) REFERENCES jazzhands.x509_signed_certificate(x509_signed_certificate_id);
+-- consider FK between x509_signed_certificate and jazzhands.property
+ALTER TABLE jazzhands.property
+	ADD CONSTRAINT fk_prop_x509_crt_id
+	FOREIGN KEY (x509_signed_certificate_id) REFERENCES jazzhands.x509_signed_certificate(x509_signed_certificate_id);
+-- consider FK between x509_signed_certificate and jazzhands.x509_key_usage_attribute
+ALTER TABLE jazzhands.x509_key_usage_attribute
+	ADD CONSTRAINT fk_x509_certificate
+	FOREIGN KEY (x509_cert_id) REFERENCES jazzhands.x509_signed_certificate(x509_signed_certificate_id);
+
+-- FOREIGN KEYS TO
+-- consider FK x509_signed_certificate and certificate_signing_request
+ALTER TABLE jazzhands.x509_signed_certificate
+	ADD CONSTRAINT fk_csr_pvtkeyid
+	FOREIGN KEY (certificate_signing_request_id) REFERENCES jazzhands.certificate_signing_request(certificate_signing_request_id);
+-- consider FK x509_signed_certificate and private_key
+ALTER TABLE jazzhands.x509_signed_certificate
+	ADD CONSTRAINT fk_pvtkey_x509crt
+	FOREIGN KEY (private_key_id) REFERENCES jazzhands.private_key(private_key_id);
+-- consider FK x509_signed_certificate and x509_signed_certificate
+ALTER TABLE jazzhands.x509_signed_certificate
+	ADD CONSTRAINT fk_x509_cert_cert
+	FOREIGN KEY (signing_cert_id) REFERENCES jazzhands.x509_signed_certificate(x509_signed_certificate_id);
+-- consider FK x509_signed_certificate and val_x509_revocation_reason
+ALTER TABLE jazzhands.x509_signed_certificate
+	ADD CONSTRAINT fk_x509_cert_revoc_reason
+	FOREIGN KEY (x509_revocation_reason) REFERENCES jazzhands.val_x509_revocation_reason(x509_revocation_reason);
+-- consider FK x509_signed_certificate and val_x509_certificate_type
+ALTER TABLE jazzhands.x509_signed_certificate
+	ADD CONSTRAINT fk_x509crtid_crttype
+	FOREIGN KEY (x509_certificate_type) REFERENCES jazzhands.val_x509_certificate_type(x509_certificate_type);
+
+-- TRIGGERS
+-- consider NEW jazzhands.x509_signed_ski_pvtkey_validate
+CREATE OR REPLACE FUNCTION jazzhands.x509_signed_ski_pvtkey_validate()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+DECLARE
+	ski	TEXT;
+BEGIN
+	--
+	-- XXX needs to be tweaked to ensure that both are set or not set.
+	--
+	IF NEW.private_key_id IS NULL THEN
+		RETURN NEW;
+	END IF;
+
+	SELECT	subject_key_identifier
+	INTO	ski
+	FROM	private_key p
+	WHERE	p.private_key_id = NEW.private_key_id;
+
+	IF FOUND AND ski != NEW.subject_key_identifier THEN
+		RAISE EXCEPTION 'subject key identifier must match private key in private_key' USING ERRCODE = 'foreign_key_violation';
+	END IF;
+
+	RETURN NEW;
+END;
+$function$
+;
+CREATE TRIGGER trigger_x509_signed_ski_pvtkey_validate AFTER INSERT OR UPDATE OF subject_key_identifier, private_key_id ON jazzhands.x509_signed_certificate FOR EACH ROW EXECUTE PROCEDURE jazzhands.x509_signed_ski_pvtkey_validate();
+
+-- XXX - may need to include trigger function
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.rebuild_stamp_trigger('jazzhands', 'x509_signed_certificate');
+SELECT schema_support.build_audit_table_pkak_indexes('audit', 'jazzhands', 'x509_signed_certificate');
+SELECT schema_support.rebuild_audit_trigger('audit', 'jazzhands', 'x509_signed_certificate');
+ALTER SEQUENCE jazzhands.x509_signed_certificate_x509_signed_certificate_id_seq
+	 OWNED BY x509_signed_certificate.x509_signed_certificate_id;
+DROP TABLE IF EXISTS x509_signed_certificate_v86;
+DROP TABLE IF EXISTS audit.x509_signed_certificate_v86;
+-- DONE DEALING WITH TABLE x509_signed_certificate (jazzhands)
+--------------------------------------------------------------------
 --
 -- BEGIN: process_ancillary_schema(jazzhands_cache)
 --
+-- =============================================
+--------------------------------------------------------------------
+-- DEALING WITH TABLE ct_account_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'ct_account_collection_hier_from_ancestor', 'ct_account_collection_hier_from_ancestor');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands_cache', 'ct_account_collection_hier_from_ancestor');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands_cache.ct_account_collection_hier_from_ancestor DROP CONSTRAINT IF EXISTS ct_account_collection_hier_from_ancestor_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands_cache"."iix_account_collection_hier_from_ancestor_id";
+DROP INDEX IF EXISTS "jazzhands_cache"."iix_account_collection_hier_from_ancestor_inter_id";
+DROP INDEX IF EXISTS "jazzhands_cache"."ix_account_collection_hier_from_ancestor_id";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'ct_account_collection_hier_from_ancestor');
+---- BEGIN audit.ct_account_collection_hier_from_ancestor TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'ct_account_collection_hier_from_ancestor', 'ct_account_collection_hier_from_ancestor');
+---- DONE audit.ct_account_collection_hier_from_ancestor TEARDOWN
+
+
+ALTER TABLE jazzhands_cache.ct_account_collection_hier_from_ancestor RENAME TO ct_account_collection_hier_from_ancestor_v86;
+CREATE TABLE jazzhands_cache.ct_account_collection_hier_from_ancestor
+(
+	root_account_collection_id	integer  NULL,
+	account_collection_id	integer  NULL,
+	path	integer[] NOT NULL,
+	cycle	boolean  NULL
+);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands_cache.ct_account_collection_hier_from_ancestor ADD CONSTRAINT ct_account_collection_hier_from_ancestor_pkey PRIMARY KEY (path);
+
+-- Table/Column Comments
+-- INDEXES
+CREATE INDEX iix_account_collection_hier_from_ancestor_id ON jazzhands_cache.ct_account_collection_hier_from_ancestor USING btree (account_collection_id);
+CREATE INDEX ix_account_collection_hier_from_ancestor_id ON jazzhands_cache.ct_account_collection_hier_from_ancestor USING btree (root_account_collection_id);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+DROP TABLE IF EXISTS jazzhands_cache.ct_account_collection_hier_from_ancestor_v86;
+-- DONE DEALING WITH TABLE ct_account_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+-- =============================================
+-- =============================================
+--------------------------------------------------------------------
+-- DEALING WITH TABLE ct_device_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'ct_device_collection_hier_from_ancestor', 'ct_device_collection_hier_from_ancestor');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands_cache', 'ct_device_collection_hier_from_ancestor');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands_cache.ct_device_collection_hier_from_ancestor DROP CONSTRAINT IF EXISTS ct_device_collection_hier_from_ancestor_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands_cache"."iix_device_collection_hier_from_ancestor_id";
+DROP INDEX IF EXISTS "jazzhands_cache"."iix_device_collection_hier_from_ancestor_inter_id";
+DROP INDEX IF EXISTS "jazzhands_cache"."ix_device_collection_hier_from_ancestor_id";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'ct_device_collection_hier_from_ancestor');
+---- BEGIN audit.ct_device_collection_hier_from_ancestor TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'ct_device_collection_hier_from_ancestor', 'ct_device_collection_hier_from_ancestor');
+---- DONE audit.ct_device_collection_hier_from_ancestor TEARDOWN
+
+
+ALTER TABLE jazzhands_cache.ct_device_collection_hier_from_ancestor RENAME TO ct_device_collection_hier_from_ancestor_v86;
+CREATE TABLE jazzhands_cache.ct_device_collection_hier_from_ancestor
+(
+	root_device_collection_id	integer  NULL,
+	device_collection_id	integer  NULL,
+	path	integer[] NOT NULL,
+	cycle	boolean  NULL
+);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands_cache.ct_device_collection_hier_from_ancestor ADD CONSTRAINT ct_device_collection_hier_from_ancestor_pkey PRIMARY KEY (path);
+
+-- Table/Column Comments
+-- INDEXES
+CREATE INDEX iix_device_collection_hier_from_ancestor_id ON jazzhands_cache.ct_device_collection_hier_from_ancestor USING btree (device_collection_id);
+CREATE INDEX ix_device_collection_hier_from_ancestor_id ON jazzhands_cache.ct_device_collection_hier_from_ancestor USING btree (root_device_collection_id);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+DROP TABLE IF EXISTS jazzhands_cache.ct_device_collection_hier_from_ancestor_v86;
+-- DONE DEALING WITH TABLE ct_device_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+-- =============================================
+-- =============================================
+--------------------------------------------------------------------
+-- DEALING WITH TABLE ct_netblock_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'ct_netblock_collection_hier_from_ancestor', 'ct_netblock_collection_hier_from_ancestor');
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- EXTRA-SCHEMA constraints
+SELECT schema_support.save_constraint_for_replay('jazzhands_cache', 'ct_netblock_collection_hier_from_ancestor');
+
+-- PRIMARY and ALTERNATE KEYS
+ALTER TABLE jazzhands_cache.ct_netblock_collection_hier_from_ancestor DROP CONSTRAINT IF EXISTS ct_netblock_collection_hier_from_ancestor_pkey;
+-- INDEXES
+DROP INDEX IF EXISTS "jazzhands_cache"."iix_netblock_collection_hier_from_ancestor_id";
+DROP INDEX IF EXISTS "jazzhands_cache"."iix_netblock_collection_hier_from_ancestor_inter_id";
+DROP INDEX IF EXISTS "jazzhands_cache"."ix_netblock_collection_hier_from_ancestor_id";
+-- CHECK CONSTRAINTS, etc
+-- TRIGGERS, etc
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'ct_netblock_collection_hier_from_ancestor');
+---- BEGIN audit.ct_netblock_collection_hier_from_ancestor TEARDOWN
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('audit', 'ct_netblock_collection_hier_from_ancestor', 'ct_netblock_collection_hier_from_ancestor');
+---- DONE audit.ct_netblock_collection_hier_from_ancestor TEARDOWN
+
+
+ALTER TABLE jazzhands_cache.ct_netblock_collection_hier_from_ancestor RENAME TO ct_netblock_collection_hier_from_ancestor_v86;
+CREATE TABLE jazzhands_cache.ct_netblock_collection_hier_from_ancestor
+(
+	root_netblock_collection_id	integer  NULL,
+	netblock_collection_id	integer  NULL,
+	path	integer[] NOT NULL,
+	cycle	boolean  NULL
+);
+
+-- PRIMARY AND ALTERNATE KEYS
+ALTER TABLE jazzhands_cache.ct_netblock_collection_hier_from_ancestor ADD CONSTRAINT ct_netblock_collection_hier_from_ancestor_pkey PRIMARY KEY (path);
+
+-- Table/Column Comments
+-- INDEXES
+CREATE INDEX iix_netblock_collection_hier_from_ancestor_id ON jazzhands_cache.ct_netblock_collection_hier_from_ancestor USING btree (netblock_collection_id);
+CREATE INDEX ix_netblock_collection_hier_from_ancestor_id ON jazzhands_cache.ct_netblock_collection_hier_from_ancestor USING btree (root_netblock_collection_id);
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+DROP TABLE IF EXISTS jazzhands_cache.ct_netblock_collection_hier_from_ancestor_v86;
+-- DONE DEALING WITH TABLE ct_netblock_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+-- =============================================
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_account_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_account_collection_hier_from_ancestor', 'v_account_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'v_account_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_cache.v_account_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_cache.v_account_collection_hier_from_ancestor AS
+ WITH RECURSIVE var_recurse(root_account_collection_id, account_collection_id, path, cycle) AS (
+         SELECT u.account_collection_id AS root_account_collection_id,
+            u.account_collection_id,
+            ARRAY[u.account_collection_id] AS path,
+            false AS cycle
+           FROM jazzhands.account_collection u
+        UNION ALL
+         SELECT x.root_account_collection_id,
+            uch.child_account_collection_id AS account_collection_id,
+            array_prepend(uch.child_account_collection_id, x.path) AS path,
+            uch.child_account_collection_id = ANY (x.path) AS cycle
+           FROM var_recurse x
+             JOIN jazzhands.account_collection_hier uch ON x.account_collection_id = uch.account_collection_id
+          WHERE NOT x.cycle
+        )
+ SELECT var_recurse.root_account_collection_id,
+    var_recurse.account_collection_id,
+    var_recurse.path,
+    var_recurse.cycle
+   FROM var_recurse;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_cache' AND type = 'view' AND object = 'v_account_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_account_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_account_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_device_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_device_collection_hier_from_ancestor', 'v_device_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'v_device_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_cache.v_device_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_cache.v_device_collection_hier_from_ancestor AS
+ WITH RECURSIVE var_recurse(root_device_collection_id, device_collection_id, path, cycle) AS (
+         SELECT u.device_collection_id AS root_device_collection_id,
+            u.device_collection_id,
+            ARRAY[u.device_collection_id] AS path,
+            false AS cycle
+           FROM jazzhands.device_collection u
+        UNION ALL
+         SELECT x.root_device_collection_id,
+            uch.child_device_collection_id AS device_collection_id,
+            array_prepend(uch.child_device_collection_id, x.path) AS path,
+            uch.child_device_collection_id = ANY (x.path) AS cycle
+           FROM var_recurse x
+             JOIN jazzhands.device_collection_hier uch ON x.device_collection_id = uch.device_collection_id
+          WHERE NOT x.cycle
+        )
+ SELECT var_recurse.root_device_collection_id,
+    var_recurse.device_collection_id,
+    var_recurse.path,
+    var_recurse.cycle
+   FROM var_recurse;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_cache' AND type = 'view' AND object = 'v_device_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_device_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_device_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_netblock_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_netblock_collection_hier_from_ancestor', 'v_netblock_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'v_netblock_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_cache.v_netblock_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_cache.v_netblock_collection_hier_from_ancestor AS
+ WITH RECURSIVE var_recurse(root_netblock_collection_id, netblock_collection_id, path, cycle) AS (
+         SELECT u.netblock_collection_id AS root_netblock_collection_id,
+            u.netblock_collection_id,
+            ARRAY[u.netblock_collection_id] AS path,
+            false AS cycle
+           FROM jazzhands.netblock_collection u
+        UNION ALL
+         SELECT x.root_netblock_collection_id,
+            uch.child_netblock_collection_id AS netblock_collection_id,
+            array_prepend(uch.child_netblock_collection_id, x.path) AS path,
+            uch.child_netblock_collection_id = ANY (x.path) AS cycle
+           FROM var_recurse x
+             JOIN jazzhands.netblock_collection_hier uch ON x.netblock_collection_id = uch.netblock_collection_id
+          WHERE NOT x.cycle
+        )
+ SELECT var_recurse.root_netblock_collection_id,
+    var_recurse.netblock_collection_id,
+    var_recurse.path,
+    var_recurse.cycle
+   FROM var_recurse;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_cache' AND type = 'view' AND object = 'v_netblock_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_netblock_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_netblock_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
 -- DONE: process_ancillary_schema(jazzhands_cache)
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_account_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_account_collection_hier_from_ancestor', 'v_account_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'v_account_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_cache.v_account_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_cache.v_account_collection_hier_from_ancestor AS
+ WITH RECURSIVE var_recurse(root_account_collection_id, account_collection_id, path, cycle) AS (
+         SELECT u.account_collection_id AS root_account_collection_id,
+            u.account_collection_id,
+            ARRAY[u.account_collection_id] AS path,
+            false AS cycle
+           FROM jazzhands.account_collection u
+        UNION ALL
+         SELECT x.root_account_collection_id,
+            uch.child_account_collection_id AS account_collection_id,
+            array_prepend(uch.child_account_collection_id, x.path) AS path,
+            uch.child_account_collection_id = ANY (x.path) AS cycle
+           FROM var_recurse x
+             JOIN jazzhands.account_collection_hier uch ON x.account_collection_id = uch.account_collection_id
+          WHERE NOT x.cycle
+        )
+ SELECT var_recurse.root_account_collection_id,
+    var_recurse.account_collection_id,
+    var_recurse.path,
+    var_recurse.cycle
+   FROM var_recurse;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_cache' AND type = 'view' AND object = 'v_account_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_account_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_account_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_device_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_device_collection_hier_from_ancestor', 'v_device_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'v_device_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_cache.v_device_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_cache.v_device_collection_hier_from_ancestor AS
+ WITH RECURSIVE var_recurse(root_device_collection_id, device_collection_id, path, cycle) AS (
+         SELECT u.device_collection_id AS root_device_collection_id,
+            u.device_collection_id,
+            ARRAY[u.device_collection_id] AS path,
+            false AS cycle
+           FROM jazzhands.device_collection u
+        UNION ALL
+         SELECT x.root_device_collection_id,
+            uch.child_device_collection_id AS device_collection_id,
+            array_prepend(uch.child_device_collection_id, x.path) AS path,
+            uch.child_device_collection_id = ANY (x.path) AS cycle
+           FROM var_recurse x
+             JOIN jazzhands.device_collection_hier uch ON x.device_collection_id = uch.device_collection_id
+          WHERE NOT x.cycle
+        )
+ SELECT var_recurse.root_device_collection_id,
+    var_recurse.device_collection_id,
+    var_recurse.path,
+    var_recurse.cycle
+   FROM var_recurse;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_cache' AND type = 'view' AND object = 'v_device_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_device_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_device_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_netblock_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_netblock_collection_hier_from_ancestor', 'v_netblock_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands_cache', 'v_netblock_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands_cache.v_netblock_collection_hier_from_ancestor;
+CREATE VIEW jazzhands_cache.v_netblock_collection_hier_from_ancestor AS
+ WITH RECURSIVE var_recurse(root_netblock_collection_id, netblock_collection_id, path, cycle) AS (
+         SELECT u.netblock_collection_id AS root_netblock_collection_id,
+            u.netblock_collection_id,
+            ARRAY[u.netblock_collection_id] AS path,
+            false AS cycle
+           FROM jazzhands.netblock_collection u
+        UNION ALL
+         SELECT x.root_netblock_collection_id,
+            uch.child_netblock_collection_id AS netblock_collection_id,
+            array_prepend(uch.child_netblock_collection_id, x.path) AS path,
+            uch.child_netblock_collection_id = ANY (x.path) AS cycle
+           FROM var_recurse x
+             JOIN jazzhands.netblock_collection_hier uch ON x.netblock_collection_id = uch.netblock_collection_id
+          WHERE NOT x.cycle
+        )
+ SELECT var_recurse.root_netblock_collection_id,
+    var_recurse.netblock_collection_id,
+    var_recurse.path,
+    var_recurse.cycle
+   FROM var_recurse;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands_cache' AND type = 'view' AND object = 'v_netblock_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_netblock_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_netblock_collection_hier_from_ancestor (jazzhands_cache)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_account_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_account_collection_hier_from_ancestor', 'v_account_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'v_account_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands.v_account_collection_hier_from_ancestor;
+CREATE VIEW jazzhands.v_account_collection_hier_from_ancestor AS
+ SELECT ct_account_collection_hier_from_ancestor.root_account_collection_id,
+    ct_account_collection_hier_from_ancestor.account_collection_id,
+    ct_account_collection_hier_from_ancestor.path,
+    ct_account_collection_hier_from_ancestor.cycle
+   FROM jazzhands_cache.ct_account_collection_hier_from_ancestor;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands' AND type = 'view' AND object = 'v_account_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_account_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_account_collection_hier_from_ancestor (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_device_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_device_collection_hier_from_ancestor', 'v_device_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'v_device_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands.v_device_collection_hier_from_ancestor;
+CREATE VIEW jazzhands.v_device_collection_hier_from_ancestor AS
+ SELECT ct_device_collection_hier_from_ancestor.root_device_collection_id,
+    ct_device_collection_hier_from_ancestor.device_collection_id,
+    ct_device_collection_hier_from_ancestor.path,
+    ct_device_collection_hier_from_ancestor.cycle
+   FROM jazzhands_cache.ct_device_collection_hier_from_ancestor;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands' AND type = 'view' AND object = 'v_device_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_device_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_device_collection_hier_from_ancestor (jazzhands)
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- DEALING WITH TABLE v_netblock_collection_hier_from_ancestor
+-- Save grants for later reapplication
+SELECT schema_support.save_grants_for_replay('jazzhands', 'v_netblock_collection_hier_from_ancestor', 'v_netblock_collection_hier_from_ancestor');
+SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'v_netblock_collection_hier_from_ancestor');
+DROP VIEW IF EXISTS jazzhands.v_netblock_collection_hier_from_ancestor;
+CREATE VIEW jazzhands.v_netblock_collection_hier_from_ancestor AS
+ SELECT ct_netblock_collection_hier_from_ancestor.root_netblock_collection_id,
+    ct_netblock_collection_hier_from_ancestor.netblock_collection_id,
+    ct_netblock_collection_hier_from_ancestor.path,
+    ct_netblock_collection_hier_from_ancestor.cycle
+   FROM jazzhands_cache.ct_netblock_collection_hier_from_ancestor;
+
+DO $$
+
+			BEGIN
+				DELETE FROM __recreate WHERE schema = 'jazzhands' AND type = 'view' AND object = 'v_netblock_collection_hier_from_ancestor';
+			EXCEPTION WHEN undefined_table THEN
+				RAISE NOTICE 'Drop of v_netblock_collection_hier_from_ancestor failed but that is ok';
+				NULL;
+			END;
+$$;
+
+-- just in case
+SELECT schema_support.prepare_for_object_replay();
+
+-- PRIMARY AND ALTERNATE KEYS
+
+-- Table/Column Comments
+-- INDEXES
+
+-- CHECK CONSTRAINTS
+
+-- FOREIGN KEYS FROM
+
+-- FOREIGN KEYS TO
+
+-- TRIGGERS
+-- this used to be at the end...
+-- SELECT schema_support.replay_object_recreates();
+-- DONE DEALING WITH TABLE v_netblock_collection_hier_from_ancestor (jazzhands)
+--------------------------------------------------------------------
 --------------------------------------------------------------------
 -- DEALING WITH NEW TABLE v_site_netblock_expanded_assigned (jazzhands)
 SELECT schema_support.save_dependent_objects_for_replay('jazzhands', 'v_site_netblock_expanded_assigned');
@@ -5197,7 +7350,7 @@ $$;
 
 -- TRIGGERS
 -- this used to be at the end...
--- SELECT schema_support.replay_object_recreates();
+SELECT schema_support.replay_object_recreates();
 -- DONE DEALING WITH TABLE v_site_netblock_expanded_assigned (jazzhands)
 --------------------------------------------------------------------
 --------------------------------------------------------------------
@@ -5258,6 +7411,124 @@ $$;
 -- Process drops in jazzhands_cache
 --
 -- Changed function
+SELECT schema_support.save_grants_for_replay('jazzhands_cache', 'account_collection_base_handler');
+CREATE OR REPLACE FUNCTION jazzhands_cache.account_collection_base_handler()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+BEGIN
+	IF TG_OP = 'DELETE' THEN
+		DELETE FROM jazzhands_cache.ct_account_collection_hier_from_ancestor
+		WHERE root_account_collection_id = OLD.account_collection_id
+		AND account_collection_id = OLD.account_collection_id;
+
+		RETURN OLD;
+	ELSIF TG_OP = 'UPDATE' THEN
+		UPDATE jazzhands_cache.ct_account_collection_hier_from_ancestor
+		SET
+			root_account_collection_id = NEW.account_collection_id,
+			account_collection_id = NEW.account_collection_id
+		WHERE root_account_collection_id = OLD.account_collection_id
+		AND account_collection_id = OLD.account_collection_id;
+	ELSIF TG_OP = 'INSERT' THEN
+		INSERT INTO jazzhands_cache.ct_account_collection_hier_from_ancestor (
+			root_account_collection_id,
+			account_collection_id,
+			path,
+			cycle
+		) VALUES (
+			NEW.account_collection_id,
+			NEW.account_collection_id,
+			ARRAY[NEW.account_collection_id],
+			false
+		);
+	END IF;
+
+	RETURN NEW;
+END
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('jazzhands_cache', 'account_collection_root_handler');
+CREATE OR REPLACE FUNCTION jazzhands_cache.account_collection_root_handler()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+DECLARE
+	_r		RECORD;
+	_cnt	INTEGER;
+BEGIN
+	--
+	-- Delete any rows that are invalidated due to a parent change.
+	--
+	IF
+		(TG_OP = 'DELETE' OR TG_OP = 'UPDATE')
+	THEN
+		FOR _r IN
+		DELETE FROM jazzhands_cache.ct_account_collection_hier_from_ancestor
+		WHERE	OLD.account_collection_id = ANY (path)
+		AND		OLD.child_account_collection_id = ANY (path)
+		RETURNING *
+		LOOP
+			RAISE DEBUG '-> rm %', to_json(_r);
+		END LOOP
+		;
+		get diagnostics _cnt = row_count;
+		RAISE DEBUG 'Deleting upstream references to netcoll %/% from cache == %',
+			OLD.account_collection_id, OLD.child_account_collection_id, _cnt;
+	END IF;
+
+
+	--
+	-- Insert any new rows to correspond with a new parent
+	--
+	IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+		RAISE DEBUG '%%Insert: %', to_json(NEW);
+		-- for the new collection/child, glue together all the ones that
+		-- have account_collection_id = parent
+		-- with those that have root_account_collection_id = child
+
+		FOR _r IN
+			SELECT
+				p.path as parent_path, c.path as child_path,
+				p.root_account_collection_id,
+				c.account_collection_id,
+				c.path || p.path as path,
+				false AS cycle
+			FROM	jazzhands_cache.ct_account_collection_hier_from_ancestor p,
+				jazzhands_cache.ct_account_collection_hier_from_ancestor c
+			WHERE p.account_collection_id = NEW.account_collection_id
+			AND c.root_account_collection_id = NEW.child_account_collection_id
+		LOOP
+			RAISE DEBUG 'i/smash:%', to_json(_r);
+			IF _r.cycle THEN
+				RAISE EXCEPTION 'danger!  cycle!';
+			END IF;
+			INSERT INTO jazzhands_cache.ct_account_collection_hier_from_ancestor (
+					root_account_collection_id,
+					account_collection_id,
+					path,
+					cycle
+				) VALUES (
+					_r.root_account_collection_id,
+					_r.account_collection_id,
+					_r.path,
+					_r.cycle
+				);
+		END LOOP;
+	END IF;
+
+	RETURN NULL;
+END
+$function$
+;
+
+-- Changed function
 SELECT schema_support.save_grants_for_replay('jazzhands_cache', 'cache_netblock_hier_handler');
 CREATE OR REPLACE FUNCTION jazzhands_cache.cache_netblock_hier_handler()
  RETURNS trigger
@@ -5268,14 +7539,38 @@ AS $function$
 DECLARE
 	_cnt	INTEGER;
 	_r		RECORD;
+	_n		RECORD;
 BEGIN
 	IF TG_OP IN ('UPDATE','INSERT') AND NEW.is_single_address = 'Y' THEN
 		RETURN NULL;
 	END IF;
+
+	IF TG_OP IN ('DELETE','UPDATE') THEN
+		RAISE DEBUG 'ENTER cache_netblock_hier_handler OLD: % %',
+			TG_OP, to_json(OLD);
+	END IF;
+	IF TG_OP IN ('INSERT','UPDATE') THEN
+		RAISE DEBUG 'ENTER cache_netblock_hier_handler NEW: % %',
+			TG_OP, to_json(NEW);
+		IF NEW.parent_netblock_id IS NOT NULL AND NEW.netblock_id = NEW.parent_netblock_id THEN
+			RAISE DEBUG 'aborting because this row is self referrential';
+			RETURN NULL;
+		END IF;
+	END IF;
+
 	--
 	-- Delete any rows that are invalidated due to a parent change.
+	-- Any parent change means recreating all the rows related to the node
+	-- that changes; due to how the netblock triggers work, this may result
+	-- in records being changed multiple times.
 	--
-	IF TG_OP = 'DELETE' THEN
+	IF TG_OP = 'DELETE' OR
+		(
+			TG_OP = 'UPDATE' AND OLD.parent_netblock_id IS NOT NULL
+		)
+	THEN
+		RAISE DEBUG '% cleanup for %, % [%]',
+			TG_OP, OLD.netblock_id, OLD.parent_netblock_id, OLD.ip_address;
 		FOR _r IN
 		DELETE FROM jazzhands_cache.ct_netblock_hier
 		WHERE	OLD.netblock_id = ANY(path)
@@ -5284,33 +7579,32 @@ BEGIN
 			RAISE DEBUG '-> rm/DEL %', to_json(_r);
 		END LOOP;
 		get diagnostics _cnt = row_count;
-		RAISE DEBUG 'Deleting upstream references to netblock % from cache == %',
+		RAISE DEBUG 'nbcache: Deleting upstream references to netblock % from cache == %',
 			OLD.netblock_id, _cnt;
-	ELSIF TG_OP = 'UPDATE' AND OLD.parent_netblock_id IS NOT NULL THEN
+	ELSIF TG_OP = 'INSERT' THEN
 		FOR _r IN
 		DELETE FROM jazzhands_cache.ct_netblock_hier
-		WHERE	OLD.parent_netblock_id IS NOT NULL
-					AND		OLD.parent_netblock_id = ANY (path)
-					AND		OLD.netblock_id = ANY (path)
-					AND		netblock_id = OLD.netblock_id
+		-- WHERE	NEW.netblock_id = ANY(path)
+		WHERE root_netblocK_id = NEW.netblock_id
 		RETURNING *
 		LOOP
-			RAISE DEBUG '-> rm/upd %', to_json(_r);
+			RAISE DEBUG '-> rm/INS?! %', to_json(_r);
 		END LOOP;
-		get diagnostics _cnt = row_count;
-		RAISE DEBUG 'Deleting upstream references to netblock %/% from cache == %',
-			OLD.netblock_id, OLD.parent_netblock_id, _cnt;
 	END IF;
 
+
 	--
-	-- Insert any new rows to correspond with a new parent
+	-- XXX deal with parent becoming NULL!
 	--
 
+	IF TG_OP IN ('INSERT', 'UPDATE') THEN
+		RAISE DEBUG 'nbcache: % reference for new netblock %, % [%]',
+			TG_OP, NEW.netblock_id, NEW.parent_netblock_id, NEW.ip_address;
 
-	IF TG_OP IN ('INSERT') THEN
-		RAISE DEBUG 'Inserting reference for new netblock % into cache [%]',
-			NEW.netblock_id, NEW.parent_netblock_id;
-
+		--
+		-- This runs even if parent_netblock_id is NULL in order to get the
+		-- row that includes the netblock into itself.
+		--
 		FOR _r IN
 		WITH RECURSIVE tier (
 			root_netblock_id,
@@ -5333,7 +7627,7 @@ BEGIN
 				JOIN netblock n ON n.netblock_id = tier.root_netblock_id
 			WHERE n.parent_netblock_id IS NOT NULL
 		), combo AS (
-			 SELECT * FROM tier
+			SELECT * FROM tier
 			UNION ALL
 			SELECT netblock_id, netblock_id, netblock_id, ARRAY[netblock_id]
 			FROM netblock WHERE netblock_id = NEW.netblock_id
@@ -5341,107 +7635,1402 @@ BEGIN
 		LOOP
 			RAISE DEBUG 'nb/ins up %', to_json(_r);
 			INSERT INTO jazzhands_cache.ct_netblock_hier (
-				root_netblock_id, intermediate_netblock_id, 
+				root_netblock_id, intermediate_netblock_id,
 				netblock_id, path
 			) VALUES (
-				_r.root_netblock_id, _r.intermediate_netblock_id, 
+				_r.root_netblock_id, _r.intermediate_netblock_id,
 				_r.netblock_id, _r.path
 			);
 		END LOOP;
 
-	ELSIF (TG_OP = 'UPDATE' AND NEW.parent_netblock_id IS NOT NULL) THEN
-
 		FOR _r IN
-		WITH base AS (
-			SELECT *
-			FROM jazzhands_cache.ct_netblock_hier
-			WHERE NEW.netblock_id = ANY (path)
-			AND array_length(path, 1) > 2
-
-		), inew AS (
-			INSERT INTO jazzhands_cache.ct_netblock_hier (
-				root_netblock_id,
-				intermediate_netblock_id,
-				netblock_id,
-				path
-			)  SELECT
-				base.root_netblock_id,
-				NEW.parent_netblock_id,
-				netblock_id,
-				array_cat(
-					array_cat(
-						path[: (array_position(path, NEW.netblock_id)-1)],
-						ARRAY[NEW.netblock_id, NEW.parent_netblock_id]
-					),
-					path[(array_position(path, NEW.netblock_id)+1) :]
-				)
-				FROM base
-				RETURNING *
-		), uold AS (
-			UPDATE jazzhands_cache.ct_netblock_hier n
-			SET root_netblock_id = base.root_netblock_id,
-				intermediate_netblock_id = NEW.parent_netblock_id,
-			path = array_replace(base.path, base.root_netblock_id, NEW.parent_netblock_id)
-			FROM base
-			WHERE n.path = base.path
-				RETURNING n.*
-		) SELECT 'ins' as "what", * FROM inew
-			UNION
-			SELECT 'upd' as "what", * FROM uold
-
+			SELECT h.*, ip_address
+			FROM jazzhands_cache.ct_netblock_hier h
+				JOIN netblock n ON
+					n.netblock_id = h.root_netblock_id
+			AND n.parent_netblock_id = NEW.netblock_id
+			-- AND array_length(path, 1) > 1
 		LOOP
-			RAISE DEBUG 'down:%', to_json(_r);
-		END LOOP;
-
-		get diagnostics _cnt = row_count;
-		RAISE DEBUG 'Inserting upstream references down for updated netblock %/% into cache == %',
-			NEW.netblock_id, NEW.parent_netblock_id, _cnt;
-
-		-- walk up and install rows for all the things above due to change
-		FOR _r IN
-		WITH RECURSIVE tier (
-			root_netblock_id,
-			intermediate_netblock_id,
-			netblock_id,
-			path,
-			cycle
-		)AS (
-			SELECT parent_netblock_id,
-                parent_netblock_id,
-                netblock_id,
-                ARRAY[netblock_id, parent_netblock_id],
-                false
-            FROM netblock WHERE netblock_id = NEW.netblock_id
-        UNION ALL
-            SELECT n.parent_netblock_id,
-                n.netblock_Id,
-                tier.netblock_id,
-                array_append(tier.path, n.parent_netblock_id),
-                n.parent_netblock_id = ANY(path)
-            FROM tier
-                JOIN netblock n ON n.netblock_id = tier.root_netblock_id
-            WHERE n.parent_netblock_id IS NOT NULL
-			AND NOT cycle
-        ) SELECT * FROM tier
-		LOOP
-			IF _r.cycle THEN
-				RAISE EXCEPTION 'Insert Created a netblock loop.'
-					USING ERRCODE = 'JH101';
+			RAISE DEBUG 'nb/ins from %', to_json(_r);
+			_r.root_netblock_id := NEW.netblock_id;
+			IF array_length(_r.path, 1) = 1 THEN
+				_r.intermediate_netblock_id := NEW.netblock_id;
+			ELSE
+				_r.intermediate_netblock_id := _r.intermediate_netblock_id;
 			END IF;
-			INSERT INTO jazzhands_cache.ct_netblock_hier (
-				root_netblock_id, intermediate_netblock_id, netblock_id, path
-			) VALUES (
-				_r.root_netblock_id, _r.intermediate_netblock_id, _r.netblock_id, _r.path
-			);
+			_r.netblock_id := _r.netblock_id;
+			_r.path := array_append(_r.path, NEW.netblock_id);
 
-			RAISE DEBUG 'nb/upd up %', to_json(_r);
+			RAISE DEBUG '... %', to_json(_r);
+			INSERT INTO jazzhands_cache.ct_netblock_hier (
+				root_netblock_id, intermediate_netblock_id,
+				netblock_id, path
+			) VALUES (
+				_r.root_netblock_id, _r.intermediate_netblock_id,
+				_r.netblock_id, _r.path
+			);
 		END LOOP;
-		get diagnostics _cnt = row_count;
-		RAISE DEBUG 'Inserting upstream references up for updated netblock %/% into cache == %',
-			NEW.netblock_id, NEW.parent_netblock_id, _cnt;
+
+		--
+		-- now combine all the kids and all the parents with this row in
+		-- the middle
+		--
+		IF TG_OP = 'INSERT' THEN
+			FOR _r IN
+				SELECT
+					hpar.root_netblock_id,
+					hkid.intermediate_netblock_id as intermediate_netblock_id,
+					hkid.netblock_id,
+					array_cat( hkid.path, hpar.path[2:]) as path,
+					hkid.path as hkid_path,
+					hpar.path as hpar_path
+				FROM jazzhands_cache.ct_netblock_hier hkid
+					JOIN jazzhands_cache.ct_netblock_hier hpar
+						ON hkid.root_netblock_id = hpar.netblock_id
+				WHERE hpar.netblock_id = NEW.netblock_id
+				AND array_length(hpar.path, 1) > 1
+				AND array_length(hkid.path, 1) > 2
+			LOOP
+				RAISE DEBUG 'XXX nb ins/comp: %', to_json(_r);
+				INSERT INTO jazzhands_cache.ct_netblock_hier (
+					root_netblock_id, intermediate_netblock_id,
+					netblock_id, path
+				) VALUES (
+					_r.root_netblock_id, _r.intermediate_netblock_id,
+					_r.netblock_id, _r.path
+				);
+				END LOOP;
+		END IF;
 	END IF;
+	RAISE DEBUG 'EXIT jazzhands_cache.cache_netblock_hier_handler';
 	RETURN NULL;
 END
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('jazzhands_cache', 'device_collection_base_handler');
+CREATE OR REPLACE FUNCTION jazzhands_cache.device_collection_base_handler()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+BEGIN
+	IF TG_OP = 'DELETE' THEN
+		DELETE FROM jazzhands_cache.ct_device_collection_hier_from_ancestor
+		WHERE root_device_collection_id = OLD.device_collection_id
+		AND device_collection_id = OLD.device_collection_id;
+
+		RETURN OLD;
+	ELSIF TG_OP = 'UPDATE' THEN
+		UPDATE jazzhands_cache.ct_device_collection_hier_from_ancestor
+		SET
+			root_device_collection_id = NEW.device_collection_id,
+			device_collection_id = NEW.device_collection_id
+		WHERE root_device_collection_id = OLD.device_collection_id
+		AND device_collection_id = OLD.device_collection_id;
+	ELSIF TG_OP = 'INSERT' THEN
+		INSERT INTO jazzhands_cache.ct_device_collection_hier_from_ancestor (
+			root_device_collection_id,
+			device_collection_id,
+			path,
+			cycle
+		) VALUES (
+			NEW.device_collection_id,
+			NEW.device_collection_id,
+			ARRAY[NEW.device_collection_id],
+			false
+		);
+	END IF;
+
+	RETURN NEW;
+END
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('jazzhands_cache', 'device_collection_root_handler');
+CREATE OR REPLACE FUNCTION jazzhands_cache.device_collection_root_handler()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+DECLARE
+	_r		RECORD;
+	_cnt	INTEGER;
+BEGIN
+	--
+	-- Delete any rows that are invalidated due to a parent change.
+	--
+	IF
+		(TG_OP = 'DELETE' OR TG_OP = 'UPDATE')
+	THEN
+		FOR _r IN
+		DELETE FROM jazzhands_cache.ct_device_collection_hier_from_ancestor
+		WHERE	OLD.device_collection_id = ANY (path)
+		AND		OLD.child_device_collection_id = ANY (path)
+		RETURNING *
+		LOOP
+			RAISE DEBUG '-> rm %', to_json(_r);
+		END LOOP
+		;
+		get diagnostics _cnt = row_count;
+		RAISE DEBUG 'Deleting upstream references to netcoll %/% from cache == %',
+			OLD.device_collection_id, OLD.child_device_collection_id, _cnt;
+	END IF;
+
+
+	--
+	-- Insert any new rows to correspond with a new parent
+	--
+	IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+		RAISE DEBUG '%%Insert: %', to_json(NEW);
+		-- for the new collection/child, glue together all the ones that
+		-- have device_collection_id = parent
+		-- with those that have root_device_collection_id = child
+
+		FOR _r IN
+			SELECT
+				p.path as parent_path, c.path as child_path,
+				p.root_device_collection_id,
+				c.device_collection_id,
+				c.path || p.path as path,
+				false AS cycle
+			FROM	jazzhands_cache.ct_device_collection_hier_from_ancestor p,
+				jazzhands_cache.ct_device_collection_hier_from_ancestor c
+			WHERE p.device_collection_id = NEW.device_collection_id
+			AND c.root_device_collection_id = NEW.child_device_collection_id
+		LOOP
+			RAISE DEBUG 'i/smash:%', to_json(_r);
+			IF _r.cycle THEN
+				RAISE EXCEPTION 'danger!  cycle!';
+			END IF;
+			INSERT INTO jazzhands_cache.ct_device_collection_hier_from_ancestor (
+					root_device_collection_id,
+					device_collection_id,
+					path,
+					cycle
+				) VALUES (
+					_r.root_device_collection_id,
+					_r.device_collection_id,
+					_r.path,
+					_r.cycle
+				);
+		END LOOP;
+	END IF;
+
+	RETURN NULL;
+END
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('jazzhands_cache', 'netblock_collection_base_handler');
+CREATE OR REPLACE FUNCTION jazzhands_cache.netblock_collection_base_handler()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+BEGIN
+	IF TG_OP = 'DELETE' THEN
+		DELETE FROM jazzhands_cache.ct_netblock_collection_hier_from_ancestor
+		WHERE root_netblock_collection_id = OLD.netblock_collection_id
+		AND netblock_collection_id = OLD.netblock_collection_id;
+
+		RETURN OLD;
+	ELSIF TG_OP = 'UPDATE' THEN
+		UPDATE jazzhands_cache.ct_netblock_collection_hier_from_ancestor
+		SET
+			root_netblock_collection_id = NEW.netblock_collection_id,
+			netblock_collection_id = NEW.netblock_collection_id
+		WHERE root_netblock_collection_id = OLD.netblock_collection_id
+		AND netblock_collection_id = OLD.netblock_collection_id;
+	ELSIF TG_OP = 'INSERT' THEN
+		INSERT INTO jazzhands_cache.ct_netblock_collection_hier_from_ancestor (
+			root_netblock_collection_id,
+			netblock_collection_id,
+			path,
+			cycle
+		) VALUES (
+			NEW.netblock_collection_id,
+			NEW.netblock_collection_id,
+			ARRAY[NEW.netblock_collection_id],
+			false
+		);
+	END IF;
+
+	RETURN NEW;
+END
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('jazzhands_cache', 'netblock_collection_root_handler');
+CREATE OR REPLACE FUNCTION jazzhands_cache.netblock_collection_root_handler()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+DECLARE
+	_r		RECORD;
+	_cnt	INTEGER;
+BEGIN
+	--
+	-- Delete any rows that are invalidated due to a parent change.
+	--
+	IF
+		(TG_OP = 'DELETE' OR TG_OP = 'UPDATE')
+	THEN
+		FOR _r IN
+		DELETE FROM jazzhands_cache.ct_netblock_collection_hier_from_ancestor
+		WHERE	OLD.netblock_collection_id = ANY (path)
+		AND		OLD.child_netblock_collection_id = ANY (path)
+		RETURNING *
+		LOOP
+			RAISE DEBUG '-> rm %', to_json(_r);
+		END LOOP
+		;
+		get diagnostics _cnt = row_count;
+		RAISE DEBUG 'Deleting upstream references to netcoll %/% from cache == %',
+			OLD.netblock_collection_id, OLD.child_netblock_collection_id, _cnt;
+	END IF;
+
+
+	--
+	-- Insert any new rows to correspond with a new parent
+	--
+	IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+		RAISE DEBUG '%%Insert: %', to_json(NEW);
+		-- for the new collection/child, glue together all the ones that
+		-- have netblock_collection_id = parent
+		-- with those that have root_netblock_collection_id = child
+
+		FOR _r IN
+			SELECT
+				p.path as parent_path, c.path as child_path,
+				p.root_netblock_collection_id,
+				c.netblock_collection_id,
+				c.path || p.path as path,
+				false AS cycle
+			FROM	jazzhands_cache.ct_netblock_collection_hier_from_ancestor p,
+				jazzhands_cache.ct_netblock_collection_hier_from_ancestor c
+			WHERE p.netblock_collection_id = NEW.netblock_collection_id
+			AND c.root_netblock_collection_id = NEW.child_netblock_collection_id
+		LOOP
+			RAISE DEBUG 'i/smash:%', to_json(_r);
+			IF _r.cycle THEN
+				RAISE EXCEPTION 'danger!  cycle!';
+			END IF;
+			INSERT INTO jazzhands_cache.ct_netblock_collection_hier_from_ancestor (
+					root_netblock_collection_id,
+					netblock_collection_id,
+					path,
+					cycle
+				) VALUES (
+					_r.root_netblock_collection_id,
+					_r.netblock_collection_id,
+					_r.path,
+					_r.cycle
+				);
+		END LOOP;
+	END IF;
+
+	RETURN NULL;
+END
+$function$
+;
+
+--
+-- Process drops in lv_manip
+--
+--
+-- Process drops in approval_utils
+--
+--
+-- Process drops in account_collection_manip
+--
+--
+-- Process drops in script_hooks
+--
+--
+-- Process drops in backend_utils
+--
+--
+-- Process drops in schema_support
+--
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'build_audit_table_other_indexes');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.build_audit_table_other_indexes ( aud_schema character varying, tbl_schema character varying, table_name character varying );
+CREATE OR REPLACE FUNCTION schema_support.build_audit_table_other_indexes(aud_schema character varying, tbl_schema character varying, table_name character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_r	RECORD;
+	sch	TEXT;
+BEGIN
+	-- one day, I will want to construct the list of columns by hand rather
+	-- than use pg_get_constraintdef.  watch me...
+
+	sch := quote_ident( aud_schema );
+	FOR _r IN
+		SELECT c2.relname, pg_get_indexdef(i.indexrelid) as def, con.contype
+	FROM pg_catalog.pg_class c
+	    INNER JOIN pg_namespace n
+		ON relnamespace = n.oid
+	    INNER JOIN pg_catalog.pg_index i
+		ON c.oid = i.indrelid
+	    INNER JOIN pg_catalog.pg_class c2
+		ON i.indexrelid = c2.oid
+	   LEFT JOIN pg_catalog.pg_constraint con ON
+		(con.conrelid = i.indrelid
+		AND con.conindid = i.indexrelid )
+	WHERE c.relname =  table_name
+	AND      n.nspname = tbl_schema
+	AND	con.contype IS NULL
+
+	LOOP
+		_r.def := regexp_replace(_r.def, ' ON ', ' ON ' || sch || '.');
+		EXECUTE _r.def;
+	END LOOP;
+
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'create_cache_table');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.create_cache_table ( cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean );
+CREATE OR REPLACE FUNCTION schema_support.create_cache_table(cache_table_schema text, cache_table text, defining_view_schema text, defining_view text, force boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	param_cache_table_schema	ALIAS FOR cache_table_schema;
+	param_cache_table			ALIAS FOR cache_table;
+	param_defining_view_schema	ALIAS FOR defining_view_schema;
+	param_defining_view			ALIAS FOR defining_view;
+	ct_rec						RECORD;
+BEGIN
+	--
+	-- Ensure that the defining view exists
+	--
+	PERFORM *
+	FROM
+		information_schema.views
+	WHERE
+		table_schema = defining_view_schema AND
+		table_name = defining_view;
+
+	IF NOT FOUND THEN
+		RAISE 'view %.% does not exist',
+			defining_view_schema,
+			defining_view
+			USING ERRCODE = 'foreign_key_violation';
+	END IF;
+
+	--
+	-- Verify that the cache table does not exist, or if it does that
+	-- we have an entry for it in schema_support.cache_table and
+	-- force is being passed.
+	--
+
+	PERFORM *
+	FROM
+		information_schema.tables
+	WHERE
+		table_schema = cache_table_schema AND
+		table_name = cache_table;
+
+	IF FOUND THEN
+		IF NOT force THEN
+			RAISE 'cache table %.% already exists',
+				cache_table_schema,
+				cache_table
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM *
+		FROM
+			schema_support.cache_table ct
+		WHERE
+			ct.cache_table_schema = param_cache_table_schema AND
+			ct.cache_table = param_cache_table;
+
+		IF NOT FOUND THEN
+			RAISE '%', concat(
+				'cache table ', cache_table_schema, '.', cache_table,
+				' already exists, but there is no tracking ',
+				'information for it in schema_support.cache_table.  ',
+				'This must be corrected manually.')
+				USING ERRCODE = 'unique_violation';
+		END IF;
+
+		PERFORM schema_support.save_grants_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		PERFORM schema_support.save_dependent_objects_for_replay(
+			cache_table_schema, cache_table
+		);
+
+		EXECUTE 'DROP TABLE '
+			|| quote_ident(cache_table_schema) || '.'
+			|| quote_ident(cache_table);
+	END IF;
+
+	SELECT * INTO ct_rec
+	FROM
+		schema_support.cache_table ct
+	WHERE
+		ct.cache_table_schema = param_cache_table_schema AND
+		ct.cache_table = param_cache_table;
+
+	IF NOT FOUND THEN
+		INSERT INTO schema_support.cache_table(
+			cache_table_schema,
+			cache_table,
+			defining_view_schema,
+			defining_view,
+			updates_enabled
+		) VALUES (
+			param_cache_table_schema,
+			param_cache_table,
+			param_defining_view_schema,
+			param_defining_view,
+			'true'
+		);
+	END IF;
+
+	EXECUTE format('CREATE TABLE %I.%I AS SELECT * FROM %I.%I',
+		cache_table_schema,
+		cache_table,
+		defining_view_schema,
+		defining_view
+	);
+	IF force THEN
+		PERFORM schema_support.replay_object_recreates();
+		PERFORM schema_support.replay_saved_grants();
+	END IF;
+END
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'get_columns');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.get_columns ( _schema text, _table text );
+CREATE OR REPLACE FUNCTION schema_support.get_columns(_schema text, _table text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	cols		text[];
+	_r			record;
+BEGIN
+	FOR _r IN SELECT  a.attname as colname,
+	    pg_catalog.format_type(a.atttypid, a.atttypmod) as coltype,
+	    a.attnotnull, a.attnum
+	FROM    pg_catalog.pg_attribute a
+				INNER JOIN pg_class c on a.attrelid = c.oid
+				INNER JOIN pg_namespace n on n.oid = c.relnamespace
+	WHERE   c.relname = _table
+		  AND	n.nspname = _schema
+	  AND   a.attnum > 0
+	  AND   NOT a.attisdropped
+		  AND	lower(a.attname) not like 'data_%'
+	ORDER BY a.attnum
+	LOOP
+		SELECT array_append(cols, _r.colname::text) INTO cols;
+	END LOOP;
+	RETURN cols;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'get_common_columns');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.get_common_columns ( _schema text, _table1 text, _table2 text );
+CREATE OR REPLACE FUNCTION schema_support.get_common_columns(_schema text, _table1 text, _table2 text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_q			text;
+    cols	text[];
+BEGIN
+    _q := 'WITH cols AS (
+	SELECT  n.nspname as schema, c.relname as relation, a.attname as colname, t.typoutput as type,
+		a.attnum
+	    FROM    pg_catalog.pg_attribute a
+		INNER JOIN pg_catalog.pg_class c
+		    ON a.attrelid = c.oid
+		INNER JOIN pg_catalog.pg_namespace n
+		    ON c.relnamespace = n.oid
+				INNER JOIN pg_catalog.pg_type t
+					ON  t.oid = a.atttypid
+	    WHERE   a.attnum > 0
+	    AND   NOT a.attisdropped
+	    ORDER BY a.attnum
+       ) SELECT array_agg(colname ORDER BY attnum) as cols
+	FROM ( SELECT CASE WHEN ( o.type::text ~ ''enum'' OR n.type::text ~ ''enum'')  AND o.type != n.type THEN concat(quote_ident(n.colname), ''::text'')
+					ELSE quote_ident(n.colname)
+					END  AS colname,
+				o.attnum
+			FROM cols  o
+	    INNER JOIN cols n USING (schema, colname)
+		WHERE
+			o.schema = $1
+		and o.relation = $2
+		and n.relation = $3
+		) as prett
+	';
+	EXECUTE _q INTO cols USING _schema, _table1, _table2;
+	RETURN cols;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'get_pk_columns');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.get_pk_columns ( _schema text, _table text );
+CREATE OR REPLACE FUNCTION schema_support.get_pk_columns(_schema text, _table text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	cols		text[];
+	_r			RECORD;
+BEGIN
+	for _r IN SELECT a.attname
+			FROM pg_class c
+				INNER JOIN pg_namespace n on n.oid = c.relnamespace
+				INNER JOIN pg_index i ON i.indrelid = c.oid
+				INNER JOIN pg_attribute  a ON   a.attrelid = c.oid AND
+								a.attnum = any(i.indkey)
+			WHERE	c.relname = _table
+			AND		n.nspname = _schema
+			AND		indisprimary
+	LOOP
+		SELECT array_append(cols, _r.attname::text) INTO cols;
+	END LOOP;
+	RETURN cols;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'relation_diff');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.relation_diff ( schema text, old_rel text, new_rel text, key_relation text, prikeys text[], raise_exception boolean );
+CREATE OR REPLACE FUNCTION schema_support.relation_diff(schema text, old_rel text, new_rel text, key_relation text DEFAULT NULL::text, prikeys text[] DEFAULT NULL::text[], raise_exception boolean DEFAULT true)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_r		RECORD;
+	_t1		integer;
+	_t2		integer;
+	_cnt	integer;
+	_cols	TEXT[];
+	_pkcol	TEXT[];
+	_q		TEXT;
+	_f		TEXT;
+	_c		RECORD;
+	_w		TEXT[];
+	_ctl		TEXT[];
+	_rv	boolean;
+	_oj		jsonb;
+	_nj		jsonb;
+BEGIN
+	-- do a simple row count
+	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || old_rel || '"' INTO _t1;
+	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || new_rel || '"' INTO _t2;
+
+	_rv := true;
+
+	IF _t1 IS NULL THEN
+		RAISE NOTICE 'table %.% does not seem to exist', schema, old_rel;
+		_rv := false;
+	END IF;
+	IF _t2 IS NULL THEN
+		RAISE NOTICE 'table %.% does not seem to exist', schema, new_rel;
+		_rv := false;
+	END IF;
+
+	IF prikeys IS NULL THEN
+		-- read into prikeys the primary key for the table
+		IF key_relation IS NULL THEN
+			key_relation := old_rel;
+		END IF;
+		prikeys := schema_support.get_pk_columns(schema, key_relation);
+	END IF;
+
+	-- read into _cols the column list in common between old_rel and new_rel
+	_cols := schema_support.get_common_columns(schema, old_rel, new_rel);
+
+	_ctl := NULL;
+	FOREACH _f IN ARRAY prikeys
+	LOOP
+		SELECT array_append(_ctl, quote_ident(_f) ) INTO _ctl;
+	END LOOP;
+	_pkcol := _ctl;
+
+	--
+	-- Number of rows mismatch.  Show the missing rows based on the
+	-- primary key.
+	--
+	IF _t1 != _t2 THEN
+		RAISE NOTICE 'table % has % rows; table % has % rows (%)', old_rel, _t1, new_rel, _t2, _t1 - _t2;
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+			' EXCEPT ( '
+				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+			' )) ';
+
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InOld/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
+
+	IF _cnt > 0  THEN
+		_rv := false;
+	END IF;
+
+	_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+		quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+		' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
+			' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
+			' EXCEPT ( '
+				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
+			' )) ';
+
+	_cnt := 0;
+	FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
+	LOOP
+		RAISE NOTICE 'InNew/%: %', _cnt, _r;
+		_cnt := _cnt + 1;
+	END LOOP;
+
+	IF _cnt > 0  THEN
+		_rv := false;
+	END IF;
+
+	IF NOT _rv THEN
+		IF raise_exception THEN
+			RAISE EXCEPTION 'Relations do not match';
+		END IF;
+		RETURN false;
+	END IF;
+
+	-- At this point, the same number of rows appear in both, so need to
+	-- figure out rows that are different between them.
+
+	-- SELECT row_to_json(o) as old, row_to_json(n) as new
+	-- FROM ( SELECT cols FROM old WHERE prikeys in Vv ) old,
+	-- JOIN ( SELECT cols FROM new WHERE prikeys in Vv ) new
+	-- USING (prikeys);
+	-- WHERE (prikeys) IN
+	-- ( SELECT  prikeys FROM (
+	--		( SELECT cols FROM old EXCEPT ( SELECT cols FROM new ) )
+	-- ))
+
+	_q := ' SELECT row_to_json(old) as old, row_to_json(new) as new FROM ' ||
+		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(old_rel) || ' ) old ' ||
+		' JOIN ' ||
+		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
+			quote_ident(schema) || '.' || quote_ident(new_rel) || ' ) new ' ||
+		' USING ( ' ||  array_to_string(_pkcol,',') ||
+		' ) WHERE (' || array_to_string(_pkcol,',') || ' ) IN (' ||
+		'SELECT ' || array_to_string(_pkcol,',')  || ' FROM ( ' ||
+			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(old_rel) ||
+			' EXCEPT ' ||
+			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
+				quote_ident(schema) || '.' || quote_ident(new_rel) || ' )) ' ||
+		' ) subq) ORDER BY ' || array_to_string(_pkcol,',')
+	;
+
+	_t1 := 0;
+	FOR _r IN EXECUTE _q
+	LOOP
+		_t1 := _t1 + 1;
+		FOR _f IN SELECT json_object_keys(_r.new)
+		LOOP
+			IF _f = ANY ( prikeys ) OR _r.old->>_f IS DISTINCT FROM _r.new->>_f
+			THEN
+				IF _oj IS NULL THEN
+					_oj := jsonb_build_object(_f, _r.old->>_f);
+					_nj := jsonb_build_object(_f, _r.new->>_f);
+				ELSE
+					_oj := _oj || jsonb_build_object(_f, _r.old->>_f);
+					_nj := _nj || jsonb_build_object(_f, _r.new->>_f);
+				END IF;
+			END IF;
+		END LOOP;
+		RAISE NOTICE 'mismatched row:';
+		RAISE NOTICE 'OLD: %', _oj;
+		RAISE NOTICE 'NEW: %', _nj;
+		_rv := false;
+	END LOOP;
+
+
+	IF NOT _rv AND raise_exception THEN
+		RAISE EXCEPTION 'Relations do not match (% rows)', _t1;
+	ELSE
+		RAISE NOTICE '% rows mismatch', _t1;
+	END IF;
+	return _rv;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'relation_last_changed');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.relation_last_changed ( relation text, schema text, debug boolean );
+CREATE OR REPLACE FUNCTION schema_support.relation_last_changed(relation text, schema text DEFAULT 'jazzhands'::text, debug boolean DEFAULT false)
+ RETURNS timestamp without time zone
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	audsch	text;
+	rk	char;
+	rv	timestamp;
+	ts	timestamp;
+	obj	text;
+	objaud text;
+	objkind text;
+	objschema text;
+BEGIN
+	SELECT	audit_schema
+	INTO	audsch
+	FROM	schema_support.schema_audit_map m
+	WHERE	m.schema = relation_last_changed.schema;
+
+	IF NOT FOUND THEN
+		RAISE EXCEPTION 'Schema % not configured for this', schema;
+	END IF;
+
+	SELECT	relkind
+	INTO	rk
+	FROM	pg_catalog.pg_class c
+		JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+	WHERE	n.nspname = relation_last_changed.schema
+	AND	c.relname = relation_last_changed.relation;
+
+	IF NOT FOUND THEN
+		RAISE EXCEPTION 'No such object %.%', schema, relation;
+	END IF;
+
+	IF rk = 'r' THEN
+		EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
+			FROM '||quote_ident(audsch)||'.'|| quote_ident(relation)
+		INTO rv;
+		IF rv IS NULL THEN
+			EXECUTE '
+				SELECT	max("aud#timestamp")
+				FROM	'||quote_ident(audsch)||'.'||quote_ident(relation)
+			INTO rv;
+		END IF;
+
+		IF rv IS NULL THEN
+			RETURN '-infinity'::timestamp;
+		ELSE
+			RETURN rv;
+		END IF;
+	END IF;
+
+	IF rk = 'v' OR rk = 'm' THEN
+		FOR obj,objaud,objkind, objschema IN WITH RECURSIVE recur AS (
+		SELECT distinct rewrite.ev_class as root_oid, d.refobjid as oid
+		FROM pg_depend d
+		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
+		    JOIN pg_class c on rewrite.ev_class = c.oid
+		    JOIN pg_namespace n on n.oid = c.relnamespace
+		WHERE c.relname = relation
+		AND n.nspname = relation_last_changed.schema
+		AND d.refobjsubid > 0
+	    UNION ALL
+		SELECT recur.root_oid, d.refobjid as oid
+		FROM pg_depend d
+		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
+		    JOIN pg_class c on rewrite.ev_class = c.oid
+		JOIN recur ON recur.oid = rewrite.ev_class
+		AND d.refobjsubid > 0
+		AND c.relkind != 'm'
+	    ), list AS ( select distinct m.audit_schema, c.relname, c.relkind, n.nspname as relschema, recur.*
+		FROM pg_class c
+		    JOIN recur on recur.oid = c.oid
+		    JOIN pg_namespace n on c.relnamespace = n.oid
+		    JOIN schema_support.schema_audit_map m
+			ON m.schema = n.nspname
+		WHERE relkind IN ('r', 'm')
+		) SELECT relname, audit_schema, relkind, relschema from list
+		LOOP
+			-- if there is no audit table, assume its kept current.  This is
+			-- likely some sort of cache table.  XXX - should probably be
+			-- updated to use the materialized view update bits
+			BEGIN
+				IF objkind = 'r' THEN
+					EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
+						FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) ||'
+						WHERE "aud#timestamp" > (
+								SELECT max("aud#timestamp")
+								FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) || '
+							) - ''10 day''::interval'
+						INTO ts;
+					IF ts IS NULL THEN
+						EXECUTE 'SELECT max("aud#timestamp")
+							FROM '||quote_ident(objaud)||'.'|| quote_ident(obj)
+							INTO ts;
+					END IF;
+				ELSIF objkind = 'm' THEN
+					SELECT refresh INTO ts FROM schema_support.mv_refresh m WHERE m.schema = objschema
+						AND m.view = obj;
+				ELSE
+					RAISE NOTICE 'Unknown object kind % for %.%', objkind, objaud, obj;
+				END IF;
+				IF debug THEN
+					RAISE NOTICE 'schema_support.relation_last_changed(): %.% -> %', objaud, obj, ts;
+				END IF;
+				IF rv IS NULL OR ts > rv THEN
+					rv := ts;
+				END IF;
+			EXCEPTION WHEN undefined_table THEN
+				IF debug THEN
+					RAISE NOTICE 'schema_support.relation_last_changed(): skipping %.%', schema, obj;
+				END IF;
+			END;
+		END LOOP;
+		RETURN rv;
+	END IF;
+
+	RAISE EXCEPTION 'Unable to process relkind %', rk;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'reset_table_sequence');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.reset_table_sequence ( schema character varying, table_name character varying );
+CREATE OR REPLACE FUNCTION schema_support.reset_table_sequence(schema character varying, table_name character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	_r	RECORD;
+	m	BIGINT;
+BEGIN
+	FOR _r IN
+		WITH s AS (
+			SELECT	pg_get_serial_sequence(schema||'.'||table_name,
+				a.attname) as seq, a.attname as column
+			FROM	pg_attribute a
+			JOIN pg_class c ON c.oid = a.attrelid
+			JOIN pg_namespace n ON n.oid = c.relnamespace
+			WHERE	c.relname = table_name
+			AND	n.nspname = schema
+				AND	a.attnum > 0
+				AND	NOT a.attisdropped
+		) SELECT s.*, nextval(s.seq) as nv FROM s WHERE seq IS NOT NULL
+	LOOP
+		EXECUTE 'SELECT max('||quote_ident(_r.column)||')+1 FROM  '
+			|| quote_ident(schema)||'.'||quote_ident(table_name)
+			INTO m;
+		IF m IS NOT NULL THEN
+			IF _r.nv > m THEN
+				m := _r.nv;
+			END IF;
+			EXECUTE 'ALTER SEQUENCE ' || _r.seq || ' RESTART WITH '
+				|| m;
+		END IF;
+	END LOOP;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'save_constraint_for_replay');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.save_constraint_for_replay ( schema character varying, object character varying, dropit boolean );
+CREATE OR REPLACE FUNCTION schema_support.save_constraint_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_r		RECORD;
+	_cmd	TEXT;
+	_ddl	TEXT;
+BEGIN
+	PERFORM schema_support.prepare_for_object_replay();
+
+	FOR _r in	SELECT n.nspname, c.relname, con.conname,
+				pg_get_constraintdef(con.oid, true) as def
+		FROM pg_constraint con
+			INNER JOIN pg_class c on (c.relnamespace, c.oid) =
+				(con.connamespace, con.conrelid)
+			INNER JOIN pg_namespace n on n.oid = c.relnamespace
+		WHERE con.confrelid in (
+			select c.oid
+			from pg_class c
+				inner join pg_namespace n on n.oid = c.relnamespace
+			WHERE c.relname = object
+			AND n.nspname = schema
+		) AND n.nspname != schema
+	LOOP
+		_ddl := 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
+			' ADD CONSTRAINT ' || _r.conname || ' ' || _r.def;
+		IF _ddl is NULL THEN
+			RAISE EXCEPTION 'Unable to define constraint for %', _r;
+		END IF;
+		INSERT INTO __recreate (schema, object, type, ddl )
+			VALUES (
+				_r.nspname, _r.relname, 'constraint', _ddl
+			);
+		IF dropit  THEN
+			_cmd = 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
+				' DROP CONSTRAINT ' || _r.conname || ';';
+			EXECUTE _cmd;
+		END IF;
+	END LOOP;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'save_dependent_objects_for_replay');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.save_dependent_objects_for_replay ( schema character varying, object character varying, dropit boolean, doobjectdeps boolean );
+CREATE OR REPLACE FUNCTION schema_support.save_dependent_objects_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true, doobjectdeps boolean DEFAULT false)
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	_r		RECORD;
+	_cmd	TEXT;
+	_ddl	TEXT;
+BEGIN
+	RAISE DEBUG 'processing %.%', schema, object;
+	-- process stored procedures
+	FOR _r in SELECT  distinct np.nspname::text, dependent.proname::text
+		FROM   pg_depend dep
+			INNER join pg_type dependee on dependee.oid = dep.refobjid
+			INNER join pg_namespace n on n.oid = dependee.typnamespace
+			INNER join pg_proc dependent on dependent.oid = dep.objid
+			INNER join pg_namespace np on np.oid = dependent.pronamespace
+			WHERE   dependee.typname = object
+			  AND	  n.nspname = schema
+	LOOP
+		-- RAISE NOTICE '1 dealing with  %.%', _r.nspname, _r.proname;
+		PERFORM schema_support.save_constraint_for_replay(_r.nspname, _r.proname, dropit);
+		PERFORM schema_support.save_dependent_objects_for_replay(_r.nspname, _r.proname, dropit);
+		PERFORM schema_support.save_function_for_replay(_r.nspname, _r.proname, dropit);
+	END LOOP;
+
+	-- save any triggers on the view
+	FOR _r in SELECT distinct n.nspname::text, dependee.relname::text, dependee.relkind
+		FROM pg_depend
+		JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
+		JOIN pg_class as dependee ON pg_rewrite.ev_class = dependee.oid
+		JOIN pg_class as dependent ON pg_depend.refobjid = dependent.oid
+		JOIN pg_namespace n on n.oid = dependee.relnamespace
+		JOIN pg_namespace sn on sn.oid = dependent.relnamespace
+		JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
+			AND pg_depend.refobjsubid = pg_attribute.attnum
+		WHERE dependent.relname = object
+		AND sn.nspname = schema
+	LOOP
+		IF _r.relkind = 'v' OR _r.relkind = 'm' THEN
+			-- RAISE NOTICE '2 dealing with  %.%', _r.nspname, _r.relname;
+			PERFORM * FROM save_dependent_objects_for_replay(_r.nspname, _r.relname, dropit);
+			PERFORM schema_support.save_view_for_replay(_r.nspname, _r.relname, dropit);
+		END IF;
+	END LOOP;
+	IF doobjectdeps THEN
+		PERFORM schema_support.save_trigger_for_replay(schema, object, dropit);
+		PERFORM schema_support.save_constraint_for_replay('jazzhands', 'table');
+	END IF;
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'save_grants_for_replay_relations');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.save_grants_for_replay_relations ( schema character varying, object character varying, newname character varying );
+CREATE OR REPLACE FUNCTION schema_support.save_grants_for_replay_relations(schema character varying, object character varying, newname character varying DEFAULT NULL::character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	_schema		varchar;
+	_object	varchar;
+	_tabs		RECORD;
+	_perm		RECORD;
+	_grant		varchar;
+	_fullgrant		varchar;
+	_role		varchar;
+BEGIN
+	_schema := schema;
+	_object := object;
+	if newname IS NULL THEN
+		newname := _object;
+	END IF;
+	PERFORM schema_support.prepare_for_grant_replay();
+
+	-- Handle table wide grants
+	FOR _tabs IN SELECT  n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'm' THEN 'view'
+				WHEN 'v' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as "Type",
+			c.relacl as privs
+		FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+		WHERE c.relkind IN ('r', 'v', 'S', 'f')
+		  AND c.relname = _object
+		  AND n.nspname = _schema
+		ORDER BY 1, 2
+	LOOP
+		-- NOTE:  We lose who granted it.  Oh Well.
+		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
+		LOOP
+			--  grantor | grantee | privilege_type | is_grantable
+			IF _perm.is_grantable THEN
+				_grant = ' WITH GRANT OPTION';
+			ELSE
+				_grant = '';
+			END IF;
+			IF _perm.grantee = 0 THEN
+				_role := 'PUBLIC';
+			ELSE
+				_role := pg_get_userbyid(_perm.grantee);
+			END IF;
+			_fullgrant := 'GRANT ' ||
+				_perm.privilege_type || ' on ' ||
+				_schema || '.' ||
+				newname || ' to ' ||
+				_role || _grant;
+			IF _fullgrant IS NULL THEN
+				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
+					schema, object, newname;
+	    END IF;
+			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
+		END LOOP;
+	END LOOP;
+
+	-- Handle column specific wide grants
+	FOR _tabs IN SELECT  n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'v' THEN 'view'
+				WHEN 'mv' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as "Type",
+			a.attname as col,
+			a.attacl as privs
+		FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+			INNER JOIN pg_attribute a
+		ON a.attrelid = c.oid
+		WHERE c.relkind IN ('r', 'v', 'S', 'f')
+		  AND a.attacl IS NOT NULL
+		  AND c.relname = _object
+		  AND n.nspname = _schema
+		ORDER BY 1, 2
+	LOOP
+		-- NOTE:  We lose who granted it.  Oh Well.
+		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
+		LOOP
+			--  grantor | grantee | privilege_type | is_grantable
+			IF _perm.is_grantable THEN
+				_grant = ' WITH GRANT OPTION';
+			ELSE
+				_grant = '';
+			END IF;
+			IF _perm.grantee = 0 THEN
+				_role := 'PUBLIC';
+			ELSE
+				_role := pg_get_userbyid(_perm.grantee);
+			END IF;
+			_fullgrant := 'GRANT ' ||
+				_perm.privilege_type || '(' || _tabs.col || ')'
+				' on ' ||
+				_schema || '.' ||
+				newname || ' to ' ||
+				_role || _grant;
+			IF _fullgrant IS NULL THEN
+				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
+					schema, object, newname;
+	    END IF;
+			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
+		END LOOP;
+	END LOOP;
+
+END;
+$function$
+;
+
+-- Changed function
+SELECT schema_support.save_grants_for_replay('schema_support', 'synchronize_cache_tables');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS schema_support.synchronize_cache_tables ( cache_table_schema text, cache_table text );
+CREATE OR REPLACE FUNCTION schema_support.synchronize_cache_tables(cache_table_schema text DEFAULT NULL::text, cache_table text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+	ct_rec			RECORD;
+	query			text;
+	inserted_rows	integer;
+	deleted_rows	integer;
+BEGIN
+	IF cache_table_schema IS NULL THEN
+		IF cache_table IS NOT NULL THEN
+			RAISE 'Must specify cache_table_schema if cache_table is passed'
+				USING ERRCODE = 'null_value_not_allowed';
+		END IF;
+		query := '
+			SELECT
+				*
+			FROM
+				schema_support.cache_table
+			WHERE
+				updates_enabled = true
+			';
+	ELSE
+		IF cache_table IS NOT NULL THEN
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					quote_ident(cache_table) = '%I'
+				$query$,
+				cache_table_schema,
+				cache_table
+			);
+		ELSE
+			query := format($query$
+				SELECT
+					*
+				FROM
+					schema_support.cache_table
+				WHERE
+					quote_ident(cache_table_schema) = '%I' AND
+					updates_enabled = true
+				$query$,
+				cache_table_schema
+			);
+		END IF;
+	END IF;
+	FOR ct_rec IN EXECUTE query LOOP
+		RAISE DEBUG 'Processing %.%',
+			quote_ident(ct_rec.cache_table_schema),
+			quote_ident(ct_rec.cache_table);
+
+		--
+		-- Insert rows that exist in the view that do not exist in the cache
+		-- table
+		--
+		query := format($query$
+			INSERT INTO %I.%I
+			SELECT * FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS inserted_rows := ROW_COUNT;
+
+		--
+		-- Delete rows that exist in the cache table that do not exist in the
+		-- defining view
+		--
+		query := format($query$
+			DELETE FROM %I.%I z
+			WHERE
+				(z) IN
+				(
+					SELECT (x) FROM
+					(
+						SELECT * FROM %I.%I EXCEPT
+						SELECT * FROM %I.%I
+					) x
+				)
+			$query$,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.cache_table_schema,
+			ct_rec.cache_table,
+			ct_rec.defining_view_schema,
+			ct_rec.defining_view
+		);
+		RAISE DEBUG E'Executing:\n%\n', query;
+		EXECUTE query;
+		GET DIAGNOSTICS deleted_rows := ROW_COUNT;
+
+		IF (inserted_rows > 0 OR deleted_rows > 0) THEN
+			INSERT INTO schema_support.cache_table_update_log (
+				cache_table_schema,
+				cache_table,
+				update_timestamp,
+				rows_inserted,
+				rows_deleted,
+				forced
+			) VALUES (
+				ct_rec.cache_table_schema,
+				ct_rec.cache_table,
+				current_timestamp,
+				inserted_rows,
+				deleted_rows,
+				false
+			);
+		END IF;
+	END LOOP;
+END
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION schema_support.migrate_grants(username text, direction text, old_schema text DEFAULT 'jazzhands'::text, new_schema text DEFAULT 'jazzhands_legacy'::text)
+ RETURNS text[]
+ LANGUAGE plpgsql
+ SET search_path TO 'schema_support'
+AS $function$
+DECLARE
+	_rv	TEXT[];
+	_r	RECORD;
+	_q	TEXT;
+BEGIN
+	IF lower(direction) NOT IN ('grant','revoke') THEN
+		RAISE EXCEPTION 'direction must be grant or revoke';
+	END IF;
+
+	FOR _r IN
+		WITH x AS (
+		SELECT *
+			FROM (
+		SELECT oid, schema, name,  typ,
+			p->>'privilege_type' as privilege_type,
+			col,
+			r.usename as grantor, e.usename as grantee,
+			r.usesysid as rid,  e.usesysid as eid,
+			e.useconfig
+		FROM (
+			SELECT  c.oid, n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'm' THEN 'view'
+				WHEN 'v' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as typ,
+				NULL::text as col,
+			to_jsonb(pg_catalog.aclexplode(acl := c.relacl)) as p
+			FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+			WHERE c.relkind IN ('r', 'v', 'S', 'f')
+		UNION ALL
+		SELECT  c.oid, n.nspname as schema,
+			c.relname as name,
+			CASE c.relkind
+				WHEN 'r' THEN 'table'
+				WHEN 'v' THEN 'view'
+				WHEN 'mv' THEN 'mview'
+				WHEN 'S' THEN 'sequence'
+				WHEN 'f' THEN 'foreign table'
+				END as typ,
+			a.attname as col,
+			to_jsonb(pg_catalog.aclexplode(a.attacl)) as p
+			FROM    pg_catalog.pg_class c
+			INNER JOIN pg_catalog.pg_namespace n
+				ON n.oid = c.relnamespace
+			INNER JOIN pg_attribute a
+				ON a.attrelid = c.oid
+			WHERE c.relkind IN ('r', 'v', 'S', 'f')
+			AND a.attacl IS NOT NULL
+		) x
+		LEFT JOIN pg_user r ON r.usesysid = (p->>'grantor')::oid
+		LEFT JOIN pg_user e ON e.usesysid = (p->>'grantee')::oid
+		) i
+		) select *
+		FROM x
+		WHERE ( schema = old_schema )
+		AND grantee = username
+		AND typ IN ('table', 'view', 'mview', 'foreign table')
+		order by name, col
+	LOOP
+		IF _r.col IS NOT NULL THEN
+			_q = concat(' (', _r.col, ') ');
+		ELSE
+			_q := NULL;
+		END IF;
+		IF lower(direction) = 'grant' THEN
+			_q := concat('GRANT ', _r.privilege_type, _q, ' ON ', new_schema, '.', _r.name, ' TO ', _r.grantee);
+		ELSIF lower(direction) = 'revoke' THEN
+			_q := concat('REVOKE ', _r.privilege_type, _q, ' ON ', old_schema, '.', _r.name, ' FROM ', _r.grantee);
+		END IF;
+
+
+		_rv := array_append(_rv, _q);
+		EXECUTE _q;
+	END LOOP;
+	RETURN _rv;
+END;
 $function$
 ;
 
@@ -5493,7 +9082,7 @@ $function$
 -- Process drops in person_manip
 --
 --
--- Process drops in layerx_network_manip
+-- Process drops in rack_utils
 --
 --
 -- Process drops in auto_ac_manip
@@ -5502,7 +9091,7 @@ $function$
 -- Process drops in company_manip
 --
 --
--- Process drops in component_connection_utils
+-- Process drops in layerx_network_manip
 --
 --
 -- Process drops in token_utils
@@ -6380,818 +9969,6 @@ $function$
 ;
 
 --
--- Process drops in rack_utils
---
---
--- Process drops in schema_support
---
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'build_audit_table_other_indexes');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.build_audit_table_other_indexes ( aud_schema character varying, tbl_schema character varying, table_name character varying );
-CREATE OR REPLACE FUNCTION schema_support.build_audit_table_other_indexes(aud_schema character varying, tbl_schema character varying, table_name character varying)
- RETURNS void
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_r	RECORD;
-	sch	TEXT;
-BEGIN
-	-- one day, I will want to construct the list of columns by hand rather
-	-- than use pg_get_constraintdef.  watch me...
-
-	sch := quote_ident( aud_schema );
-	FOR _r IN
-		SELECT c2.relname, pg_get_indexdef(i.indexrelid) as def, con.contype
-	FROM pg_catalog.pg_class c
-	    INNER JOIN pg_namespace n
-		ON relnamespace = n.oid
-	    INNER JOIN pg_catalog.pg_index i
-		ON c.oid = i.indrelid
-	    INNER JOIN pg_catalog.pg_class c2
-		ON i.indexrelid = c2.oid
-	   LEFT JOIN pg_catalog.pg_constraint con ON
-		(con.conrelid = i.indrelid
-		AND con.conindid = i.indexrelid )
-	WHERE c.relname =  table_name
-	AND      n.nspname = tbl_schema
-	AND	con.contype IS NULL
-
-	LOOP
-		_r.def := regexp_replace(_r.def, ' ON ', ' ON ' || sch || '.');
-		EXECUTE _r.def;
-	END LOOP;
-
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'get_columns');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.get_columns ( _schema text, _table text );
-CREATE OR REPLACE FUNCTION schema_support.get_columns(_schema text, _table text)
- RETURNS text[]
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	cols		text[];
-	_r			record;
-BEGIN
-	FOR _r IN SELECT  a.attname as colname,
-	    pg_catalog.format_type(a.atttypid, a.atttypmod) as coltype,
-	    a.attnotnull, a.attnum
-	FROM    pg_catalog.pg_attribute a
-				INNER JOIN pg_class c on a.attrelid = c.oid
-				INNER JOIN pg_namespace n on n.oid = c.relnamespace
-	WHERE   c.relname = _table
-		  AND	n.nspname = _schema
-	  AND   a.attnum > 0
-	  AND   NOT a.attisdropped
-		  AND	lower(a.attname) not like 'data_%'
-	ORDER BY a.attnum
-	LOOP
-		SELECT array_append(cols, _r.colname::text) INTO cols;
-	END LOOP;
-	RETURN cols;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'get_common_columns');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.get_common_columns ( _schema text, _table1 text, _table2 text );
-CREATE OR REPLACE FUNCTION schema_support.get_common_columns(_schema text, _table1 text, _table2 text)
- RETURNS text[]
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_q			text;
-    cols	text[];
-BEGIN
-    _q := 'WITH cols AS (
-	SELECT  n.nspname as schema, c.relname as relation, a.attname as colname, t.typoutput as type,
-		a.attnum
-	    FROM    pg_catalog.pg_attribute a
-		INNER JOIN pg_catalog.pg_class c
-		    ON a.attrelid = c.oid
-		INNER JOIN pg_catalog.pg_namespace n
-		    ON c.relnamespace = n.oid
-				INNER JOIN pg_catalog.pg_type t
-					ON  t.oid = a.atttypid
-	    WHERE   a.attnum > 0
-	    AND   NOT a.attisdropped
-	    ORDER BY a.attnum
-       ) SELECT array_agg(colname ORDER BY attnum) as cols
-	FROM ( SELECT CASE WHEN ( o.type::text ~ ''enum'' OR n.type::text ~ ''enum'')  AND o.type != n.type THEN concat(quote_ident(n.colname), ''::text'')
-					ELSE quote_ident(n.colname)
-					END  AS colname,
-				o.attnum
-			FROM cols  o
-	    INNER JOIN cols n USING (schema, colname)
-		WHERE
-			o.schema = $1
-		and o.relation = $2
-		and n.relation = $3
-		) as prett
-	';
-	EXECUTE _q INTO cols USING _schema, _table1, _table2;
-	RETURN cols;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'get_pk_columns');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.get_pk_columns ( _schema text, _table text );
-CREATE OR REPLACE FUNCTION schema_support.get_pk_columns(_schema text, _table text)
- RETURNS text[]
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	cols		text[];
-	_r			RECORD;
-BEGIN
-	for _r IN SELECT a.attname
-			FROM pg_class c
-				INNER JOIN pg_namespace n on n.oid = c.relnamespace
-				INNER JOIN pg_index i ON i.indrelid = c.oid
-				INNER JOIN pg_attribute  a ON   a.attrelid = c.oid AND
-								a.attnum = any(i.indkey)
-			WHERE	c.relname = _table
-			AND		n.nspname = _schema
-			AND		indisprimary
-	LOOP
-		SELECT array_append(cols, _r.attname::text) INTO cols;
-	END LOOP;
-	RETURN cols;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'relation_diff');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.relation_diff ( schema text, old_rel text, new_rel text, key_relation text, prikeys text[], raise_exception boolean );
-CREATE OR REPLACE FUNCTION schema_support.relation_diff(schema text, old_rel text, new_rel text, key_relation text DEFAULT NULL::text, prikeys text[] DEFAULT NULL::text[], raise_exception boolean DEFAULT true)
- RETURNS boolean
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_r		RECORD;
-	_t1		integer;
-	_t2		integer;
-	_cnt	integer;
-	_cols	TEXT[];
-	_pkcol	TEXT[];
-	_q		TEXT;
-	_f		TEXT;
-	_c		RECORD;
-	_w		TEXT[];
-	_ctl		TEXT[];
-	_rv	boolean;
-	_oj		jsonb;
-	_nj		jsonb;
-BEGIN
-	-- do a simple row count
-	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || old_rel || '"' INTO _t1;
-	EXECUTE 'SELECT count(*) FROM ' || schema || '."' || new_rel || '"' INTO _t2;
-
-	_rv := true;
-
-	IF _t1 IS NULL THEN
-		RAISE NOTICE 'table %.% does not seem to exist', schema, old_rel;
-		_rv := false;
-	END IF;
-	IF _t2 IS NULL THEN
-		RAISE NOTICE 'table %.% does not seem to exist', schema, new_rel;
-		_rv := false;
-	END IF;
-
-	IF prikeys IS NULL THEN
-		-- read into prikeys the primary key for the table
-		IF key_relation IS NULL THEN
-			key_relation := old_rel;
-		END IF;
-		prikeys := schema_support.get_pk_columns(schema, key_relation);
-	END IF;
-
-	-- read into _cols the column list in common between old_rel and new_rel
-	_cols := schema_support.get_common_columns(schema, old_rel, new_rel);
-
-	_ctl := NULL;
-	FOREACH _f IN ARRAY prikeys
-	LOOP
-		SELECT array_append(_ctl, quote_ident(_f) ) INTO _ctl;
-	END LOOP;
-	_pkcol := _ctl;
-
-	--
-	-- Number of rows mismatch.  Show the missing rows based on the
-	-- primary key.
-	--
-	IF _t1 != _t2 THEN
-		RAISE NOTICE 'table % has % rows; table % has % rows (%)', old_rel, _t1, new_rel, _t2, _t1 - _t2;
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
-				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' )) ';
-
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InOld/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
-
-		_q := 'SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-			' WHERE (' || array_to_string(_pkcol,',') || ') IN ( ' ||
-				' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(new_rel)  ||
-				' EXCEPT ( '
-					' SELECT ' || array_to_string(_pkcol,',') || ' FROM ' ||
-					quote_ident(schema) || '.' || quote_ident(old_rel)  ||
-				' )) ';
-
-		_cnt := 0;
-		FOR _r IN EXECUTE 'SELECT row_to_json(x) as r FROM (' || _q || ') x'
-		LOOP
-			RAISE NOTICE 'InNew/%: %', _cnt, _r;
-			_cnt := _cnt + 1;
-		END LOOP;
-
-		_rv := false;
-	END IF;
-
-	IF NOT _rv THEN
-		IF raise_exception THEN
-			RAISE EXCEPTION 'Relations do not match';
-		END IF;
-		RETURN false;
-	END IF;
-
-	-- At this point, the same number of rows appear in both, so need to
-	-- figure out rows that are different between them.
-
-
-	-- SELECT row_to_json(o) as old, row_to_json(n) as new
-	-- FROM ( SELECT cols FROM old WHERE prikeys in Vv ) old,
-	-- JOIN ( SELECT cols FROM new WHERE prikeys in Vv ) new
-	-- USING (prikeys);
-	-- WHERE (prikeys) IN
-	-- ( SELECT  prikeys FROM (
-	--		( SELECT cols FROM old EXCEPT ( SELECT cols FROM new ) )
-	-- ))
-
-	_q := ' SELECT row_to_json(old) as old, row_to_json(new) as new FROM ' ||
-		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(old_rel) || ' ) old ' ||
-		' JOIN ' ||
-		'( SELECT '  || array_to_string(_cols,',') || ' FROM ' ||
-			quote_ident(schema) || '.' || quote_ident(new_rel) || ' ) new ' ||
-		' USING ( ' ||  array_to_string(_pkcol,',') ||
-		' ) WHERE (' || array_to_string(_pkcol,',') || ' ) IN (' ||
-		'SELECT ' || array_to_string(_pkcol,',')  || ' FROM ( ' ||
-			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(old_rel) ||
-			' EXCEPT ' ||
-			'( SELECT ' || array_to_string(_cols,',') || ' FROM ' ||
-				quote_ident(schema) || '.' || quote_ident(new_rel) || ' )) ' ||
-		' ) subq) ORDER BY ' || array_to_string(_pkcol,',')
-	;
-
-	_t1 := 0;
-	FOR _r IN EXECUTE _q
-	LOOP
-		_t1 := _t1 + 1;
-		FOR _f IN SELECT json_object_keys(_r.new)
-		LOOP
-			IF _f = ANY ( prikeys ) OR _r.old->>_f IS DISTINCT FROM _r.new->>_f
-			THEN
-				IF _oj IS NULL THEN
-					_oj := jsonb_build_object(_f, _r.old->>_f);
-					_nj := jsonb_build_object(_f, _r.new->>_f);
-				ELSE
-					_oj := _oj || jsonb_build_object(_f, _r.old->>_f);
-					_nj := _nj || jsonb_build_object(_f, _r.new->>_f);
-				END IF;
-			END IF;
-		END LOOP;
-		RAISE NOTICE 'mismatched row:';
-		RAISE NOTICE 'OLD: %', _oj;
-		RAISE NOTICE 'NEW: %', _nj;
-		_rv := false;
-	END LOOP;
-
-	IF NOT _rv AND raise_exception THEN
-		RAISE EXCEPTION 'Relations do not match (% rows)', _t1;
-	ELSE
-		RAISE NOTICE '% rows mismatch', _t1;
-	END IF;
-	return _rv;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'relation_last_changed');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.relation_last_changed ( relation text, schema text, debug boolean );
-CREATE OR REPLACE FUNCTION schema_support.relation_last_changed(relation text, schema text DEFAULT 'jazzhands'::text, debug boolean DEFAULT false)
- RETURNS timestamp without time zone
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	audsch	text;
-	rk	char;
-	rv	timestamp;
-	ts	timestamp;
-	obj	text;
-	objaud text;
-	objkind text;
-	objschema text;
-BEGIN
-	SELECT	audit_schema
-	INTO	audsch
-	FROM	schema_support.schema_audit_map m
-	WHERE	m.schema = relation_last_changed.schema;
-
-	IF NOT FOUND THEN
-		RAISE EXCEPTION 'Schema % not configured for this', schema;
-	END IF;
-
-	SELECT	relkind
-	INTO	rk
-	FROM	pg_catalog.pg_class c
-		JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-	WHERE	n.nspname = relation_last_changed.schema
-	AND	c.relname = relation_last_changed.relation;
-
-	IF NOT FOUND THEN
-		RAISE EXCEPTION 'No such object %.%', schema, relation;
-	END IF;
-
-	IF rk = 'r' THEN
-		EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
-			FROM '||quote_ident(audsch)||'.'|| quote_ident(relation)
-		INTO rv;
-		IF rv IS NULL THEN
-			EXECUTE '
-				SELECT	max("aud#timestamp")
-				FROM	'||quote_ident(audsch)||'.'||quote_ident(relation)
-			INTO rv;
-		END IF;
-
-		IF rv IS NULL THEN
-			RETURN '-infinity'::timestamp;
-		ELSE
-			RETURN rv;
-		END IF;
-	END IF;
-
-	IF rk = 'v' OR rk = 'm' THEN
-		FOR obj,objaud,objkind, objschema IN WITH RECURSIVE recur AS (
-		SELECT distinct rewrite.ev_class as root_oid, d.refobjid as oid
-		FROM pg_depend d
-		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
-		    JOIN pg_class c on rewrite.ev_class = c.oid
-		    JOIN pg_namespace n on n.oid = c.relnamespace
-		WHERE c.relname = relation
-		AND n.nspname = relation_last_changed.schema
-		AND d.refobjsubid > 0
-	    UNION ALL
-		SELECT recur.root_oid, d.refobjid as oid
-		FROM pg_depend d
-		    JOIN pg_rewrite rewrite ON d.objid = rewrite.oid
-		    JOIN pg_class c on rewrite.ev_class = c.oid
-		JOIN recur ON recur.oid = rewrite.ev_class
-		AND d.refobjsubid > 0
-		AND c.relkind != 'm'
-	    ), list AS ( select distinct m.audit_schema, c.relname, c.relkind, n.nspname as relschema, recur.*
-		FROM pg_class c
-		    JOIN recur on recur.oid = c.oid
-		    JOIN pg_namespace n on c.relnamespace = n.oid
-		    JOIN schema_support.schema_audit_map m
-			ON m.schema = n.nspname
-		WHERE relkind IN ('r', 'm')
-		) SELECT relname, audit_schema, relkind, relschema from list
-		LOOP
-			-- if there is no audit table, assume its kept current.  This is
-			-- likely some sort of cache table.  XXX - should probably be
-			-- updated to use the materialized view update bits
-			BEGIN
-				IF objkind = 'r' THEN
-					EXECUTE 'SELECT max(pg_xact_commit_timestamp(xmin))
-						FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) ||'
-						WHERE "aud#timestamp" > (
-								SELECT max("aud#timestamp")
-								FROM '||quote_ident(objaud)||'.'|| quote_ident(obj) || '
-							) - ''10 day''::interval'
-						INTO ts;
-					IF ts IS NULL THEN
-						EXECUTE 'SELECT max("aud#timestamp")
-							FROM '||quote_ident(objaud)||'.'|| quote_ident(obj)
-							INTO ts;
-					END IF;
-				ELSIF objkind = 'm' THEN
-					SELECT refresh INTO ts FROM schema_support.mv_refresh m WHERE m.schema = objschema
-						AND m.view = obj;
-				ELSE
-					RAISE NOTICE 'Unknown object kind % for %.%', objkind, objaud, obj;
-				END IF;
-				IF debug THEN
-					RAISE NOTICE 'schema_support.relation_last_changed(): %.% -> %', objaud, obj, ts;
-				END IF;
-				IF rv IS NULL OR ts > rv THEN
-					rv := ts;
-				END IF;
-			EXCEPTION WHEN undefined_table THEN
-				IF debug THEN
-					RAISE NOTICE 'schema_support.relation_last_changed(): skipping %.%', schema, obj;
-				END IF;
-			END;
-		END LOOP;
-		RETURN rv;
-	END IF;
-
-	RAISE EXCEPTION 'Unable to process relkind %', rk;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'reset_table_sequence');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.reset_table_sequence ( schema character varying, table_name character varying );
-CREATE OR REPLACE FUNCTION schema_support.reset_table_sequence(schema character varying, table_name character varying)
- RETURNS void
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	_r	RECORD;
-	m	BIGINT;
-BEGIN
-	FOR _r IN
-		WITH s AS (
-			SELECT	pg_get_serial_sequence(schema||'.'||table_name,
-				a.attname) as seq, a.attname as column
-			FROM	pg_attribute a
-			JOIN pg_class c ON c.oid = a.attrelid
-			JOIN pg_namespace n ON n.oid = c.relnamespace
-			WHERE	c.relname = table_name
-			AND	n.nspname = schema
-				AND	a.attnum > 0
-				AND	NOT a.attisdropped
-		) SELECT s.*, nextval(s.seq) as nv FROM s WHERE seq IS NOT NULL
-	LOOP
-		EXECUTE 'SELECT max('||quote_ident(_r.column)||')+1 FROM  '
-			|| quote_ident(schema)||'.'||quote_ident(table_name)
-			INTO m;
-		IF m IS NOT NULL THEN
-			IF _r.nv > m THEN
-				m := _r.nv;
-			END IF;
-			EXECUTE 'ALTER SEQUENCE ' || _r.seq || ' RESTART WITH '
-				|| m;
-		END IF;
-	END LOOP;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'save_constraint_for_replay');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.save_constraint_for_replay ( schema character varying, object character varying, dropit boolean );
-CREATE OR REPLACE FUNCTION schema_support.save_constraint_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true)
- RETURNS void
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_r		RECORD;
-	_cmd	TEXT;
-	_ddl	TEXT;
-BEGIN
-	PERFORM schema_support.prepare_for_object_replay();
-
-	FOR _r in	SELECT n.nspname, c.relname, con.conname,
-				pg_get_constraintdef(con.oid, true) as def
-		FROM pg_constraint con
-			INNER JOIN pg_class c on (c.relnamespace, c.oid) =
-				(con.connamespace, con.conrelid)
-			INNER JOIN pg_namespace n on n.oid = c.relnamespace
-		WHERE con.confrelid in (
-			select c.oid
-			from pg_class c
-				inner join pg_namespace n on n.oid = c.relnamespace
-			WHERE c.relname = object
-			AND n.nspname = schema
-		) AND n.nspname != schema
-	LOOP
-		_ddl := 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
-			' ADD CONSTRAINT ' || _r.conname || ' ' || _r.def;
-		IF _ddl is NULL THEN
-			RAISE EXCEPTION 'Unable to define constraint for %', _r;
-		END IF;
-		INSERT INTO __recreate (schema, object, type, ddl )
-			VALUES (
-				_r.nspname, _r.relname, 'constraint', _ddl
-			);
-		IF dropit  THEN
-			_cmd = 'ALTER TABLE ' || _r.nspname || '.' || _r.relname ||
-				' DROP CONSTRAINT ' || _r.conname || ';';
-			EXECUTE _cmd;
-		END IF;
-	END LOOP;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'save_dependent_objects_for_replay');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.save_dependent_objects_for_replay ( schema character varying, object character varying, dropit boolean, doobjectdeps boolean );
-CREATE OR REPLACE FUNCTION schema_support.save_dependent_objects_for_replay(schema character varying, object character varying, dropit boolean DEFAULT true, doobjectdeps boolean DEFAULT false)
- RETURNS void
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	_r		RECORD;
-	_cmd	TEXT;
-	_ddl	TEXT;
-BEGIN
-	RAISE DEBUG 'processing %.%', schema, object;
-	-- process stored procedures
-	FOR _r in SELECT  distinct np.nspname::text, dependent.proname::text
-		FROM   pg_depend dep
-			INNER join pg_type dependee on dependee.oid = dep.refobjid
-			INNER join pg_namespace n on n.oid = dependee.typnamespace
-			INNER join pg_proc dependent on dependent.oid = dep.objid
-			INNER join pg_namespace np on np.oid = dependent.pronamespace
-			WHERE   dependee.typname = object
-			  AND	  n.nspname = schema
-	LOOP
-		-- RAISE NOTICE '1 dealing with  %.%', _r.nspname, _r.proname;
-		PERFORM schema_support.save_constraint_for_replay(_r.nspname, _r.proname, dropit);
-		PERFORM schema_support.save_dependent_objects_for_replay(_r.nspname, _r.proname, dropit);
-		PERFORM schema_support.save_function_for_replay(_r.nspname, _r.proname, dropit);
-	END LOOP;
-
-	-- save any triggers on the view
-	FOR _r in SELECT distinct n.nspname::text, dependee.relname::text, dependee.relkind
-		FROM pg_depend
-		JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
-		JOIN pg_class as dependee ON pg_rewrite.ev_class = dependee.oid
-		JOIN pg_class as dependent ON pg_depend.refobjid = dependent.oid
-		JOIN pg_namespace n on n.oid = dependee.relnamespace
-		JOIN pg_namespace sn on sn.oid = dependent.relnamespace
-		JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
-			AND pg_depend.refobjsubid = pg_attribute.attnum
-		WHERE dependent.relname = object
-		AND sn.nspname = schema
-	LOOP
-		IF _r.relkind = 'v' OR _r.relkind = 'm' THEN
-			-- RAISE NOTICE '2 dealing with  %.%', _r.nspname, _r.relname;
-			PERFORM * FROM save_dependent_objects_for_replay(_r.nspname, _r.relname, dropit);
-			PERFORM schema_support.save_view_for_replay(_r.nspname, _r.relname, dropit);
-		END IF;
-	END LOOP;
-	IF doobjectdeps THEN
-		PERFORM schema_support.save_trigger_for_replay(schema, object, dropit);
-		PERFORM schema_support.save_constraint_for_replay('jazzhands', 'table');
-	END IF;
-END;
-$function$
-;
-
--- Changed function
-SELECT schema_support.save_grants_for_replay('schema_support', 'save_grants_for_replay_relations');
--- Dropped in case type changes.
-DROP FUNCTION IF EXISTS schema_support.save_grants_for_replay_relations ( schema character varying, object character varying, newname character varying );
-CREATE OR REPLACE FUNCTION schema_support.save_grants_for_replay_relations(schema character varying, object character varying, newname character varying DEFAULT NULL::character varying)
- RETURNS void
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-	_schema		varchar;
-	_object	varchar;
-	_tabs		RECORD;
-	_perm		RECORD;
-	_grant		varchar;
-	_fullgrant		varchar;
-	_role		varchar;
-BEGIN
-	_schema := schema;
-	_object := object;
-	if newname IS NULL THEN
-		newname := _object;
-	END IF;
-	PERFORM schema_support.prepare_for_grant_replay();
-
-	-- Handle table wide grants
-	FOR _tabs IN SELECT  n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'm' THEN 'view'
-				WHEN 'v' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as "Type",
-			c.relacl as privs
-		FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-		WHERE c.relkind IN ('r', 'v', 'S', 'f')
-		  AND c.relname = _object
-		  AND n.nspname = _schema
-		ORDER BY 1, 2
-	LOOP
-		-- NOTE:  We lose who granted it.  Oh Well.
-		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
-		LOOP
-			--  grantor | grantee | privilege_type | is_grantable
-			IF _perm.is_grantable THEN
-				_grant = ' WITH GRANT OPTION';
-			ELSE
-				_grant = '';
-			END IF;
-			IF _perm.grantee = 0 THEN
-				_role := 'PUBLIC';
-			ELSE
-				_role := pg_get_userbyid(_perm.grantee);
-			END IF;
-			_fullgrant := 'GRANT ' ||
-				_perm.privilege_type || ' on ' ||
-				_schema || '.' ||
-				newname || ' to ' ||
-				_role || _grant;
-			IF _fullgrant IS NULL THEN
-				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
-					schema, object, newname;
-	    END IF;
-			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
-		END LOOP;
-	END LOOP;
-
-	-- Handle column specific wide grants
-	FOR _tabs IN SELECT  n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'v' THEN 'view'
-				WHEN 'mv' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as "Type",
-			a.attname as col,
-			a.attacl as privs
-		FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-			INNER JOIN pg_attribute a
-		ON a.attrelid = c.oid
-		WHERE c.relkind IN ('r', 'v', 'S', 'f')
-		  AND a.attacl IS NOT NULL
-		  AND c.relname = _object
-		  AND n.nspname = _schema
-		ORDER BY 1, 2
-	LOOP
-		-- NOTE:  We lose who granted it.  Oh Well.
-		FOR _perm IN SELECT * FROM pg_catalog.aclexplode(acl := _tabs.privs)
-		LOOP
-			--  grantor | grantee | privilege_type | is_grantable
-			IF _perm.is_grantable THEN
-				_grant = ' WITH GRANT OPTION';
-			ELSE
-				_grant = '';
-			END IF;
-			IF _perm.grantee = 0 THEN
-				_role := 'PUBLIC';
-			ELSE
-				_role := pg_get_userbyid(_perm.grantee);
-			END IF;
-			_fullgrant := 'GRANT ' ||
-				_perm.privilege_type || '(' || _tabs.col || ')'
-				' on ' ||
-				_schema || '.' ||
-				newname || ' to ' ||
-				_role || _grant;
-			IF _fullgrant IS NULL THEN
-				RAISE EXCEPTION 'built up grant for %.% (%) is NULL',
-					schema, object, newname;
-	    END IF;
-			INSERT INTO __regrants (schema, object, newname, regrant) values (schema,object, newname, _fullgrant );
-		END LOOP;
-	END LOOP;
-
-END;
-$function$
-;
-
--- New function
-CREATE OR REPLACE FUNCTION schema_support.migrate_grants(username text, direction text, old_schema text DEFAULT 'jazzhands'::text, new_schema text DEFAULT 'jazzhands_legacy'::text)
- RETURNS text[]
- LANGUAGE plpgsql
- SET search_path TO 'schema_support'
-AS $function$
-DECLARE
-	_rv	TEXT[];
-	_r	RECORD;
-	_q	TEXT;
-BEGIN
-	IF lower(direction) NOT IN ('grant','revoke') THEN
-		RAISE EXCEPTION 'direction must be grant or revoke';
-	END IF;
-
-	FOR _r IN
-		WITH x AS (
-		SELECT *
-			FROM (
-		SELECT oid, schema, name,  typ,
-			p->>'privilege_type' as privilege_type,
-			col,
-			r.usename as grantor, e.usename as grantee,
-			r.usesysid as rid,  e.usesysid as eid,
-			e.useconfig
-		FROM (
-			SELECT  c.oid, n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'm' THEN 'view'
-				WHEN 'v' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as typ,
-				NULL::text as col,
-			to_jsonb(pg_catalog.aclexplode(acl := c.relacl)) as p
-			FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-			WHERE c.relkind IN ('r', 'v', 'S', 'f')
-		UNION ALL
-		SELECT  c.oid, n.nspname as schema,
-			c.relname as name,
-			CASE c.relkind
-				WHEN 'r' THEN 'table'
-				WHEN 'v' THEN 'view'
-				WHEN 'mv' THEN 'mview'
-				WHEN 'S' THEN 'sequence'
-				WHEN 'f' THEN 'foreign table'
-				END as typ,
-			a.attname as col,
-			to_jsonb(pg_catalog.aclexplode(a.attacl)) as p
-			FROM    pg_catalog.pg_class c
-			INNER JOIN pg_catalog.pg_namespace n
-				ON n.oid = c.relnamespace
-			INNER JOIN pg_attribute a
-				ON a.attrelid = c.oid
-			WHERE c.relkind IN ('r', 'v', 'S', 'f')
-			AND a.attacl IS NOT NULL
-		) x
-		LEFT JOIN pg_user r ON r.usesysid = (p->>'grantor')::oid
-		LEFT JOIN pg_user e ON e.usesysid = (p->>'grantee')::oid
-		) i
-		) select *
-		FROM x
-		WHERE ( schema = old_schema )
-		AND grantee = username
-		AND typ IN ('table', 'view', 'mview', 'foreign table')
-		order by name, col
-	LOOP
-		IF _r.col IS NOT NULL THEN
-			_q = concat(' (', _r.col, ') ');
-		ELSE
-			_q := NULL;
-		END IF;
-		IF lower(direction) = 'grant' THEN
-			_q := concat('GRANT ', _r.privilege_type, _q, ' ON ', new_schema, '.', _r.name, ' TO ', _r.grantee);
-		ELSIF lower(direction) = 'revoke' THEN
-			_q := concat('REVOKE ', _r.privilege_type, _q, ' ON ', old_schema, '.', _r.name, ' FROM ', _r.grantee);
-		END IF;
-
-
-		_rv := array_append(_rv, _q);
-		EXECUTE _q;
-	END LOOP;
-	RETURN _rv;
-END;
-$function$
-;
-
---
 -- Process drops in property_utils
 --
 --
@@ -7279,23 +10056,223 @@ END; $function$
 -- Process drops in component_utils
 --
 --
+-- Process drops in component_connection_utils
+--
+--
 -- Process drops in snapshot_manip
 --
---
--- Process drops in lv_manip
---
---
--- Process drops in approval_utils
---
---
--- Process drops in account_collection_manip
---
---
--- Process drops in script_hooks
---
---
--- Process drops in backend_utils
---
+-- Changed function
+SELECT schema_support.save_grants_for_replay('snapshot_manip', 'add_snapshot');
+-- Dropped in case type changes.
+DROP FUNCTION IF EXISTS snapshot_manip.add_snapshot ( os_name character varying, os_version character varying, snapshot_name character varying, snapshot_type character varying );
+CREATE OR REPLACE FUNCTION snapshot_manip.add_snapshot(os_name character varying, os_version character varying, snapshot_name character varying, snapshot_type character varying)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	major_version text;
+	companyid     company.company_id%type;
+	osid          operating_system.operating_system_id%type;
+	snapid        operating_system_snapshot.operating_system_snapshot_id%type;
+	dcid          device_collection.device_collection_id%type;
+
+BEGIN
+	SELECT company.company_id INTO companyid FROM company
+		INNER JOIN company_type USING (company_id)
+		WHERE lower(company_short_name) = lower(os_name)
+		AND company_type = 'os provider';
+
+	IF NOT FOUND THEN
+		RAISE 'Operating system vendor not found';
+	END IF;
+
+	SELECT operating_system_id INTO osid FROM operating_system
+		WHERE operating_system_name = os_name
+		AND version = os_version;
+
+	IF NOT FOUND THEN
+		major_version := substring(os_version, '^[^.]+');
+
+		INSERT INTO operating_system (
+			operating_system_name,
+			company_id,
+			major_version,
+			version,
+			operating_system_family
+		) VALUES (
+			os_name,
+			companyid,
+			major_version,
+			os_version,
+			'linux'
+		) RETURNING * INTO osid;
+
+		INSERT INTO property (
+			property_type,
+			property_name,
+			operating_system_id,
+			property_value
+		) VALUES (
+			'OperatingSystem',
+			'AllowOSDeploy',
+			osid,
+			'N'
+		);
+	END IF;
+
+	INSERT INTO operating_system_snapshot (
+		operating_system_snapshot_name,
+		operating_system_snapshot_type,
+		operating_system_id
+	) VALUES (
+		snapshot_name,
+		snapshot_type,
+		osid
+	) RETURNING * INTO snapid;
+
+	INSERT INTO device_collection (
+		device_collection_name,
+		device_collection_type,
+		description
+	) VALUES (
+		CONCAT(os_name, '-', os_version, '-', snapshot_name),
+		'os-snapshot',
+		NULL
+	) RETURNING * INTO dcid;
+
+	INSERT INTO property (
+		property_type,
+		property_name,
+		device_collection_id,
+		operating_system_snapshot_id,
+		property_value
+	) VALUES (
+		'OperatingSystem',
+		'DeviceCollection',
+		dcid,
+		snapid,
+		NULL
+	), (
+		'OperatingSystem',
+		'AllowSnapDeploy',
+		NULL,
+		snapid,
+		'N'
+	);
+
+	RETURN snapid;
+END;
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION snapshot_manip.get_default_os_version(os_name character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	osid          operating_system.operating_system_id%type;
+	os_version    operating_system.version%type;
+
+BEGIN
+	SELECT os.operating_system_id INTO osid FROM operating_system os
+		WHERE operating_system_name = os_name;
+
+	IF NOT FOUND THEN
+		RAISE 'Operating system not found';
+	END IF;
+
+	SELECT os.version INTO os_version FROM operating_system os
+		INNER JOIN property USING (operating_system_id)
+		WHERE operating_system_name = os_name
+		AND property_type = 'OperatingSystem'
+		AND property_name = 'DefaultVersion';
+
+	IF NOT FOUND THEN
+		RAISE 'Default version not found for operating system';
+	END IF;
+
+	RETURN os_version;
+END;
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION snapshot_manip.get_default_snapshot(os_name character varying, os_version character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	major_version text;
+	companyid     company.company_id%type;
+	osid          operating_system.operating_system_id%type;
+	snapname      operating_system_snapshot.operating_system_snapshot_name%type;
+
+BEGIN
+	SELECT operating_system_id INTO osid FROM operating_system
+		WHERE operating_system_name = os_name
+		AND version = os_version;
+
+	IF NOT FOUND THEN
+		RAISE 'Operating system not found';
+	END IF;
+
+	SELECT operating_system_snapshot_name INTO snapname FROM operating_system_snapshot oss
+		INNER JOIN property p USING (operating_system_snapshot_id)
+		WHERE oss.operating_system_id = osid
+		AND property_type = 'OperatingSystem'
+		AND property_name = 'DefaultSnapshot';
+
+	IF NOT FOUND THEN
+		RAISE 'Default snapshot not found';
+	END IF;
+
+	RETURN snapname;
+END;
+$function$
+;
+
+-- New function
+CREATE OR REPLACE FUNCTION snapshot_manip.get_device_snapshot(input_device integer)
+ RETURNS character varying
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'jazzhands'
+AS $function$
+
+DECLARE
+	snapname      operating_system_snapshot.operating_system_snapshot_name%type;
+
+BEGIN
+	SELECT oss.operating_system_snapshot_name INTO snapname FROM device d
+	INNER JOIN device_collection_device dcd USING (device_id)
+	INNER JOIN device_collection dc USING (device_collection_id)
+	INNER JOIN property p USING (device_collection_id)
+	INNER JOIN operating_system_snapshot oss USING (operating_system_snapshot_id)
+	INNER JOIN operating_system os ON os.operating_system_id = oss.operating_system_id
+	WHERE dc.device_collection_type::text = 'os-snapshot'::text
+		AND p.property_type::text = 'OperatingSystem'::text
+		AND p.property_name::text = 'DeviceCollection'::text
+		AND device_id = input_device;
+
+	IF NOT FOUND THEN
+		RAISE 'Snapshot not set for device';
+	END IF;
+
+	RETURN snapname;
+END;
+$function$
+;
+
 --
 -- Process post-schema jazzhands_legacy
 --
@@ -7324,10 +10301,40 @@ ALTER TABLE network_interface
 	UNIQUE (device_id, logical_port_id);
 
 -- index
+DROP INDEX IF EXISTS "jazzhands"."uq_appaal_name";
+CREATE UNIQUE INDEX uq_appaal_name ON jazzhands.appaal USING btree (appaal_name);
+DROP INDEX IF EXISTS "jazzhands"."xif3approval_process_chain";
+CREATE INDEX xif3approval_process_chain ON jazzhands.approval_process_chain USING btree (accept_app_process_chain_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_asset_comp_id";
+CREATE INDEX xif_asset_comp_id ON jazzhands.asset USING btree (component_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_component_prnt_slt_id";
+CREATE INDEX xif_component_prnt_slt_id ON jazzhands.component USING btree (parent_slot_id);
+DROP INDEX IF EXISTS "jazzhands"."xif5department";
+CREATE UNIQUE INDEX xif5department ON jazzhands.department USING btree (account_collection_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_chasloc_chass_devid";
+CREATE INDEX xif_chasloc_chass_devid ON jazzhands.device USING btree (chassis_location_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_dev_devtp_id";
+CREATE INDEX xif_dev_devtp_id ON jazzhands.device USING btree (device_type_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_dev_rack_location_id";
+CREATE INDEX xif_dev_rack_location_id ON jazzhands.device USING btree (rack_location_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_intercomp_conn_slot1_id";
+CREATE INDEX xif_intercomp_conn_slot1_id ON jazzhands.inter_component_connection USING btree (slot1_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_intercomp_conn_slot2_id";
+CREATE INDEX xif_intercomp_conn_slot2_id ON jazzhands.inter_component_connection USING btree (slot2_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_layer3_network_netblock_id";
+CREATE INDEX xif_layer3_network_netblock_id ON jazzhands.layer3_network USING btree (netblock_id);
 DROP INDEX "jazzhands"."xif_net_int_lgl_port_id";
 DROP INDEX IF EXISTS "jazzhands"."xif12network_interface";
 CREATE INDEX xif12network_interface ON jazzhands.network_interface USING btree (logical_port_id, device_id);
+DROP INDEX IF EXISTS "jazzhands"."xif_netint_nb_netint_id";
+CREATE UNIQUE INDEX xif_netint_nb_netint_id ON jazzhands.network_interface_netblock USING btree (netblock_id);
+DROP INDEX IF EXISTS "jazzhands"."xif2shared_netblock";
+CREATE INDEX xif2shared_netblock ON jazzhands.shared_netblock USING btree (netblock_id);
+DROP INDEX IF EXISTS "jazzhands"."xifunixgrp_uclass_id";
+CREATE UNIQUE INDEX xifunixgrp_uclass_id ON jazzhands.unix_group USING btree (account_collection_id);
 -- triggers
+DROP TRIGGER IF EXISTS zaa_ta_cache_netblock_hier_handler ON netblock;
+CREATE TRIGGER zaa_ta_cache_netblock_hier_handler AFTER INSERT OR DELETE OR UPDATE OF ip_address, parent_netblock_id ON jazzhands.netblock FOR EACH ROW EXECUTE PROCEDURE jazzhands_cache.cache_netblock_hier_handler();
 DROP TRIGGER IF EXISTS trigger_val_property_value_del_check ON val_property_value;
 CREATE CONSTRAINT TRIGGER trigger_val_property_value_del_check AFTER DELETE ON jazzhands.val_property_value DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE PROCEDURE jazzhands.val_property_value_del_check();
 
@@ -7339,9 +10346,22 @@ SELECT schema_support.synchronize_cache_tables();
 
 
 -- BEGIN Misc that does not apply to above
+
+SELECT schema_support.synchronize_cache_tables();
+
 CREATE INDEX aud_network_interface_uq_netint_device_id_logical_port_id ON audit.network_interface USING btree (device_id, logical_port_id);
 
-ALTER TABLE  logical_port ALTER logical_port_type SET NOT NULL;
+ALTER SEQUENCE jazzhands.device_note_note_id_seq OWNED BY jazzhands.device_note.note_id;
+
+
+-- END Misc that does not apply to above
+
+
+-- BEGIN Misc that does not apply to above
+
+SELECT schema_support.synchronize_cache_tables();
+
+ALTER SEQUENCE jazzhands.device_note_note_id_seq OWNED BY jazzhands.device_note.note_id;
 
 
 -- END Misc that does not apply to above
@@ -7504,7 +10524,6 @@ SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_a
 DROP VIEW IF EXISTS jazzhands_legacy.v_account_collection_hier_from_ancestor;
 CREATE VIEW jazzhands_legacy.v_account_collection_hier_from_ancestor AS
  SELECT v_account_collection_hier_from_ancestor.root_account_collection_id,
-    v_account_collection_hier_from_ancestor.intermediate_account_collection_id,
     v_account_collection_hier_from_ancestor.account_collection_id,
     v_account_collection_hier_from_ancestor.path,
     v_account_collection_hier_from_ancestor.cycle
@@ -7581,7 +10600,6 @@ SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_d
 DROP VIEW IF EXISTS jazzhands_legacy.v_device_collection_hier_from_ancestor;
 CREATE VIEW jazzhands_legacy.v_device_collection_hier_from_ancestor AS
  SELECT v_device_collection_hier_from_ancestor.root_device_collection_id,
-    v_device_collection_hier_from_ancestor.intermediate_device_collection_id,
     v_device_collection_hier_from_ancestor.device_collection_id,
     v_device_collection_hier_from_ancestor.path,
     v_device_collection_hier_from_ancestor.cycle
@@ -7620,7 +10638,6 @@ SELECT schema_support.save_dependent_objects_for_replay('jazzhands_legacy', 'v_n
 DROP VIEW IF EXISTS jazzhands_legacy.v_netblock_collection_hier_from_ancestor;
 CREATE VIEW jazzhands_legacy.v_netblock_collection_hier_from_ancestor AS
  SELECT v_netblock_collection_hier_from_ancestor.root_netblock_collection_id,
-    v_netblock_collection_hier_from_ancestor.intermediate_netblock_collection_id,
     v_netblock_collection_hier_from_ancestor.netblock_collection_id,
     v_netblock_collection_hier_from_ancestor.path,
     v_netblock_collection_hier_from_ancestor.cycle
