@@ -67,7 +67,7 @@ BEGIN
 		--
 		-- Insert the VCP-VCP connection
 		-- 
-		INSERT INTO slot_type_prmt_rem_slot_type (
+		INSERT INTO slot_type_permitted_remote_slot_type (
 			slot_type_id,
 			remote_slot_type_id
 		) VALUES 
@@ -90,7 +90,7 @@ BEGIN
 		RETURNING
 			slot_type_id INTO stack_stid;
 
-		INSERT INTO slot_type_prmt_comp_slot_type (
+		INSERT INTO slot_type_permitted_component_slot_type (
 			slot_type_id,
 			component_slot_type_id
 		) VALUES
@@ -113,7 +113,7 @@ BEGIN
 		'N'
 	) RETURNING component_type_id INTO ctid;
 
-	INSERT INTO component_type_component_func (
+	INSERT INTO component_type_component_function (
 		component_type_id,
 		component_function
 	) VALUES (
@@ -121,7 +121,7 @@ BEGIN
 		'chassis'
 	);
 
-	INSERT INTO component_type_slot_tmplt (
+	INSERT INTO component_type_slot_template (
 		component_type_id,
 		slot_type_id,
 		slot_name_template,

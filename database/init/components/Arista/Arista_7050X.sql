@@ -50,7 +50,7 @@ BEGIN
 			p[3]
 		) RETURNING component_type_id INTO ctid;
 
-		INSERT INTO component_type_component_func (
+		INSERT INTO component_type_component_function (
 			component_type_id,
 			component_function
 		) VALUES (
@@ -78,7 +78,7 @@ BEGIN
 		-- Console port
 		--
 
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,
@@ -97,7 +97,7 @@ BEGIN
 		WHERE
 			slot_type = 'RJ45 serial' and slot_function = 'serial';
 
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,
@@ -121,7 +121,7 @@ BEGIN
 		WHERE
 			slot_type = '40GQSFP+Ethernet' and slot_function = 'network';
 
--- 			INSERT INTO component_type_slot_tmplt (
+-- 			INSERT INTO component_type_slot_template (
 -- 				component_type_id,
 -- 				slot_type_id,
 -- 				slot_name_template,
@@ -148,7 +148,7 @@ BEGIN
 		--
 		-- Management port
 		--
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,
@@ -224,7 +224,7 @@ BEGIN
 			p[5]
 		) RETURNING component_type_id INTO ctid;
 
-		INSERT INTO component_type_component_func (
+		INSERT INTO component_type_component_function (
 			component_type_id,
 			component_function
 		) VALUES (
@@ -252,7 +252,7 @@ BEGIN
 		-- Console port
 		--
 
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,
@@ -274,7 +274,7 @@ BEGIN
 		--
 		-- Management port
 		--
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,
@@ -291,7 +291,7 @@ BEGIN
 		WHERE
 			slot_type = port_type and slot_function = 'network';
 
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,
@@ -315,7 +315,7 @@ BEGIN
 		WHERE
 			slot_type = port_type and slot_function = 'network';
 
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,
@@ -339,7 +339,7 @@ BEGIN
 		WHERE
 			slot_type = '40GQSFP+Ethernet' and slot_function = 'network';
 
-		INSERT INTO component_type_slot_tmplt (
+		INSERT INTO component_type_slot_template (
 			component_type_id,
 			slot_type_id,
 			slot_name_template,

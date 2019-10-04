@@ -1,11 +1,11 @@
 INSERT INTO device (device_type_id, device_name, device_status,
 	service_environment_id,
-	operating_system_id, is_monitored, is_virtual_device
+	operating_system_id, is_virtual_device
 ) VALUES
 	(1, 'guinness.omniscient.com', 'up',
 	(select service_environment_id from service_environment where
 		service_environment_name = 'production'),
-	0, 'Y', 'N')
+	0, 'N')
 ;
 
 INSERT INTO property
@@ -30,16 +30,16 @@ insert into netblock
 ;
 
 WITH ni AS (
-insert into network_interface
-	(device_id, network_interface_name, network_interface_type, mac_addr
+insert into layer3_interface
+	(device_id, layer3_interface_name, layer3_interface_type, mac_addr
 	)
 	select device_id, 'bge0', 'broadcast', 'aa:bb:cc:dd:ee:ff'
 	from device
 	where device_name = 'guinness.omniscient.com'
 	RETURNING *
-) INSERT INTO network_interface_netblock
-	(network_interface_id, netblock_id)
-SELECT network_interface_id, netblock_Id
+) INSERT INTO layer3_interface_netblock
+	(layer3_interface_id, netblock_id)
+SELECT layer3_interface_id, netblock_Id
 FROM ni, netblock
 WHERE ip_address = '198.18.9.5/26';
 

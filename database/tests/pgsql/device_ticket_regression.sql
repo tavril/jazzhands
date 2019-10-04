@@ -65,14 +65,12 @@ BEGIN
 
 	INSERT INTO device (
 		device_type_id, device_name, device_status, site_code,
-		service_environment_id, operating_system_id,
-		is_monitored
+		service_environment_id, operating_system_id
 	) values (
 		_dt.device_type_id, 'JHTEST device', 'up', 'JHTEST01',
 		(select service_environment_id from service_environment
 		 where service_environment_name = 'production'),
-		0,
-		'Y'
+		0
 	) RETURNING * into _dev;
 
 	INSERT INTO device_ticket (

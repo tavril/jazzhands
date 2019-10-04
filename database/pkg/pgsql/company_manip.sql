@@ -99,12 +99,12 @@ BEGIN
 	tally := 0;
 	FOR _r IN SELECT	property_name, property_type,
 						permit_company_collection_id
-				FROM    property_collection_property pcp
-				INNER JOIN property_collection pc
-					USING (property_collection_id)
+				FROM    property_name_collection_property_name pcp
+				INNER JOIN property_name_collection pc
+					USING (property_name_collection_id)
 				INNER JOIN val_property vp USING (property_name,property_type)
-				WHERE pc.property_collection_type = 'auto_ac_assignment'
-				AND pc.property_collection_name = _company_type
+				WHERE pc.property_name_collection_type = 'auto_ac_assignment'
+				AND pc.property_name_collection_name = _company_type
 				AND property_name != 'site'
 	LOOP
 		IF _r.property_name = 'account_type' THEN

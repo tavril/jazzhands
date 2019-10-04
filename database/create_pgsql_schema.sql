@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Todd Kover
+ * Copyright (c) 2013-2019 Todd Kover
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,21 +74,19 @@ COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
 \ir ddl/schema/pgsql/create_dns_domain_coll_hier_triggers.sql
 \ir ddl/schema/pgsql/create_dns_triggers.sql
 \ir ddl/schema/pgsql/create_dns_triggers-RETIRE.sql
-\ir ddl/schema/pgsql/create_layer3_network_triggers.sql
-\ir ddl/schema/pgsql/create_l2network_coll_hier_triggers.sql
-\ir ddl/schema/pgsql/create_l2network_coll_hier_triggers.sql
-\ir ddl/schema/pgsql/create_l3network_coll_hier_triggers.sql
-\ir ddl/schema/pgsql/create_l3network_coll_hier_triggers.sql
+\ir ddl/schema/pgsql/create_layer2_network_coll_hier_triggers.sql
+\ir ddl/schema/pgsql/create_layer2_network_coll_hier_triggers.sql
+\ir ddl/schema/pgsql/create_layer3_network_coll_hier_triggers.sql
+\ir ddl/schema/pgsql/create_layer3_network_coll_hier_triggers.sql
 \ir ddl/schema/pgsql/create_legacy_port_triggers_RETIRE.sql
 \ir ddl/schema/pgsql/create_netblock_coll_hier_triggers.sql
 \ir ddl/schema/pgsql/create_netblock_triggers.sql
 -- \ir ddl/schema/pgsql/create_netblock_triggers-RETIRE.sql
-\ir ddl/schema/pgsql/create_network_interface_triggers.sql
-\ir ddl/schema/pgsql/create_network_interface_triggers_RETIRE.sql
+\ir ddl/schema/pgsql/create_layer3_interface_triggers.sql
 \ir ddl/schema/pgsql/create_network_range_triggers.sql
 \ir ddl/schema/pgsql/create_per_svc_env_coll_triggers.sql
 \ir ddl/schema/pgsql/create_physical_conection_triggers.sql
-\ir ddl/schema/pgsql/create_property_coll_hier_triggers.sql
+\ir ddl/schema/pgsql/create_property_name_collection_hier_triggers.sql
 \ir ddl/schema/pgsql/create_property_triggers.sql
 \ir ddl/schema/pgsql/create_svcenv_coll_hier_triggers.sql
 \ir ddl/schema/pgsql/create_token_coll_hier_triggers.sql
@@ -97,6 +95,8 @@ COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
 \ir ddl/schema/pgsql/create_account_coll_realm_triggers.sql
 \ir ddl/schema/pgsql/create_device_coll_hook_triggers.sql
 \ir ddl/schema/pgsql/create_layer2_network_coll_hook_triggers.sql
+\ir ddl/schema/pgsql/create_layer3_network_coll_hook_triggers.sql
+\ir ddl/schema/pgsql/create_property_name_collection_hook_triggers.sql
 \ir ddl/schema/pgsql/create_x509_triggers.sql
 \ir ddl/schema/pgsql/create_account_coll_relation_triggers.sql
 \ir ddl/schema/pgsql/create_x509_triggers-RETIRE.sql
@@ -105,13 +105,11 @@ COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
 \ir ddl/schema/pgsql/create_site_netblock_triggers.sql
 \ir ddl/schema/pgsql/create_network_range_triggers.sql
 
-\ir ddl/schema/pgsql/create_physical_conection_triggers_RETIRE.sql
 \ir ddl/schema/pgsql/create_person_company_attr_triggers.sql
 \ir ddl/schema/pgsql/create_account_pgnotify_trigger.sql
 
 \ir ddl/schema/pgsql/create_hotpants_view_triggers.sql
 \ir ddl/schema/pgsql/create_v_person_company_triggers.sql
-\ir ddl/schema/pgsql/create_v_network_interface_trans_triggers.sql
 
 -- This could be done for backwards compatibility but is not.
 -- \ir compat/pgsql/create_location_compatibility_view.sql
@@ -119,6 +117,7 @@ COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
 --
 -- Backwards compatability for a few revisions
 --
+-- temporary comment out. This needs to be reconciled.
 \ir ddl/legacy.sql
 
 select now();

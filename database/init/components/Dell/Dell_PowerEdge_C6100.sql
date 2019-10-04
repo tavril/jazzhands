@@ -57,7 +57,7 @@ BEGIN
 		2
 	) RETURNING component_type_id INTO ctid;
 
-	INSERT INTO component_type_component_func (
+	INSERT INTO component_type_component_function (
 		component_type_id,
 		component_function
 	) VALUES (
@@ -65,7 +65,7 @@ BEGIN
 		'chassis'
 	);
 
-	INSERT INTO component_type_slot_tmplt (
+	INSERT INTO component_type_slot_template (
 		component_type_id,
 		slot_type_id,
 		slot_name_template,
@@ -102,7 +102,7 @@ BEGIN
 		1
 	) RETURNING component_type_id INTO ctid;
 
-	INSERT INTO component_type_component_func (
+	INSERT INTO component_type_component_function (
 		component_type_id,
 		component_function
 	) VALUES (
@@ -113,7 +113,7 @@ BEGIN
 	--
 	-- Network ports
 	--
-	INSERT INTO component_type_slot_tmplt (
+	INSERT INTO component_type_slot_template (
 		component_type_id,
 		slot_type_id,
 		slot_name_template,
@@ -134,7 +134,7 @@ BEGIN
 	--
 	-- CPU sockets
 	--
-	INSERT INTO component_type_slot_tmplt (
+	INSERT INTO component_type_slot_template (
 		component_type_id,
 		slot_type_id,
 		slot_name_template,
@@ -153,7 +153,7 @@ BEGIN
 	--
 	-- memory slots
 	--
-	INSERT INTO component_type_slot_tmplt (
+	INSERT INTO component_type_slot_template (
 		component_type_id,
 		slot_type_id,
 		slot_name_template,
@@ -172,7 +172,7 @@ BEGIN
 	--
 	-- PCI slots
 	--
-	INSERT INTO component_type_slot_tmplt (
+	INSERT INTO component_type_slot_template (
 		component_type_id,
 		slot_type_id,
 		slot_name_template,
@@ -192,7 +192,7 @@ BEGIN
 	-- RAID card, but I'm doing this quick and dirty for now)
 	--
 
-	INSERT INTO component_type_slot_tmplt (
+	INSERT INTO component_type_slot_template (
 		component_type_id,
 		slot_type_id,
 		slot_name_template,
