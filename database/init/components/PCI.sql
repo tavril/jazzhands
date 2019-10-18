@@ -25,7 +25,7 @@ BEGIN
 		INSERT INTO val_component_property_type (
 			component_property_type, description, is_multivalue
 		) VALUES 
-			('PCI', 'PCI properties', 'Y');
+			('PCI', 'PCI properties', true);
 
 		--
 		-- Insert a sampling of component function properties
@@ -39,13 +39,13 @@ BEGIN
 			required_component_function,
 			permit_component_type_id
 		) VALUES 
-			('PCIVendorID', 'PCI', 'PCI Vendor ID', 'N', 'number',
+			('PCIVendorID', 'PCI', 'PCI Vendor ID', false, 'number',
 				'PCI', 'REQUIRED'),
-			('PCIDeviceID', 'PCI', 'PCI Device ID', 'N', 'number',
+			('PCIDeviceID', 'PCI', 'PCI Device ID', false, 'number',
 				'PCI', 'REQUIRED'),
-			('PCISubsystemVendorID', 'PCI', 'PCI Vendor ID', 'N', 'number',
+			('PCISubsystemVendorID', 'PCI', 'PCI Vendor ID', false, 'number',
 				'PCI', 'REQUIRED'),
-			('PCISubsystemID', 'PCI', 'PCI Device ID', 'N', 'number',
+			('PCISubsystemID', 'PCI', 'PCI Device ID', false, 'number',
 				'PCI', 'REQUIRED');
 
 		--
@@ -89,17 +89,17 @@ BEGIN
 			(slot_type, slot_physical_interface_type, slot_function, description,
 			 remote_slot_permitted)
 		VALUES
-			('unknown', 'unknown', 'PCI', 'Unknown PCI type', 'N'),
-			('PCIEx1', 'PCIEx1', 'PCI', 'PCI-E x1', 'N'),
-			('PCIEx1half', 'PCIEx1', 'PCI', 'PCI-E x1 half-length', 'N'),
-			('PCIEx2', 'PCIEx2', 'PCI', 'PCI-E x2', 'N'),
-			('PCIEx2half', 'PCIEx2', 'PCI', 'PCI-E x2 half-length', 'N'),
-			('PCIEx4', 'PCIEx4', 'PCI', 'PCI-E x4', 'N'),
-			('PCIEx4half', 'PCIEx4', 'PCI', 'PCI-E x4 half-length', 'N'),
-			('PCIEx8', 'PCIEx8', 'PCI', 'PCI-E x8', 'N'),
-			('PCIEx8half', 'PCIEx8', 'PCI', 'PCI-E x8 half-length', 'N'),
-			('PCIEx16', 'PCIEx16', 'PCI', 'PCI-E x16', 'N'),
-			('PCIEx16half', 'PCIEx16', 'PCI', 'PCI-E x16 half-length', 'N');
+			('unknown', 'unknown', 'PCI', 'Unknown PCI type', false),
+			('PCIEx1', 'PCIEx1', 'PCI', 'PCI-E x1', false),
+			('PCIEx1half', 'PCIEx1', 'PCI', 'PCI-E x1 half-length', false),
+			('PCIEx2', 'PCIEx2', 'PCI', 'PCI-E x2', false),
+			('PCIEx2half', 'PCIEx2', 'PCI', 'PCI-E x2 half-length', false),
+			('PCIEx4', 'PCIEx4', 'PCI', 'PCI-E x4', false),
+			('PCIEx4half', 'PCIEx4', 'PCI', 'PCI-E x4 half-length', false),
+			('PCIEx8', 'PCIEx8', 'PCI', 'PCI-E x8', false),
+			('PCIEx8half', 'PCIEx8', 'PCI', 'PCI-E x8 half-length', false),
+			('PCIEx16', 'PCIEx16', 'PCI', 'PCI-E x16', false),
+			('PCIEx16half', 'PCIEx16', 'PCI', 'PCI-E x16 half-length', false);
 
 		--
 		-- Insert the permitted PCI connections.  Components can connect to

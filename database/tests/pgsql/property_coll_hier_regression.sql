@@ -60,7 +60,7 @@ BEGIN
 	INSERT INTO val_property_name_collection_Type (
 		property_name_collection_type, can_have_hierarchy
 	) VALUES (
-		'JHTEST-HIER', 'N'
+		'JHTEST-HIER', false
 	);
 
 	INSERT into property_name_collection (

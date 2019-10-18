@@ -52,8 +52,8 @@ BEGIN
 			NULL,
 			'DCS-7160-32CQ',
 			cid,
-			'Y',
-			'Y',
+			true,
+			true,
 			1
 		) RETURNING component_type_id INTO ctid;
 

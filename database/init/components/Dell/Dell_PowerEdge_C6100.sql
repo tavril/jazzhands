@@ -36,7 +36,7 @@ BEGIN
 		(slot_type, slot_physical_interface_type, slot_function, description,
 		 remote_slot_permitted)
 	 VALUES
-		 ('C6100node', 'sled', 'chassis_slot', 'C6100 node', 'N')
+		 ('C6100node', 'sled', 'chassis_slot', 'C6100 node', false)
 	 RETURNING slot_type_id INTO stid;
 
 	INSERT INTO component_type (
@@ -52,8 +52,8 @@ BEGIN
 		NULL,
 		'PowerEdge C6100 chassis',
 		cid,
-		'Y',
-		'Y',
+		true,
+		true,
 		2
 	) RETURNING component_type_id INTO ctid;
 
@@ -97,8 +97,8 @@ BEGIN
 		stid,
 		'C6100',
 		cid,
-		'Y',
-		'N',
+		true,
+		false,
 		1
 	) RETURNING component_type_id INTO ctid;
 

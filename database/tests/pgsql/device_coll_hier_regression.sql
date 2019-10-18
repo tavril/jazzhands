@@ -75,7 +75,7 @@ BEGIN
 	INSERT INTO val_device_collection_Type (
 		device_collection_type, can_have_hierarchy
 	) VALUES (
-		'JHTEST-HIER', 'N'
+		'JHTEST-HIER', false
 	);
 
 	INSERT into device_collection (

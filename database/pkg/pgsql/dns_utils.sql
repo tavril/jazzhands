@@ -286,8 +286,8 @@ BEGIN
 		INTO	nblk_id
 		FROM	netblock
 		WHERE	netblock_type = 'dns'
-		AND		is_single_address = 'N'
-		AND		can_subnet = 'N'
+		AND		is_single_address = false
+		AND		can_subnet = false
 		AND		netblock_status = 'Allocated'
 		AND		ip_universe_id = 0
 		AND		ip_address = ip;
@@ -297,8 +297,8 @@ BEGIN
 			ip_address, netblock_type, is_single_address,
 			can_subnet, netblock_status, ip_universe_id
 		) VALUES (
-			ip, 'dns', 'N',
-			'N', 'Allocated', 0
+			ip, 'dns', false,
+			false, 'Allocated', 0
 		) RETURNING netblock_id INTO nblk_id;
 	END IF;
 
@@ -420,7 +420,7 @@ BEGIN
 				(select property_value from property 
 					where property_type = 'Defaults'
 					and property_name = '_dnsrname' ORDER BY property_id LIMIT 1),
-				'Y'
+				true
 		;
 	END LOOP;
 
@@ -444,7 +444,7 @@ BEGIN
 		AND dns_domain_id IN (
 			SELECT dns_domain_id
 			FROM dns_domain_ip_universe
-			WHERE should_generate = 'Y'
+			WHERE should_generate = true
 		);
 	END IF;
 

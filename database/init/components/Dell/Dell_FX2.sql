@@ -40,7 +40,7 @@ BEGIN
 		(slot_type, slot_physical_interface_type, slot_function, description,
 		 remote_slot_permitted)
 	VALUES
-		 ('FX2node', 'sled', 'chassis_slot', 'FX2node', 'N')
+		 ('FX2node', 'sled', 'chassis_slot', 'FX2node', false)
 	RETURNING
 		slot_type_id INTO stid;
 
@@ -60,8 +60,8 @@ BEGIN
 		NULL,
 		'PowerEdge FX2 chassis',
 		cid,
-		'Y',
-		'Y',
+		true,
+		true,
 		2
 	) RETURNING component_type_id INTO ctid;
 
@@ -114,8 +114,8 @@ BEGIN
 			d[1],
 			d[2],
 			(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
-			'Y',
-			'N',
+			true,
+			false,
 			2
 		) RETURNING component_type_id INTO ctid;
 
@@ -187,7 +187,7 @@ $$ LANGUAGE plpgsql;
 -- 			remote_slot_permitted)
 -- 	VALUES
 -- 		('R720NetworkDaughterConnector', 'R720NetworkDaughterConnector',
--- 		 'PCI', 'R720 network daughter card connector', 'N')
+-- 		 'PCI', 'R720 network daughter card connector', false)
 -- 	RETURNING
 -- 		slot_type_id INTO stid;
 -- 
@@ -217,8 +217,8 @@ $$ LANGUAGE plpgsql;
 -- 			'Ethernet 10G 4P X540/I350 rNDC',
 -- 			stid,
 -- 			(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
--- 			'N',
--- 			'N'
+-- 			false,
+-- 			false
 -- 		) RETURNING component_type_id INTO ctid;
 -- 
 -- 		INSERT INTO component_type_component_function (

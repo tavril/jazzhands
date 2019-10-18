@@ -579,8 +579,8 @@ BEGIN
 					component_id = NULL,
 					service_environment_id = se_id,
 					device_status = 'removed',
-					is_monitored = 'N',
-					should_fetch_config = 'N',
+					is_monitored = false,
+					should_fetch_config = false,
 					description = NULL
 				WHERE
 					d.device_id = dev_id;
@@ -947,9 +947,9 @@ BEGIN
 	END;
 
 	UPDATE device d SET
-		is_monitored = 'N'
+		is_monitored = false
 	WHERE
-		is_monitored = 'Y' AND
+		is_monitored = true AND
 		device_id IN (
 			SELECT
 				device_id

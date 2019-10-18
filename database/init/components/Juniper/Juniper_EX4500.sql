@@ -58,8 +58,8 @@ BEGIN
 		stack_stid,
 		'EX4500-40F',
 		cid,
-		'Y',
-		'Y',
+		true,
+		true,
 		1
 	) RETURNING component_type_id INTO ctid;
 

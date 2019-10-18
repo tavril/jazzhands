@@ -197,10 +197,10 @@ CREATE OR REPLACE FUNCTION person_manip.add_user(
     birth_date                      DATE        DEFAULT NULL,
     external_hr_id                  VARCHAR     DEFAULT NULL,
     person_company_status           VARCHAR     DEFAULT 'enabled',
-    is_management                   VARCHAR(1)  DEFAULT 'N',
+    is_management                   VARCHAR(1)  DEFAULT false,
     is_manager                      VARCHAR(1)  DEFAULT NULL,
-    is_exempt                       VARCHAR(1)  DEFAULT 'Y',
-    is_full_time                    VARCHAR(1)  DEFAULT 'Y',
+    is_exempt                       VARCHAR(1)  DEFAULT true,
+    is_full_time                    VARCHAR(1)  DEFAULT true,
     employee_id                     TEXT        DEFAULT NULL,
     hire_date                       DATE        DEFAULT NULL,
     termination_date                DATE        DEFAULT NULL,
@@ -685,7 +685,7 @@ BEGIN
 			  FROM	ACCOUNT_COLLECTION
 				INNER JOIN VAL_ACCOUNT_COLLECTION_TYPE
 					USING (ACCOUNT_COLLECTION_TYPE)
-			 WHERE	IS_INFRASTRUCTURE_TYPE = 'N'
+			 WHERE	IS_INFRASTRUCTURE_TYPE = false
 		)
 	  AND	account_collection_id not in (
 			SELECT	account_collection_id

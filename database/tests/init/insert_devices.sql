@@ -5,7 +5,7 @@ INSERT INTO device (device_type_id, device_name, device_status,
 	(1, 'guinness.omniscient.com', 'up',
 	(select service_environment_id from service_environment where
 		service_environment_name = 'production'),
-	0, 'N')
+	0, false)
 ;
 
 INSERT INTO property
@@ -22,11 +22,11 @@ insert into netblock
 	(ip_address, is_single_address,
 		can_subnet, parent_netblock_id, netblock_status,
 		netblock_type)
-	select '198.18.9.5/26', 'Y',
-	 	'N', netblock_id, 'Allocated',
+	select '198.18.9.5/26', true,
+	 	false, netblock_id, 'Allocated',
 	 	'default'
 	from netblock where ip_address = '198.18.9.0/26'
-		and is_single_address = 'N'
+		and is_single_address = false
 ;
 
 WITH ni AS (

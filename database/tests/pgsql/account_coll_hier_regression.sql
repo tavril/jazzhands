@@ -76,7 +76,7 @@ BEGIN
 	INSERT INTO val_account_collection_Type (
 		account_collection_type, can_have_hierarchy
 	) VALUES (
-		'JHTEST-HIER', 'N'
+		'JHTEST-HIER', false
 	);
 
 	INSERT into account_collection (

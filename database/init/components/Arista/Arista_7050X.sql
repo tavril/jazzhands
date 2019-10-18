@@ -45,8 +45,8 @@ BEGIN
 			NULL,
 			concat_ws('-', 'DCS', p[1], p[2]),
 			cid,
-			'Y',
-			'Y',
+			true,
+			true,
 			p[3]
 		) RETURNING component_type_id INTO ctid;
 
@@ -219,8 +219,8 @@ BEGIN
 			NULL,
 			concat_ws('-', 'DCS', p[1]),
 			cid,
-			'Y',
-			'Y',
+			true,
+			true,
 			p[5]
 		) RETURNING component_type_id INTO ctid;
 

@@ -42,8 +42,8 @@ BEGIN
 			d[1],
 			d[2],
 			(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
-			'Y',
-			'Y',
+			true,
+			true,
 			2
 		) RETURNING component_type_id INTO ctid;
 
@@ -206,7 +206,7 @@ BEGIN
 			remote_slot_permitted)
 	VALUES
 		('R720NetworkDaughterConnector', 'R720NetworkDaughterConnector',
-		 'PCI', 'R720 network daughter card connector', 'N')
+		 'PCI', 'R720 network daughter card connector', false)
 	RETURNING
 		slot_type_id INTO stid;
 
@@ -236,8 +236,8 @@ BEGIN
 			'Ethernet 10G 4P X540/I350 rNDC',
 			stid,
 			(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
-			'N',
-			'N'
+			false,
+			false
 		) RETURNING component_type_id INTO ctid;
 
 		INSERT INTO component_type_component_function (
@@ -298,8 +298,8 @@ BEGIN
 --			'Ethernet 10G 4P X540/I350 rNDC (I350)',
 --			stid,
 --			(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
---			'N',
---			'N'
+--			false,
+--			false
 --		) RETURNING component_type_id INTO ctid;
 --
 --		INSERT INTO component_type_component_function (

@@ -59,20 +59,20 @@ BEGIN
 		model, rack_units, has_802_3_interface,
 		has_802_11_interface, snmp_capable, is_chassis
 	) values (
-		'JHTEST Chassis', 2, 'N', 'N', 'N', 'Y'
+		'JHTEST Chassis', 2, false, false, false, true
 	) RETURNING * INTO _chassis_dt;
 
 	INSERT INTO rack (
 		site_code, rack_name, rack_style, rack_height_in_u, display_from_bottom
 	) values (
-		'JHTEST01', 'JHTEST-01', 'CABINET', 42, 'Y'
+		'JHTEST01', 'JHTEST-01', 'CABINET', 42, true
 	) RETURNING * into _rack;
 
 	INSERT INTO device_type (
 		model, rack_units, has_802_3_interface,
 		has_802_11_interface, snmp_capable, is_chassis
 	) values (
-		'JHTEST Sled', 0, 'N', 'N', 'N', 'N'
+		'JHTEST Sled', 0, false, false, false, false
 	) RETURNING * INTO _sled_dt;
 
 	INSERT INTO rack_location (
@@ -147,7 +147,7 @@ BEGIN
 	RAISE NOTICE 'Testing to see if a chassis device_type can have is_chassis set to N';
 	BEGIN
 		UPDATE device_type
-		  SET  is_chassis = 'N'
+		  SET  is_chassis = false
 		WHERE device_type_id = _chassis_dt.device_type_id;
 		RAISE EXCEPTION '... IT DID NOT.';
 	EXCEPTION WHEN foreign_key_violation THEN

@@ -61,20 +61,20 @@ BEGIN
 	INSERT INTO netblock (ip_address, netblock_type, is_single_address,
 		can_subnet, netblock_status, description
 		) VALUES (
-			'172.31.26.0/26', 'default', 'N',
-			'N', 'Allocated', 'JHTEST1') RETURNING * into _nb1;
+			'172.31.26.0/26', 'default', false,
+			false, 'Allocated', 'JHTEST1') RETURNING * into _nb1;
 
 	INSERT INTO netblock (ip_address, netblock_type, is_single_address,
 		can_subnet, netblock_status, description
 		) VALUES (
-			'172.31.192.0/26', 'default', 'N',
-			'N', 'Allocated', 'JHTEST2') RETURNING * into _nb2;
+			'172.31.192.0/26', 'default', false,
+			false, 'Allocated', 'JHTEST2') RETURNING * into _nb2;
 
        INSERT INTO netblock (ip_address, netblock_type, is_single_address,
 		can_subnet, netblock_status, description
 		) VALUES (
-			'ff00:dead:f00d::/64', 'default', 'N',
-			'Y', 'Allocated', 'JHTEST1') RETURNING * into _nb6;
+			'ff00:dead:f00d::/64', 'default', false,
+			true, 'Allocated', 'JHTEST1') RETURNING * into _nb6;
 
 
 	INSERT INTO val_layer3_network_collection_type (
@@ -95,7 +95,7 @@ BEGIN
 	INSERT INTO val_layer3_network_collection_type (
 		layer3_network_collection_type, can_have_hierarchy
 	) VALUES (
-		'JHTEST-HIER', 'N'
+		'JHTEST-HIER', false
 	);
 
 	INSERT INTO layer3_network_collection (

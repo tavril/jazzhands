@@ -33,7 +33,7 @@ BEGIN
 		(select property_name_collection_type from property_name_collection
 			where property_name_collection_id = NEW.property_name_collection_id);
 
-	IF pct.can_have_hierarchy = 'N' THEN
+	IF pct.can_have_hierarchy = false THEN
 		RAISE EXCEPTION 'Property Collections of type % may not be hierarcical',
 			pct.property_name_collection_type
 			USING ERRCODE= 'unique_violation';

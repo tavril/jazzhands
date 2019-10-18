@@ -103,7 +103,7 @@ BEGIN
 
 	-- Check to see if the property itself is multivalue.  That is, if only
 	-- one value can be set for this property for a specific property LHS
-	IF (v_prop.is_multivalue = 'N') THEN
+	IF (v_prop.is_multivalue = false) THEN
 		PERFORM 1 FROM Property WHERE
 			Property_Id != NEW.Property_Id AND
 			Property_Name = NEW.Property_Name AND
@@ -172,6 +172,8 @@ BEGIN
 			property_value IS NOT DISTINCT FROM NEW.property_value AND
 			property_value_json IS NOT DISTINCT FROM
 				NEW.property_value_json AND
+			property_value_boolean IS NOT DISTINCT FROM
+				NEW.property_value_boolean AND
 			property_value_timestamp IS NOT DISTINCT FROM
 				NEW.property_value_timestamp AND
 			property_value_account_collection_id IS NOT DISTINCT FROM
@@ -206,7 +208,7 @@ BEGIN
 	-- one property and value can be set for any properties with this type
 	-- for a specific property LHS
 
-	IF (v_proptype.is_multivalue = 'N') THEN
+	IF (v_proptype.is_multivalue = false) THEN
 		PERFORM 1 FROM Property WHERE
 			Property_Id != NEW.Property_Id AND
 			Property_Type = NEW.Property_Type AND
@@ -326,21 +328,24 @@ BEGIN
 		END IF;
 	END IF;
 
+	IF NEW.property_value_boolean IS NOT NULL THEN
+		IF v_prop.Property_Data_Type = 'boolean' THEN
+			tally := tally + 1;
+		ELSE
+			RAISE 'Property value may not be boolean' USING
+				ERRCODE = 'invalid_parameter_value';
+		END IF;
+	END IF;
+
 	-- at this point, tally will be set to 1 if one of the other property
 	-- values is set to something valid.  Now, check the various options for
 	-- PROPERTY_VALUE itself.  If a new type is added to the val table, this
 	-- trigger needs to be updated or it will be considered invalid.  If a
 	-- new PROPERTY_VALUE_* column is added, then it will pass through without
 	-- trigger modification.  This should be considered bad.
-
 	IF NEW.Property_Value IS NOT NULL THEN
 		tally := tally + 1;
-		IF v_prop.Property_Data_Type = 'boolean' THEN
-			IF NEW.Property_Value != 'Y' AND NEW.Property_Value != 'N' THEN
-				RAISE 'Boolean Property_Value must be Y or N' USING
-					ERRCODE = 'invalid_parameter_value';
-			END IF;
-		ELSIF v_prop.Property_Data_Type = 'number' THEN
+		IF v_prop.Property_Data_Type = 'number' THEN
 			BEGIN
 				v_num := to_number(NEW.property_value, '9');
 			EXCEPTION

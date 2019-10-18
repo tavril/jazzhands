@@ -49,8 +49,8 @@ BEGIN
 			),
 			'ST9500530NS',
 			cid,
-			'Y',
-			'N',
+			true,
+			false,
 			2
 		) RETURNING component_type_id INTO ctid;
 

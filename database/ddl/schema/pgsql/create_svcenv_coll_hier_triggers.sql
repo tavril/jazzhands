@@ -35,7 +35,7 @@ BEGIN
 			where service_environment_collection_id =
 				NEW.service_environment_collection_id);
 
-	IF serviceenvt.can_have_hierarchy = 'N' THEN
+	IF serviceenvt.can_have_hierarchy = false THEN
 		RAISE EXCEPTION 'Service Environment Collections of type % may not be hierarcical',
 			serviceenvt.service_environment_collection_type
 			USING ERRCODE= 'unique_violation';

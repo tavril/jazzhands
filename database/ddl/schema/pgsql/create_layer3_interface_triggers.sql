@@ -28,7 +28,7 @@ BEGIN
 		INTO _tally
 		FROM netblock
 		WHERE netblock_id = NEW.netblock_id
-		AND is_single_address = 'Y'
+		AND is_single_address = true
 		AND netblock_type = 'default';
 
 		IF _tally = 0 THEN

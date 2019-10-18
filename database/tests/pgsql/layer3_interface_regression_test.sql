@@ -58,7 +58,7 @@ BEGIN
 			description
 	) VALUES (
 		'172.31.29.42/24', 'adhoc',
-			'Y', 'N', 'Allocated',
+			true, false, 'Allocated',
 			'JHTEST _blk'
 	) RETURNING * INTO _other;
 
@@ -67,7 +67,7 @@ BEGIN
 			description
 	) VALUES (
 		'172.31.30.0/24', 'default',
-			'N', 'N', 'Allocated',
+			false, false, 'Allocated',
 			'JHTEST _blk'
 	) RETURNING * INTO _blk;
 
@@ -76,7 +76,7 @@ BEGIN
 			description
 	) VALUES (
 		'172.31.30.1/24', 'default',
-			'Y', 'N', 'Allocated',
+			true, false, 'Allocated',
 			'JHTEST _nb'
 	) RETURNING * INTO _nb;
 
@@ -87,7 +87,7 @@ BEGIN
 			description, should_monitor
 		) VALUES (
 			_dev1.device_id, 'JHTEST0', 'broadcast', 
-			'JHTEST0', 'Y'
+			'JHTEST0', true
 		) RETURNING *
 	),z AS ( INSERT INTO layer3_interface_netblock
 			(layer3_interface_id, netblock_id)
@@ -99,7 +99,7 @@ BEGIN
 	RAISE NOTICE 'Testing to see if switching a block to N fails... ';
 	BEGIN
 		UPDATE netblock set ip_address = '172.31.30.0', 
-				is_single_address = 'N'
+				is_single_address = false
 			WHERE netblock_id = _nb.netblock_id;
 		RAISE EXCEPTION '... it did not (!)';
 	EXCEPTION WHEN foreign_key_violation THEN
@@ -125,7 +125,7 @@ BEGIN
 			) VALUES (
 				_dev1.device_id, 'JHTEST1', 'broadcast', 
 				'JHTEST1',
-				'Y' 
+				true 
 			) RETURNING * 
 		),z AS ( INSERT INTO layer3_interface_netblock
 				(layer3_interface_id, netblock_id)
@@ -146,7 +146,7 @@ BEGIN
 			) VALUES (
 				_dev1.device_id, 'JHTEST2', 'broadcast', 
 				'JHTEST2',
-				'Y'
+				true
 			) RETURNING *
 		),z AS ( INSERT INTO layer3_interface_netblock
 				(layer3_interface_id, netblock_id)

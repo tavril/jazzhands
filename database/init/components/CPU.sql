@@ -28,7 +28,7 @@ BEGIN
 		INSERT INTO val_component_property_type (
 			component_property_type, description, is_multivalue
 		) VALUES 
-			('CPU', 'CPU properties', 'Y');
+			('CPU', 'CPU properties', true);
 
 		--
 		-- Insert a sampling of component function properties
@@ -42,12 +42,12 @@ BEGIN
 			required_component_function,
 			permit_component_type_id
 		) VALUES 
-			('ProcessorSpeed', 'CPU', 'CPU Speed (MHz)', 'N', 'number',
+			('ProcessorSpeed', 'CPU', 'CPU Speed (MHz)', false, 'number',
 				'CPU', 'REQUIRED'),
-			('ProcessorCores', 'CPU', 'Number of CPU cores', 'N', 'number',
+			('ProcessorCores', 'CPU', 'Number of CPU cores', false, 'number',
 				'CPU', 'REQUIRED'),
 			('ProcessorGeneration', 'CPU', 'Generation/Family of Processor',
-				'N', 'string', 'CPU', 'REQUIRED');
+				false, 'string', 'CPU', 'REQUIRED');
 
 		--
 		-- Slot functions are also somewhat arbitrary, and exist for associating
@@ -88,11 +88,11 @@ BEGIN
 			 remote_slot_permitted)
 		VALUES
 			('Socket LGA1366', 'Socket LGA1366', 'CPU',
-				'LGA1366 CPU socket', 'N'),
+				'LGA1366 CPU socket', false),
 			('Socket LGA2011', 'Socket LGA2011', 'CPU',
-				'LGA2011 CPU socket', 'N'),
+				'LGA2011 CPU socket', false),
 			('Socket LGA2011-3', 'Socket LGA2011-3', 'CPU',
-				'LGA2011-v3 CPU socket', 'N');
+				'LGA2011-v3 CPU socket', false);
 
 		--
 		-- Insert the permitted CPU connections.  CPUs can only go into a slot

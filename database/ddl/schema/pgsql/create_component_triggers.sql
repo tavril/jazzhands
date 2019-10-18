@@ -308,7 +308,7 @@ BEGIN
 	WHERE
 		component_id = NEW.component_id;
 
-	IF ct_rec.is_rack_mountable != 'Y' THEN
+	IF ct_rec.is_rack_mountable != true THEN
 		RAISE EXCEPTION 'component_type_id % may not be assigned a rack_location',
 			ct_rec.component_type_id
 			USING ERRCODE = 'check_violation';
@@ -364,7 +364,7 @@ BEGIN
 	-- Check to see if the property itself is multivalue.  That is, if only
 	-- one value can be set for this property for a specific property LHS
 
-	IF (v_comp_prop.is_multivalue != 'Y') THEN
+	IF (v_comp_prop.is_multivalue != true) THEN
 		PERFORM 1 FROM component_property WHERE
 			component_property_id != NEW.component_property_id AND
 			component_property_name = NEW.component_property_name AND
@@ -390,7 +390,7 @@ BEGIN
 	-- one property and value can be set for any properties with this type
 	-- for a specific property LHS
 
-	IF (v_comp_prop_type.is_multivalue != 'Y') THEN
+	IF (v_comp_prop_type.is_multivalue != true) THEN
 		PERFORM 1 FROM component_property WHERE
 			component_property_id != NEW.component_property_id AND
 			component_property_type = NEW.component_property_type AND
@@ -427,7 +427,7 @@ BEGIN
 	IF NEW.property_value IS NOT NULL THEN
 		tally := tally + 1;
 		IF v_comp_prop.property_data_type = 'boolean' THEN
-			IF NEW.Property_Value != 'Y' AND NEW.Property_Value != 'N' THEN
+			IF NEW.Property_Value != true AND NEW.Property_Value != false THEN
 				RAISE 'Boolean property_value must be Y or N' USING
 					ERRCODE = 'invalid_parameter_value';
 			END IF;

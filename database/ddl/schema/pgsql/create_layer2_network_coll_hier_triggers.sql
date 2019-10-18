@@ -35,7 +35,7 @@ BEGIN
 		(select layer2_network_collection_type from layer2_network_collection
 			where layer2_network_collection_id = NEW.layer2_network_collection_id);
 
-	IF act.can_have_hierarchy = 'N' THEN
+	IF act.can_have_hierarchy = false THEN
 		RAISE EXCEPTION 'Layer2 Network Collections of type % may not be hierarcical',
 			act.layer2_network_collection_type
 			USING ERRCODE= 'unique_violation';

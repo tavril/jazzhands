@@ -38,8 +38,8 @@ BEGIN
 			'iX2224-BACR920LPB/2.5',
 			'085915D9',
 			(SELECT company_id FROM jazzhands.company WHERE company_name = 'iXsystems'),
-			'Y',
-			'Y',
+			true,
+			true,
 			2
 		) RETURNING component_type_id INTO ctid;
 

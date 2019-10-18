@@ -33,7 +33,7 @@ BEGIN
 		(select dns_domain_collection_type from dns_domain_collection
 			where dns_domain_collection_id = NEW.dns_domain_collection_id);
 
-	IF dct.can_have_hierarchy = 'N' THEN
+	IF dct.can_have_hierarchy = false THEN
 		RAISE EXCEPTION 'DNS Domain Collections of type % may not be hierarcical',
 			dct.dns_domain_collection_type
 			USING ERRCODE= 'unique_violation';

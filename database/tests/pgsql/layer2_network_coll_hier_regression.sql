@@ -69,7 +69,7 @@ BEGIN
 	INSERT INTO val_layer2_network_collection_type (
 		layer2_network_collection_type, can_have_hierarchy
 	) VALUES (
-		'JHTEST-HIER', 'N'
+		'JHTEST-HIER', false
 	);
 
 	INSERT into layer2_network_collection (

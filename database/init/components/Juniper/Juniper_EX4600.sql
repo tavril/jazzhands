@@ -74,8 +74,8 @@ BEGIN
 			'EX4600-' || m[1],
 			m[2],
 			cid,
-			'Y',
-			'Y',
+			true,
+			true,
 			1
 		) RETURNING component_type_id INTO ctid;
 

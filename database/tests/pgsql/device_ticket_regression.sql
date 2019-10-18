@@ -52,7 +52,7 @@ BEGIN
 		model, rack_units, has_802_3_interface,
 		has_802_11_interface, snmp_capable, is_chassis
 	) values (
-		'JHTEST type', 2, 'N', 'N', 'N', 'Y'
+		'JHTEST type', 2, false, false, false, true
 	) RETURNING * INTO _dt;
 
 	INSERT INTO ticketing_system (

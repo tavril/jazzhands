@@ -187,7 +187,7 @@ values
 
 -- insert test user - kovert
 insert into person (first_name, middle_name, last_name, gender)
-	values ('Todd', 'M', 'Kover', 'M');
+	values ('Todd', 'M', 'Kover', 'male');
 
 insert into person_company (company_id, person_id, 
 	is_exempt,
@@ -229,7 +229,7 @@ values ('kovert',
 
 -- insert test user - mdr
 insert into person (first_name, middle_name, last_name, gender)
-	values ('Matthew', 'D', 'Ragan', 'M');
+	values ('Matthew', 'D', 'Ragan', 'male');
 
 insert into person_company (company_id, person_id, 
 	is_exempt,

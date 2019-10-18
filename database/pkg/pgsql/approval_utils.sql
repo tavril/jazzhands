@@ -312,7 +312,7 @@ CREATE OR REPLACE FUNCTION approval_utils.build_next_approval_item(
 						approval_process_chain.approval_process_chain_id%TYPE,
 	approval_instance_id
 				approval_instance.approval_instance_id%TYPE,
-	approved				char(1),
+	approved				boolean,
 	approving_account_id	account.account_id%TYPE,
 	new_value				text DEFAULT NULL
 ) RETURNS approval_instance_item.approval_instance_item_id%TYPE AS $$
@@ -396,7 +396,7 @@ BEGIN
 		WHERE	approval_process_chain_id = $1
 		AND		approval_instance_id = $2
 		AND		approver_account_id = $3
-		AND		is_completed = ''N''
+		AND		is_completed = false
 	' INTO _step USING approval_process_chain_id,
 		approval_instance_id, _acid;
 
@@ -425,7 +425,7 @@ BEGIN
 			approving_account_id);
 	END IF;
 
-	IF _apc.refresh_all_data = 'Y' THEN
+	IF _apc.refresh_all_data = true THEN
 		-- this is called twice, should rethink how to not
 		_v := approval_utils.refresh_approval_instance_item(approval_instance_item_id);
 		_l := approval_utils.get_or_create_correct_approval_instance_link(
@@ -474,7 +474,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = approval_utils,jazzhands;
 CREATE OR REPLACE FUNCTION approval_utils.approve(
 	approval_instance_item_id	
 					approval_instance_item.approval_instance_item_id%TYPE,
-	approved				char(1),
+	approved				boolean,
 	approving_account_id	account.account_id%TYPE,
 	new_value				text DEFAULT NULL
 ) RETURNS boolean AS $$
@@ -546,11 +546,11 @@ BEGIN
 		RAISE EXCEPTION 'Approval is already completed.';
 	END IF;
 
-	IF approved = 'N' THEN
+	IF approved = false THEN
 		IF _r.reject_app_process_chain_id IS NOT NULL THEN
 			_chid := _r.reject_app_process_chain_id;	
 		END IF;
-	ELSIF approved = 'Y' THEN
+	ELSIF approved = true THEN
 		IF _r.accept_app_process_chain_id IS NOT NULL THEN
 			_chid := _r.accept_app_process_chain_id;
 		END IF;

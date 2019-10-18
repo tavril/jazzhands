@@ -69,7 +69,7 @@ BEGIN
 	INSERT INTO val_dns_domain_collection_Type (
 		dns_domain_collection_type, can_have_hierarchy
 	) VALUES (
-		'JHTEST-HIER', 'N'
+		'JHTEST-HIER', false
 	);
 
 	INSERT into dns_domain_collection (

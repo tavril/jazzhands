@@ -59,7 +59,7 @@ BEGIN
 				'network',
 				'QSFP28',
 				'100Gbps QSFP28 Ethernet',
-				'Y'
+				true
 			) RETURNING slot_type_id INTO stid;
 		END IF;
 
@@ -75,8 +75,8 @@ BEGIN
 			stid,
 			'QSFP28-4xSFP28',
 			cid,
-			'Y',
-			'N'
+			true,
+			false
 		) RETURNING component_type_id INTO ctid;
 
 		PERFORM * FROM val_component_function

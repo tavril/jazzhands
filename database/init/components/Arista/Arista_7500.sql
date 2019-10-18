@@ -53,9 +53,9 @@ BEGIN
 				 description, remote_slot_permitted)
 			VALUES
 				('Arista 75XX Supervisor', 'Arista 75XX Supervisor',
-				 'chassis_slot', 'Arista 75XX Supervisor', 'N'),
+				 'chassis_slot', 'Arista 75XX Supervisor', false),
 				('Arista 75XX Linecard', 'Arista 75XX Linecard',
-				 'chassis_slot', 'Arista 75XX Linecard', 'N')
+				 'chassis_slot', 'Arista 75XX Linecard', false)
 			RETURNING slot_type_id 
 		) SELECT array_agg(slot_type_id) FROM z INTO stid;
 
@@ -85,8 +85,8 @@ BEGIN
 				NULL,
 				'DCS-' || d[1],
 				cid,
-				'Y',
-				'Y',
+				true,
+				true,
 				3 + d[2]::integer
 			) RETURNING component_type_id INTO ctid;
 
@@ -153,8 +153,8 @@ BEGIN
 			NULL,
 			'DCS-7500E-SUP',
 			cid,
-			'Y',
-			'N'
+			true,
+			false
 		) RETURNING component_type_id INTO ctid;
 
 		--
@@ -230,8 +230,8 @@ BEGIN
 			NULL,
 			'7500E-48S-LC',
 			cid,
-			'Y',
-			'N'
+			true,
+			false
 		) RETURNING component_type_id INTO ctid;
 
 		INSERT INTO component_type_slot_template (
@@ -274,8 +274,8 @@ BEGIN
 			NULL,
 			'7500E-36Q-LC',
 			cid,
-			'Y',
-			'N'
+			true,
+			false
 		) RETURNING component_type_id INTO ctid;
 
 		INSERT INTO component_type_slot_template (

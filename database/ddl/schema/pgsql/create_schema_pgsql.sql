@@ -4261,14 +4261,15 @@ CREATE TABLE property
 	property_name        varchar(255)  NOT NULL ,
 	property_type        varchar(50)  NOT NULL ,
 	property_value       varchar(1024)  NULL ,
-	property_value_timestamp timestamp without time zone  NULL ,
 	property_value_account_collection_id integer  NULL ,
+	property_value_boolean boolean  NULL ,
 	property_value_device_collection_id integer  NULL ,
 	property_value_json  jsonb  NULL ,
 	property_value_netblock_collection_id integer  NULL ,
 	property_value_password_type character varying(50)  NULL ,
 	property_value_person_id integer  NULL ,
 	property_value_sw_package_id integer  NULL ,
+	property_value_timestamp timestamp without time zone  NULL ,
 	property_value_token_collection_id integer  NULL ,
 	property_rank        integer  NULL ,
 	start_date           timestamp without time zone  NULL ,
@@ -8553,6 +8554,18 @@ COMMENT ON COLUMN device_ticket.ticket_number IS 'trouble ticketing system id';
 COMMENT ON COLUMN device_ticket.device_ticket_notes IS 'free form notes about the ticket/device association';
 
 ALTER TABLE device_type
+	ALTER COLUMN has_802_3_interface
+		SET DEFAULT false;
+
+ALTER TABLE device_type
+	ALTER COLUMN has_802_11_interface
+		SET DEFAULT false;
+
+ALTER TABLE device_type
+	ALTER COLUMN snmp_capable
+		SET DEFAULT false;
+
+ALTER TABLE device_type
 	ALTER COLUMN is_chassis
 		SET DEFAULT false;
 
@@ -8716,6 +8729,14 @@ ALTER TABLE dns_record
 ALTER TABLE dns_record
 	ALTER COLUMN dns_class
 		SET DEFAULT 'IN';
+
+ALTER TABLE dns_record
+	ALTER COLUMN should_generate_ptr
+		SET DEFAULT true;
+
+ALTER TABLE dns_record
+	ALTER COLUMN is_enabled
+		SET DEFAULT true;
 
 
 ALTER TABLE dns_record
@@ -8967,6 +8988,18 @@ ALTER TABLE layer2_network_collection_layer2_network
 
 ALTER TABLE layer3_interface
 	ADD CONSTRAINT ckc_netint_parent_role_1026598895 CHECK  ( parent_relation_type IN ('NONE', 'SUBINTERFACE', 'SECONDARY') ) ;
+
+ALTER TABLE layer3_interface
+	ALTER COLUMN is_interface_up
+		SET DEFAULT true;
+
+ALTER TABLE layer3_interface
+	ALTER COLUMN should_monitor
+		SET DEFAULT true;
+
+ALTER TABLE layer3_interface
+	ALTER COLUMN should_manage
+		SET DEFAULT true;
 
 
 ALTER TABLE layer3_interface

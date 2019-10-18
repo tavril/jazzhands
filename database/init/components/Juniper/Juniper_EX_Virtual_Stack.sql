@@ -60,7 +60,7 @@ BEGIN
 			 description, remote_slot_permitted)
 		VALUES
 			('Juniper EX VCP', 'Juniper EX VCP', 'inter_component_link',
-			'Juniper Virtual Chassis port', 'Y')
+			'Juniper Virtual Chassis port', true)
 		RETURNING
 			slot_type_id INTO vcp_stid;
 
@@ -86,7 +86,7 @@ BEGIN
 			 description, remote_slot_permitted)
 		VALUES
 			('JuniperEXStack', 'JuniperEXStack', 'chassis_slot',
-			 'Juniper EX stack', 'N')
+			 'Juniper EX stack', false)
 		RETURNING
 			slot_type_id INTO stack_stid;
 
@@ -109,8 +109,8 @@ BEGIN
 		NULL,
 		'Juniper EX4xxx virtual chassis',
 		cid,
-		'Y',
-		'N'
+		true,
+		false
 	) RETURNING component_type_id INTO ctid;
 
 	INSERT INTO component_type_component_function (

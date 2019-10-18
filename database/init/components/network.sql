@@ -31,7 +31,7 @@ BEGIN
 		INSERT INTO val_component_property_type (
 			component_property_type, description, is_multivalue
 		) VALUES 
-			('network_adapter', 'network adapter properties', 'Y');
+			('network_adapter', 'network adapter properties', true);
 
 		--
 		-- Slot functions are also somewhat arbitrary, and exist for associating
@@ -80,22 +80,22 @@ BEGIN
 			 description, remote_slot_permitted)
 		VALUES
 			-- Direct attach types
-			('100BaseTEthernet', 'RJ45', 'network', '100BaseT Ethernet', 'Y'),
-			('1000BaseTEthernet', 'RJ45', 'network', '1000BaseT Ethernet', 'Y'),
-			('10GBaseTEthernet', 'RJ45', 'network', '10GBaseT Ethernet', 'Y'),
-			('1GLCEthernet', 'LC', 'network', '1Gbps LC Fiber Ethernet', 'Y'),
-			('10GLCEthernet', 'LC', 'network', '10Gbps LC Ethernet', 'Y'),
-			('10GMPOEthernet', 'MPO', 'network', '10Gbps split-MPO Ethernet', 'Y'),
-			('10GSFPCuEthernet', '10GSFP+Cu', 'network', '10Gbps SFP+Cu (TwinAx) Ethernet', 'Y'),
-			('40GMPOEthernet', 'MPO', 'network', '40Gbps MPO/MTP Ethernet', 'Y'),
+			('100BaseTEthernet', 'RJ45', 'network', '100BaseT Ethernet', true),
+			('1000BaseTEthernet', 'RJ45', 'network', '1000BaseT Ethernet', true),
+			('10GBaseTEthernet', 'RJ45', 'network', '10GBaseT Ethernet', true),
+			('1GLCEthernet', 'LC', 'network', '1Gbps LC Fiber Ethernet', true),
+			('10GLCEthernet', 'LC', 'network', '10Gbps LC Ethernet', true),
+			('10GMPOEthernet', 'MPO', 'network', '10Gbps split-MPO Ethernet', true),
+			('10GSFPCuEthernet', '10GSFP+Cu', 'network', '10Gbps SFP+Cu (TwinAx) Ethernet', true),
+			('40GMPOEthernet', 'MPO', 'network', '40Gbps MPO/MTP Ethernet', true),
 			-- Module-requiring types
-			('1GSFPEthernet', 'SFP', 'network', '1Gbps SFP Ethernet', 'N'),
-			('10GSFP+Ethernet', 'SFP+', 'network', '10Gbps SFP+ Ethernet', 'N'),
-			('10GQSFP+Ethernet', 'QSFP+', 'network', '10Gbps split QSFP Ethernet', 'N'),
-			('40GQSFP+Ethernet', 'QSFP+', 'network', '40Gbps QSFP Ethernet', 'N'),
-			('100GMXPEthernet', 'MXP', 'network', '100Gbps MXP Ethernet', 'N'),
-			('100GQSFP28Ethernet', 'QSFP28', 'network', '100Gbps QSFP28 Ethernet', 'N'),
-			('25GSFP28Ethernet', 'QSFP28', 'network', '25Gbps SFP28 Ethernet', 'N');
+			('1GSFPEthernet', 'SFP', 'network', '1Gbps SFP Ethernet', false),
+			('10GSFP+Ethernet', 'SFP+', 'network', '10Gbps SFP+ Ethernet', false),
+			('10GQSFP+Ethernet', 'QSFP+', 'network', '10Gbps split QSFP Ethernet', false),
+			('40GQSFP+Ethernet', 'QSFP+', 'network', '40Gbps QSFP Ethernet', false),
+			('100GMXPEthernet', 'MXP', 'network', '100Gbps MXP Ethernet', false),
+			('100GQSFP28Ethernet', 'QSFP28', 'network', '100Gbps QSFP28 Ethernet', false),
+			('25GSFP28Ethernet', 'QSFP28', 'network', '25Gbps SFP28 Ethernet', false);
 
 
 		--

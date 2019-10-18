@@ -269,15 +269,15 @@ $$
 DECLARE
 	_cmpid	company.company_id%type;
 	_short	text;
-	_isfam	char(1);
+	_isfam	boolean;
 	_perm	text;
 BEGIN
 	IF _company_types @> ARRAY['corporate family'] THEN
-		_isfam := 'Y';
+		_isfam := true;
 	ELSE
-		_isfam := 'N';
+		_isfam := false;
 	END IF;
-	IF _company_short_name IS NULL and _isfam = 'Y' THEN
+	IF _company_short_name IS NULL and _isfam = true THEN
 		_short := lower(regexp_replace(
 				regexp_replace(
 					regexp_replace(_company_name,

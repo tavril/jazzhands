@@ -49,8 +49,8 @@ BEGIN
 			NULL,
 			'DCS-7050' || d[1] || '-64',
 			cid,
-			'Y',
-			'Y',
+			true,
+			true,
 			1
 		) RETURNING component_type_id INTO ctid;
 
@@ -173,8 +173,8 @@ BEGIN
 			NULL,
 			'DCS-7050' || d[1] || '-36',
 			cid,
-			'Y',
-			'Y',
+			true,
+			true,
 			1
 		) RETURNING component_type_id INTO ctid;
 

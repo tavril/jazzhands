@@ -73,7 +73,7 @@ BEGIN
 	INSERT INTO val_service_environment_collection_type (
 		service_environment_collection_type, can_have_hierarchy
 	) VALUES (
-		'JHTEST-HIER', 'N'
+		'JHTEST-HIER', false
 	);
 
 	INSERT into service_environment_collection (

@@ -97,9 +97,9 @@ BEGIN
 --
 
 	INSERT INTO VAL_Property_Type ( Property_Type, Is_Multivalue ) VALUES
-		('test', 'Y');
+		('test', true);
 	INSERT INTO VAL_Property_Type ( Property_Type, Is_Multivalue ) VALUES
-		('multivaluetest', 'N');
+		('multivaluetest', false);
 
 --
 -- Set up VAL_Property_Data_Type for test data
@@ -123,7 +123,7 @@ BEGIN
 	) VALUES (
 		'Prohibited',
 		'test',
-		'N',
+		false,
 		NULL,
 		'string',
 		'PROHIBITED',
@@ -155,7 +155,7 @@ BEGIN
 	) VALUES (
 		'Multivalue',
 		'test',
-		'Y',
+		true,
 		NULL,
 		'string',
 		'ALLOWED',
@@ -187,7 +187,7 @@ BEGIN
 	) VALUES (
 		'Singlevalue',
 		'test',
-		'N',
+		false,
 		NULL,
 		'string',
 		'ALLOWED',
@@ -219,7 +219,7 @@ BEGIN
 	) VALUES (
 		'Multivalue',
 		'multivaluetest',
-		'N',
+		false,
 		NULL,
 		'string',
 		'ALLOWED',
@@ -251,7 +251,7 @@ BEGIN
 	) VALUES (
 		'AnotherProperty',
 		'multivaluetest',
-		'N',
+		false,
 		NULL,
 		'string',
 		'ALLOWED',
@@ -283,7 +283,7 @@ BEGIN
 	) VALUES (
 		'Allowed',
 		'test',
-		'N',
+		false,
 		NULL,
 		'string',
 		'ALLOWED',
@@ -315,7 +315,7 @@ BEGIN
 	) VALUES (
 		'Required',
 		'test',
-		'N',
+		false,
 		NULL,
 		'string',
 		'REQUIRED',
@@ -347,7 +347,7 @@ BEGIN
 	) VALUES (
 		'RestrictAccount_Collection',
 		'test',
-		'N',
+		false,
 		'per-account',
 		'string',
 		'PROHIBITED',
@@ -380,7 +380,7 @@ BEGIN
 	) VALUES (
 		'boolean',
 		'test',
-		'N',
+		false,
 		NULL,
 		'boolean',
 		'PROHIBITED',
@@ -413,7 +413,7 @@ BEGIN
      ) VALUES (
 	     'company_collection_id',
 	     'test',
-	     'N',
+	     false,
 	     NULL,
 	     'none',
 	     'PROHIBITED',
@@ -446,7 +446,7 @@ BEGIN
 	) VALUES (
 		'netblock_collection_id',
 		'test',
-		'N',
+		false,
 		NULL,
 		'netblock_collection_id',
 		'PROHIBITED',
@@ -478,7 +478,7 @@ BEGIN
 	) VALUES (
 		'device_collection_id',
 		'test',
-		'N',
+		false,
 		NULL,
 		'device_collection_id',
 		'PROHIBITED',
@@ -510,7 +510,7 @@ BEGIN
 	) VALUES (
 		'sw_package_id',
 		'test',
-		'N',
+		false,
 		NULL,
 		'sw_package_id',
 		'PROHIBITED',
@@ -543,7 +543,7 @@ BEGIN
 	) VALUES (
 		'none',
 		'test',
-		'N',
+		false,
 		NULL,
 		'none',
 		'PROHIBITED',
@@ -576,7 +576,7 @@ BEGIN
 	) VALUES (
 		'number',
 		'test',
-		'N',
+		false,
 		NULL,
 		'string',
 		'PROHIBITED',
@@ -609,7 +609,7 @@ BEGIN
 	) VALUES (
 		'password_type',
 		'test',
-		'N',
+		false,
 		NULL,
 		'password_type',
 		'PROHIBITED',
@@ -642,7 +642,7 @@ BEGIN
 	) VALUES (
 		'string',
 		'test',
-		'N',
+		false,
 		NULL,
 		'string',
 		'PROHIBITED',
@@ -675,7 +675,7 @@ BEGIN
 	) VALUES (
 		'timestamp',
 		'test',
-		'N',
+		false,
 		NULL,
 		'timestamp',
 		'PROHIBITED',
@@ -708,7 +708,7 @@ BEGIN
 	) VALUES (
 		'token_collection_id',
 		'test',
-		'N',
+		false,
 		NULL,
 		'token_collection_id',
 		'PROHIBITED',
@@ -741,7 +741,7 @@ BEGIN
 	) VALUES (
 		'account_collection_id',
 		'test',
-		'N',
+		false,
 		NULL,
 		'account_collection_id',
 		'PROHIBITED',
@@ -774,7 +774,7 @@ BEGIN
 	) VALUES (
 		'list',
 		'test',
-		'N',
+		false,
 		NULL,
 		'list',
 		'PROHIBITED',
@@ -863,7 +863,7 @@ BEGIN
 	) VALUES (
 		'actype',
 		'test',
-		'Y',
+		true,
 		(select account_collection_type from account_collection
 			where account_collection_id = v_account_collection_id),
 		'string',
@@ -2587,13 +2587,13 @@ BEGIN
 	-- Boolean
 	--
 
-	RAISE NOTICE 'Inserting Y value into boolean property';
+	RAISE NOTICE 'Inserting true value into boolean property';
 	BEGIN
 		INSERT INTO Property (Property_Name, Property_Type,
-			Property_Value
+			Property_Value_boolean
 			) VALUES (
 			'boolean', 'test',
-			'Y'
+			true
 			) RETURNING Property_ID INTO v_property_id;
 		RAISE NOTICE '... Success';
 	EXCEPTION
@@ -2603,13 +2603,13 @@ BEGIN
 	END;
 	DELETE FROM Property WHERE Property_ID = v_property_id;
 
-	RAISE NOTICE 'Inserting N value into boolean property';
+	RAISE NOTICE 'Inserting false value into boolean property';
 	BEGIN
 		INSERT INTO Property (Property_Name, Property_Type,
-			Property_Value
+			Property_Value_boolean
 			) VALUES (
 			'boolean', 'test',
-			'N'
+			false
 			) RETURNING Property_ID INTO v_property_id;
 		RAISE NOTICE '... Success';
 	EXCEPTION

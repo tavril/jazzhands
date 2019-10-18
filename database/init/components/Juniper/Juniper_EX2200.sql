@@ -56,8 +56,8 @@ BEGIN
 			'EX2200-48' || m[1] ||'-4G',
 			m[2],
 			cid,
-			'Y',
-			'Y',
+			true,
+			true,
 			1
 		) RETURNING component_type_id INTO ctid;
 

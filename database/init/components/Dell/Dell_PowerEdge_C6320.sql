@@ -30,7 +30,7 @@ BEGIN
 		(slot_type, slot_physical_interface_type, slot_function, description,
 		 remote_slot_permitted)
 	VALUES
-		 ('C6320node', 'sled', 'chassis_slot', 'C6320 node', 'N')
+		 ('C6320node', 'sled', 'chassis_slot', 'C6320 node', false)
 	RETURNING
 		slot_type_id INTO stid;
 
@@ -50,8 +50,8 @@ BEGIN
 		NULL,
 		'PowerEdge C6320 chassis',
 		(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
-		'Y',
-		'Y',
+		true,
+		true,
 		2
 	) RETURNING component_type_id INTO ctid;
 
@@ -108,8 +108,8 @@ BEGIN
 				d[1],
 				d[2],
 				(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
-				'Y',
-				'N',
+				true,
+				false,
 				1
 			) RETURNING component_type_id INTO ctid;
 

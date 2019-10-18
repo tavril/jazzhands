@@ -593,7 +593,7 @@ BEGIN
 				pci_sub_device_name
 			END,
 			stid,
-			'Y',
+			true,
 			model_name
 		) RETURNING component_type_id INTO ctid;
 		--
@@ -776,7 +776,7 @@ BEGIN
 			cid,
 			model,
 			stid,
-			'Y',
+			true,
 			concat_ws(' ', vendor_name, model, media_type, 'disk')
 		) RETURNING component_type_id INTO ctid;
 
@@ -946,7 +946,7 @@ BEGIN
 			cid,
 			model,
 			stid,
-			'Y',
+			true,
 			concat_ws(' ', vendor_name, model, (memory_size || 'MB'), 'memory')
 		) RETURNING component_type_id INTO ctid;
 
@@ -1116,7 +1116,7 @@ BEGIN
 			cid,
 			model,
 			stid,
-			'Y',
+			true,
 			model
 		) RETURNING component_type_id INTO ctid;
 

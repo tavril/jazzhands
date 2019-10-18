@@ -64,7 +64,7 @@ CREATE OR REPLACE FUNCTION netblock_utils.find_best_parent_id(
 	in_Netmask_Bits integer DEFAULT NULL,
 	in_netblock_type jazzhands.netblock.netblock_type%type DEFAULT 'default',
 	in_ip_universe_id jazzhands.ip_universe.ip_universe_id%type DEFAULT 0,
-	in_is_single_address jazzhands.netblock.is_single_address%type DEFAULT 'N',
+	in_is_single_address jazzhands.netblock.is_single_address%type DEFAULT false,
 	in_netblock_id jazzhands.netblock.netblock_id%type DEFAULT NULL,
 	in_fuzzy_can_subnet boolean DEFAULT false,
 	can_fix_can_subnet boolean DEFAULT false
@@ -82,14 +82,14 @@ BEGIN
 		    from jazzhands.netblock
 		   where
 		   	in_IpAddress <<= ip_address
-		    and is_single_address = 'N'
+		    and is_single_address = false
 			and netblock_type = in_netblock_type
 			and ip_universe_id = in_ip_universe_id
 		    and (
-				(in_is_single_address = 'N' AND
+				(in_is_single_address = false AND
 					masklen(ip_address) < masklen(In_IpAddress))
 				OR
-				(in_is_single_address = 'Y' AND can_subnet = 'N' AND
+				(in_is_single_address = true AND can_subnet = false AND
 					(in_Netmask_Bits IS NULL
 						OR masklen(Ip_Address) = in_Netmask_Bits))
 			)
@@ -98,32 +98,32 @@ BEGIN
 		order by masklen(ip_address) desc
 	) subq LIMIT 1;
 
-	IF par_nbid IS NULL AND in_is_single_address = 'Y' AND in_fuzzy_can_subnet THEN
+	IF par_nbid IS NULL AND in_is_single_address = true AND in_fuzzy_can_subnet THEN
 		select  Netblock_Id
 		  into	par_nbid
 		  from  ( select Netblock_Id, Ip_Address
 			    from jazzhands.netblock
 			   where
 			   	in_IpAddress <<= ip_address
-			    and is_single_address = 'N'
+			    and is_single_address = false
 				and netblock_type = in_netblock_type
 				and ip_universe_id = in_ip_universe_id
 			    and
-					(in_is_single_address = 'Y' AND can_subnet = 'Y' AND
+					(in_is_single_address = true AND can_subnet = 'Y' AND
 						(in_Netmask_Bits IS NULL
 							OR masklen(Ip_Address) = in_Netmask_Bits))
 				and (in_netblock_id IS NULL OR
 					netblock_id != in_netblock_id)
 				and netblock_id not IN (
 					select parent_netblock_id from jazzhands.netblock
-						where is_single_address = 'N'
+						where is_single_address = false
 						and parent_netblock_id is not null
 				)
 			order by masklen(ip_address) desc
 		) subq LIMIT 1;
 
 		IF can_fix_can_subnet AND par_nbid IS NOT NULL THEN
-			UPDATE netblock SET can_subnet = 'N' where netblock_id = par_nbid;
+			UPDATE netblock SET can_subnet = false where netblock_id = par_nbid;
 		END IF;
 	END IF;
 
@@ -476,11 +476,11 @@ BEGIN
 			CONTINUE;
 		END IF;
 
-		IF single_address AND netblock_rec.can_subnet = 'Y' THEN
+		IF single_address AND netblock_rec.can_subnet = true THEN
 			RAISE EXCEPTION 'single addresses may not be assigned to to a block where can_subnet is Y';
 		END IF;
 
-		IF (NOT single_address) AND netblock_rec.can_subnet = 'N' THEN
+		IF (NOT single_address) AND netblock_rec.can_subnet = false THEN
 			RAISE EXCEPTION 'Netblock % (%) may not be subnetted',
 				netblock_rec.ip_address,
 				netblock_rec.netblock_id;
@@ -674,13 +674,13 @@ BEGIN
 		IF NOT FOUND THEN
 			RAISE EXCEPTION 'netblock_id % not found', netblock_id;
 		END IF;
-		IF netblock_rec.is_single_address = 'Y' THEN
+		IF netblock_rec.is_single_address = true THEN
 			RETURN;
 		END IF;
 		ip_address := netblock_rec.ip_address;
 		ip_universe_id := netblock_rec.ip_universe_id;
 		netblock_type := netblock_rec.netblock_type;
-		subnettable := CASE WHEN netblock_rec.can_subnet = 'N'
+		subnettable := CASE WHEN netblock_rec.can_subnet = false
 			THEN false ELSE true
 			END;
 	ELSIF ip_address IS NOT NULL THEN
@@ -699,8 +699,8 @@ BEGIN
 				n.ip_address <<= list_unallocated_netblocks.ip_address AND
 				n.ip_universe_id = list_unallocated_netblocks.ip_universe_id AND
 				n.netblock_type = list_unallocated_netblocks.netblock_type AND
-				is_single_address = 'N' AND
-				can_subnet = 'N'
+				is_single_address = false AND
+				can_subnet = false
 			ORDER BY
 				n.ip_address
 		) INTO ip_array;
@@ -812,7 +812,7 @@ BEGIN
 			set_masklen(max_addr, family_bits)
 		THEN
 			ip_addr := set_masklen(max_addr + 1, masklen(current_nb));
-			-- Validate that this isn't an empty can_subnet='Y' block already
+			-- Validate that this isn't an empty can_subnet=true block already
 			-- If it is, split it in half and return both halves
 			PERFORM * FROM netblock n WHERE
 				n.ip_address = ip_addr AND
@@ -845,7 +845,7 @@ BEGIN
 		current_nb := set_masklen(current_nb, masklen(current_nb) + 1);
 		IF NOT (current_nb >>= ip_block_2) THEN
 			ip_addr := current_nb;
-			-- Validate that this isn't an empty can_subnet='Y' block already
+			-- Validate that this isn't an empty can_subnet=true block already
 			-- If it is, split it in half and return both halves
 			PERFORM * FROM netblock n WHERE
 				n.ip_address = ip_addr AND
@@ -888,7 +888,7 @@ BEGIN
 	INTO	u_id
 	FROM	netblock nb
 		JOIN ip_universe u USING (ip_universe_id)
-	WHERE	is_single_address = 'N'
+	WHERE	is_single_address = false
 	AND	nb.ip_address >>= ip
 	AND	u.ip_namespace = 'default'
 	ORDER BY masklen(nb.ip_address) desc

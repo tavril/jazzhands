@@ -26,7 +26,7 @@ BEGIN
 		INSERT INTO val_component_property_type (
 			component_property_type, description, is_multivalue
 		) VALUES 
-			('memory', 'memory properties', 'Y');
+			('memory', 'memory properties', true);
 
 		--
 		-- Insert a sampling of component function properties
@@ -40,9 +40,9 @@ BEGIN
 			required_component_function,
 			permit_component_type_id
 		) VALUES 
-			('MemorySize', 'memory', 'Memory Size (MB)', 'N', 'number',
+			('MemorySize', 'memory', 'Memory Size (MB)', false, 'number',
 				'memory', 'REQUIRED'),
-			('MemorySpeed', 'memory', 'Memory Speed (MHz)', 'N', 'number',
+			('MemorySpeed', 'memory', 'Memory Speed (MHz)', false, 'number',
 				'memory', 'REQUIRED');
 
 		--
@@ -82,8 +82,8 @@ BEGIN
 			(slot_type, slot_physical_interface_type, slot_function,
 			 description, remote_slot_permitted)
 		VALUES
-			('DDR3 RDIMM', 'DDR3 RDIMM', 'memory', 'DDR3 RDIMM', 'N'),
-			('DDR4 DIMM', 'DDR4 DIMM', 'memory', 'DDR4 DIMM', 'N');
+			('DDR3 RDIMM', 'DDR3 RDIMM', 'memory', 'DDR3 RDIMM', false),
+			('DDR4 DIMM', 'DDR4 DIMM', 'memory', 'DDR4 DIMM', false);
 
 		--
 		-- Insert the permitted memory connections.  Memory can only go into a

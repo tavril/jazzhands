@@ -35,7 +35,7 @@ BEGIN
 				USING ERRCODE = 'not_null_violation';
 		END IF;
 		IF v_pc_atr.person_company_attribute_data_type = 'boolean' THEN
-			IF NEW.attribute_value NOT IN ('Y', 'N') THEN
+			IF NEW.attribute_value NOT IN (true, false) THEN
 				RAISE EXCEPTION 'attribute_value must be boolean (Y,N)'
 					USING ERRCODE = 'integrity_constraint_violation';
 			END IF;

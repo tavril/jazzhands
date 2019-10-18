@@ -41,8 +41,8 @@ BEGIN
 			d[1],
 			d[2],
 			(SELECT company_id FROM jazzhands.company WHERE company_name = 'Dell'),
-			'Y',
-			'Y',
+			true,
+			true,
 			4
 		) RETURNING component_type_id INTO ctid;
 

@@ -309,7 +309,7 @@ BEGIN
 		        ) values (
 			        physportid1, physportid2,
 			        i_baud, i_data_bits, i_stop_bits, i_parity, i_flw_cntrl,
-			        i_circuit_id, 'Y'
+			        i_circuit_id, true
 		        ) RETURNING layer1_connection_id into l1_con_id;
 		ELSE
 		        insert into layer1_connection (

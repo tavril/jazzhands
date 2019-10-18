@@ -189,7 +189,7 @@ BEGIN
 			ANY(allocate_netblock.parent_netblock_list) ORDER BY netblock_id
 			FOR UPDATE LOOP
 
-		IF parent_rec.is_single_address = 'Y' THEN
+		IF parent_rec.is_single_address = true THEN
 			RAISE EXCEPTION 'parent_netblock_id refers to a single_address netblock'
 				USING ERRCODE = 'invalid_parameter_value';
 		END IF;
@@ -207,18 +207,18 @@ BEGIN
 				CASE WHEN
 					family(parent_rec.ip_address) = 4 THEN 32 ELSE 128 END;
 
-			IF parent_rec.can_subnet = 'N' THEN
+			IF parent_rec.can_subnet = false THEN
 				RAISE EXCEPTION 'parent subnet must have can_subnet set to Y'
 					USING ERRCODE = 'JH10B';
 			END IF;
 		ELSIF address_type = 'single' THEN
-			IF parent_rec.can_subnet = 'Y' THEN
+			IF parent_rec.can_subnet = true THEN
 				RAISE EXCEPTION
 					'parent subnet for single address must have can_subnet set to N'
 					USING ERRCODE = 'JH10B';
 			END IF;
 		ELSIF address_type = 'netblock' THEN
-			IF parent_rec.can_subnet = 'N' THEN
+			IF parent_rec.can_subnet = false THEN
 				RAISE EXCEPTION 'parent subnet must have can_subnet set to Y'
 					USING ERRCODE = 'JH10B';
 			END IF;
@@ -257,8 +257,8 @@ BEGIN
 		) VALUES (
 			inet_rec.ip_address,
 			inet_rec.netblock_type,
-			'N',
-			'N',
+			false,
+			false,
 			inet_rec.ip_universe_id,
 			allocate_netblock.description,
 			allocate_netblock.netblock_status
@@ -275,8 +275,8 @@ BEGIN
 		) VALUES (
 			inet_rec.ip_address,
 			parent_rec.netblock_type,
-			'Y',
-			'N',
+			true,
+			false,
 			inet_rec.ip_universe_id,
 			allocate_netblock.description,
 			allocate_netblock.netblock_status
@@ -317,8 +317,8 @@ BEGIN
 		) VALUES (
 			inet_rec.ip_address,
 			inet_rec.netblock_type,
-			'Y',
-			'N',
+			true,
+			false,
 			inet_rec.ip_universe_id,
 			allocate_netblock.description,
 			allocate_netblock.netblock_status
@@ -351,8 +351,8 @@ BEGIN
 		) VALUES (
 			inet_rec.ip_address,
 			inet_rec.netblock_type,
-			'N',
-			CASE WHEN can_subnet THEN 'Y' ELSE 'N' END,
+			false,
+			CASE WHEN can_subnet THEN true ELSE false END,
 			inet_rec.ip_universe_id,
 			allocate_netblock.description,
 			allocate_netblock.netblock_status
@@ -455,7 +455,7 @@ BEGIN
 			FROM
 				netblock_utils.find_best_parent_id(
 					in_ipaddress := start_ip_address,
-					in_is_single_address := 'Y'
+					in_is_single_address := true
 				)
 		);
 
@@ -465,8 +465,8 @@ BEGIN
 		END IF;
 	END IF;
 
-	IF par_netblock.can_subnet != 'N' OR
-			par_netblock.is_single_address != 'N' THEN
+	IF par_netblock.can_subnet != false OR
+			par_netblock.is_single_address != false THEN
 		RAISE 'create_network_range: parent netblock % must not be subnettable or a single address',
 			par_netblock.netblock_id USING ERRCODE = 'check_violation';
 	END IF;
@@ -524,8 +524,8 @@ BEGIN
 	WHERE
 		host(n.ip_address)::inet = start_ip_address AND
 		n.netblock_type = 'network_range' AND
-		n.can_subnet = 'N' AND
-		n.is_single_address = 'Y' AND
+		n.can_subnet = false AND
+		n.is_single_address = true AND
 		n.ip_universe_id = par_netblock.ip_universe_id;
 
 	IF NOT FOUND THEN
@@ -539,8 +539,8 @@ BEGIN
 		) VALUES (
 			host(start_ip_address)::inet,
 			'network_range',
-			'Y',
-			'N',
+			true,
+			false,
 			'Allocated',
 			par_netblock.ip_universe_id
 		) RETURNING * INTO start_netblock;
@@ -555,8 +555,8 @@ BEGIN
 	WHERE
 		host(n.ip_address)::inet = stop_ip_address AND
 		n.netblock_type = 'network_range' AND
-		n.can_subnet = 'N' AND
-		n.is_single_address = 'Y' AND
+		n.can_subnet = false AND
+		n.is_single_address = true AND
 		n.ip_universe_id = par_netblock.ip_universe_id;
 
 	IF NOT FOUND THEN
@@ -570,8 +570,8 @@ BEGIN
 		) VALUES (
 			host(stop_ip_address)::inet,
 			'network_range',
-			'Y',
-			'N',
+			true,
+			false,
 			'Allocated',
 			par_netblock.ip_universe_id
 		) RETURNING * INTO stop_netblock;
@@ -703,7 +703,7 @@ BEGIN
 				dev_id,
 				ni_name,
 				ni_type,
-				'N'
+				false
 			) RETURNING layer3_interface.layer3_interface_id INTO ni_id;
 		END IF;
 	END IF;
@@ -814,7 +814,7 @@ BEGIN
 			END IF;
 
 			--
-			-- Look for an is_single_address='Y', can_subnet='N' netblock
+			-- Look for an is_single_address=true, can_subnet=false netblock
 			-- with the given ip_address
 			--
 			SELECT
@@ -822,8 +822,8 @@ BEGIN
 			FROM
 				netblock n
 			WHERE
-				is_single_address = 'Y' AND
-				can_subnet = 'N' AND
+				is_single_address = true AND
+				can_subnet = false AND
 				netblock_type = nb_type AND
 				ip_universe_id = universe AND
 				host(ip_address) = host(ipaddr);
@@ -883,8 +883,8 @@ BEGIN
 				WHERE
 					n.ip_universe_id = universe AND
 					n.netblock_type = nb_type AND
-					is_single_address = 'N' AND
-					can_subnet = 'N' AND
+					is_single_address = false AND
+					can_subnet = false AND
 					n.ip_address >>= ipaddr;
 
 				IF NOT FOUND THEN
@@ -895,7 +895,7 @@ BEGIN
 					CONTINUE WHEN NOT create_layer3_networks;
 					--
 					-- Check to see if the netblock exists, but is
-					-- marked can_subnet='Y'.  If so, fix it
+					-- marked can_subnet=true.  If so, fix it
 					--
 					SELECT
 						* INTO pnb_rec
@@ -904,16 +904,16 @@ BEGIN
 					WHERE
 						n.ip_universe_id = universe AND
 						n.netblock_type = nb_type AND
-						n.is_single_address = 'N' AND
-						n.can_subnet = 'Y' AND
+						n.is_single_address = false AND
+						n.can_subnet = true AND
 						n.ip_address = network(ipaddr);
 
 					IF FOUND THEN
 						UPDATE netblock n SET
-							can_subnet = 'N'
+							can_subnet = false
 						WHERE
 							n.netblock_id = pnb_rec.netblock_id;
-						pnb_rec.can_subnet = 'N';
+						pnb_rec.can_subnet = false;
 					ELSE
 						INSERT INTO netblock (
 							ip_address,
@@ -925,8 +925,8 @@ BEGIN
 						) VALUES (
 							network(ipaddr),
 							nb_type,
-							'N',
-							'N',
+							false,
+							false,
 							universe,
 							'Allocated'
 						) RETURNING * INTO pnb_rec;
@@ -982,8 +982,8 @@ BEGIN
 					ipaddr,
 					nb_type,
 					universe,
-					'Y',
-					'N',
+					true,
+					false,
 					'Allocated'
 				) RETURNING * INTO nb_rec;
 				nb_id_ary := array_append(nb_id_ary, nb_rec.netblock_id);
@@ -1281,7 +1281,7 @@ BEGIN
 			END IF;
 
 			--
-			-- Look for an is_single_address='Y', can_subnet='N' netblock
+			-- Look for an is_single_address=true, can_subnet=false netblock
 			-- with the given ip_address
 			--
 			SELECT
@@ -1289,8 +1289,8 @@ BEGIN
 			FROM
 				netblock n
 			WHERE
-				is_single_address = 'Y' AND
-				can_subnet = 'N' AND
+				is_single_address = true AND
+				can_subnet = false AND
 				netblock_type = nb_type AND
 				ip_universe_id = universe AND
 				host(ip_address) = host(ipaddr);
@@ -1350,8 +1350,8 @@ BEGIN
 				WHERE
 					n.ip_universe_id = universe AND
 					n.netblock_type = nb_type AND
-					is_single_address = 'N' AND
-					can_subnet = 'N' AND
+					is_single_address = false AND
+					can_subnet = false AND
 					n.ip_address >>= ipaddr;
 
 				IF NOT FOUND THEN
@@ -1371,8 +1371,8 @@ BEGIN
 						) VALUES (
 							network(ipaddr),
 							nb_type,
-							'N',
-							'N',
+							false,
+							false,
 							universe,
 							'Allocated'
 						) RETURNING *
@@ -1430,8 +1430,8 @@ BEGIN
 					ipaddr,
 					nb_type,
 					universe,
-					'Y',
-					'N',
+					true,
+					false,
 					'Allocated'
 				) RETURNING * INTO nb_rec;
 				nb_id_ary := array_append(nb_id_ary, nb_rec.netblock_id);
