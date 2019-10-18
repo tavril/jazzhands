@@ -123,8 +123,9 @@ BEGIN
 		netblock_status := netblock_status
 	);
 END;
-$$ LANGUAGE plpgsql SET search_path = jazzhands;
-
+$$ LANGUAGE plpgsql
+SET search_path = jazzhands
+SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION netblock_manip.allocate_netblock(
 	parent_netblock_list	integer[],
@@ -368,7 +369,9 @@ BEGIN
 		RETURN;
 	END IF;
 END;
-$$ LANGUAGE plpgsql SET search_path = jazzhands;
+$$ LANGUAGE plpgsql
+SET search_path = jazzhands
+SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION netblock_manip.create_network_range(
 	start_ip_address	inet,
@@ -598,7 +601,9 @@ BEGIN
 
 	RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SET search_path = jazzhands;
+$$ LANGUAGE plpgsql
+SET search_path = jazzhands
+SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION netblock_manip.set_interface_addresses(
 	layer3_interface_id
@@ -892,7 +897,7 @@ BEGIN
 					-- Check to see if the netblock exists, but is
 					-- marked can_subnet='Y'.  If so, fix it
 					--
-					SELECT 
+					SELECT
 						* INTO pnb_rec
 					FROM
 						netblock n
@@ -1020,7 +1025,7 @@ BEGIN
 
 			IF FOUND THEN
 				IF move_addresses = 'always' OR (
-					move_addresses = 'if_same_device' AND 
+					move_addresses = 'if_same_device' AND
 					nin_rec.device_id = ni_rec.device_id
 				)
 				THEN
@@ -1438,8 +1443,6 @@ BEGIN
 			--
 			ni_id_ary := ARRAY[]::integer[];
 
-			SELECT 
-				ni.layer3_interface_id,
 				nin.netblock_id,
 				ni.device_id
 			INTO nin_rec
@@ -1452,7 +1455,7 @@ BEGIN
 
 			IF FOUND THEN
 				IF move_addresses = 'always' OR (
-					move_addresses = 'if_same_device' AND 
+					move_addresses = 'if_same_device' AND
 					nin_rec.device_id = ni_rec.device_id
 				)
 				THEN
