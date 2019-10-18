@@ -1,16 +1,50 @@
 \set ON_ERROR_STOP
 CREATE SCHEMA jazzhands_legacy;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.account AS
-SELECT account_id,login,person_id,company_id,is_enabled,account_realm_id,account_status,account_role,account_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	account_id,
+	login,
+	person_id,
+	company_id,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	account_realm_id,
+	account_status,
+	account_role,
+	account_type,
+	description,
+	external_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.account;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.account_assignd_cert AS
 SELECT account_id,x509_cert_id,x509_key_usg,key_usage_reason_for_assign,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_assigned_certificate;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.account_auth_log AS
-SELECT account_id,account_auth_ts,auth_resource,account_auth_seq,was_auth_success,auth_resource_instance,auth_origin,data_ins_date,data_ins_user
+SELECT
+	account_id,
+	account_auth_ts,
+	auth_resource,
+	account_auth_seq,
+	CASE WHEN was_auth_success IS NULL THEN NULL
+		WHEN was_auth_success = true THEN 'Y'
+		WHEN was_auth_success = false THEN 'N'
+		ELSE NULL
+	END AS was_auth_success,
+	auth_resource_instance,
+	auth_origin,
+	data_ins_date,
+	data_ins_user
 FROM jazzhands.account_auth_log;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.account_coll_type_relation AS
@@ -59,7 +93,7 @@ FROM jazzhands.account_token;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.account_unix_info AS
-SELECT 
+SELECT
 	account_id,
 	unix_uid,
 	unix_group_account_collection_id AS unix_group_acct_collection_id,
@@ -77,7 +111,7 @@ FROM jazzhands.appaal;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.appaal_instance AS
-SELECT 
+SELECT
 	appaal_instance_id,
 	appaal_id,
 	service_environment_id,
@@ -102,16 +136,57 @@ CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance AS
 SELECT approval_instance_id,approval_process_id,approval_instance_name,description,approval_start,approval_end,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.approval_instance;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_item AS
-SELECT approval_instance_item_id,approval_instance_link_id,approval_instance_step_id,next_approval_instance_item_id,approved_category,approved_label,approved_lhs,approved_rhs,is_approved,approved_account_id,approval_note,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	approval_instance_item_id,
+	approval_instance_link_id,
+	approval_instance_step_id,
+	next_approval_instance_item_id,
+	approved_category,
+	approved_label,
+	approved_lhs,
+	approved_rhs,
+	CASE WHEN is_approved IS NULL THEN NULL
+		WHEN is_approved = true THEN 'Y'
+		WHEN is_approved = false THEN 'N'
+		ELSE NULL
+	END AS is_approved,
+	approved_account_id,
+	approval_note,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.approval_instance_item;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_link AS
 SELECT approval_instance_link_id,acct_collection_acct_seq_id,person_company_seq_id,property_seq_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.approval_instance_link;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_step AS
-SELECT approval_instance_step_id,approval_instance_id,approval_process_chain_id,approval_instance_step_name,approval_instance_step_due,approval_type,description,approval_instance_step_start,approval_instance_step_end,approver_account_id,external_reference_name,is_completed,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	approval_instance_step_id,
+	approval_instance_id,
+	approval_process_chain_id,
+	approval_instance_step_name,
+	approval_instance_step_due,
+	approval_type,
+	description,
+	approval_instance_step_start,
+	approval_instance_step_end,
+	approver_account_id,
+	external_reference_name,
+	CASE WHEN is_completed IS NULL THEN NULL
+		WHEN is_completed = true THEN 'Y'
+		WHEN is_completed = false THEN 'N'
+		ELSE NULL
+	END AS is_completed,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.approval_instance_step;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_step_notify AS
@@ -120,7 +195,7 @@ FROM jazzhands.approval_instance_step_notify;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_process AS
-SELECT 
+SELECT
 	approval_process_id,
 	approval_process_name,
 	approval_process_type,
@@ -139,8 +214,32 @@ SELECT
 	data_upd_date
 FROM jazzhands.approval_process;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_process_chain AS
-SELECT approval_process_chain_id,approval_process_chain_name,approval_chain_response_period,description,message,email_message,email_subject_prefix,email_subject_suffix,max_escalation_level,escalation_delay,escalation_reminder_gap,approving_entity,refresh_all_data,accept_app_process_chain_id,reject_app_process_chain_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	approval_process_chain_id,
+	approval_process_chain_name,
+	approval_chain_response_period,
+	description,
+	message,
+	email_message,
+	email_subject_prefix,
+	email_subject_suffix,
+	max_escalation_level,
+	escalation_delay,
+	escalation_reminder_gap,
+	approving_entity,
+	CASE WHEN refresh_all_data IS NULL THEN NULL
+		WHEN refresh_all_data = true THEN 'Y'
+		WHEN refresh_all_data = false THEN 'N'
+		ELSE NULL
+	END AS refresh_all_data,
+	accept_app_process_chain_id,
+	reject_app_process_chain_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.approval_process_chain;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.asset AS
@@ -163,8 +262,27 @@ CREATE OR REPLACE VIEW jazzhands_legacy.chassis_location AS
 SELECT chassis_location_id,chassis_device_type_id,device_type_module_name,chassis_device_id,module_device_type_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.chassis_location;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.circuit AS
-SELECT circuit_id,vendor_company_id,vendor_circuit_id_str,aloc_lec_company_id,aloc_lec_circuit_id_str,aloc_parent_circuit_id,zloc_lec_company_id,zloc_lec_circuit_id_str,zloc_parent_circuit_id,is_locally_managed,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	circuit_id,
+	vendor_company_id,
+	vendor_circuit_id_str,
+	aloc_lec_company_id,
+	aloc_lec_circuit_id_str,
+	aloc_parent_circuit_id,
+	zloc_lec_company_id,
+	zloc_lec_circuit_id_str,
+	zloc_parent_circuit_id,
+	CASE WHEN is_locally_managed IS NULL THEN NULL
+		WHEN is_locally_managed = true THEN 'Y'
+		WHEN is_locally_managed = false THEN 'N'
+		ELSE NULL
+	END AS is_locally_managed,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.circuit;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.company AS
@@ -195,8 +313,40 @@ CREATE OR REPLACE VIEW jazzhands_legacy.component_property AS
 SELECT component_property_id,component_function,component_type_id,component_id,inter_component_connection_id,slot_function,slot_type_id,slot_id,component_property_name,component_property_type,property_value,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.component_property;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.component_type AS
-SELECT component_type_id,company_id,model,slot_type_id,description,part_number,is_removable,asset_permitted,is_rack_mountable,is_virtual_component,size_units,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	component_type_id,
+	company_id,
+	model,
+	slot_type_id,
+	description,
+	part_number,
+	CASE WHEN is_removable IS NULL THEN NULL
+		WHEN is_removable = true THEN 'Y'
+		WHEN is_removable = false THEN 'N'
+		ELSE NULL
+	END AS is_removable,
+	CASE WHEN asset_permitted IS NULL THEN NULL
+		WHEN asset_permitted = true THEN 'Y'
+		WHEN asset_permitted = false THEN 'N'
+		ELSE NULL
+	END AS asset_permitted,
+	CASE WHEN is_rack_mountable IS NULL THEN NULL
+		WHEN is_rack_mountable = true THEN 'Y'
+		WHEN is_rack_mountable = false THEN 'N'
+		ELSE NULL
+	END AS is_rack_mountable,
+	CASE WHEN is_virtual_component IS NULL THEN NULL
+		WHEN is_virtual_component = true THEN 'Y'
+		WHEN is_virtual_component = false THEN 'N'
+		ELSE NULL
+	END AS is_virtual_component,
+	size_units,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.component_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.component_type_component_func AS
@@ -215,13 +365,30 @@ CREATE OR REPLACE VIEW jazzhands_legacy.contract_type AS
 SELECT contract_id,contract_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.contract_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.department AS
-SELECT account_collection_id,company_id,manager_account_id,is_active,dept_code,cost_center_name,cost_center_number,default_badge_type_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	account_collection_id,
+	company_id,
+	manager_account_id,
+	CASE WHEN is_active IS NULL THEN NULL
+		WHEN is_active = true THEN 'Y'
+		WHEN is_active = false THEN 'N'
+		ELSE NULL
+	END AS is_active,
+	dept_code,
+	cost_center_name,
+	cost_center_number,
+	default_badge_type_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.department;
 
 -- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.device AS
-SELECT 
+SELECT
 	device_id,
 	component_id,
 	device_type_id,
@@ -239,9 +406,17 @@ SELECT
 	operating_system_id,
 	service_environment_id,
 	NULL AS auto_mgmt_protocol, -- Need to fill in
-	is_locally_managed,
+	CASE WHEN is_locally_managed IS NULL THEN NULL
+		WHEN is_locally_managed = true THEN 'Y'
+		WHEN is_locally_managed = false THEN 'N'
+		ELSE NULL
+	END AS is_locally_managed,
 	NULL AS is_monitored, -- Need to fill in
-	is_virtual_device,
+	CASE WHEN is_virtual_device IS NULL THEN NULL
+		WHEN is_virtual_device = true THEN 'Y'
+		WHEN is_virtual_device = false THEN 'N'
+		ELSE NULL
+	END AS is_virtual_device,
 	NULL AS should_fetch_config, -- Need to fill in
 	date_in_service,
 	data_ins_user,
@@ -256,7 +431,7 @@ FROM jazzhands.device_collection;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection_assignd_cert AS
-SELECT 
+SELECT
 	device_collection_id,
 	x509_signed_certificate_id AS x509_cert_id,
 	x509_key_usage AS x509_key_usg,
@@ -296,7 +471,7 @@ FROM jazzhands.device_layer2_network;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.device_management_controller AS
-SELECT 
+SELECT
 	manager_device_id,
 	device_id,
 	device_management_control_type AS device_mgmt_control_type,
@@ -327,8 +502,45 @@ CREATE OR REPLACE VIEW jazzhands_legacy.device_ticket AS
 SELECT device_id,ticketing_system_id,ticket_number,device_ticket_notes,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_ticket;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.device_type AS
-SELECT device_type_id,component_type_id,device_type_name,template_device_id,idealized_device_id,description,company_id,model,device_type_depth_in_cm,processor_architecture,config_fetch_type,rack_units,has_802_3_interface,has_802_11_interface,snmp_capable,is_chassis,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	device_type_id,
+	component_type_id,
+	device_type_name,
+	template_device_id,
+	idealized_device_id,
+	description,
+	company_id,
+	model,
+	device_type_depth_in_cm,
+	processor_architecture,
+	config_fetch_type,
+	rack_units,
+	CASE WHEN has_802_3_interface IS NULL THEN NULL
+		WHEN has_802_3_interface = true THEN 'Y'
+		WHEN has_802_3_interface = false THEN 'N'
+		ELSE NULL
+	END AS has_802_3_interface,
+	CASE WHEN has_802_11_interface IS NULL THEN NULL
+		WHEN has_802_11_interface = true THEN 'Y'
+		WHEN has_802_11_interface = false THEN 'N'
+		ELSE NULL
+	END AS has_802_11_interface,
+	CASE WHEN snmp_capable IS NULL THEN NULL
+		WHEN snmp_capable = true THEN 'Y'
+		WHEN snmp_capable = false THEN 'N'
+		ELSE NULL
+	END AS snmp_capable,
+	CASE WHEN is_chassis IS NULL THEN NULL
+		WHEN is_chassis = true THEN 'Y'
+		WHEN is_chassis = false THEN 'N'
+		ELSE NULL
+	END AS is_chassis,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.device_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_type_module AS
@@ -359,12 +571,65 @@ CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain_collection_hier AS
 SELECT dns_domain_collection_id,child_dns_domain_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.dns_domain_collection_hier;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain_ip_universe AS
-SELECT dns_domain_id,ip_universe_id,soa_class,soa_ttl,soa_serial,soa_refresh,soa_retry,soa_expire,soa_minimum,soa_mname,soa_rname,should_generate,last_generated,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	dns_domain_id,
+	ip_universe_id,
+	soa_class,
+	soa_ttl,
+	soa_serial,
+	soa_refresh,
+	soa_retry,
+	soa_expire,
+	soa_minimum,
+	soa_mname,
+	soa_rname,
+	CASE WHEN should_generate IS NULL THEN NULL
+		WHEN should_generate = true THEN 'Y'
+		WHEN should_generate = false THEN 'N'
+		ELSE NULL
+	END AS should_generate,
+	last_generated,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.dns_domain_ip_universe;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_record AS
-SELECT dns_record_id,dns_name,dns_domain_id,dns_ttl,dns_class,dns_type,dns_value,dns_priority,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,netblock_id,ip_universe_id,reference_dns_record_id,dns_value_record_id,should_generate_ptr,is_enabled,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	dns_record_id,
+	dns_name,
+	dns_domain_id,
+	dns_ttl,
+	dns_class,
+	dns_type,
+	dns_value,
+	dns_priority,
+	dns_srv_service,
+	dns_srv_protocol,
+	dns_srv_weight,
+	dns_srv_port,
+	netblock_id,
+	ip_universe_id,
+	reference_dns_record_id,
+	dns_value_record_id,
+	CASE WHEN should_generate_ptr IS NULL THEN NULL
+		WHEN should_generate_ptr = true THEN 'Y'
+		WHEN should_generate_ptr = false THEN 'N'
+		ELSE NULL
+	END AS should_generate_ptr,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.dns_record;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_record_relation AS
@@ -387,12 +652,38 @@ CREATE OR REPLACE VIEW jazzhands_legacy.inter_component_connection AS
 SELECT inter_component_connection_id,slot1_id,slot2_id,circuit_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.inter_component_connection;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.ip_universe AS
-SELECT ip_universe_id,ip_universe_name,ip_namespace,should_generate_dns,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	ip_universe_id,
+	ip_universe_name,
+	ip_namespace,
+	CASE WHEN should_generate_dns IS NULL THEN NULL
+		WHEN should_generate_dns = true THEN 'Y'
+		WHEN should_generate_dns = false THEN 'N'
+		ELSE NULL
+	END AS should_generate_dns,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.ip_universe;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.ip_universe_visibility AS
-SELECT ip_universe_id,visible_ip_universe_id,propagate_dns,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	ip_universe_id,
+	visible_ip_universe_id,
+	CASE WHEN propagate_dns IS NULL THEN NULL
+		WHEN propagate_dns = true THEN 'Y'
+		WHEN propagate_dns = false THEN 'N'
+		ELSE NULL
+	END AS propagate_dns,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.ip_universe_visibility;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.kerberos_realm AS
@@ -401,7 +692,7 @@ FROM jazzhands.kerberos_realm;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.klogin AS
-SELECT 
+SELECT
 	klogin_id,
 	account_id,
 	account_collection_id,
@@ -448,7 +739,7 @@ FROM jazzhands.layer2_network_collection;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.layer2_network_collection_hier AS
-SELECT 
+SELECT
 	layer2_network_collection_id,
 	child_layer2_network_collection_id AS child_l2_network_coll_id,
 	data_ins_user,
@@ -467,7 +758,7 @@ FROM jazzhands.layer3_network_collection;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.layer3_network_collection_hier AS
-SELECT 
+SELECT
 	layer3_network_collection_id,
 	child_layer3_network_collection_id AS child_l3_network_coll_id,
 	data_ins_user,
@@ -500,13 +791,36 @@ CREATE OR REPLACE VIEW jazzhands_legacy.mlag_peering AS
 SELECT mlag_peering_id,device1_id,device2_id,domain_id,system_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.mlag_peering;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.netblock AS
-SELECT netblock_id,ip_address,netblock_type,is_single_address,can_subnet,parent_netblock_id,netblock_status,ip_universe_id,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	netblock_id,
+	ip_address,
+	netblock_type,
+	CASE WHEN is_single_address IS NULL THEN NULL
+		WHEN is_single_address = true THEN 'Y'
+		WHEN is_single_address = false THEN 'N'
+		ELSE NULL
+	END AS is_single_address,
+	CASE WHEN can_subnet IS NULL THEN NULL
+		WHEN can_subnet = true THEN 'Y'
+		WHEN can_subnet = false THEN 'N'
+		ELSE NULL
+	END AS can_subnet,
+	parent_netblock_id,
+	netblock_status,
+	ip_universe_id,
+	description,
+	external_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.netblock;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.netblock_collection AS
-SELECT 
+SELECT
 	netblock_collection_id,
 	netblock_collection_name,
 	netblock_collection_type,
@@ -529,7 +843,7 @@ FROM jazzhands.netblock_collection_netblock;
 
 -- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface AS
-SELECT 
+SELECT
 	layer3_interface_id AS network_interface_id,
 	device_id,
 	layer3_interface_name AS network_interface_name,
@@ -540,10 +854,22 @@ SELECT
 	slot_id,
 	logical_port_id,
 	layer3_interface_type AS network_interface_type,
-	is_interface_up,
+	CASE WHEN is_interface_up IS NULL THEN NULL
+		WHEN is_interface_up = true THEN 'Y'
+		WHEN is_interface_up = false THEN 'N'
+		ELSE NULL
+	END AS is_interface_up,
 	mac_addr,
-	should_monitor,
-	should_manage,
+	CASE WHEN should_monitor IS NULL THEN NULL
+		WHEN should_monitor = true THEN 'Y'
+		WHEN should_monitor = false THEN 'N'
+		ELSE NULL
+	END AS should_monitor,
+	CASE WHEN should_manage IS NULL THEN NULL
+		WHEN should_manage = true THEN 'Y'
+		WHEN should_manage = false THEN 'N'
+		ELSE NULL
+	END AS should_manage,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
@@ -552,7 +878,7 @@ FROM jazzhands.layer3_interface;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface_netblock AS
-SELECT 
+SELECT
 	netblock_id,
 	layer3_interface_id AS network_interface_id,
 	device_id,
@@ -565,7 +891,7 @@ FROM jazzhands.layer3_interface_netblock;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface_purpose AS
-SELECT 
+SELECT
 	device_id,
 	network_interface_purpose,
 	layer3_interface_id AS network_interface_id,
@@ -580,13 +906,31 @@ CREATE OR REPLACE VIEW jazzhands_legacy.network_range AS
 SELECT network_range_id,network_range_type,description,parent_netblock_id,start_netblock_id,stop_netblock_id,dns_prefix,dns_domain_id,lease_time,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.network_range;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.network_service AS
-SELECT network_service_id,name,description,network_service_type,is_monitored,device_id,network_interface_id,dns_record_id,service_environment_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	network_service_id,
+	name,
+	description,
+	network_service_type,
+	CASE WHEN is_monitored IS NULL THEN NULL
+		WHEN is_monitored = true THEN 'Y'
+		WHEN is_monitored = false THEN 'N'
+		ELSE NULL
+	END AS is_monitored,
+	device_id,
+	network_interface_id,
+	dns_record_id,
+	service_environment_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.network_service;
 
 -- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.operating_system AS
-SELECT 
+SELECT
 	operating_system_id,
 	operating_system_name,
 	operating_system_short_name,
@@ -605,25 +949,88 @@ CREATE OR REPLACE VIEW jazzhands_legacy.operating_system_snapshot AS
 SELECT operating_system_snapshot_id,operating_system_snapshot_name,operating_system_snapshot_type,operating_system_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.operating_system_snapshot;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person AS
-SELECT person_id,description,first_name,middle_name,last_name,name_suffix,gender,preferred_first_name,preferred_last_name,nickname,birth_date,diet,shirt_size,pant_size,hat_size,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	person_id,
+	description,
+	first_name,
+	middle_name,
+	last_name,
+	name_suffix,
+	gender,
+	preferred_first_name,
+	preferred_last_name,
+	nickname,
+	birth_date,
+	diet,
+	shirt_size,
+	pant_size,
+	hat_size,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.person;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.person_account_realm_company AS
 SELECT person_id,company_id,account_realm_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_account_realm_company;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person_auth_question AS
-SELECT auth_question_id,person_id,user_answer,is_active,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	auth_question_id,
+	person_id,
+	user_answer,
+	CASE WHEN is_active IS NULL THEN NULL
+		WHEN is_active = true THEN 'Y'
+		WHEN is_active = false THEN 'N'
+		ELSE NULL
+	END AS is_active,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.person_auth_question;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person_company AS
-SELECT company_id,person_id,person_company_status,person_company_relation,is_exempt,is_management,is_full_time,description,position_title,hire_date,termination_date,manager_person_id,nickname,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	company_id,
+	person_id,
+	person_company_status,
+	person_company_relation,
+	CASE WHEN is_exempt IS NULL THEN NULL
+		WHEN is_exempt = true THEN 'Y'
+		WHEN is_exempt = false THEN 'N'
+		ELSE NULL
+	END AS is_exempt,
+	CASE WHEN is_management IS NULL THEN NULL
+		WHEN is_management = true THEN 'Y'
+		WHEN is_management = false THEN 'N'
+		ELSE NULL
+	END AS is_management,
+	CASE WHEN is_full_time IS NULL THEN NULL
+		WHEN is_full_time = true THEN 'Y'
+		WHEN is_full_time = false THEN 'N'
+		ELSE NULL
+	END AS is_full_time,
+	description,
+	position_title,
+	hire_date,
+	termination_date,
+	manager_person_id,
+	nickname,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.person_company;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.person_company_attr AS
-SELECT 
+SELECT
 	company_id,
 	person_id,
 	person_company_attribute_name AS person_company_attr_name,
@@ -644,7 +1051,7 @@ FROM jazzhands.person_company_badge;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.person_contact AS
-SELECT 
+SELECT
 	person_contact_id,
 	person_id,
 	person_contact_type,
@@ -695,7 +1102,7 @@ FROM jazzhands.physical_address;
 
 -- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.physical_connection AS
-SELECT 
+SELECT
 	physical_connection_id,
 	NULL AS physical_port1_id, -- Need to fill in
 	NULL AS physical_port2_id, -- Need to fill in
@@ -716,13 +1123,29 @@ CREATE OR REPLACE VIEW jazzhands_legacy.physicalish_volume AS
 SELECT physicalish_volume_id,physicalish_volume_name,physicalish_volume_type,device_id,logical_volume_id,component_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.physicalish_volume;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.private_key AS
-SELECT private_key_id,private_key_encryption_type,is_active,subject_key_identifier,private_key,passphrase,encryption_key_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	private_key_id,
+	private_key_encryption_type,
+	CASE WHEN is_active IS NULL THEN NULL
+		WHEN is_active = true THEN 'Y'
+		WHEN is_active = false THEN 'N'
+		ELSE NULL
+	END AS is_active,
+	subject_key_identifier,
+	private_key,
+	passphrase,
+	encryption_key_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.private_key;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.property AS
-SELECT 
+SELECT
 	property_id,
 	account_collection_id,
 	account_id,
@@ -757,7 +1180,11 @@ SELECT
 	property_rank,
 	start_date,
 	finish_date,
-	is_enabled,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
@@ -766,7 +1193,7 @@ FROM jazzhands.property;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.property_collection AS
-SELECT 
+SELECT
 	property_name_collection_id AS property_collection_id,
 	property_name_collection_name AS property_collection_name,
 	property_name_collection_type AS property_collection_type,
@@ -779,7 +1206,7 @@ FROM jazzhands.property_name_collection;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.property_collection_hier AS
-SELECT 
+SELECT
 	property_name_collection_id AS property_collection_id,
 	child_property_name_collection_id AS child_property_collection_id,
 	data_ins_user,
@@ -790,7 +1217,7 @@ FROM jazzhands.property_name_collection_hier;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.property_collection_property AS
-SELECT 
+SELECT
 	property_name_collection_id AS property_collection_id,
 	property_name,
 	property_type,
@@ -805,8 +1232,28 @@ CREATE OR REPLACE VIEW jazzhands_legacy.pseudo_klogin AS
 SELECT pseudo_klogin_id,principal,dest_account_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.pseudo_klogin;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.rack AS
-SELECT rack_id,site_code,room,sub_room,rack_row,rack_name,rack_style,rack_type,description,rack_height_in_u,display_from_bottom,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	rack_id,
+	site_code,
+	room,
+	sub_room,
+	rack_row,
+	rack_name,
+	rack_style,
+	rack_type,
+	description,
+	rack_height_in_u,
+	CASE WHEN display_from_bottom IS NULL THEN NULL
+		WHEN display_from_bottom = true THEN 'Y'
+		WHEN display_from_bottom = false THEN 'N'
+		ELSE NULL
+	END AS display_from_bottom,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.rack;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.rack_location AS
@@ -819,7 +1266,7 @@ FROM jazzhands.service_environment;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.service_environment_coll_hier AS
-SELECT 
+SELECT
 	service_environment_collection_id AS service_env_collection_id,
 	child_service_environment_collection_id AS child_service_env_coll_id,
 	description,
@@ -831,7 +1278,7 @@ FROM jazzhands.service_environment_collection_hier;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.service_environment_collection AS
-SELECT 
+SELECT
 	service_environment_collection_id AS service_env_collection_id,
 	service_environment_collection_name AS service_env_collection_name,
 	service_environment_collection_type AS service_env_collection_type,
@@ -849,7 +1296,7 @@ FROM jazzhands.shared_netblock;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.shared_netblock_network_int AS
-SELECT 
+SELECT
 	shared_netblock_id,
 	layer3_interface_id AS network_interface_id,
 	priority,
@@ -867,16 +1314,20 @@ CREATE OR REPLACE VIEW jazzhands_legacy.site_netblock AS
 SELECT site_code,netblock_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.site_netblock;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.slot AS
-SELECT 
+SELECT
 	slot_id,
 	component_id,
 	slot_name,
 	slot_index,
 	slot_type_id,
 	component_type_slot_template_id AS component_type_slot_tmplt_id,
-	is_enabled,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
 	physical_label,
 	mac_address,
 	description,
@@ -890,8 +1341,23 @@ SELECT
 	data_upd_date
 FROM jazzhands.slot;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.slot_type AS
-SELECT slot_type_id,slot_type,slot_function,slot_physical_interface_type,description,remote_slot_permitted,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	slot_type_id,
+	slot_type,
+	slot_function,
+	slot_physical_interface_type,
+	description,
+	CASE WHEN remote_slot_permitted IS NULL THEN NULL
+		WHEN remote_slot_permitted = true THEN 'Y'
+		WHEN remote_slot_permitted = false THEN 'N'
+		ELSE NULL
+	END AS remote_slot_permitted,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.slot_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.slot_type_prmt_comp_slot_type AS
@@ -908,7 +1374,7 @@ FROM jazzhands.ssh_key;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.static_route AS
-SELECT 
+SELECT
 	static_route_id,
 	device_source_id AS device_src_id,
 	network_interface_destination_id AS network_interface_dst_id,
@@ -921,7 +1387,7 @@ FROM jazzhands.static_route;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.static_route_template AS
-SELECT 
+SELECT
 	static_route_template_id,
 	netblock_source_id AS netblock_src_id,
 	network_interface_destination_id AS network_interface_dst_id,
@@ -933,8 +1399,27 @@ SELECT
 	data_upd_date
 FROM jazzhands.static_route_template;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.sudo_acct_col_device_collectio AS
-SELECT sudo_alias_name,device_collection_id,account_collection_id,run_as_account_collection_id,requires_password,can_exec_child,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	sudo_alias_name,
+	device_collection_id,
+	account_collection_id,
+	run_as_account_collection_id,
+	CASE WHEN requires_password IS NULL THEN NULL
+		WHEN requires_password = true THEN 'Y'
+		WHEN requires_password = false THEN 'N'
+		ELSE NULL
+	END AS requires_password,
+	CASE WHEN can_exec_child IS NULL THEN NULL
+		WHEN can_exec_child = true THEN 'Y'
+		WHEN can_exec_child = false THEN 'N'
+		ELSE NULL
+	END AS can_exec_child,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.sudo_account_collection_device_collection;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.sudo_alias AS
@@ -943,7 +1428,7 @@ FROM jazzhands.sudo_alias;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.svc_environment_coll_svc_env AS
-SELECT 
+SELECT
 	service_environment_collection_id AS service_env_collection_id,
 	service_environment_id,
 	description,
@@ -961,8 +1446,34 @@ CREATE OR REPLACE VIEW jazzhands_legacy.ticketing_system AS
 SELECT ticketing_system_id,ticketing_system_name,ticketing_system_url,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.ticketing_system;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.token AS
-SELECT token_id,token_type,token_status,description,external_id,token_serial,zero_time,time_modulo,time_skew,token_key,encryption_key_id,token_password,expire_time,is_token_locked,token_unlock_time,bad_logins,last_updated,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	token_id,
+	token_type,
+	token_status,
+	description,
+	external_id,
+	token_serial,
+	zero_time,
+	time_modulo,
+	time_skew,
+	token_key,
+	encryption_key_id,
+	token_password,
+	expire_time,
+	CASE WHEN is_token_locked IS NULL THEN NULL
+		WHEN is_token_locked = true THEN 'Y'
+		WHEN is_token_locked = false THEN 'N'
+		ELSE NULL
+	END AS is_token_locked,
+	token_unlock_time,
+	bad_logins,
+	last_updated,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.token;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.token_collection AS
@@ -1023,7 +1534,7 @@ FROM jazzhands.v_account_collection_expanded;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_acct_coll_expanded_detail AS
-SELECT 
+SELECT
 	account_collection_id,
 	root_account_collection_id,
 	account_collection_level AS acct_coll_level,
@@ -1035,7 +1546,7 @@ FROM jazzhands.v_account_collection_expanded_detail;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_acct_coll_prop_expanded AS
-SELECT 
+SELECT
 	account_collection_id,
 	property_id,
 	property_name,
@@ -1060,8 +1571,20 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_application_role_member AS
 SELECT device_id,role_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.v_application_role_member;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_approval_instance_step_expanded AS
-SELECT first_approval_instance_item_id,root_step_id,approval_instance_item_id,approval_instance_step_id,tier,level,is_approved
+SELECT
+	first_approval_instance_item_id,
+	root_step_id,
+	approval_instance_item_id,
+	approval_instance_step_id,
+	tier,
+	level,
+	CASE WHEN is_approved IS NULL THEN NULL
+		WHEN is_approved = true THEN 'Y'
+		WHEN is_approved = false THEN 'N'
+		ELSE NULL
+	END AS is_approved
 FROM jazzhands.v_approval_instance_step_expanded;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_company_hier AS
@@ -1072,8 +1595,27 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_component_hier AS
 SELECT component_id,child_component_id,component_path,level
 FROM jazzhands.v_component_hier;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_corp_family_account AS
-SELECT account_id,login,person_id,company_id,account_realm_id,account_status,account_role,account_type,description,is_enabled,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	account_id,
+	login,
+	person_id,
+	company_id,
+	account_realm_id,
+	account_status,
+	account_role,
+	account_type,
+	description,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.v_corp_family_account;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_department_company_expanded AS
@@ -1088,8 +1630,27 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_dev_col_root AS
 SELECT root_id,root_name,root_type,leaf_id,leaf_name,leaf_type
 FROM jazzhands.v_device_collection_root;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dev_col_user_prop_expanded AS
-SELECT property_id,device_collection_id,account_id,login,account_status,account_realm_id,account_realm_name,is_enabled,property_type,property_name,property_rank,property_value,is_multivalue,is_boolean
+SELECT
+	property_id,
+	device_collection_id,
+	account_id,
+	login,
+	account_status,
+	account_realm_id,
+	account_realm_name,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	property_type,
+	property_name,
+	property_rank,
+	property_value,
+	is_multivalue,
+	is_boolean
 FROM jazzhands.v_device_collection_account_property_expanded;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_col_account_cart AS
@@ -1152,28 +1713,181 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_device_slots AS
 SELECT device_id,device_component_id,component_id,slot_id
 FROM jazzhands.v_device_slots;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns AS
-SELECT dns_record_id,network_range_id,dns_domain_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ip_universe_id,ref_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,is_enabled,should_generate_ptr,dns_value_record_id
+SELECT
+	dns_record_id,
+	network_range_id,
+	dns_domain_id,
+	dns_name,
+	dns_ttl,
+	dns_class,
+	dns_type,
+	dns_value,
+	dns_priority,
+	ip,
+	netblock_id,
+	ip_universe_id,
+	ref_record_id,
+	dns_srv_service,
+	dns_srv_protocol,
+	dns_srv_weight,
+	dns_srv_port,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	CASE WHEN should_generate_ptr IS NULL THEN NULL
+		WHEN should_generate_ptr = true THEN 'Y'
+		WHEN should_generate_ptr = false THEN 'N'
+		ELSE NULL
+	END AS should_generate_ptr,
+	dns_value_record_id
 FROM jazzhands.v_dns;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_changes_pending AS
-SELECT dns_change_record_id,dns_domain_id,ip_universe_id,should_generate,last_generated,soa_name,ip_address
+SELECT
+	dns_change_record_id,
+	dns_domain_id,
+	ip_universe_id,
+	CASE WHEN should_generate IS NULL THEN NULL
+		WHEN should_generate = true THEN 'Y'
+		WHEN should_generate = false THEN 'N'
+		ELSE NULL
+	END AS should_generate,
+	last_generated,
+	soa_name,
+	ip_address
 FROM jazzhands.v_dns_changes_pending;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_domain_nouniverse AS
-SELECT dns_domain_id,soa_name,soa_class,soa_ttl,soa_serial,soa_refresh,soa_retry,soa_expire,soa_minimum,soa_mname,soa_rname,parent_dns_domain_id,should_generate,last_generated,dns_domain_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	dns_domain_id,
+	soa_name,
+	soa_class,
+	soa_ttl,
+	soa_serial,
+	soa_refresh,
+	soa_retry,
+	soa_expire,
+	soa_minimum,
+	soa_mname,
+	soa_rname,
+	parent_dns_domain_id,
+	CASE WHEN should_generate IS NULL THEN NULL
+		WHEN should_generate = true THEN 'Y'
+		WHEN should_generate = false THEN 'N'
+		ELSE NULL
+	END AS should_generate,
+	last_generated,
+	dns_domain_type,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.v_dns_domain_nouniverse;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_fwd AS
-SELECT dns_record_id,network_range_id,dns_domain_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ip_universe_id,ref_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,is_enabled,should_generate_ptr,dns_value_record_id
+SELECT
+	dns_record_id,
+	network_range_id,
+	dns_domain_id,
+	dns_name,
+	dns_ttl,
+	dns_class,
+	dns_type,
+	dns_value,
+	dns_priority,
+	ip,
+	netblock_id,
+	ip_universe_id,
+	ref_record_id,
+	dns_srv_service,
+	dns_srv_protocol,
+	dns_srv_weight,
+	dns_srv_port,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	CASE WHEN should_generate_ptr IS NULL THEN NULL
+		WHEN should_generate_ptr = true THEN 'Y'
+		WHEN should_generate_ptr = false THEN 'N'
+		ELSE NULL
+	END AS should_generate_ptr,
+	dns_value_record_id
 FROM jazzhands.v_dns_fwd;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_rvs AS
-SELECT dns_record_id,network_range_id,dns_domain_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ip_universe_id,rdns_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_srv_port,is_enabled,should_generate_ptr,dns_value_record_id
+SELECT
+	dns_record_id,
+	network_range_id,
+	dns_domain_id,
+	dns_name,
+	dns_ttl,
+	dns_class,
+	dns_type,
+	dns_value,
+	dns_priority,
+	ip,
+	netblock_id,
+	ip_universe_id,
+	rdns_record_id,
+	dns_srv_service,
+	dns_srv_protocol,
+	dns_srv_weight,
+	dns_srv_srv_port,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	CASE WHEN should_generate_ptr IS NULL THEN NULL
+		WHEN should_generate_ptr = true THEN 'Y'
+		WHEN should_generate_ptr = false THEN 'N'
+		ELSE NULL
+	END AS should_generate_ptr,
+	dns_value_record_id
 FROM jazzhands.v_dns_rvs;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_sorted AS
-SELECT dns_record_id,network_range_id,dns_value_record_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ref_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,should_generate_ptr,is_enabled,dns_domain_id,anchor_record_id,anchor_rank
+SELECT
+	dns_record_id,
+	network_range_id,
+	dns_value_record_id,
+	dns_name,
+	dns_ttl,
+	dns_class,
+	dns_type,
+	dns_value,
+	dns_priority,
+	ip,
+	netblock_id,
+	ref_record_id,
+	dns_srv_service,
+	dns_srv_protocol,
+	dns_srv_weight,
+	dns_srv_port,
+	CASE WHEN should_generate_ptr IS NULL THEN NULL
+		WHEN should_generate_ptr = true THEN 'Y'
+		WHEN should_generate_ptr = false THEN 'N'
+		ELSE NULL
+	END AS should_generate_ptr,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	dns_domain_id,
+	anchor_record_id,
+	anchor_rank
 FROM jazzhands.v_dns_sorted;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_account_attribute AS
@@ -1192,8 +1906,30 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_device_collection AS
 SELECT device_id,device_name,device_collection_id,device_collection_name,device_collection_type,ip_address
 FROM jazzhands.v_hotpants_device_collection;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_token AS
-SELECT token_id,token_type,token_status,token_serial,token_key,zero_time,time_modulo,token_password,is_token_locked,token_unlock_time,bad_logins,token_sequence,last_updated,encryption_key_db_value,encryption_key_purpose,encryption_key_purpose_version,encryption_method
+SELECT
+	token_id,
+	token_type,
+	token_status,
+	token_serial,
+	token_key,
+	zero_time,
+	time_modulo,
+	token_password,
+	CASE WHEN is_token_locked IS NULL THEN NULL
+		WHEN is_token_locked = true THEN 'Y'
+		WHEN is_token_locked = false THEN 'N'
+		ELSE NULL
+	END AS is_token_locked,
+	token_unlock_time,
+	bad_logins,
+	token_sequence,
+	last_updated,
+	encryption_key_db_value,
+	encryption_key_purpose,
+	encryption_key_purpose_version,
+	encryption_method
 FROM jazzhands.v_hotpants_token;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_l1_all_physical_ports AS
@@ -1202,7 +1938,7 @@ FROM jazzhands.v_l1_all_physical_ports;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_l2_network_coll_expanded AS
-SELECT 
+SELECT
 	level,
 	layer2_network_collection_id,
 	root_layer2_network_collection_id AS root_l2_network_coll_id,
@@ -1213,7 +1949,7 @@ FROM jazzhands.v_layer2_network_collection_expanded;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_l3_network_coll_expanded AS
-SELECT 
+SELECT
 	level,
 	layer3_network_collection_id,
 	root_layer3_network_collection_id AS root_l3_network_coll_id,
@@ -1242,24 +1978,126 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_collection_hier_from_ancestor
 SELECT root_netblock_collection_id,netblock_collection_id,path,cycle
 FROM jazzhands.v_netblock_collection_hier_from_ancestor;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_hier AS
-SELECT netblock_level,root_netblock_id,ip,netblock_id,ip_address,netblock_status,is_single_address,description,parent_netblock_id,site_code,text_path,array_path,array_ip_path
+SELECT
+	netblock_level,
+	root_netblock_id,
+	ip,
+	netblock_id,
+	ip_address,
+	netblock_status,
+	CASE WHEN is_single_address IS NULL THEN NULL
+		WHEN is_single_address = true THEN 'Y'
+		WHEN is_single_address = false THEN 'N'
+		ELSE NULL
+	END AS is_single_address,
+	description,
+	parent_netblock_id,
+	site_code,
+	text_path,
+	array_path,
+	array_ip_path
 FROM jazzhands.v_netblock_hier;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_hier_expanded AS
-SELECT netblock_level,root_netblock_id,site_code,path,netblock_id,ip_address,netblock_type,is_single_address,can_subnet,parent_netblock_id,netblock_status,ip_universe_id,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	netblock_level,
+	root_netblock_id,
+	site_code,
+	path,
+	netblock_id,
+	ip_address,
+	netblock_type,
+	CASE WHEN is_single_address IS NULL THEN NULL
+		WHEN is_single_address = true THEN 'Y'
+		WHEN is_single_address = false THEN 'N'
+		ELSE NULL
+	END AS is_single_address,
+	CASE WHEN can_subnet IS NULL THEN NULL
+		WHEN can_subnet = true THEN 'Y'
+		WHEN can_subnet = false THEN 'N'
+		ELSE NULL
+	END AS can_subnet,
+	parent_netblock_id,
+	netblock_status,
+	ip_universe_id,
+	description,
+	external_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.v_netblock_hier_expanded;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_network_range_expanded AS
 SELECT network_range_id,network_range_type,description,parent_netblock_id,ip_address,netblock_type,ip_universe_id,start_netblock_id,start_ip_address,start_netblock_type,start_ip_universe_id,stop_netblock_id,stop_ip_address,stop_netblock_type,stop_ip_universe_id,dns_prefix,dns_domain_id,soa_name
 FROM jazzhands.v_network_range_expanded;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person AS
-SELECT person_id,description,first_name,middle_name,last_name,name_suffix,gender,preferred_first_name,preferred_last_name,legal_first_name,legal_last_name,nickname,birth_date,diet,shirt_size,pant_size,hat_size,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	person_id,
+	description,
+	first_name,
+	middle_name,
+	last_name,
+	name_suffix,
+	gender,
+	preferred_first_name,
+	preferred_last_name,
+	legal_first_name,
+	legal_last_name,
+	nickname,
+	birth_date,
+	diet,
+	shirt_size,
+	pant_size,
+	hat_size,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.v_person;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person_company AS
-SELECT company_id,person_id,person_company_status,person_company_relation,is_exempt,is_management,is_full_time,description,employee_id,payroll_id,external_hr_id,position_title,badge_system_id,hire_date,termination_date,manager_person_id,supervisor_person_id,nickname,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	company_id,
+	person_id,
+	person_company_status,
+	person_company_relation,
+	CASE WHEN is_exempt IS NULL THEN NULL
+		WHEN is_exempt = true THEN 'Y'
+		WHEN is_exempt = false THEN 'N'
+		ELSE NULL
+	END AS is_exempt,
+	CASE WHEN is_management IS NULL THEN NULL
+		WHEN is_management = true THEN 'Y'
+		WHEN is_management = false THEN 'N'
+		ELSE NULL
+	END AS is_management,
+	CASE WHEN is_full_time IS NULL THEN NULL
+		WHEN is_full_time = true THEN 'Y'
+		WHEN is_full_time = false THEN 'N'
+		ELSE NULL
+	END AS is_full_time,
+	description,
+	employee_id,
+	payroll_id,
+	external_hr_id,
+	position_title,
+	badge_system_id,
+	hire_date,
+	termination_date,
+	manager_person_id,
+	supervisor_person_id,
+	nickname,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.v_person_company;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person_company_expanded AS
@@ -1274,9 +2112,9 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_physical_connection AS
 SELECT level,inter_component_connection_id,layer1_connection_id,physical_connection_id,inter_dev_conn_slot1_id,inter_dev_conn_slot2_id,layer1_physical_port1_id,layer1_physical_port2_id,slot1_id,slot2_id,physical_port1_id,physical_port2_id
 FROM jazzhands.v_physical_connection;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_property AS
-SELECT 
+SELECT
 	property_id,
 	account_collection_id,
 	account_id,
@@ -1311,7 +2149,11 @@ SELECT
 	property_rank,
 	start_date,
 	finish_date,
-	is_enabled,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
@@ -1326,8 +2168,30 @@ CREATE OR REPLACE VIEW jazzhands_legacy.v_site_netblock_expanded_assigned AS
 SELECT site_code,netblock_id
 FROM jazzhands.v_site_netblock_expanded_assigned;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_token AS
-SELECT token_id,token_type,token_status,token_serial,token_sequence,account_id,token_password,zero_time,time_modulo,time_skew,is_token_locked,token_unlock_time,bad_logins,issued_date,token_last_updated,token_sequence_last_updated,lock_status_last_updated
+SELECT
+	token_id,
+	token_type,
+	token_status,
+	token_serial,
+	token_sequence,
+	account_id,
+	token_password,
+	zero_time,
+	time_modulo,
+	time_skew,
+	CASE WHEN is_token_locked IS NULL THEN NULL
+		WHEN is_token_locked = true THEN 'Y'
+		WHEN is_token_locked = false THEN 'N'
+		ELSE NULL
+	END AS is_token_locked,
+	token_unlock_time,
+	bad_logins,
+	issued_date,
+	token_last_updated,
+	token_sequence_last_updated,
+	lock_status_last_updated
 FROM jazzhands.v_token;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_unix_account_overrides AS
@@ -1354,16 +2218,65 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_account_collection_relatio AS
 SELECT account_collection_relation,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_account_collection_relation;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_collection_type AS
-SELECT account_collection_type,description,is_infrastructure_type,max_num_members,max_num_collections,can_have_hierarchy,account_realm_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	account_collection_type,
+	description,
+	CASE WHEN is_infrastructure_type IS NULL THEN NULL
+		WHEN is_infrastructure_type = true THEN 'Y'
+		WHEN is_infrastructure_type = false THEN 'N'
+		ELSE NULL
+	END AS is_infrastructure_type,
+	max_num_members,
+	max_num_collections,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
+	account_realm_id,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_account_collection_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_role AS
-SELECT account_role,uid_gid_forced,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	account_role,
+	CASE WHEN uid_gid_forced IS NULL THEN NULL
+		WHEN uid_gid_forced = true THEN 'Y'
+		WHEN uid_gid_forced = false THEN 'N'
+		ELSE NULL
+	END AS uid_gid_forced,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_account_role;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_type AS
-SELECT account_type,is_person,uid_gid_forced,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	account_type,
+	CASE WHEN is_person IS NULL THEN NULL
+		WHEN is_person = true THEN 'Y'
+		WHEN is_person = false THEN 'N'
+		ELSE NULL
+	END AS is_person,
+	CASE WHEN uid_gid_forced IS NULL THEN NULL
+		WHEN uid_gid_forced = true THEN 'Y'
+		WHEN uid_gid_forced = false THEN 'N'
+		ELSE NULL
+	END AS uid_gid_forced,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_account_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_app_key AS
@@ -1418,8 +2331,27 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_cable_type AS
 SELECT cable_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_cable_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_company_collection_type AS
-SELECT company_collection_type,description,is_infrastructure_type,max_num_members,max_num_collections,can_have_hierarchy,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	company_collection_type,
+	description,
+	CASE WHEN is_infrastructure_type IS NULL THEN NULL
+		WHEN is_infrastructure_type = true THEN 'Y'
+		WHEN is_infrastructure_type = false THEN 'N'
+		ELSE NULL
+	END AS is_infrastructure_type,
+	max_num_members,
+	max_num_collections,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_company_collection_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_company_type AS
@@ -1434,13 +2366,17 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_component_function AS
 SELECT component_function,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_component_function;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property AS
-SELECT 
+SELECT
 	component_property_name,
 	component_property_type,
 	description,
-	is_multivalue,
+	CASE WHEN is_multivalue IS NULL THEN NULL
+		WHEN is_multivalue = true THEN 'Y'
+		WHEN is_multivalue = false THEN 'N'
+		ELSE NULL
+	END AS is_multivalue,
 	property_data_type,
 	permit_component_type_id,
 	required_component_type_id,
@@ -1459,8 +2395,20 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_component_property;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property_type AS
-SELECT component_property_type,description,is_multivalue,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	component_property_type,
+	description,
+	CASE WHEN is_multivalue IS NULL THEN NULL
+		WHEN is_multivalue = true THEN 'Y'
+		WHEN is_multivalue = false THEN 'N'
+		ELSE NULL
+	END AS is_multivalue,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_component_property_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property_value AS
@@ -1475,8 +2423,22 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_country_code AS
 SELECT iso_country_code,dial_country_code,primary_iso_currency_code,country_name,display_priority,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_country_code;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_device_collection_type AS
-SELECT device_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	device_collection_type,
+	description,
+	max_num_members,
+	max_num_collections,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_device_collection_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_device_mgmt_ctrl_type AS
@@ -1495,12 +2457,38 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_class AS
 SELECT dns_class,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_dns_class;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_domain_collection_type AS
-SELECT dns_domain_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	dns_domain_collection_type,
+	description,
+	max_num_members,
+	max_num_collections,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_dns_domain_collection_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_domain_type AS
-SELECT dns_domain_type,can_generate,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	dns_domain_type,
+	CASE WHEN can_generate IS NULL THEN NULL
+		WHEN can_generate = true THEN 'Y'
+		WHEN can_generate = false THEN 'N'
+		ELSE NULL
+	END AS can_generate,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_dns_domain_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_record_relation_type AS
@@ -1549,7 +2537,7 @@ FROM jazzhands.val_iso_currency_code;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_key_usg_reason_for_assgn AS
-SELECT 
+SELECT
 	key_usage_reason_for_assignment AS key_usage_reason_for_assign,
 	description,
 	data_ins_user,
@@ -1558,12 +2546,40 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_key_usage_reason_for_assignment;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_layer2_network_coll_type AS
-SELECT layer2_network_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	layer2_network_collection_type,
+	description,
+	max_num_members,
+	max_num_collections,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_layer2_network_collection_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_layer3_network_coll_type AS
-SELECT layer3_network_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	layer3_network_collection_type,
+	description,
+	max_num_members,
+	max_num_collections,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_layer3_network_collection_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_logical_port_type AS
@@ -1582,14 +2598,18 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_logical_volume_type AS
 SELECT logical_volume_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_logical_volume_type;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_collection_type AS
-SELECT 
+SELECT
 	netblock_collection_type,
 	description,
 	max_num_members,
 	max_num_collections,
-	can_have_hierarchy,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
 	netblock_is_single_address_restriction AS netblock_single_addr_restrict,
 	netblock_ip_family_restriction AS netblock_ip_family_restrict,
 	data_ins_user,
@@ -1602,8 +2622,25 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_status AS
 SELECT netblock_status,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_netblock_status;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_type AS
-SELECT netblock_type,description,db_forced_hierarchy,is_validated_hierarchy,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	netblock_type,
+	description,
+	CASE WHEN db_forced_hierarchy IS NULL THEN NULL
+		WHEN db_forced_hierarchy = true THEN 'Y'
+		WHEN db_forced_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS db_forced_hierarchy,
+	CASE WHEN is_validated_hierarchy IS NULL THEN NULL
+		WHEN is_validated_hierarchy = true THEN 'Y'
+		WHEN is_validated_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS is_validated_hierarchy,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_netblock_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_interface_purpose AS
@@ -1614,8 +2651,28 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_network_interface_type AS
 SELECT network_interface_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_network_interface_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_range_type AS
-SELECT network_range_type,description,dns_domain_required,default_dns_prefix,netblock_type,can_overlap,require_cidr_boundary,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	network_range_type,
+	description,
+	dns_domain_required,
+	default_dns_prefix,
+	netblock_type,
+	CASE WHEN can_overlap IS NULL THEN NULL
+		WHEN can_overlap = true THEN 'Y'
+		WHEN can_overlap = false THEN 'N'
+		ELSE NULL
+	END AS can_overlap,
+	CASE WHEN require_cidr_boundary IS NULL THEN NULL
+		WHEN require_cidr_boundary = true THEN 'Y'
+		WHEN require_cidr_boundary = false THEN 'N'
+		ELSE NULL
+	END AS require_cidr_boundary,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_network_range_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_service_type AS
@@ -1644,7 +2701,7 @@ FROM jazzhands.val_password_type;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_company_attr_dtype AS
-SELECT 
+SELECT
 	person_company_attribute_data_type AS person_company_attr_data_type,
 	description,
 	data_ins_user,
@@ -1655,7 +2712,7 @@ FROM jazzhands.val_person_company_attribute_data_type;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_company_attr_name AS
-SELECT 
+SELECT
 	person_company_attribute_name AS person_company_attr_name,
 	person_company_attribute_data_type AS person_company_attr_data_type,
 	description,
@@ -1667,7 +2724,7 @@ FROM jazzhands.val_person_company_attribute_name;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_company_attr_value AS
-SELECT 
+SELECT
 	person_company_attribute_name AS person_company_attr_name,
 	person_company_attribute_value AS person_company_attr_value,
 	description,
@@ -1693,16 +2750,54 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_person_contact_type AS
 SELECT person_contact_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_contact_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_image_usage AS
-SELECT person_image_usage,is_multivalue,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	person_image_usage,
+	CASE WHEN is_multivalue IS NULL THEN NULL
+		WHEN is_multivalue = true THEN 'Y'
+		WHEN is_multivalue = false THEN 'N'
+		ELSE NULL
+	END AS is_multivalue,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_person_image_usage;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_location_type AS
 SELECT person_location_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_location_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_status AS
-SELECT person_status,description,is_enabled,propagate_from_person,is_forced,is_db_enforced,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	person_status,
+	description,
+	CASE WHEN is_enabled IS NULL THEN NULL
+		WHEN is_enabled = true THEN 'Y'
+		WHEN is_enabled = false THEN 'N'
+		ELSE NULL
+	END AS is_enabled,
+	CASE WHEN propagate_from_person IS NULL THEN NULL
+		WHEN propagate_from_person = true THEN 'Y'
+		WHEN propagate_from_person = false THEN 'N'
+		ELSE NULL
+	END AS propagate_from_person,
+	CASE WHEN is_forced IS NULL THEN NULL
+		WHEN is_forced = true THEN 'Y'
+		WHEN is_forced = false THEN 'N'
+		ELSE NULL
+	END AS is_forced,
+	CASE WHEN is_db_enforced IS NULL THEN NULL
+		WHEN is_db_enforced = true THEN 'Y'
+		WHEN is_db_enforced = false THEN 'N'
+		ELSE NULL
+	END AS is_db_enforced,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_person_status;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_physical_address_type AS
@@ -1721,9 +2816,9 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_production_state AS
 SELECT production_state,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_production_state;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property AS
-SELECT 
+SELECT
 	property_name,
 	property_type,
 	description,
@@ -1737,7 +2832,11 @@ SELECT
 	network_range_type,
 	property_name_collection_type AS property_collection_type,
 	service_environment_collection_type AS service_env_collection_type,
-	is_multivalue,
+	CASE WHEN is_multivalue IS NULL THEN NULL
+		WHEN is_multivalue = true THEN 'Y'
+		WHEN is_multivalue = false THEN 'N'
+		ELSE NULL
+	END AS is_multivalue,
 	property_value_account_collection_type_restriction AS prop_val_acct_coll_type_rstrct,
 	property_value_device_collection_type_restriction AS prop_val_dev_coll_type_rstrct,
 	property_value_netblock_collection_type_restriction AS prop_val_nblk_coll_type_rstrct,
@@ -1768,14 +2867,18 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_property;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property_collection_type AS
-SELECT 
+SELECT
 	property_name_collection_type AS property_collection_type,
 	description,
 	max_num_members,
 	max_num_collections,
-	can_have_hierarchy,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
@@ -1786,13 +2889,17 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_property_data_type AS
 SELECT property_data_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_property_data_type;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property_type AS
-SELECT 
+SELECT
 	property_type,
 	description,
 	property_value_account_collection_type_restriction AS prop_val_acct_coll_type_rstrct,
-	is_multivalue,
+	CASE WHEN is_multivalue IS NULL THEN NULL
+		WHEN is_multivalue = true THEN 'Y'
+		WHEN is_multivalue = false THEN 'N'
+		ELSE NULL
+	END AS is_multivalue,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
@@ -1815,14 +2922,18 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_raid_type AS
 SELECT raid_type,description,primary_raid_level,secondary_raid_level,raid_level_qualifier,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_raid_type;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_service_env_coll_type AS
-SELECT 
+SELECT
 	service_environment_collection_type AS service_env_collection_type,
 	description,
 	max_num_members,
 	max_num_collections,
-	can_have_hierarchy,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
@@ -1833,8 +2944,20 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_shared_netblock_protocol AS
 SELECT shared_netblock_protocol,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_shared_netblock_protocol;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_slot_function AS
-SELECT slot_function,description,can_have_mac_address,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	slot_function,
+	description,
+	CASE WHEN can_have_mac_address IS NULL THEN NULL
+		WHEN can_have_mac_address = true THEN 'Y'
+		WHEN can_have_mac_address = false THEN 'N'
+		ELSE NULL
+	END AS can_have_mac_address,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_slot_function;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_slot_physical_interface AS
@@ -1849,8 +2972,22 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_sw_package_type AS
 SELECT sw_package_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_sw_package_type;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_token_collection_type AS
-SELECT token_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	token_collection_type,
+	description,
+	max_num_members,
+	max_num_collections,
+	CASE WHEN can_have_hierarchy IS NULL THEN NULL
+		WHEN can_have_hierarchy = true THEN 'Y'
+		WHEN can_have_hierarchy = false THEN 'N'
+		ELSE NULL
+	END AS can_have_hierarchy,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.val_token_collection_type;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_token_status AS
@@ -1875,7 +3012,7 @@ FROM jazzhands.val_volume_group_type;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_certificate_file_fmt AS
-SELECT 
+SELECT
 	x509_certificate_file_format AS x509_file_format,
 	description,
 	data_ins_user,
@@ -1888,12 +3025,16 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_certificate_type AS
 SELECT x509_certificate_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_x509_certificate_type;
 
--- Simple column rename
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_key_usage AS
-SELECT 
+SELECT
 	x509_key_usage AS x509_key_usg,
 	description,
-	is_extended,
+	CASE WHEN is_extended IS NULL THEN NULL
+		WHEN is_extended = true THEN 'Y'
+		WHEN is_extended = false THEN 'N'
+		ELSE NULL
+	END AS is_extended,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
@@ -1902,7 +3043,7 @@ FROM jazzhands.val_x509_key_usage;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_key_usage_category AS
-SELECT 
+SELECT
 	x509_key_usage_category AS x509_key_usg_cat,
 	description,
 	data_ins_user,
@@ -1921,7 +3062,7 @@ FROM jazzhands.volume_group;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.volume_group_physicalish_vol AS
-SELECT 
+SELECT
 	physicalish_volume_id,
 	volume_group_id,
 	device_id,
@@ -1938,13 +3079,45 @@ CREATE OR REPLACE VIEW jazzhands_legacy.volume_group_purpose AS
 SELECT volume_group_id,volume_group_purpose,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.volume_group_purpose;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_certificate AS
-SELECT x509_cert_id,friendly_name,is_active,is_certificate_authority,signing_cert_id,x509_ca_cert_serial_number,public_key,private_key,certificate_sign_req,subject,subject_key_identifier,valid_from,valid_to,x509_revocation_date,x509_revocation_reason,passphrase,encryption_key_id,ocsp_uri,crl_uri,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	x509_cert_id,
+	friendly_name,
+	CASE WHEN is_active IS NULL THEN NULL
+		WHEN is_active = true THEN 'Y'
+		WHEN is_active = false THEN 'N'
+		ELSE NULL
+	END AS is_active,
+	CASE WHEN is_certificate_authority IS NULL THEN NULL
+		WHEN is_certificate_authority = true THEN 'Y'
+		WHEN is_certificate_authority = false THEN 'N'
+		ELSE NULL
+	END AS is_certificate_authority,
+	signing_cert_id,
+	x509_ca_cert_serial_number,
+	public_key,
+	private_key,
+	certificate_sign_req,
+	subject,
+	subject_key_identifier,
+	valid_from,
+	valid_to,
+	x509_revocation_date,
+	x509_revocation_reason,
+	passphrase,
+	encryption_key_id,
+	ocsp_uri,
+	crl_uri,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.x509_certificate;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_key_usage_attribute AS
-SELECT 
+SELECT
 	x509_signed_certificate_id AS x509_cert_id,
 	x509_key_usage AS x509_key_usg,
 	x509_key_usgage_category AS x509_key_usg_cat,
@@ -1956,7 +3129,7 @@ FROM jazzhands.x509_key_usage_attribute;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_key_usage_categorization AS
-SELECT 
+SELECT
 	x509_key_usage_category AS x509_key_usg_cat,
 	x509_key_usage AS x509_key_usg,
 	description,
@@ -1968,7 +3141,7 @@ FROM jazzhands.x509_key_usage_categorization;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_key_usage_default AS
-SELECT 
+SELECT
 	x509_signed_certificate_id,
 	x509_key_usage AS x509_key_usg,
 	description,
@@ -1978,8 +3151,39 @@ SELECT
 	data_upd_date
 FROM jazzhands.x509_key_usage_default;
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_signed_certificate AS
-SELECT x509_signed_certificate_id,x509_certificate_type,subject,friendly_name,subject_key_identifier,is_active,is_certificate_authority,signing_cert_id,x509_ca_cert_serial_number,public_key,private_key_id,certificate_signing_request_id,valid_from,valid_to,x509_revocation_date,x509_revocation_reason,ocsp_uri,crl_uri,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	x509_signed_certificate_id,
+	x509_certificate_type,
+	subject,
+	friendly_name,
+	subject_key_identifier,
+	CASE WHEN is_active IS NULL THEN NULL
+		WHEN is_active = true THEN 'Y'
+		WHEN is_active = false THEN 'N'
+		ELSE NULL
+	END AS is_active,
+	CASE WHEN is_certificate_authority IS NULL THEN NULL
+		WHEN is_certificate_authority = true THEN 'Y'
+		WHEN is_certificate_authority = false THEN 'N'
+		ELSE NULL
+	END AS is_certificate_authority,
+	signing_cert_id,
+	x509_ca_cert_serial_number,
+	public_key,
+	private_key_id,
+	certificate_signing_request_id,
+	valid_from,
+	valid_to,
+	x509_revocation_date,
+	x509_revocation_reason,
+	ocsp_uri,
+	crl_uri,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.x509_signed_certificate;
 
 
@@ -1990,5 +3194,239 @@ FROM jazzhands.x509_signed_certificate;
 --- XXX - need to sort out v_network_interface_trans by hand
 --- XXX - need to sort out val_device_auto_mgmt_protocol by hand
 --- XXX - need to sort out val_snmp_commstr_type by hand
+/* Need to write triggers for$VAR1 = {
+          'val_layer3_network_coll_type' => [
+                                              'can_have_hierarchy'
+                                            ],
+          'x509_certificate' => [
+                                  'is_active',
+                                  'is_certificate_authority'
+                                ],
+          'device_type' => [
+                             'has_802_3_interface',
+                             'has_802_11_interface',
+                             'snmp_capable',
+                             'is_chassis'
+                           ],
+          'v_dns_domain_nouniverse' => [
+                                         'should_generate'
+                                       ],
+          'val_netblock_type' => [
+                                   'db_forced_hierarchy',
+                                   'is_validated_hierarchy'
+                                 ],
+          'val_layer2_network_coll_type' => [
+                                              'can_have_hierarchy'
+                                            ],
+          'val_account_role' => [
+                                  'uid_gid_forced'
+                                ],
+          'v_dns' => [
+                       'is_enabled',
+                       'should_generate_ptr'
+                     ],
+          'network_interface' => [
+                                   'is_interface_up',
+                                   'should_monitor',
+                                   'should_manage'
+                                 ],
+          'v_hotpants_token' => [
+                                  'is_token_locked'
+                                ],
+          'val_network_range_type' => [
+                                        'can_overlap',
+                                        'require_cidr_boundary'
+                                      ],
+          'token' => [
+                       'is_token_locked'
+                     ],
+          'rack' => [
+                      'display_from_bottom'
+                    ],
+          'sudo_acct_col_device_collectio' => [
+                                                'requires_password',
+                                                'can_exec_child'
+                                              ],
+          'dns_domain_ip_universe' => [
+                                        'should_generate'
+                                      ],
+          'account_auth_log' => [
+                                  'was_auth_success'
+                                ],
+          'v_corp_family_account' => [
+                                       'is_enabled'
+                                     ],
+          'val_dns_domain_type' => [
+                                     'can_generate'
+                                   ],
+          'slot_type' => [
+                           'remote_slot_permitted'
+                         ],
+          'person_auth_question' => [
+                                      'is_active'
+                                    ],
+          'v_dev_col_user_prop_expanded' => [
+                                              'is_enabled'
+                                            ],
+          'val_company_collection_type' => [
+                                             'is_infrastructure_type',
+                                             'can_have_hierarchy'
+                                           ],
+          'account' => [
+                         'is_enabled'
+                       ],
+          'v_property' => [
+                            'is_enabled'
+                          ],
+          'val_device_collection_type' => [
+                                            'can_have_hierarchy'
+                                          ],
+          'v_dns_rvs' => [
+                           'is_enabled',
+                           'should_generate_ptr'
+                         ],
+          'department' => [
+                            'is_active'
+                          ],
+          'person_company' => [
+                                'is_exempt',
+                                'is_management',
+                                'is_full_time'
+                              ],
+          'device' => [
+                        'is_locally_managed',
+                        'is_virtual_device'
+                      ],
+          'x509_signed_certificate' => [
+                                         'is_active',
+                                         'is_certificate_authority'
+                                       ],
+          'netblock' => [
+                          'is_single_address',
+                          'can_subnet'
+                        ],
+          'v_token' => [
+                         'is_token_locked'
+                       ],
+          'val_token_collection_type' => [
+                                           'can_have_hierarchy'
+                                         ],
+          'v_dns_sorted' => [
+                              'should_generate_ptr',
+                              'is_enabled'
+                            ],
+          'v_netblock_hier_expanded' => [
+                                          'is_single_address',
+                                          'can_subnet'
+                                        ],
+          'ip_universe' => [
+                             'should_generate_dns'
+                           ],
+          'private_key' => [
+                             'is_active'
+                           ],
+          'dns_record' => [
+                            'should_generate_ptr',
+                            'is_enabled'
+                          ],
+          'val_account_collection_type' => [
+                                             'is_infrastructure_type',
+                                             'can_have_hierarchy'
+                                           ],
+          'approval_instance_item' => [
+                                        'is_approved'
+                                      ],
+          'val_component_property_type' => [
+                                             'is_multivalue'
+                                           ],
+          'v_person_company' => [
+                                  'is_exempt',
+                                  'is_management',
+                                  'is_full_time'
+                                ],
+          'circuit' => [
+                         'is_locally_managed'
+                       ],
+          'val_person_image_usage' => [
+                                        'is_multivalue'
+                                      ],
+          'val_person_status' => [
+                                   'is_enabled',
+                                   'propagate_from_person',
+                                   'is_forced',
+                                   'is_db_enforced'
+                                 ],
+          'val_component_property' => [
+                                        'is_multivalue'
+                                      ],
+          'network_service' => [
+                                 'is_monitored'
+                               ],
+          'v_netblock_hier' => [
+                                 'is_single_address'
+                               ],
+          'slot' => [
+                      'is_enabled'
+                    ],
+          'val_account_type' => [
+                                  'is_person',
+                                  'uid_gid_forced'
+                                ],
+          'v_dns_fwd' => [
+                           'is_enabled',
+                           'should_generate_ptr'
+                         ],
+          'val_slot_function' => [
+                                   'can_have_mac_address'
+                                 ],
+          'property' => [
+                          'is_enabled'
+                        ],
+          'val_property' => [
+                              'is_multivalue'
+                            ],
+          'val_service_env_coll_type' => [
+                                           'can_have_hierarchy'
+                                         ],
+          'val_netblock_collection_type' => [
+                                              'can_have_hierarchy'
+                                            ],
+          'approval_instance_step' => [
+                                        'is_completed'
+                                      ],
+          'v_approval_instance_step_expanded' => [
+                                                   'is_approved'
+                                                 ],
+          'val_x509_key_usage' => [
+                                    'is_extended'
+                                  ],
+          'v_dns_changes_pending' => [
+                                       'should_generate'
+                                     ],
+          'approval_process_chain' => [
+                                        'refresh_all_data'
+                                      ],
+          'val_property_collection_type' => [
+                                              'can_have_hierarchy'
+                                            ],
+          'val_dns_domain_collection_type' => [
+                                                'can_have_hierarchy'
+                                              ],
+          'val_property_type' => [
+                                   'is_multivalue'
+                                 ],
+          'ip_universe_visibility' => [
+                                        'propagate_dns'
+                                      ],
+          'component_type' => [
+                                'is_removable',
+                                'asset_permitted',
+                                'is_rack_mountable',
+                                'is_virtual_component'
+                              ]
+        };
+
+*/
+
 
 
