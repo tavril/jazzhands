@@ -59,6 +59,6 @@ FROM	person_company pc
 		) hrid USING (company_id, person_id)
 ;
 
-ALTER VIEW v_person_company alter column is_exempt set default 'Y'::text;
-ALTER VIEW v_person_company alter column is_management set default 'N'::text;
-ALTER VIEW v_person_company alter column is_full_time set default 'Y'::text;
+ALTER VIEW v_person_company alter column is_exempt set default true;
+ALTER VIEW v_person_company alter column is_management set default false;
+ALTER VIEW v_person_company alter column is_full_time set default true;

@@ -63,7 +63,7 @@ CREATE TABLE account
 	login                varchar(50)  NOT NULL ,
 	person_id            integer  NOT NULL ,
 	company_id           integer  NOT NULL ,
-	is_enabled           char(1)  NOT NULL ,
+	is_enabled           boolean  NOT NULL ,
 	account_realm_id     integer  NOT NULL ,
 	account_status       varchar(50)  NOT NULL ,
 	account_role         varchar(50)  NOT NULL ,
@@ -147,7 +147,7 @@ CREATE TABLE account_auth_log
 	account_auth_ts      timestamp without time zone  NOT NULL ,
 	auth_resource        character varying(50)  NOT NULL ,
 	account_auth_seq     integer  NOT NULL ,
-	was_auth_success     CHAR(1)  NOT NULL ,
+	was_auth_success     boolean  NOT NULL ,
 	auth_resource_instance varchar(50)  NOT NULL ,
 	auth_origin          varchar(50)  NOT NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -631,7 +631,7 @@ CREATE TABLE approval_instance_item
 	approved_label       varchar(255)  NULL ,
 	approved_lhs         varchar(255)  NULL ,
 	approved_rhs         varchar(255)  NULL ,
-	is_approved          char(1)  NULL ,
+	is_approved          boolean  NULL ,
 	approved_account_id  integer  NULL ,
 	approval_note        text  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -699,7 +699,7 @@ CREATE TABLE approval_instance_step
 	approval_instance_step_end timestamp with time zone  NULL ,
 	approver_account_id  integer  NOT NULL ,
 	external_reference_name varchar(255)  NULL ,
-	is_completed         char(1)  NOT NULL ,
+	is_completed         boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -834,7 +834,7 @@ CREATE TABLE approval_process_chain
 	escalation_delay     integer  NULL ,
 	escalation_reminder_gap integer  NULL ,
 	approving_entity     varchar(50)  NULL ,
-	refresh_all_data     char(1)  NOT NULL ,
+	refresh_all_data     boolean  NOT NULL ,
 	accept_app_process_chain_id integer  NULL ,
 	reject_app_process_chain_id integer  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -1038,7 +1038,7 @@ CREATE TABLE circuit
 	zloc_lec_company_id  integer  NULL ,
 	zloc_lec_circuit_id_str varchar(255)  NULL ,
 	zloc_parent_circuit_id integer  NULL ,
-	is_locally_managed   CHAR(1)  NOT NULL ,
+	is_locally_managed   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -1334,10 +1334,10 @@ CREATE TABLE component_type
 	slot_type_id         integer  NULL ,
 	description          varchar(255)  NULL ,
 	part_number          varchar(255)  NULL ,
-	is_removable         char(1)  NOT NULL ,
-	asset_permitted      char(1)  NOT NULL ,
-	is_rack_mountable    char(1)  NOT NULL ,
-	is_virtual_component char(1)  NOT NULL ,
+	is_removable         boolean  NOT NULL ,
+	asset_permitted      boolean  NOT NULL ,
+	is_rack_mountable    boolean  NOT NULL ,
+	is_virtual_component boolean  NOT NULL ,
 	size_units           varchar(50)  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -1484,7 +1484,7 @@ CREATE TABLE department
 	account_collection_id integer  NOT NULL ,
 	company_id           integer  NOT NULL ,
 	manager_account_id   integer  NULL ,
-	is_active            CHAR(1)  NOT NULL ,
+	is_active            boolean  NOT NULL ,
 	dept_code            varchar(30)  NULL ,
 	cost_center_name     varchar(255)  NULL ,
 	cost_center_number   integer  NULL ,
@@ -1546,8 +1546,8 @@ CREATE TABLE device
 	device_status        varchar(50)  NOT NULL ,
 	operating_system_id  integer  NOT NULL ,
 	service_environment_id integer  NOT NULL ,
-	is_locally_managed   CHAR(1)  NOT NULL ,
-	is_virtual_device    CHAR(1)  NOT NULL ,
+	is_locally_managed   boolean  NOT NULL ,
+	is_virtual_device    boolean  NOT NULL ,
 	date_in_service      timestamp with time zone  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -1971,10 +1971,10 @@ CREATE TABLE device_type
 	processor_architecture varchar(50)  NULL ,
 	config_fetch_type    varchar(50)  NULL ,
 	rack_units           integer  NULL ,
-	has_802_3_interface  CHAR(1)  NOT NULL ,
-	has_802_11_interface CHAR(1)  NOT NULL ,
-	snmp_capable         CHAR(1)  NOT NULL ,
-	is_chassis           char(1)  NOT NULL ,
+	has_802_3_interface  boolean  NOT NULL ,
+	has_802_11_interface boolean  NOT NULL ,
+	snmp_capable         boolean  NOT NULL ,
+	is_chassis           boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2224,7 +2224,7 @@ CREATE TABLE dns_domain_ip_universe
 	soa_minimum          integer  NULL ,
 	soa_mname            varchar(255)  NULL ,
 	soa_rname            varchar(255)  NOT NULL ,
-	should_generate      CHAR(1)  NOT NULL ,
+	should_generate      boolean  NOT NULL ,
 	last_generated       timestamp with time zone  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -2267,8 +2267,8 @@ CREATE TABLE dns_record
 	ip_universe_id       integer  NOT NULL ,
 	reference_dns_record_id integer  NULL ,
 	dns_value_record_id  integer  NULL ,
-	should_generate_ptr  CHAR(1)  NOT NULL ,
-	is_enabled           CHAR(1)  NOT NULL ,
+	should_generate_ptr  boolean  NOT NULL ,
+	is_enabled           boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2456,7 +2456,7 @@ CREATE TABLE ip_universe
 	ip_universe_id       serial  NOT NULL ,
 	ip_universe_name     varchar(50)  NOT NULL ,
 	ip_namespace         varchar(50)  NOT NULL ,
-	should_generate_dns  char(1)  NOT NULL ,
+	should_generate_dns  boolean  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -2483,7 +2483,7 @@ CREATE TABLE ip_universe_visibility
 ( 
 	ip_universe_id       integer  NOT NULL ,
 	visible_ip_universe_id integer  NOT NULL ,
-	propagate_dns        char(1)  NOT NULL ,
+	propagate_dns        boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -2790,10 +2790,10 @@ CREATE TABLE layer3_interface
 	parent_relation_type varchar(255)  NULL ,
 	slot_id              integer  NULL ,
 	logical_port_id      integer  NULL ,
-	is_interface_up      CHAR(1)  NOT NULL ,
+	is_interface_up      boolean  NOT NULL ,
 	mac_addr             macaddr  NULL ,
-	should_monitor       CHAR(1)  NOT NULL ,
-	should_manage        CHAR(1)  NOT NULL ,
+	should_monitor       boolean  NOT NULL ,
+	should_manage        boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -3267,8 +3267,8 @@ CREATE INDEX xif_lvpurp_val_lgpuprp ON logical_volume_purpose
 CREATE TABLE mlag_peering
 ( 
 	mlag_peering_id      serial  NOT NULL ,
-	device1_id           integer  NOT NULL ,
-	device2_id           integer  NOT NULL ,
+	device1_id           integer  NULL ,
+	device2_id           integer  NULL ,
 	domain_id            varchar(50)  NULL ,
 	system_id            macaddr  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -3299,8 +3299,8 @@ CREATE TABLE netblock
 	netblock_id          serial  NOT NULL ,
 	ip_address           inet  NOT NULL ,
 	netblock_type        varchar(50)  NOT NULL ,
-	is_single_address    CHAR(1)  NOT NULL ,
-	can_subnet           char(1)  NOT NULL ,
+	is_single_address    boolean  NOT NULL ,
+	can_subnet           boolean  NOT NULL ,
 	parent_netblock_id   integer  NULL ,
 	netblock_status      varchar(50)  NOT NULL ,
 	ip_universe_id       integer  NOT NULL ,
@@ -3487,7 +3487,7 @@ CREATE TABLE network_service
 	name                 varchar(255)  NULL ,
 	description          varchar(255)  NULL ,
 	network_service_type character varying(50)  NOT NULL ,
-	is_monitored         CHAR(1)  NOT NULL ,
+	is_monitored         boolean  NOT NULL ,
 	device_id            integer  NULL ,
 	network_interface_id integer  NULL ,
 	dns_record_id        integer  NULL ,
@@ -3613,7 +3613,7 @@ CREATE TABLE person
 	middle_name          varchar(50)  NULL ,
 	last_name            varchar(50)  NOT NULL ,
 	name_suffix          varchar(10)  NULL ,
-	gender               CHAR(1)  NULL ,
+	gender               varchar(255)  NULL ,
 	preferred_first_name varchar(50)  NULL ,
 	preferred_last_name  varchar(50)  NULL ,
 	nickname             varchar(255)  NULL ,
@@ -3634,6 +3634,11 @@ ALTER TABLE person
 CREATE INDEX xif1person ON person
 ( 
 	diet    
+);
+
+CREATE INDEX xif2person ON person
+( 
+	gender   ASC
 );
 
 CREATE INDEX idx_person_name ON person
@@ -3680,7 +3685,7 @@ CREATE TABLE person_auth_question
 	auth_question_id     integer  NOT NULL ,
 	person_id            integer  NOT NULL ,
 	user_answer          varchar(255)  NOT NULL ,
-	is_active            char(1)  NOT NULL ,
+	is_active            boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -3710,9 +3715,9 @@ CREATE TABLE person_company
 	person_id            integer  NOT NULL ,
 	person_company_status character varying(50)  NOT NULL ,
 	person_company_relation varchar(50)  NOT NULL ,
-	is_exempt            char(1)  NOT NULL ,
-	is_management        char(1)  NOT NULL ,
-	is_full_time         char(1)  NOT NULL ,
+	is_exempt            boolean  NOT NULL ,
+	is_management        boolean  NOT NULL ,
+	is_full_time         boolean  NOT NULL ,
 	description          varchar(255)  NULL ,
 	position_title       varchar(50)  NULL ,
 	hire_date            timestamp with time zone  NULL ,
@@ -4201,7 +4206,7 @@ CREATE TABLE private_key
 ( 
 	private_key_id       serial  NOT NULL ,
 	private_key_encryption_type varchar(50)  NOT NULL ,
-	is_active            char(1)  NOT NULL ,
+	is_active            boolean  NOT NULL ,
 	subject_key_identifier varchar(255)  NULL ,
 	private_key          text  NOT NULL ,
 	passphrase           varchar(255)  NULL ,
@@ -4268,7 +4273,7 @@ CREATE TABLE property
 	property_rank        integer  NULL ,
 	start_date           timestamp without time zone  NULL ,
 	finish_date          timestamp without time zone  NULL ,
-	is_enabled           char(1)  NOT NULL ,
+	is_enabled           boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -4535,7 +4540,7 @@ CREATE TABLE rack
 	rack_type            varchar(255)  NULL ,
 	description          varchar(255)  NULL ,
 	rack_height_in_u     integer  NOT NULL ,
-	display_from_bottom  CHAR(1)  NOT NULL ,
+	display_from_bottom  boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -4786,7 +4791,7 @@ CREATE TABLE slot
 	slot_index           integer  NULL ,
 	slot_type_id         integer  NOT NULL ,
 	component_type_slot_template_id integer  NULL ,
-	is_enabled           char(1)  NOT NULL ,
+	is_enabled           boolean  NOT NULL ,
 	physical_label       varchar(50)  NULL ,
 	mac_address          macaddr  NULL ,
 	description          varchar(255)  NULL ,
@@ -4835,7 +4840,7 @@ CREATE TABLE slot_type
 	slot_function        character varying(50)  NOT NULL ,
 	slot_physical_interface_type character varying(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
-	remote_slot_permitted char(1)  NOT NULL ,
+	remote_slot_permitted boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5014,8 +5019,8 @@ CREATE TABLE sudo_account_collection_device_collection
 	device_collection_id integer  NOT NULL ,
 	account_collection_id integer  NOT NULL ,
 	run_as_account_collection_id integer  NULL ,
-	requires_password    CHAR(1)  NOT NULL ,
-	can_exec_child       CHAR(1)  NOT NULL ,
+	requires_password    boolean  NOT NULL ,
+	can_exec_child       boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5102,7 +5107,7 @@ CREATE TABLE token
 	encryption_key_id    integer  NULL ,
 	token_password       varchar(128)  NULL ,
 	expire_time          timestamp with time zone  NULL ,
-	is_token_locked      char(1)  NOT NULL ,
+	is_token_locked      boolean  NOT NULL ,
 	token_unlock_time    timestamp with time zone  NULL ,
 	bad_logins           integer  NULL ,
 	last_updated         timestamp with time zone  NOT NULL ,
@@ -5274,10 +5279,10 @@ CREATE TABLE val_account_collection_type
 ( 
 	account_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_infrastructure_type char(1)  NOT NULL ,
+	is_infrastructure_type boolean  NOT NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	account_realm_id     integer  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -5300,7 +5305,7 @@ CREATE INDEX xif1val_account_collection_type ON val_account_collection_type
 CREATE TABLE val_account_role
 ( 
 	account_role         varchar(50)  NOT NULL ,
-	uid_gid_forced       char(1)  NOT NULL ,
+	uid_gid_forced       boolean  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -5318,8 +5323,8 @@ ALTER TABLE val_account_role
 CREATE TABLE val_account_type
 ( 
 	account_type         varchar(50)  NOT NULL ,
-	is_person            CHAR(1)  NOT NULL ,
-	uid_gid_forced       char(1)  NOT NULL ,
+	is_person            boolean  NOT NULL ,
+	uid_gid_forced       boolean  NOT NULL ,
 	description          varchar(4000)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -5571,10 +5576,10 @@ CREATE TABLE val_company_collection_type
 ( 
 	company_collection_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_infrastructure_type char(1)  NOT NULL ,
+	is_infrastructure_type boolean  NOT NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5650,7 +5655,7 @@ CREATE TABLE val_component_property
 	component_property_name varchar(50)  NOT NULL ,
 	component_property_type character varying(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_multivalue        char(1)  NOT NULL ,
+	is_multivalue        boolean  NOT NULL ,
 	property_data_type   varchar(50)  NOT NULL ,
 	permit_component_type_id char(10)  NOT NULL ,
 	required_component_type_id integer  NULL ,
@@ -5705,7 +5710,7 @@ CREATE TABLE val_component_property_type
 ( 
 	component_property_type varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_multivalue        char(1)  NOT NULL ,
+	is_multivalue        boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5792,7 +5797,7 @@ CREATE TABLE val_device_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5879,7 +5884,7 @@ CREATE TABLE val_dns_domain_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -5892,7 +5897,7 @@ ALTER TABLE val_dns_domain_collection_type
 CREATE TABLE val_dns_domain_type
 ( 
 	dns_domain_type      varchar(50)  NOT NULL ,
-	can_generate         char(1)  NOT NULL ,
+	can_generate         boolean  NOT NULL ,
 	description          varchar(255)  NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
@@ -6048,6 +6053,23 @@ ALTER TABLE val_filesystem_type
 	ADD CONSTRAINT "pk_val_filesytem_type" PRIMARY KEY (filesystem_type);
 
 /***********************************************
+ * Table: val_gender
+ ***********************************************/
+
+CREATE TABLE val_gender
+( 
+	gender               varchar(255)  NOT NULL ,
+	description          varchar(255)  NULL ,
+	data_ins_user        varchar(255)  NULL ,
+	data_ins_date        timestamp with time zone  NULL ,
+	data_upd_user        varchar(255)  NULL ,
+	data_upd_date        timestamp with time zone  NULL 
+);
+
+ALTER TABLE val_gender
+	ADD CONSTRAINT "pk_val_gemder" PRIMARY KEY (gender);
+
+/***********************************************
  * Table: val_image_type
  ***********************************************/
 
@@ -6126,7 +6148,7 @@ CREATE TABLE val_layer2_network_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6146,7 +6168,7 @@ CREATE TABLE val_layer3_network_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6240,7 +6262,7 @@ CREATE TABLE val_netblock_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	netblock_is_single_address_restriction varchar(3)  NOT NULL ,
 	netblock_ip_family_restriction integer  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -6277,8 +6299,8 @@ CREATE TABLE val_netblock_type
 ( 
 	netblock_type        varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	db_forced_hierarchy  char(1)  NOT NULL ,
-	is_validated_hierarchy char(1)  NOT NULL ,
+	db_forced_hierarchy  boolean  NOT NULL ,
+	is_validated_hierarchy boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6333,8 +6355,8 @@ CREATE TABLE val_network_range_type
 	dns_domain_required  char(10)  NOT NULL ,
 	default_dns_prefix   varchar(50)  NULL ,
 	netblock_type        character varying(50)  NULL ,
-	can_overlap          char(1)  NOT NULL ,
-	require_cidr_boundary char(1)  NOT NULL ,
+	can_overlap          boolean  NOT NULL ,
+	require_cidr_boundary boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6595,7 +6617,7 @@ ALTER TABLE val_person_contact_type
 CREATE TABLE val_person_image_usage
 ( 
 	person_image_usage   varchar(50)  NOT NULL ,
-	is_multivalue        char(1)  NOT NULL ,
+	is_multivalue        boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6630,10 +6652,10 @@ CREATE TABLE val_person_status
 ( 
 	person_status        varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	is_enabled           char(1)  NOT NULL ,
-	propagate_from_person char(1)  NOT NULL ,
-	is_forced            char(1)  NOT NULL ,
-	is_db_enforced       char(1)  NOT NULL ,
+	is_enabled           boolean  NOT NULL ,
+	propagate_from_person boolean  NOT NULL ,
+	is_forced            boolean  NOT NULL ,
+	is_db_enforced       boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6748,7 +6770,7 @@ CREATE TABLE val_property
 	network_range_type   varchar(50)  NULL ,
 	property_name_collection_type varchar(50)  NULL ,
 	service_environment_collection_type varchar(50)  NULL ,
-	is_multivalue        CHAR(1)  NOT NULL ,
+	is_multivalue        boolean  NOT NULL ,
 	property_value_account_collection_type_restriction character varying(50)  NULL ,
 	property_value_device_collection_type_restriction character varying(50)  NULL ,
 	property_value_netblock_collection_type_restriction varchar(50)  NULL ,
@@ -6884,7 +6906,7 @@ CREATE TABLE val_property_name_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6903,7 +6925,7 @@ CREATE TABLE val_property_type
 	property_type        varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
 	property_value_account_collection_type_restriction character varying(50)  NULL ,
-	is_multivalue        CHAR(1)  NOT NULL ,
+	is_multivalue        boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -6986,7 +7008,7 @@ CREATE TABLE val_service_environment_collection_type
 	description          varchar(4000)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -7020,7 +7042,7 @@ CREATE TABLE val_slot_function
 ( 
 	slot_function        varchar(50)  NOT NULL ,
 	description          varchar(4000)  NULL ,
-	can_have_mac_address char(1)  NOT NULL ,
+	can_have_mac_address boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -7096,7 +7118,7 @@ CREATE TABLE val_token_collection_type
 	description          varchar(255)  NULL ,
 	max_num_members      integer  NULL ,
 	max_num_collections  integer  NULL ,
-	can_have_hierarchy   char(1)  NOT NULL ,
+	can_have_hierarchy   boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -7234,7 +7256,7 @@ CREATE TABLE val_x509_key_usage
 ( 
 	x509_key_usage       varchar(50)  NOT NULL ,
 	description          varchar(255)  NULL ,
-	is_extended          CHAR(1)  NOT NULL ,
+	is_extended          boolean  NOT NULL ,
 	data_ins_user        varchar(255)  NULL ,
 	data_ins_date        timestamp with time zone  NULL ,
 	data_upd_user        varchar(255)  NULL ,
@@ -7495,8 +7517,8 @@ CREATE TABLE x509_signed_certificate
 	subject              varchar(255)  NOT NULL ,
 	friendly_name        varchar(255)  NOT NULL ,
 	subject_key_identifier varchar(255)  NULL ,
-	is_active            char(1)  NOT NULL ,
-	is_certificate_authority char(1)  NOT NULL ,
+	is_active            boolean  NOT NULL ,
+	is_certificate_authority boolean  NOT NULL ,
 	signing_cert_id      integer  NULL ,
 	x509_ca_cert_serial_number numeric  NULL ,
 	public_key           text  NULL ,
@@ -7539,10 +7561,6 @@ CREATE INDEX xif6x509_signed_certificate ON x509_signed_certificate
 ( 
 	x509_certificate_type
 );
-
-
-ALTER TABLE account
-	ADD CONSTRAINT check_yes_no_707724729 CHECK  ( is_enabled IN ('Y', 'N') ) ;
 
 
 ALTER TABLE account
@@ -7604,10 +7622,6 @@ COMMENT ON COLUMN account_assigned_certificate.x509_key_usg IS 'Name of the Cert
 COMMENT ON COLUMN account_assigned_certificate.x509_cert_id IS 'Uniquely identifies Certificate';
 
 COMMENT ON COLUMN account_assigned_certificate.key_usage_reason_for_assign IS 'Uniquely identifies and indicates reason for assignment.';
-
-
-ALTER TABLE account_auth_log
-	ADD CONSTRAINT check_yes_no_1972033909 CHECK  ( was_auth_success IN ('Y', 'N') ) ;
 
 
 ALTER TABLE account_auth_log
@@ -7854,10 +7868,6 @@ ALTER TABLE approval_instance
 
 
 ALTER TABLE approval_instance_item
-	ADD CONSTRAINT check_yes_no_1852849955 CHECK  ( is_approved IN ('Y', 'N') ) ;
-
-
-ALTER TABLE approval_instance_item
 	ADD CONSTRAINT "fk_appinstitem_appinststep" FOREIGN KEY (approval_instance_step_id) REFERENCES approval_instance_step(approval_instance_step_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -7877,17 +7887,13 @@ ALTER TABLE approval_instance_item
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE approval_instance_step
-	ADD CONSTRAINT check_yes_no_1566117395 CHECK  ( is_completed IN ('Y', 'N') ) ;
-
 ALTER TABLE approval_instance_step
 	ALTER COLUMN approval_instance_step_start
 		SET DEFAULT now();
 
 ALTER TABLE approval_instance_step
 	ALTER COLUMN is_completed
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE approval_instance_step
@@ -7952,17 +7958,13 @@ ALTER TABLE approval_process
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE approval_process_chain
-	ADD CONSTRAINT check_yes_no_960168 CHECK  ( refresh_all_data IN ('Y', 'N') ) ;
-
 ALTER TABLE approval_process_chain
 	ALTER COLUMN approval_chain_response_period
 		SET DEFAULT '1 week';
 
 ALTER TABLE approval_process_chain
 	ALTER COLUMN refresh_all_data
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE approval_process_chain
@@ -8051,10 +8053,6 @@ ALTER TABLE chassis_location
 COMMENT ON COLUMN chassis_location.chassis_device_type_id IS 'Device Type of the Container Device (Chassis)';
 
 COMMENT ON COLUMN chassis_location.device_type_module_name IS 'Name used to describe the module programatically.';
-
-
-ALTER TABLE circuit
-	ADD CONSTRAINT check_yes_no_1766081229 CHECK  ( is_locally_managed IN ('Y', 'N') ) ;
 
 
 ALTER TABLE circuit
@@ -8198,22 +8196,9 @@ ALTER TABLE component_property
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE component_type
-	ADD CONSTRAINT check_yes_no_1178386392 CHECK  ( is_removable IN ('Y', 'N') ) ;
-
-ALTER TABLE component_type
-	ADD CONSTRAINT check_yes_no_606817185 CHECK  ( asset_permitted IN ('Y', 'N') ) ;
-
-ALTER TABLE component_type
-	ADD CONSTRAINT check_yes_no_1115790481 CHECK  ( is_rack_mountable IN ('Y', 'N') ) ;
-
-ALTER TABLE component_type
-	ADD CONSTRAINT check_yes_no_1683679475 CHECK  ( is_virtual_component IN ('Y', 'N') ) ;
-
 ALTER TABLE component_type
 	ALTER COLUMN is_removable
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE component_type
 	ALTER COLUMN size_units
@@ -8221,15 +8206,15 @@ ALTER TABLE component_type
 
 ALTER TABLE component_type
 	ALTER COLUMN asset_permitted
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE component_type
 	ALTER COLUMN is_rack_mountable
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE component_type
 	ALTER COLUMN is_virtual_component
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE component_type
@@ -8290,14 +8275,6 @@ ALTER TABLE contract_type
 
 
 ALTER TABLE department
-	ADD CONSTRAINT check_yes_no_dept_isact CHECK  ( is_active IN ('Y', 'N') ) ;
-
-ALTER TABLE department
-	ALTER COLUMN is_active
-		SET DEFAULT 'Y';
-
-
-ALTER TABLE department
 	ADD CONSTRAINT "fk_dept_usr_col_id" FOREIGN KEY (account_collection_id) REFERENCES account_collection(account_collection_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -8318,24 +8295,17 @@ ALTER TABLE department
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
 
-
-ALTER TABLE device
-	ADD CONSTRAINT check_yes_no_1955318701 CHECK  ( is_virtual_device IN ('Y', 'N') ) ;
-
-ALTER TABLE device
-	ADD CONSTRAINT check_yes_no_1952460860 CHECK  ( is_locally_managed IN ('Y', 'N') ) ;
-
 ALTER TABLE device
 	ALTER COLUMN operating_system_id
 		SET DEFAULT 0;
 
 ALTER TABLE device
 	ALTER COLUMN is_virtual_device
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE device
 	ALTER COLUMN is_locally_managed
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE device
@@ -8582,34 +8552,9 @@ COMMENT ON COLUMN device_ticket.ticket_number IS 'trouble ticketing system id';
 
 COMMENT ON COLUMN device_ticket.device_ticket_notes IS 'free form notes about the ticket/device association';
 
-
-ALTER TABLE device_type
-	ADD CONSTRAINT check_yes_no_279922778 CHECK  ( has_802_3_interface IN ('Y', 'N') ) ;
-
-ALTER TABLE device_type
-	ADD CONSTRAINT check_yes_no_956213646 CHECK  ( has_802_11_interface IN ('Y', 'N') ) ;
-
-ALTER TABLE device_type
-	ADD CONSTRAINT check_yes_no_1419559865 CHECK  ( snmp_capable IN ('Y', 'N') ) ;
-
-ALTER TABLE device_type
-	ADD CONSTRAINT check_yes_no_1345939137 CHECK  ( is_chassis IN ('Y', 'N') ) ;
-
-ALTER TABLE device_type
-	ALTER COLUMN has_802_3_interface
-		SET DEFAULT 'N';
-
-ALTER TABLE device_type
-	ALTER COLUMN has_802_11_interface
-		SET DEFAULT 'N';
-
-ALTER TABLE device_type
-	ALTER COLUMN snmp_capable
-		SET DEFAULT 'N';
-
 ALTER TABLE device_type
 	ALTER COLUMN is_chassis
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE device_type
@@ -8749,10 +8694,6 @@ ALTER TABLE dns_domain_collection_hier
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE dns_domain_ip_universe
-	ADD CONSTRAINT check_yes_no_417925201 CHECK  ( should_generate IN ('Y', 'N') ) ;
-
 ALTER TABLE dns_domain_ip_universe
 	ALTER COLUMN soa_serial
 		SET DEFAULT 0;
@@ -8773,22 +8714,8 @@ ALTER TABLE dns_record
 	ADD CONSTRAINT ckc_dns_srv_protocol_dns_reco CHECK  ( DNS_SRV_PROTOCOL is null or (DNS_SRV_PROTOCOL in ('tcp','udp') and DNS_SRV_PROTOCOL = lower(DNS_SRV_PROTOCOL)) ) ;
 
 ALTER TABLE dns_record
-	ADD CONSTRAINT check_yes_no_689258637 CHECK  ( should_generate_ptr IN ('Y', 'N') ) ;
-
-ALTER TABLE dns_record
-	ADD CONSTRAINT check_yes_no_1295081792 CHECK  ( is_enabled IN ('Y', 'N') ) ;
-
-ALTER TABLE dns_record
 	ALTER COLUMN dns_class
 		SET DEFAULT 'IN';
-
-ALTER TABLE dns_record
-	ALTER COLUMN should_generate_ptr
-		SET DEFAULT 'Y';
-
-ALTER TABLE dns_record
-	ALTER COLUMN is_enabled
-		SET DEFAULT 'Y';
 
 
 ALTER TABLE dns_record
@@ -8905,10 +8832,6 @@ ALTER TABLE inter_component_connection
 
 
 ALTER TABLE ip_universe
-	ADD CONSTRAINT check_yes_no_739095954 CHECK  ( should_generate_dns IN ('Y', 'N') ) ;
-
-
-ALTER TABLE ip_universe
 	ADD CONSTRAINT "fk_ip_universe_namespace" FOREIGN KEY (ip_namespace) REFERENCES val_ip_namespace(ip_namespace)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -8917,13 +8840,9 @@ COMMENT ON COLUMN ip_universe.ip_namespace IS 'defeines the namespace for a give
 
 COMMENT ON COLUMN ip_universe.should_generate_dns IS 'Indicates if any zones should generated rooted in this universe.   Primarily used to turn off DNS generation for universes that exist as shims between two networks (such as the internet can see, inside can not, for inbound NAT''d addresses).';
 
-
-ALTER TABLE ip_universe_visibility
-	ADD CONSTRAINT check_yes_no_1997260291 CHECK  ( propagate_dns IN ('Y', 'N') ) ;
-
 ALTER TABLE ip_universe_visibility
 	ALTER COLUMN propagate_dns
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE ip_universe_visibility
@@ -9047,28 +8966,7 @@ ALTER TABLE layer2_network_collection_layer2_network
 
 
 ALTER TABLE layer3_interface
-	ADD CONSTRAINT check_yes_no_712537714 CHECK  ( is_interface_up IN ('Y', 'N') ) ;
-
-ALTER TABLE layer3_interface
-	ADD CONSTRAINT check_yes_no_472235856 CHECK  ( should_monitor IN ('Y', 'N') ) ;
-
-ALTER TABLE layer3_interface
-	ADD CONSTRAINT check_yes_no_403095919 CHECK  ( should_manage IN ('Y', 'N') ) ;
-
-ALTER TABLE layer3_interface
 	ADD CONSTRAINT ckc_netint_parent_role_1026598895 CHECK  ( parent_relation_type IN ('NONE', 'SUBINTERFACE', 'SECONDARY') ) ;
-
-ALTER TABLE layer3_interface
-	ALTER COLUMN is_interface_up
-		SET DEFAULT 'Y';
-
-ALTER TABLE layer3_interface
-	ALTER COLUMN should_monitor
-		SET DEFAULT 'Y';
-
-ALTER TABLE layer3_interface
-	ALTER COLUMN should_manage
-		SET DEFAULT 'Y';
 
 
 ALTER TABLE layer3_interface
@@ -9299,13 +9197,6 @@ ALTER TABLE mlag_peering
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE netblock
-	ADD CONSTRAINT check_yes_no_896740574 CHECK  ( is_single_address IN ('Y', 'N') ) ;
-
-ALTER TABLE netblock
-	ADD CONSTRAINT check_yes_no_356293545 CHECK  ( can_subnet IN ('Y', 'N') ) ;
-
 ALTER TABLE netblock
 	ALTER COLUMN netblock_type
 		SET DEFAULT 'default';
@@ -9395,10 +9286,6 @@ COMMENT ON COLUMN network_range.parent_netblock_id IS 'The netblock where the ra
 
 
 ALTER TABLE network_service
-	ADD CONSTRAINT check_yes_no_667542475 CHECK  ( is_monitored IN ('Y', 'N') ) ;
-
-
-ALTER TABLE network_service
 	ADD CONSTRAINT "fk_netsvc_netsvctyp_id" FOREIGN KEY (network_service_type) REFERENCES val_network_service_type(network_service_type)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -9448,9 +9335,6 @@ ALTER TABLE operating_system_snapshot
 
 
 ALTER TABLE person
-	ADD CONSTRAINT ckc_gender_legacy_489562276 CHECK  ( GENDER is null or (GENDER in ('M','F','U') and GENDER = upper(GENDER)) ) ;
-
-ALTER TABLE person
 	ADD CONSTRAINT ckc_shirt_size_349995592 CHECK  ( SHIRT_SIZE is null or (SHIRT_SIZE in ('XS','S','M','L','XL','XXL','XXXL') and SHIRT_SIZE = upper(SHIRT_SIZE)) ) ;
 
 ALTER TABLE person
@@ -9459,6 +9343,11 @@ ALTER TABLE person
 
 ALTER TABLE person
 	ADD CONSTRAINT "fk_diet_val_diet" FOREIGN KEY (diet) REFERENCES val_diet(diet)
+		ON UPDATE NO ACTION
+		ON DELETE NO ACTION;
+
+ALTER TABLE person
+	ADD CONSTRAINT "r_822" FOREIGN KEY (gender) REFERENCES val_gender(gender)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
@@ -9490,10 +9379,6 @@ ALTER TABLE person_account_realm_company
 
 
 ALTER TABLE person_auth_question
-	ADD CONSTRAINT check_yes_no_1358904229 CHECK  ( is_active IN ('Y', 'N') ) ;
-
-
-ALTER TABLE person_auth_question
 	ADD CONSTRAINT "fk_person_auth_question_prsnid" FOREIGN KEY (person_id) REFERENCES person(person_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
@@ -9509,27 +9394,17 @@ COMMENT ON COLUMN person_auth_question.auth_question_id IS 'Uniquely identifies 
 
 COMMENT ON COLUMN person_auth_question.user_answer IS 'Records system user answer to the authentication question.';
 
-
-ALTER TABLE person_company
-	ADD CONSTRAINT check_yes_no_1404165584 CHECK  ( is_exempt IN ('Y', 'N') ) ;
-
-ALTER TABLE person_company
-	ADD CONSTRAINT check_yes_no_prsncmpy_mgmt CHECK  ( is_management IN ('Y', 'N') ) ;
-
-ALTER TABLE person_company
-	ADD CONSTRAINT check_yes_no_676772835 CHECK  ( is_full_time IN ('Y', 'N') ) ;
-
 ALTER TABLE person_company
 	ALTER COLUMN is_exempt
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 ALTER TABLE person_company
 	ALTER COLUMN is_management
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE person_company
 	ALTER COLUMN is_full_time
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE person_company
@@ -9753,13 +9628,9 @@ ALTER TABLE physicalish_volume
 		ON DELETE NO ACTION
 	DEFERRABLE  ;
 
-
-ALTER TABLE private_key
-	ADD CONSTRAINT check_yes_no_1732013376 CHECK  ( is_active IN ('Y', 'N') ) ;
-
 ALTER TABLE private_key
 	ALTER COLUMN is_active
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE private_key
@@ -9789,13 +9660,9 @@ COMMENT ON COLUMN private_key.subject_key_identifier IS 'colon seperate byte hex
 COMMENT ON COLUMN private_key.private_key_encryption_type IS 'encryption tyof private key (rsa, dsa, ec, etc).  
 ';
 
-
-ALTER TABLE property
-	ADD CONSTRAINT ckc_prop_isenbld CHECK  ( is_enabled IN ('Y', 'N') ) ;
-
 ALTER TABLE property
 	ALTER COLUMN is_enabled
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE property
@@ -10035,9 +9902,6 @@ ALTER TABLE pseudo_klogin
 ALTER TABLE rack
 	ADD CONSTRAINT ckc_rack_style_rack CHECK  ( RACK_STYLE in ('RELAY','CABINET') and RACK_STYLE = upper(RACK_STYLE) ) ;
 
-ALTER TABLE rack
-	ADD CONSTRAINT check_yes_no_1604632020 CHECK  ( display_from_bottom IN ('Y', 'N') ) ;
-
 
 ALTER TABLE rack
 	ADD CONSTRAINT "fk_site_rack" FOREIGN KEY (site_code) REFERENCES site(site_code)
@@ -10141,14 +10005,11 @@ ALTER TABLE site
 
 
 ALTER TABLE slot
-	ADD CONSTRAINT checkslot_enbled__yes_no CHECK  ( is_enabled IN ('Y', 'N') ) ;
-
-ALTER TABLE slot
 	ADD CONSTRAINT ckc_slot_slot_side CHECK  ( slot_side in ('FRONT','BACK') ) ;
 
 ALTER TABLE slot
 	ALTER COLUMN is_enabled
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE slot
@@ -10166,13 +10027,9 @@ ALTER TABLE slot
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE slot_type
-	ADD CONSTRAINT check_yes_no_1060412074 CHECK  ( remote_slot_permitted IN ('Y', 'N') ) ;
-
 ALTER TABLE slot_type
 	ALTER COLUMN remote_slot_permitted
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE slot_type
@@ -10254,12 +10111,6 @@ ALTER TABLE static_route_template
 ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT ckc_sudo_alias_name_sudo_ucl CHECK  ( sudo_alias_name ~ '^[A-Z][A-Z0-9_]*$'::text ) ;
 
-ALTER TABLE sudo_account_collection_device_collection
-	ADD CONSTRAINT check_yes_no_620272763 CHECK  ( requires_password IN ('Y', 'N') ) ;
-
-ALTER TABLE sudo_account_collection_device_collection
-	ADD CONSTRAINT check_yes_no_1479273988 CHECK  ( can_exec_child IN ('Y', 'N') ) ;
-
 
 ALTER TABLE sudo_account_collection_device_collection
 	ADD CONSTRAINT "fk_sudoaccoll_fk_sudo_u_actcl" FOREIGN KEY (account_collection_id) REFERENCES account_collection(account_collection_id)
@@ -10292,13 +10143,9 @@ ALTER TABLE sw_package
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE token
-	ADD CONSTRAINT check_yes_no_tkn_islckd CHECK  ( is_token_locked IN ('Y', 'N') ) ;
-
 ALTER TABLE token
 	ALTER COLUMN is_token_locked
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE token
@@ -10371,20 +10218,13 @@ ALTER TABLE unix_group
 
 COMMENT ON TABLE val_account_collection_relation IS 'Defines type of relationship';
 
-
-ALTER TABLE val_account_collection_type
-	ADD CONSTRAINT check_yes_no_1430080190 CHECK  ( is_infrastructure_type IN ('Y', 'N') ) ;
-
-ALTER TABLE val_account_collection_type
-	ADD CONSTRAINT check_yes_no_act_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_account_collection_type
 	ALTER COLUMN is_infrastructure_type
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE val_account_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE val_account_collection_type
@@ -10403,18 +10243,7 @@ COMMENT ON COLUMN val_account_collection_type.max_num_collections IS 'Maximum nu
 COMMENT ON COLUMN val_account_collection_type.account_realm_id IS 'If set, all accounts in this collection must be of this realm, and all child account collections of this one must have the realm set to be the same.';
 
 
-ALTER TABLE val_account_role
-	ADD CONSTRAINT check_yes_no_769504641 CHECK  ( uid_gid_forced IN ('Y', 'N') ) ;
-
-
 COMMENT ON TABLE val_account_role IS 'Defines the role for the account, such as primary, administrator, privileged/superuser, test, etc';
-
-
-ALTER TABLE val_account_type
-	ADD CONSTRAINT check_yes_no_726744778 CHECK  ( is_person IN ('Y', 'N') ) ;
-
-ALTER TABLE val_account_type
-	ADD CONSTRAINT check_yes_no_836614027 CHECK  ( uid_gid_forced IN ('Y', 'N') ) ;
 
 
 COMMENT ON TABLE val_account_type IS 'Defines the type of the account (pseudouser or person).  is_person is probably unnecessary and will be dropped in the future.';
@@ -10431,20 +10260,13 @@ ALTER TABLE val_app_key_values
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE val_company_collection_type
-	ADD CONSTRAINT check_yes_no_1632390060 CHECK  ( is_infrastructure_type IN ('Y', 'N') ) ;
-
-ALTER TABLE val_company_collection_type
-	ADD CONSTRAINT check_yes_no_206713558 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_company_collection_type
 	ALTER COLUMN is_infrastructure_type
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE val_company_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 COMMENT ON COLUMN val_company_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
@@ -10468,9 +10290,6 @@ ALTER TABLE val_company_type
 
 COMMENT ON TABLE val_company_type_purpose IS 'Mechanism to group company types together, mostly for display or more complicated rules';
 
-
-ALTER TABLE val_component_property
-	ADD CONSTRAINT check_yes_no_1492573689 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
 
 ALTER TABLE val_component_property
 	ADD CONSTRAINT check_prp_prmt_2069511743 CHECK  ( permit_component_type_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
@@ -10550,13 +10369,9 @@ ALTER TABLE val_component_property
 
 COMMENT ON TABLE val_component_property IS 'Contains a list of all valid properties for component tables (component, component_type, component_function, slot, slot_type, slot_function)';
 
-
-ALTER TABLE val_component_property_type
-	ADD CONSTRAINT check_yes_no_1637846134 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
-
 ALTER TABLE val_component_property_type
 	ALTER COLUMN is_multivalue
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 COMMENT ON TABLE val_component_property_type IS 'Contains list of valid component_property_types';
@@ -10573,13 +10388,9 @@ ALTER TABLE val_country_code
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE val_device_collection_type
-	ADD CONSTRAINT check_yes_no_dct_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_device_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 COMMENT ON COLUMN val_device_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
@@ -10590,13 +10401,9 @@ COMMENT ON COLUMN val_device_collection_type.can_have_hierarchy IS 'Indicates if
 COMMENT ON COLUMN val_device_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
 ';
 
-
-ALTER TABLE val_dns_domain_collection_type
-	ADD CONSTRAINT check_yes_no_dnsdom_coll_canhier CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_dns_domain_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 COMMENT ON COLUMN val_dns_domain_collection_type.max_num_members IS 'Maximum INTEGER of members in a given collection of this type';
@@ -10607,7 +10414,7 @@ COMMENT ON COLUMN val_dns_domain_collection_type.can_have_hierarchy IS 'Indicate
 
 ALTER TABLE val_dns_domain_type
 	ALTER COLUMN can_generate
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE val_dns_type
@@ -10630,13 +10437,9 @@ COMMENT ON TABLE val_key_usage_reason_for_assignment IS 'Identifies a reason why
 
 COMMENT ON COLUMN val_key_usage_reason_for_assignment.key_usage_reason_for_assignment IS 'Uniquely identifies and indicates reason for assignment.';
 
-
-ALTER TABLE val_layer2_network_collection_type
-	ADD CONSTRAINT check_yes_no_516965998 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_layer2_network_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 COMMENT ON COLUMN val_layer2_network_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
@@ -10647,13 +10450,9 @@ COMMENT ON COLUMN val_layer2_network_collection_type.can_have_hierarchy IS 'Indi
 COMMENT ON COLUMN val_layer2_network_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
 ';
 
-
-ALTER TABLE val_layer3_network_collection_type
-	ADD CONSTRAINT check_yes_no_l3nc_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_layer3_network_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 COMMENT ON COLUMN val_layer3_network_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
@@ -10672,9 +10471,6 @@ ALTER TABLE val_logical_volume_property
 
 
 ALTER TABLE val_netblock_collection_type
-	ADD CONSTRAINT check_yes_no_nct_chh CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
-ALTER TABLE val_netblock_collection_type
 	ADD CONSTRAINT check_any_yes_no_nc_singaddr_rst CHECK  ( netblock_is_single_address_restriction IN ('Y', 'N', 'ANY') ) ;
 
 ALTER TABLE val_netblock_collection_type
@@ -10682,7 +10478,7 @@ ALTER TABLE val_netblock_collection_type
 
 ALTER TABLE val_netblock_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 ALTER TABLE val_netblock_collection_type
 	ALTER COLUMN netblock_is_single_address_restriction
@@ -10702,21 +10498,8 @@ COMMENT ON COLUMN val_netblock_collection_type.netblock_is_single_address_restri
 COMMENT ON COLUMN val_netblock_collection_type.netblock_ip_family_restriction IS 'all collections of this types'' member netblocks must have  and netblock collections must match this restriction, if set.';
 
 
-ALTER TABLE val_netblock_type
-	ADD CONSTRAINT check_yes_no_2942501 CHECK  ( db_forced_hierarchy IN ('Y', 'N') ) ;
-
-ALTER TABLE val_netblock_type
-	ADD CONSTRAINT check_yes_no_364552564 CHECK  ( is_validated_hierarchy IN ('Y', 'N') ) ;
-
-
 ALTER TABLE val_network_range_type
 	ADD CONSTRAINT check_prp_prmt_nrngty_ddom CHECK  ( dns_domain_required IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
-
-ALTER TABLE val_network_range_type
-	ADD CONSTRAINT check_yes_no_canoverlap CHECK  ( can_overlap IN ('Y', 'N') ) ;
-
-ALTER TABLE val_network_range_type
-	ADD CONSTRAINT check_yes_no_cidrboundary CHECK  ( require_cidr_boundary IN ('Y', 'N') ) ;
 
 ALTER TABLE val_network_range_type
 	ALTER COLUMN dns_domain_required
@@ -10724,11 +10507,11 @@ ALTER TABLE val_network_range_type
 
 ALTER TABLE val_network_range_type
 	ALTER COLUMN can_overlap
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE val_network_range_type
 	ALTER COLUMN require_cidr_boundary
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE val_network_range_type
@@ -10772,24 +10555,13 @@ COMMENT ON COLUMN val_person_contact_technology.person_contact_technology IS 'te
 
 COMMENT ON TABLE val_person_contact_type IS 'Contact Type -- chat, phone, etc.  This essentially details if phone or account is used as the identifier and should be triggered.';
 
-
-ALTER TABLE val_person_image_usage
-	ADD CONSTRAINT check_yes_no_2030957813 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
-
-
-ALTER TABLE val_person_status
-	ADD CONSTRAINT check_yes_no_233685577 CHECK  ( propagate_from_person IN ('Y', 'N') ) ;
-
-ALTER TABLE val_person_status
-	ADD CONSTRAINT check_yes_no_vpers_stat_enabled CHECK  ( is_enabled IN ('Y', 'N') ) ;
-
 ALTER TABLE val_person_status
 	ALTER COLUMN is_forced
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE val_person_status
 	ALTER COLUMN is_db_enforced
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 COMMENT ON COLUMN val_person_status.is_forced IS 'apps external can use this to indicate that the status is an override that should generally not be chagned.';
@@ -10806,9 +10578,6 @@ COMMENT ON COLUMN val_private_key_encryption_type.private_key_encryption_type IS
 ALTER TABLE val_processor_architecture
 	ADD CONSTRAINT ckc_kernel_bits_val_proc CHECK  ( KERNEL_BITS in (0,32,64) ) ;
 
-
-ALTER TABLE val_property
-	ADD CONSTRAINT check_yes_no_910695618 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
 
 ALTER TABLE val_property
 	ADD CONSTRAINT check_prp_prmt_733000589 CHECK  ( permit_company_id IN ('REQUIRED', 'PROHIBITED', 'ALLOWED') ) ;
@@ -10869,7 +10638,7 @@ ALTER TABLE val_property
 
 ALTER TABLE val_property
 	ALTER COLUMN is_multivalue
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE val_property
 	ALTER COLUMN permit_company_id
@@ -11090,13 +10859,9 @@ COMMENT ON COLUMN val_property.permit_dns_domain_collection_id IS 'defines permi
 
 COMMENT ON TABLE val_property_data_type IS 'valid data types for property (name,type) pairs.  This maps to property.property_value_* columns.';
 
-
-ALTER TABLE val_property_name_collection_type
-	ADD CONSTRAINT check_yes_no_1802219937 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_property_name_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 COMMENT ON COLUMN val_property_name_collection_type.max_num_members IS 'Maximum number of members in a given collection of this type
@@ -11107,13 +10872,9 @@ COMMENT ON COLUMN val_property_name_collection_type.can_have_hierarchy IS 'Indic
 COMMENT ON COLUMN val_property_name_collection_type.max_num_collections IS 'Maximum number of collections a given member can be a part of of this type.
 ';
 
-
-ALTER TABLE val_property_type
-	ADD CONSTRAINT check_yes_no_1294052013 CHECK  ( is_multivalue IN ('Y', 'N') ) ;
-
 ALTER TABLE val_property_type
 	ALTER COLUMN is_multivalue
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 ALTER TABLE val_property_type
@@ -11146,21 +10907,13 @@ COMMENT ON COLUMN val_raid_type.secondary_raid_level IS 'Common RAID Disk Data F
 
 COMMENT ON COLUMN val_raid_type.raid_level_qualifier IS 'Common RAID Disk Data Format Specification''s integer number that describes the raid.  Arguably, this should be split out to distinct fields and constructed, and maybe one day it will be and this field will go away.';
 
-
-ALTER TABLE val_service_environment_collection_type
-	ADD CONSTRAINT check_yes_nosect_hier CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_service_environment_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
-
-
-ALTER TABLE val_slot_function
-	ADD CONSTRAINT check_yes_no_slotfunc_macaddr CHECK  ( can_have_mac_address IN ('Y', 'N') ) ;
+		SET DEFAULT true;
 
 ALTER TABLE val_slot_function
 	ALTER COLUMN can_have_mac_address
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 
 ALTER TABLE val_slot_physical_interface
@@ -11168,13 +10921,9 @@ ALTER TABLE val_slot_physical_interface
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 
-
-ALTER TABLE val_token_collection_type
-	ADD CONSTRAINT check_yes_no_2041826759 CHECK  ( can_have_hierarchy IN ('Y', 'N') ) ;
-
 ALTER TABLE val_token_collection_type
 	ALTER COLUMN can_have_hierarchy
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 
 COMMENT ON TABLE val_token_collection_type IS 'Assign purposes to arbitrary groupings';
@@ -11198,10 +10947,6 @@ COMMENT ON TABLE val_x509_certificate_type IS 'Type of signed certificate; this 
 
 COMMENT ON COLUMN val_x509_certificate_type.x509_certificate_type IS 'encryption tyof private key (rsa, dsa, ec, etc).  
 ';
-
-
-ALTER TABLE val_x509_key_usage
-	ADD CONSTRAINT check_yes_no_220000651 CHECK  ( is_extended IN ('Y', 'N') ) ;
 
 
 COMMENT ON TABLE val_x509_key_usage IS 'Captures possible usage of the certificate key. Example: Client, Server, CA.';
@@ -11356,20 +11101,13 @@ COMMENT ON COLUMN x509_key_usage_default.description IS 'Textual Description of 
 
 COMMENT ON COLUMN x509_key_usage_default.x509_signed_certificate_id IS 'Uniquely identifies Certificate';
 
-
-ALTER TABLE x509_signed_certificate
-	ADD CONSTRAINT check_yes_no_1406267665 CHECK  ( is_certificate_authority IN ('Y', 'N') ) ;
-
-ALTER TABLE x509_signed_certificate
-	ADD CONSTRAINT check_yes_no_1640078270 CHECK  ( is_active IN ('Y', 'N') ) ;
-
 ALTER TABLE x509_signed_certificate
 	ALTER COLUMN is_certificate_authority
-		SET DEFAULT 'N';
+		SET DEFAULT false;
 
 ALTER TABLE x509_signed_certificate
 	ALTER COLUMN is_active
-		SET DEFAULT 'Y';
+		SET DEFAULT true;
 
 ALTER TABLE x509_signed_certificate
 	ALTER COLUMN x509_certificate_type

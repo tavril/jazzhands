@@ -202,7 +202,7 @@ BEGIN
     -- select tables with audit tables
     --
     FOR table_list IN
-	SELECT table_name FROM information_schema.tables
+	SELECT table_name::text FROM information_schema.tables
 	WHERE table_type = 'BASE TABLE' AND table_schema = tbl_schema
 	AND table_name IN (
 	    SELECT table_name FROM information_schema.tables
@@ -574,7 +574,7 @@ DECLARE
      table_list RECORD;
 BEGIN
     FOR table_list IN
-	SELECT table_name FROM information_schema.tables
+	SELECT table_name::text FROM information_schema.tables
 	WHERE table_type = 'BASE TABLE' AND table_schema = tbl_schema
 	AND NOT (
 	    table_name IN (
@@ -605,7 +605,7 @@ DECLARE
      table_list RECORD;
 BEGIN
     FOR table_list IN
-	SELECT b.table_name
+	SELECT b.table_name::text
 	FROM information_schema.tables b
 		INNER JOIN information_schema.tables a
 			USING (table_name,table_type)
@@ -696,7 +696,7 @@ BEGIN
 	tab RECORD;
     BEGIN
 	FOR tab IN
-	    SELECT table_name FROM information_schema.tables
+	    SELECT table_name::text FROM information_schema.tables
 	    WHERE table_schema = tbl_schema AND table_type = 'BASE TABLE'
 	    AND table_name NOT LIKE 'aud$%'
 	LOOP

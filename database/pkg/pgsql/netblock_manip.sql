@@ -1443,6 +1443,7 @@ BEGIN
 			--
 			ni_id_ary := ARRAY[]::integer[];
 
+			SELECT
 				nin.netblock_id,
 				ni.device_id
 			INTO nin_rec
