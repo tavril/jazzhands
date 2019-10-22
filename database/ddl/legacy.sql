@@ -3194,239 +3194,1721 @@ FROM jazzhands.x509_signed_certificate;
 --- XXX - need to sort out v_network_interface_trans by hand
 --- XXX - need to sort out val_device_auto_mgmt_protocol by hand
 --- XXX - need to sort out val_snmp_commstr_type by hand
-/* Need to write triggers for$VAR1 = {
-          'val_layer3_network_coll_type' => [
-                                              'can_have_hierarchy'
-                                            ],
-          'x509_certificate' => [
-                                  'is_active',
-                                  'is_certificate_authority'
-                                ],
-          'device_type' => [
-                             'has_802_3_interface',
-                             'has_802_11_interface',
-                             'snmp_capable',
-                             'is_chassis'
-                           ],
-          'v_dns_domain_nouniverse' => [
-                                         'should_generate'
-                                       ],
-          'val_netblock_type' => [
-                                   'db_forced_hierarchy',
-                                   'is_validated_hierarchy'
-                                 ],
-          'val_layer2_network_coll_type' => [
-                                              'can_have_hierarchy'
-                                            ],
-          'val_account_role' => [
-                                  'uid_gid_forced'
-                                ],
-          'v_dns' => [
-                       'is_enabled',
-                       'should_generate_ptr'
-                     ],
-          'network_interface' => [
-                                   'is_interface_up',
-                                   'should_monitor',
-                                   'should_manage'
-                                 ],
-          'v_hotpants_token' => [
-                                  'is_token_locked'
-                                ],
-          'val_network_range_type' => [
-                                        'can_overlap',
-                                        'require_cidr_boundary'
-                                      ],
-          'token' => [
-                       'is_token_locked'
-                     ],
-          'rack' => [
-                      'display_from_bottom'
-                    ],
-          'sudo_acct_col_device_collectio' => [
-                                                'requires_password',
-                                                'can_exec_child'
-                                              ],
-          'dns_domain_ip_universe' => [
-                                        'should_generate'
-                                      ],
-          'account_auth_log' => [
-                                  'was_auth_success'
-                                ],
-          'v_corp_family_account' => [
-                                       'is_enabled'
-                                     ],
-          'val_dns_domain_type' => [
-                                     'can_generate'
-                                   ],
-          'slot_type' => [
-                           'remote_slot_permitted'
-                         ],
-          'person_auth_question' => [
-                                      'is_active'
-                                    ],
-          'v_dev_col_user_prop_expanded' => [
-                                              'is_enabled'
-                                            ],
-          'val_company_collection_type' => [
-                                             'is_infrastructure_type',
-                                             'can_have_hierarchy'
-                                           ],
-          'account' => [
-                         'is_enabled'
-                       ],
-          'v_property' => [
-                            'is_enabled'
-                          ],
-          'val_device_collection_type' => [
-                                            'can_have_hierarchy'
-                                          ],
-          'v_dns_rvs' => [
-                           'is_enabled',
-                           'should_generate_ptr'
-                         ],
-          'department' => [
-                            'is_active'
-                          ],
-          'person_company' => [
-                                'is_exempt',
-                                'is_management',
-                                'is_full_time'
-                              ],
-          'device' => [
-                        'is_locally_managed',
-                        'is_virtual_device'
-                      ],
-          'x509_signed_certificate' => [
-                                         'is_active',
-                                         'is_certificate_authority'
-                                       ],
-          'netblock' => [
-                          'is_single_address',
-                          'can_subnet'
-                        ],
-          'v_token' => [
-                         'is_token_locked'
-                       ],
-          'val_token_collection_type' => [
-                                           'can_have_hierarchy'
-                                         ],
-          'v_dns_sorted' => [
-                              'should_generate_ptr',
-                              'is_enabled'
-                            ],
-          'v_netblock_hier_expanded' => [
-                                          'is_single_address',
-                                          'can_subnet'
-                                        ],
-          'ip_universe' => [
-                             'should_generate_dns'
-                           ],
-          'private_key' => [
-                             'is_active'
-                           ],
-          'dns_record' => [
-                            'should_generate_ptr',
-                            'is_enabled'
-                          ],
-          'val_account_collection_type' => [
-                                             'is_infrastructure_type',
-                                             'can_have_hierarchy'
-                                           ],
-          'approval_instance_item' => [
-                                        'is_approved'
-                                      ],
-          'val_component_property_type' => [
-                                             'is_multivalue'
-                                           ],
-          'v_person_company' => [
-                                  'is_exempt',
-                                  'is_management',
-                                  'is_full_time'
-                                ],
-          'circuit' => [
-                         'is_locally_managed'
-                       ],
-          'val_person_image_usage' => [
-                                        'is_multivalue'
-                                      ],
-          'val_person_status' => [
-                                   'is_enabled',
-                                   'propagate_from_person',
-                                   'is_forced',
-                                   'is_db_enforced'
-                                 ],
-          'val_component_property' => [
-                                        'is_multivalue'
-                                      ],
-          'network_service' => [
-                                 'is_monitored'
-                               ],
-          'v_netblock_hier' => [
-                                 'is_single_address'
-                               ],
-          'slot' => [
-                      'is_enabled'
-                    ],
-          'val_account_type' => [
-                                  'is_person',
-                                  'uid_gid_forced'
-                                ],
-          'v_dns_fwd' => [
-                           'is_enabled',
-                           'should_generate_ptr'
-                         ],
-          'val_slot_function' => [
-                                   'can_have_mac_address'
-                                 ],
-          'property' => [
-                          'is_enabled'
-                        ],
-          'val_property' => [
-                              'is_multivalue'
-                            ],
-          'val_service_env_coll_type' => [
-                                           'can_have_hierarchy'
-                                         ],
-          'val_netblock_collection_type' => [
-                                              'can_have_hierarchy'
-                                            ],
-          'approval_instance_step' => [
-                                        'is_completed'
-                                      ],
-          'v_approval_instance_step_expanded' => [
-                                                   'is_approved'
-                                                 ],
-          'val_x509_key_usage' => [
-                                    'is_extended'
-                                  ],
-          'v_dns_changes_pending' => [
-                                       'should_generate'
-                                     ],
-          'approval_process_chain' => [
-                                        'refresh_all_data'
-                                      ],
-          'val_property_collection_type' => [
-                                              'can_have_hierarchy'
-                                            ],
-          'val_dns_domain_collection_type' => [
-                                                'can_have_hierarchy'
-                                              ],
-          'val_property_type' => [
-                                   'is_multivalue'
-                                 ],
-          'ip_universe_visibility' => [
-                                        'propagate_dns'
-                                      ],
-          'component_type' => [
-                                'is_removable',
-                                'asset_permitted',
-                                'is_rack_mountable',
-                                'is_virtual_component'
-                              ]
-        };
+-- Triggers for account
 
-*/
+CREATE OR REPLACE FUNCTION jazzhands_legacy.account_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.account (
+		account_id,login,person_id,company_id,is_enabled,account_realm_id,account_status,account_role,account_type,description,external_id
+	) VALUES (
+		NEW.account_id,NEW.login,NEW.person_id,NEW.company_id,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.account_realm_id,NEW.account_status,NEW.account_role,NEW.account_type,NEW.description,NEW.external_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_account_ins
+	ON jazzhands_legacy.account;
+CREATE TRIGGER _trigger_account_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.account
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.account_ins();
+
+
+-- Triggers for account_auth_log
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.account_auth_log_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.account_auth_log (
+		account_id,account_auth_ts,auth_resource,account_auth_seq,was_auth_success,auth_resource_instance,auth_origin
+	) VALUES (
+		NEW.account_id,NEW.account_auth_ts,NEW.auth_resource,NEW.account_auth_seq,CASE WHEN NEW.was_auth_success = 'Y' THEN true WHEN NEW.was_auth_success = 'N' THEN false ELSE NULL END,NEW.auth_resource_instance,NEW.auth_origin
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_account_auth_log_ins
+	ON jazzhands_legacy.account_auth_log;
+CREATE TRIGGER _trigger_account_auth_log_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.account_auth_log
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.account_auth_log_ins();
+
+
+-- Triggers for approval_instance_item
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_item_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.approval_instance_item (
+		approval_instance_item_id,approval_instance_link_id,approval_instance_step_id,next_approval_instance_item_id,approved_category,approved_label,approved_lhs,approved_rhs,is_approved,approved_account_id,approval_note
+	) VALUES (
+		NEW.approval_instance_item_id,NEW.approval_instance_link_id,NEW.approval_instance_step_id,NEW.next_approval_instance_item_id,NEW.approved_category,NEW.approved_label,NEW.approved_lhs,NEW.approved_rhs,CASE WHEN NEW.is_approved = 'Y' THEN true WHEN NEW.is_approved = 'N' THEN false ELSE NULL END,NEW.approved_account_id,NEW.approval_note
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_instance_item_ins
+	ON jazzhands_legacy.approval_instance_item;
+CREATE TRIGGER _trigger_approval_instance_item_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.approval_instance_item
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_item_ins();
+
+
+-- Triggers for approval_instance_step
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_step_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.approval_instance_step (
+		approval_instance_step_id,approval_instance_id,approval_process_chain_id,approval_instance_step_name,approval_instance_step_due,approval_type,description,approval_instance_step_start,approval_instance_step_end,approver_account_id,external_reference_name,is_completed
+	) VALUES (
+		NEW.approval_instance_step_id,NEW.approval_instance_id,NEW.approval_process_chain_id,NEW.approval_instance_step_name,NEW.approval_instance_step_due,NEW.approval_type,NEW.description,NEW.approval_instance_step_start,NEW.approval_instance_step_end,NEW.approver_account_id,NEW.external_reference_name,CASE WHEN NEW.is_completed = 'Y' THEN true WHEN NEW.is_completed = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_instance_step_ins
+	ON jazzhands_legacy.approval_instance_step;
+CREATE TRIGGER _trigger_approval_instance_step_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.approval_instance_step
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_step_ins();
+
+
+-- Triggers for approval_process_chain
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_process_chain_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.approval_process_chain (
+		approval_process_chain_id,approval_process_chain_name,approval_chain_response_period,description,message,email_message,email_subject_prefix,email_subject_suffix,max_escalation_level,escalation_delay,escalation_reminder_gap,approving_entity,refresh_all_data,accept_app_process_chain_id,reject_app_process_chain_id
+	) VALUES (
+		NEW.approval_process_chain_id,NEW.approval_process_chain_name,NEW.approval_chain_response_period,NEW.description,NEW.message,NEW.email_message,NEW.email_subject_prefix,NEW.email_subject_suffix,NEW.max_escalation_level,NEW.escalation_delay,NEW.escalation_reminder_gap,NEW.approving_entity,CASE WHEN NEW.refresh_all_data = 'Y' THEN true WHEN NEW.refresh_all_data = 'N' THEN false ELSE NULL END,NEW.accept_app_process_chain_id,NEW.reject_app_process_chain_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_process_chain_ins
+	ON jazzhands_legacy.approval_process_chain;
+CREATE TRIGGER _trigger_approval_process_chain_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.approval_process_chain
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_process_chain_ins();
+
+
+-- Triggers for circuit
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.circuit_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.circuit (
+		circuit_id,vendor_company_id,vendor_circuit_id_str,aloc_lec_company_id,aloc_lec_circuit_id_str,aloc_parent_circuit_id,zloc_lec_company_id,zloc_lec_circuit_id_str,zloc_parent_circuit_id,is_locally_managed
+	) VALUES (
+		NEW.circuit_id,NEW.vendor_company_id,NEW.vendor_circuit_id_str,NEW.aloc_lec_company_id,NEW.aloc_lec_circuit_id_str,NEW.aloc_parent_circuit_id,NEW.zloc_lec_company_id,NEW.zloc_lec_circuit_id_str,NEW.zloc_parent_circuit_id,CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_circuit_ins
+	ON jazzhands_legacy.circuit;
+CREATE TRIGGER _trigger_circuit_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.circuit
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.circuit_ins();
+
+
+-- Triggers for component_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.component_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.component_type (
+		component_type_id,company_id,model,slot_type_id,description,part_number,is_removable,asset_permitted,is_rack_mountable,is_virtual_component,size_units
+	) VALUES (
+		NEW.component_type_id,NEW.company_id,NEW.model,NEW.slot_type_id,NEW.description,NEW.part_number,CASE WHEN NEW.is_removable = 'Y' THEN true WHEN NEW.is_removable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.asset_permitted = 'Y' THEN true WHEN NEW.asset_permitted = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_rack_mountable = 'Y' THEN true WHEN NEW.is_rack_mountable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_virtual_component = 'Y' THEN true WHEN NEW.is_virtual_component = 'N' THEN false ELSE NULL END,NEW.size_units
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_component_type_ins
+	ON jazzhands_legacy.component_type;
+CREATE TRIGGER _trigger_component_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.component_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.component_type_ins();
+
+
+-- Triggers for department
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.department_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.department (
+		account_collection_id,company_id,manager_account_id,is_active,dept_code,cost_center_name,cost_center_number,default_badge_type_id
+	) VALUES (
+		NEW.account_collection_id,NEW.company_id,NEW.manager_account_id,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,NEW.dept_code,NEW.cost_center_name,NEW.cost_center_number,NEW.default_badge_type_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_department_ins
+	ON jazzhands_legacy.department;
+CREATE TRIGGER _trigger_department_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.department
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.department_ins();
+
+
+-- Triggers for device
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.device_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+	-- XXX dropped columns: auto_mgmt_protocolis_monitoredshould_fetch_config
+	INSERT INTO jazzhands.device (
+		device_id,component_id,device_type_id,device_name,site_code,identifying_dns_record_id,host_id,physical_label,rack_location_id,chassis_location_id,parent_device_id,description,external_id,device_status,operating_system_id,service_environment_id,is_locally_managed,is_virtual_device,date_in_service
+	) VALUES (
+		NEW.device_id,NEW.component_id,NEW.device_type_id,NEW.device_name,NEW.site_code,NEW.identifying_dns_record_id,NEW.host_id,NEW.physical_label,NEW.rack_location_id,NEW.chassis_location_id,NEW.parent_device_id,NEW.description,NEW.external_id,NEW.device_status,NEW.operating_system_id,NEW.service_environment_id,CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_virtual_device = 'Y' THEN true WHEN NEW.is_virtual_device = 'N' THEN false ELSE NULL END,NEW.date_in_service
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_device_ins
+	ON jazzhands_legacy.device;
+CREATE TRIGGER _trigger_device_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.device
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.device_ins();
+
+
+-- Triggers for device_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.device_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.device_type (
+		device_type_id,component_type_id,device_type_name,template_device_id,idealized_device_id,description,company_id,model,device_type_depth_in_cm,processor_architecture,config_fetch_type,rack_units,has_802_3_interface,has_802_11_interface,snmp_capable,is_chassis
+	) VALUES (
+		NEW.device_type_id,NEW.component_type_id,NEW.device_type_name,NEW.template_device_id,NEW.idealized_device_id,NEW.description,NEW.company_id,NEW.model,NEW.device_type_depth_in_cm,NEW.processor_architecture,NEW.config_fetch_type,NEW.rack_units,CASE WHEN NEW.has_802_3_interface = 'Y' THEN true WHEN NEW.has_802_3_interface = 'N' THEN false ELSE NULL END,CASE WHEN NEW.has_802_11_interface = 'Y' THEN true WHEN NEW.has_802_11_interface = 'N' THEN false ELSE NULL END,CASE WHEN NEW.snmp_capable = 'Y' THEN true WHEN NEW.snmp_capable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_chassis = 'Y' THEN true WHEN NEW.is_chassis = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_device_type_ins
+	ON jazzhands_legacy.device_type;
+CREATE TRIGGER _trigger_device_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.device_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.device_type_ins();
+
+
+-- Triggers for dns_domain_ip_universe
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_domain_ip_universe_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.dns_domain_ip_universe (
+		dns_domain_id,ip_universe_id,soa_class,soa_ttl,soa_serial,soa_refresh,soa_retry,soa_expire,soa_minimum,soa_mname,soa_rname,should_generate,last_generated
+	) VALUES (
+		NEW.dns_domain_id,NEW.ip_universe_id,NEW.soa_class,NEW.soa_ttl,NEW.soa_serial,NEW.soa_refresh,NEW.soa_retry,NEW.soa_expire,NEW.soa_minimum,NEW.soa_mname,NEW.soa_rname,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_dns_domain_ip_universe_ins
+	ON jazzhands_legacy.dns_domain_ip_universe;
+CREATE TRIGGER _trigger_dns_domain_ip_universe_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.dns_domain_ip_universe
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.dns_domain_ip_universe_ins();
+
+
+-- Triggers for dns_record
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_record_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.dns_record (
+		dns_record_id,dns_name,dns_domain_id,dns_ttl,dns_class,dns_type,dns_value,dns_priority,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,netblock_id,ip_universe_id,reference_dns_record_id,dns_value_record_id,should_generate_ptr,is_enabled
+	) VALUES (
+		NEW.dns_record_id,NEW.dns_name,NEW.dns_domain_id,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,NEW.netblock_id,NEW.ip_universe_id,NEW.reference_dns_record_id,NEW.dns_value_record_id,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_dns_record_ins
+	ON jazzhands_legacy.dns_record;
+CREATE TRIGGER _trigger_dns_record_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.dns_record
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.dns_record_ins();
+
+
+-- Triggers for ip_universe
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.ip_universe (
+		ip_universe_id,ip_universe_name,ip_namespace,should_generate_dns,description
+	) VALUES (
+		NEW.ip_universe_id,NEW.ip_universe_name,NEW.ip_namespace,CASE WHEN NEW.should_generate_dns = 'Y' THEN true WHEN NEW.should_generate_dns = 'N' THEN false ELSE NULL END,NEW.description
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_ip_universe_ins
+	ON jazzhands_legacy.ip_universe;
+CREATE TRIGGER _trigger_ip_universe_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.ip_universe
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_ins();
+
+
+-- Triggers for ip_universe_visibility
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_visibility_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.ip_universe_visibility (
+		ip_universe_id,visible_ip_universe_id,propagate_dns
+	) VALUES (
+		NEW.ip_universe_id,NEW.visible_ip_universe_id,CASE WHEN NEW.propagate_dns = 'Y' THEN true WHEN NEW.propagate_dns = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_ip_universe_visibility_ins
+	ON jazzhands_legacy.ip_universe_visibility;
+CREATE TRIGGER _trigger_ip_universe_visibility_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.ip_universe_visibility
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_visibility_ins();
+
+
+-- Triggers for netblock
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.netblock_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.netblock (
+		netblock_id,ip_address,netblock_type,is_single_address,can_subnet,parent_netblock_id,netblock_status,ip_universe_id,description,external_id
+	) VALUES (
+		NEW.netblock_id,NEW.ip_address,NEW.netblock_type,CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_subnet = 'Y' THEN true WHEN NEW.can_subnet = 'N' THEN false ELSE NULL END,NEW.parent_netblock_id,NEW.netblock_status,NEW.ip_universe_id,NEW.description,NEW.external_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_netblock_ins
+	ON jazzhands_legacy.netblock;
+CREATE TRIGGER _trigger_netblock_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.netblock
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.netblock_ins();
+
+
+-- Triggers for network_interface
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.network_interface_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+	-- XXX dropped columns: physical_port_id
+	INSERT INTO jazzhands.layer3_interface (
+		layer3_interface_id,device_id,layer3_interface_name,description,parent_layer3_interface_id,parent_relation_type,slot_id,logical_port_id,layer3_interface_type,is_interface_up,mac_addr,should_monitor,should_manage
+	) VALUES (
+		NEW.network_interface_id,NEW.device_id,NEW.network_interface_name,NEW.description,NEW.parent_network_interface_id,NEW.parent_relation_type,NEW.slot_id,NEW.logical_port_id,NEW.network_interface_type,CASE WHEN NEW.is_interface_up = 'Y' THEN true WHEN NEW.is_interface_up = 'N' THEN false ELSE NULL END,NEW.mac_addr,CASE WHEN NEW.should_monitor = 'Y' THEN true WHEN NEW.should_monitor = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_manage = 'Y' THEN true WHEN NEW.should_manage = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_network_interface_ins
+	ON jazzhands_legacy.network_interface;
+CREATE TRIGGER _trigger_network_interface_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.network_interface
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.network_interface_ins();
+
+
+-- Triggers for network_service
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.network_service_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.network_service (
+		network_service_id,name,description,network_service_type,is_monitored,device_id,network_interface_id,dns_record_id,service_environment_id
+	) VALUES (
+		NEW.network_service_id,NEW.name,NEW.description,NEW.network_service_type,CASE WHEN NEW.is_monitored = 'Y' THEN true WHEN NEW.is_monitored = 'N' THEN false ELSE NULL END,NEW.device_id,NEW.network_interface_id,NEW.dns_record_id,NEW.service_environment_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_network_service_ins
+	ON jazzhands_legacy.network_service;
+CREATE TRIGGER _trigger_network_service_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.network_service
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.network_service_ins();
+
+
+-- Triggers for person_auth_question
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_auth_question_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.person_auth_question (
+		auth_question_id,person_id,user_answer,is_active
+	) VALUES (
+		NEW.auth_question_id,NEW.person_id,NEW.user_answer,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_auth_question_ins
+	ON jazzhands_legacy.person_auth_question;
+CREATE TRIGGER _trigger_person_auth_question_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.person_auth_question
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_auth_question_ins();
+
+
+-- Triggers for person_company
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_company_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.person_company (
+		company_id,person_id,person_company_status,person_company_relation,is_exempt,is_management,is_full_time,description,position_title,hire_date,termination_date,manager_person_id,nickname
+	) VALUES (
+		NEW.company_id,NEW.person_id,NEW.person_company_status,NEW.person_company_relation,CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END,NEW.description,NEW.position_title,NEW.hire_date,NEW.termination_date,NEW.manager_person_id,NEW.nickname
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_company_ins
+	ON jazzhands_legacy.person_company;
+CREATE TRIGGER _trigger_person_company_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.person_company
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_company_ins();
+
+
+-- Triggers for private_key
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.private_key_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.private_key (
+		private_key_id,private_key_encryption_type,is_active,subject_key_identifier,private_key,passphrase,encryption_key_id
+	) VALUES (
+		NEW.private_key_id,NEW.private_key_encryption_type,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,NEW.subject_key_identifier,NEW.private_key,NEW.passphrase,NEW.encryption_key_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_private_key_ins
+	ON jazzhands_legacy.private_key;
+CREATE TRIGGER _trigger_private_key_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.private_key
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.private_key_ins();
+
+
+-- Triggers for property
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.property_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.property (
+		property_id,account_collection_id,account_id,account_realm_id,company_collection_id,company_id,device_collection_id,dns_domain_collection_id,layer2_network_collection_id,layer3_network_collection_id,netblock_collection_id,network_range_id,operating_system_id,operating_system_snapshot_id,person_id,property_name_collection_id,service_environment_collection_id,site_code,x509_signed_certificate_id,property_name,property_type,property_value,property_value_timestamp,property_value_account_collection_id,property_value_device_collection_id,property_value_json,property_value_netblock_collection_id,property_value_password_type,property_value_person_id,property_value_sw_package_id,property_value_token_collection_id,property_rank,start_date,finish_date,is_enabled
+	) VALUES (
+		NEW.property_id,NEW.account_collection_id,NEW.account_id,NEW.account_realm_id,NEW.company_collection_id,NEW.company_id,NEW.device_collection_id,NEW.dns_domain_collection_id,NEW.layer2_network_collection_id,NEW.layer3_network_collection_id,NEW.netblock_collection_id,NEW.network_range_id,NEW.operating_system_id,NEW.operating_system_snapshot_id,NEW.person_id,NEW.property_collection_id,NEW.service_env_collection_id,NEW.site_code,NEW.x509_signed_certificate_id,NEW.property_name,NEW.property_type,NEW.property_value,NEW.property_value_timestamp,NEW.property_value_account_coll_id,NEW.property_value_device_coll_id,NEW.property_value_json,NEW.property_value_nblk_coll_id,NEW.property_value_password_type,NEW.property_value_person_id,NEW.property_value_sw_package_id,NEW.property_value_token_col_id,NEW.property_rank,NEW.start_date,NEW.finish_date,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_property_ins
+	ON jazzhands_legacy.property;
+CREATE TRIGGER _trigger_property_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.property_ins();
+
+
+-- Triggers for rack
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.rack_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.rack (
+		rack_id,site_code,room,sub_room,rack_row,rack_name,rack_style,rack_type,description,rack_height_in_u,display_from_bottom
+	) VALUES (
+		NEW.rack_id,NEW.site_code,NEW.room,NEW.sub_room,NEW.rack_row,NEW.rack_name,NEW.rack_style,NEW.rack_type,NEW.description,NEW.rack_height_in_u,CASE WHEN NEW.display_from_bottom = 'Y' THEN true WHEN NEW.display_from_bottom = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_rack_ins
+	ON jazzhands_legacy.rack;
+CREATE TRIGGER _trigger_rack_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.rack
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.rack_ins();
+
+
+-- Triggers for slot
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.slot (
+		slot_id,component_id,slot_name,slot_index,slot_type_id,component_type_slot_template_id,is_enabled,physical_label,mac_address,description,slot_x_offset,slot_y_offset,slot_z_offset,slot_side
+	) VALUES (
+		NEW.slot_id,NEW.component_id,NEW.slot_name,NEW.slot_index,NEW.slot_type_id,NEW.component_type_slot_tmplt_id,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.physical_label,NEW.mac_address,NEW.description,NEW.slot_x_offset,NEW.slot_y_offset,NEW.slot_z_offset,NEW.slot_side
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_slot_ins
+	ON jazzhands_legacy.slot;
+CREATE TRIGGER _trigger_slot_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.slot
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.slot_ins();
+
+
+-- Triggers for slot_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.slot_type (
+		slot_type_id,slot_type,slot_function,slot_physical_interface_type,description,remote_slot_permitted
+	) VALUES (
+		NEW.slot_type_id,NEW.slot_type,NEW.slot_function,NEW.slot_physical_interface_type,NEW.description,CASE WHEN NEW.remote_slot_permitted = 'Y' THEN true WHEN NEW.remote_slot_permitted = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_slot_type_ins
+	ON jazzhands_legacy.slot_type;
+CREATE TRIGGER _trigger_slot_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.slot_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.slot_type_ins();
+
+
+-- Triggers for sudo_acct_col_device_collectio
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.sudo_acct_col_device_collectio_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.sudo_account_collection_device_collection (
+		sudo_alias_name,device_collection_id,account_collection_id,run_as_account_collection_id,requires_password,can_exec_child
+	) VALUES (
+		NEW.sudo_alias_name,NEW.device_collection_id,NEW.account_collection_id,NEW.run_as_account_collection_id,CASE WHEN NEW.requires_password = 'Y' THEN true WHEN NEW.requires_password = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_exec_child = 'Y' THEN true WHEN NEW.can_exec_child = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_sudo_acct_col_device_collectio_ins
+	ON jazzhands_legacy.sudo_acct_col_device_collectio;
+CREATE TRIGGER _trigger_sudo_acct_col_device_collectio_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.sudo_acct_col_device_collectio
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.sudo_acct_col_device_collectio_ins();
+
+
+-- Triggers for token
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.token_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.token (
+		token_id,token_type,token_status,description,external_id,token_serial,zero_time,time_modulo,time_skew,token_key,encryption_key_id,token_password,expire_time,is_token_locked,token_unlock_time,bad_logins,last_updated
+	) VALUES (
+		NEW.token_id,NEW.token_type,NEW.token_status,NEW.description,NEW.external_id,NEW.token_serial,NEW.zero_time,NEW.time_modulo,NEW.time_skew,NEW.token_key,NEW.encryption_key_id,NEW.token_password,NEW.expire_time,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.last_updated
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_token_ins
+	ON jazzhands_legacy.token;
+CREATE TRIGGER _trigger_token_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.token_ins();
+
+
+-- Triggers for v_approval_instance_step_expanded
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_approval_instance_step_expanded_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_approval_instance_step_expanded (
+		first_approval_instance_item_id,root_step_id,approval_instance_item_id,approval_instance_step_id,tier,level,is_approved
+	) VALUES (
+		NEW.first_approval_instance_item_id,NEW.root_step_id,NEW.approval_instance_item_id,NEW.approval_instance_step_id,NEW.tier,NEW.level,CASE WHEN NEW.is_approved = 'Y' THEN true WHEN NEW.is_approved = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_approval_instance_step_expanded_ins
+	ON jazzhands_legacy.v_approval_instance_step_expanded;
+CREATE TRIGGER _trigger_v_approval_instance_step_expanded_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_approval_instance_step_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_approval_instance_step_expanded_ins();
+
+
+-- Triggers for v_corp_family_account
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_corp_family_account_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_corp_family_account (
+		account_id,login,person_id,company_id,account_realm_id,account_status,account_role,account_type,description,is_enabled
+	) VALUES (
+		NEW.account_id,NEW.login,NEW.person_id,NEW.company_id,NEW.account_realm_id,NEW.account_status,NEW.account_role,NEW.account_type,NEW.description,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_corp_family_account_ins
+	ON jazzhands_legacy.v_corp_family_account;
+CREATE TRIGGER _trigger_v_corp_family_account_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_corp_family_account
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_corp_family_account_ins();
+
+
+-- Triggers for v_dev_col_user_prop_expanded
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dev_col_user_prop_expanded_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_device_collection_account_property_expanded (
+		property_id,device_collection_id,account_id,login,account_status,account_realm_id,account_realm_name,is_enabled,property_type,property_name,property_rank,property_value,is_multivalue,is_boolean
+	) VALUES (
+		NEW.property_id,NEW.device_collection_id,NEW.account_id,NEW.login,NEW.account_status,NEW.account_realm_id,NEW.account_realm_name,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.property_type,NEW.property_name,NEW.property_rank,NEW.property_value,NEW.is_multivalue,NEW.is_boolean
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dev_col_user_prop_expanded_ins
+	ON jazzhands_legacy.v_dev_col_user_prop_expanded;
+CREATE TRIGGER _trigger_v_dev_col_user_prop_expanded_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_dev_col_user_prop_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dev_col_user_prop_expanded_ins();
+
+
+-- Triggers for v_dns
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_dns (
+		dns_record_id,network_range_id,dns_domain_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ip_universe_id,ref_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,is_enabled,should_generate_ptr,dns_value_record_id
+	) VALUES (
+		NEW.dns_record_id,NEW.network_range_id,NEW.dns_domain_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ip_universe_id,NEW.ref_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,NEW.dns_value_record_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_ins
+	ON jazzhands_legacy.v_dns;
+CREATE TRIGGER _trigger_v_dns_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_dns
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_ins();
+
+
+-- Triggers for v_dns_changes_pending
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_changes_pending_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_dns_changes_pending (
+		dns_change_record_id,dns_domain_id,ip_universe_id,should_generate,last_generated,soa_name,ip_address
+	) VALUES (
+		NEW.dns_change_record_id,NEW.dns_domain_id,NEW.ip_universe_id,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated,NEW.soa_name,NEW.ip_address
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_changes_pending_ins
+	ON jazzhands_legacy.v_dns_changes_pending;
+CREATE TRIGGER _trigger_v_dns_changes_pending_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_dns_changes_pending
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_changes_pending_ins();
+
+
+-- Triggers for v_dns_domain_nouniverse
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_domain_nouniverse_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_dns_domain_nouniverse (
+		dns_domain_id,soa_name,soa_class,soa_ttl,soa_serial,soa_refresh,soa_retry,soa_expire,soa_minimum,soa_mname,soa_rname,parent_dns_domain_id,should_generate,last_generated,dns_domain_type
+	) VALUES (
+		NEW.dns_domain_id,NEW.soa_name,NEW.soa_class,NEW.soa_ttl,NEW.soa_serial,NEW.soa_refresh,NEW.soa_retry,NEW.soa_expire,NEW.soa_minimum,NEW.soa_mname,NEW.soa_rname,NEW.parent_dns_domain_id,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated,NEW.dns_domain_type
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_domain_nouniverse_ins
+	ON jazzhands_legacy.v_dns_domain_nouniverse;
+CREATE TRIGGER _trigger_v_dns_domain_nouniverse_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_dns_domain_nouniverse
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_domain_nouniverse_ins();
+
+
+-- Triggers for v_dns_fwd
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_fwd_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_dns_fwd (
+		dns_record_id,network_range_id,dns_domain_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ip_universe_id,ref_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,is_enabled,should_generate_ptr,dns_value_record_id
+	) VALUES (
+		NEW.dns_record_id,NEW.network_range_id,NEW.dns_domain_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ip_universe_id,NEW.ref_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,NEW.dns_value_record_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_fwd_ins
+	ON jazzhands_legacy.v_dns_fwd;
+CREATE TRIGGER _trigger_v_dns_fwd_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_dns_fwd
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_fwd_ins();
+
+
+-- Triggers for v_dns_rvs
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_rvs_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_dns_rvs (
+		dns_record_id,network_range_id,dns_domain_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ip_universe_id,rdns_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_srv_port,is_enabled,should_generate_ptr,dns_value_record_id
+	) VALUES (
+		NEW.dns_record_id,NEW.network_range_id,NEW.dns_domain_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ip_universe_id,NEW.rdns_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_srv_port,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,NEW.dns_value_record_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_rvs_ins
+	ON jazzhands_legacy.v_dns_rvs;
+CREATE TRIGGER _trigger_v_dns_rvs_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_dns_rvs
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_rvs_ins();
+
+
+-- Triggers for v_dns_sorted
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_sorted_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_dns_sorted (
+		dns_record_id,network_range_id,dns_value_record_id,dns_name,dns_ttl,dns_class,dns_type,dns_value,dns_priority,ip,netblock_id,ref_record_id,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,should_generate_ptr,is_enabled,dns_domain_id,anchor_record_id,anchor_rank
+	) VALUES (
+		NEW.dns_record_id,NEW.network_range_id,NEW.dns_value_record_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ref_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.dns_domain_id,NEW.anchor_record_id,NEW.anchor_rank
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_sorted_ins
+	ON jazzhands_legacy.v_dns_sorted;
+CREATE TRIGGER _trigger_v_dns_sorted_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_dns_sorted
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_sorted_ins();
+
+
+-- Triggers for v_hotpants_token
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_hotpants_token_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_hotpants_token (
+		token_id,token_type,token_status,token_serial,token_key,zero_time,time_modulo,token_password,is_token_locked,token_unlock_time,bad_logins,token_sequence,last_updated,encryption_key_db_value,encryption_key_purpose,encryption_key_purpose_version,encryption_method
+	) VALUES (
+		NEW.token_id,NEW.token_type,NEW.token_status,NEW.token_serial,NEW.token_key,NEW.zero_time,NEW.time_modulo,NEW.token_password,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.token_sequence,NEW.last_updated,NEW.encryption_key_db_value,NEW.encryption_key_purpose,NEW.encryption_key_purpose_version,NEW.encryption_method
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_hotpants_token_ins
+	ON jazzhands_legacy.v_hotpants_token;
+CREATE TRIGGER _trigger_v_hotpants_token_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_hotpants_token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_hotpants_token_ins();
+
+
+-- Triggers for v_netblock_hier
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_netblock_hier (
+		netblock_level,root_netblock_id,ip,netblock_id,ip_address,netblock_status,is_single_address,description,parent_netblock_id,site_code,text_path,array_path,array_ip_path
+	) VALUES (
+		NEW.netblock_level,NEW.root_netblock_id,NEW.ip,NEW.netblock_id,NEW.ip_address,NEW.netblock_status,CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END,NEW.description,NEW.parent_netblock_id,NEW.site_code,NEW.text_path,NEW.array_path,NEW.array_ip_path
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_netblock_hier_ins
+	ON jazzhands_legacy.v_netblock_hier;
+CREATE TRIGGER _trigger_v_netblock_hier_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_netblock_hier
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_ins();
+
+
+-- Triggers for v_netblock_hier_expanded
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_expanded_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_netblock_hier_expanded (
+		netblock_level,root_netblock_id,site_code,path,netblock_id,ip_address,netblock_type,is_single_address,can_subnet,parent_netblock_id,netblock_status,ip_universe_id,description,external_id
+	) VALUES (
+		NEW.netblock_level,NEW.root_netblock_id,NEW.site_code,NEW.path,NEW.netblock_id,NEW.ip_address,NEW.netblock_type,CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_subnet = 'Y' THEN true WHEN NEW.can_subnet = 'N' THEN false ELSE NULL END,NEW.parent_netblock_id,NEW.netblock_status,NEW.ip_universe_id,NEW.description,NEW.external_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_netblock_hier_expanded_ins
+	ON jazzhands_legacy.v_netblock_hier_expanded;
+CREATE TRIGGER _trigger_v_netblock_hier_expanded_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_netblock_hier_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_expanded_ins();
+
+
+-- Triggers for v_person_company
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_person_company_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_person_company (
+		company_id,person_id,person_company_status,person_company_relation,is_exempt,is_management,is_full_time,description,employee_id,payroll_id,external_hr_id,position_title,badge_system_id,hire_date,termination_date,manager_person_id,supervisor_person_id,nickname
+	) VALUES (
+		NEW.company_id,NEW.person_id,NEW.person_company_status,NEW.person_company_relation,CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END,NEW.description,NEW.employee_id,NEW.payroll_id,NEW.external_hr_id,NEW.position_title,NEW.badge_system_id,NEW.hire_date,NEW.termination_date,NEW.manager_person_id,NEW.supervisor_person_id,NEW.nickname
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_person_company_ins
+	ON jazzhands_legacy.v_person_company;
+CREATE TRIGGER _trigger_v_person_company_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_person_company
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_person_company_ins();
+
+
+-- Triggers for v_property
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_property_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_property (
+		property_id,account_collection_id,account_id,account_realm_id,company_collection_id,company_id,device_collection_id,dns_domain_collection_id,layer2_network_collection_id,layer3_network_collection_id,netblock_collection_id,network_range_id,operating_system_id,operating_system_snapshot_id,person_id,property_name_collection_id,service_environment_collection_id,site_code,x509_signed_certificate_id,property_name,property_type,property_value,property_value_timestamp,property_value_account_collection_id,property_value_device_collection_id,property_value_json,property_value_netblock_collection_id,property_value_password_type,property_value_person_id,property_value_sw_package_id,property_value_token_collection_id,property_rank,start_date,finish_date,is_enabled
+	) VALUES (
+		NEW.property_id,NEW.account_collection_id,NEW.account_id,NEW.account_realm_id,NEW.company_collection_id,NEW.company_id,NEW.device_collection_id,NEW.dns_domain_collection_id,NEW.layer2_network_collection_id,NEW.layer3_network_collection_id,NEW.netblock_collection_id,NEW.network_range_id,NEW.operating_system_id,NEW.operating_system_snapshot_id,NEW.person_id,NEW.property_collection_id,NEW.service_env_collection_id,NEW.site_code,NEW.x509_signed_certificate_id,NEW.property_name,NEW.property_type,NEW.property_value,NEW.property_value_timestamp,NEW.property_value_account_coll_id,NEW.property_value_device_coll_id,NEW.property_value_json,NEW.property_value_nblk_coll_id,NEW.property_value_password_type,NEW.property_value_person_id,NEW.property_value_sw_package_id,NEW.property_value_token_col_id,NEW.property_rank,NEW.start_date,NEW.finish_date,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_property_ins
+	ON jazzhands_legacy.v_property;
+CREATE TRIGGER _trigger_v_property_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_property_ins();
+
+
+-- Triggers for v_token
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_token_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.v_token (
+		token_id,token_type,token_status,token_serial,token_sequence,account_id,token_password,zero_time,time_modulo,time_skew,is_token_locked,token_unlock_time,bad_logins,issued_date,token_last_updated,token_sequence_last_updated,lock_status_last_updated
+	) VALUES (
+		NEW.token_id,NEW.token_type,NEW.token_status,NEW.token_serial,NEW.token_sequence,NEW.account_id,NEW.token_password,NEW.zero_time,NEW.time_modulo,NEW.time_skew,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.issued_date,NEW.token_last_updated,NEW.token_sequence_last_updated,NEW.lock_status_last_updated
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_token_ins
+	ON jazzhands_legacy.v_token;
+CREATE TRIGGER _trigger_v_token_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.v_token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_token_ins();
+
+
+-- Triggers for val_account_collection_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_collection_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_account_collection_type (
+		account_collection_type,description,is_infrastructure_type,max_num_members,max_num_collections,can_have_hierarchy,account_realm_id
+	) VALUES (
+		NEW.account_collection_type,NEW.description,CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END,NEW.account_realm_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_collection_type_ins
+	ON jazzhands_legacy.val_account_collection_type;
+CREATE TRIGGER _trigger_val_account_collection_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_account_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_collection_type_ins();
+
+
+-- Triggers for val_account_role
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_role_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_account_role (
+		account_role,uid_gid_forced,description
+	) VALUES (
+		NEW.account_role,CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END,NEW.description
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_role_ins
+	ON jazzhands_legacy.val_account_role;
+CREATE TRIGGER _trigger_val_account_role_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_account_role
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_role_ins();
+
+
+-- Triggers for val_account_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_account_type (
+		account_type,is_person,uid_gid_forced,description
+	) VALUES (
+		NEW.account_type,CASE WHEN NEW.is_person = 'Y' THEN true WHEN NEW.is_person = 'N' THEN false ELSE NULL END,CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END,NEW.description
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_type_ins
+	ON jazzhands_legacy.val_account_type;
+CREATE TRIGGER _trigger_val_account_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_account_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_type_ins();
+
+
+-- Triggers for val_company_collection_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_company_collection_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_company_collection_type (
+		company_collection_type,description,is_infrastructure_type,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.company_collection_type,NEW.description,CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_company_collection_type_ins
+	ON jazzhands_legacy.val_company_collection_type;
+CREATE TRIGGER _trigger_val_company_collection_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_company_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_company_collection_type_ins();
+
+
+-- Triggers for val_component_property
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_component_property (
+		component_property_name,component_property_type,description,is_multivalue,property_data_type,permit_component_type_id,required_component_type_id,permit_component_function,required_component_function,permit_component_id,permit_inter_component_connection_id,permit_slot_type_id,required_slot_type_id,permit_slot_function,required_slot_function,permit_slot_id
+	) VALUES (
+		NEW.component_property_name,NEW.component_property_type,NEW.description,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END,NEW.property_data_type,NEW.permit_component_type_id,NEW.required_component_type_id,NEW.permit_component_function,NEW.required_component_function,NEW.permit_component_id,NEW.permit_intcomp_conn_id,NEW.permit_slot_type_id,NEW.required_slot_type_id,NEW.permit_slot_function,NEW.required_slot_function,NEW.permit_slot_id
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_component_property_ins
+	ON jazzhands_legacy.val_component_property;
+CREATE TRIGGER _trigger_val_component_property_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_component_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_ins();
+
+
+-- Triggers for val_component_property_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_component_property_type (
+		component_property_type,description,is_multivalue
+	) VALUES (
+		NEW.component_property_type,NEW.description,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_component_property_type_ins
+	ON jazzhands_legacy.val_component_property_type;
+CREATE TRIGGER _trigger_val_component_property_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_component_property_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_type_ins();
+
+
+-- Triggers for val_device_collection_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_device_collection_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_device_collection_type (
+		device_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.device_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_device_collection_type_ins
+	ON jazzhands_legacy.val_device_collection_type;
+CREATE TRIGGER _trigger_val_device_collection_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_device_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_device_collection_type_ins();
+
+
+-- Triggers for val_dns_domain_collection_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_collection_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_dns_domain_collection_type (
+		dns_domain_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.dns_domain_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_dns_domain_collection_type_ins
+	ON jazzhands_legacy.val_dns_domain_collection_type;
+CREATE TRIGGER _trigger_val_dns_domain_collection_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_dns_domain_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_collection_type_ins();
+
+
+-- Triggers for val_dns_domain_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_dns_domain_type (
+		dns_domain_type,can_generate,description
+	) VALUES (
+		NEW.dns_domain_type,CASE WHEN NEW.can_generate = 'Y' THEN true WHEN NEW.can_generate = 'N' THEN false ELSE NULL END,NEW.description
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_dns_domain_type_ins
+	ON jazzhands_legacy.val_dns_domain_type;
+CREATE TRIGGER _trigger_val_dns_domain_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_dns_domain_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_type_ins();
+
+
+-- Triggers for val_layer2_network_coll_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer2_network_coll_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_layer2_network_collection_type (
+		layer2_network_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.layer2_network_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_layer2_network_coll_type_ins
+	ON jazzhands_legacy.val_layer2_network_coll_type;
+CREATE TRIGGER _trigger_val_layer2_network_coll_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_layer2_network_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_layer2_network_coll_type_ins();
+
+
+-- Triggers for val_layer3_network_coll_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer3_network_coll_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_layer3_network_collection_type (
+		layer3_network_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.layer3_network_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_layer3_network_coll_type_ins
+	ON jazzhands_legacy.val_layer3_network_coll_type;
+CREATE TRIGGER _trigger_val_layer3_network_coll_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_layer3_network_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_layer3_network_coll_type_ins();
+
+
+-- Triggers for val_netblock_collection_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_collection_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_netblock_collection_type (
+		netblock_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy,netblock_is_single_address_restriction,netblock_ip_family_restriction
+	) VALUES (
+		NEW.netblock_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END,NEW.netblock_single_addr_restrict,NEW.netblock_ip_family_restrict
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_netblock_collection_type_ins
+	ON jazzhands_legacy.val_netblock_collection_type;
+CREATE TRIGGER _trigger_val_netblock_collection_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_netblock_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_collection_type_ins();
+
+
+-- Triggers for val_netblock_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_netblock_type (
+		netblock_type,description,db_forced_hierarchy,is_validated_hierarchy
+	) VALUES (
+		NEW.netblock_type,NEW.description,CASE WHEN NEW.db_forced_hierarchy = 'Y' THEN true WHEN NEW.db_forced_hierarchy = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_validated_hierarchy = 'Y' THEN true WHEN NEW.is_validated_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_netblock_type_ins
+	ON jazzhands_legacy.val_netblock_type;
+CREATE TRIGGER _trigger_val_netblock_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_netblock_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_type_ins();
+
+
+-- Triggers for val_network_range_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_network_range_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_network_range_type (
+		network_range_type,description,dns_domain_required,default_dns_prefix,netblock_type,can_overlap,require_cidr_boundary
+	) VALUES (
+		NEW.network_range_type,NEW.description,NEW.dns_domain_required,NEW.default_dns_prefix,NEW.netblock_type,CASE WHEN NEW.can_overlap = 'Y' THEN true WHEN NEW.can_overlap = 'N' THEN false ELSE NULL END,CASE WHEN NEW.require_cidr_boundary = 'Y' THEN true WHEN NEW.require_cidr_boundary = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_network_range_type_ins
+	ON jazzhands_legacy.val_network_range_type;
+CREATE TRIGGER _trigger_val_network_range_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_network_range_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_network_range_type_ins();
+
+
+-- Triggers for val_person_image_usage
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_image_usage_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_person_image_usage (
+		person_image_usage,is_multivalue
+	) VALUES (
+		NEW.person_image_usage,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_person_image_usage_ins
+	ON jazzhands_legacy.val_person_image_usage;
+CREATE TRIGGER _trigger_val_person_image_usage_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_person_image_usage
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_person_image_usage_ins();
+
+
+-- Triggers for val_person_status
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_status_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_person_status (
+		person_status,description,is_enabled,propagate_from_person,is_forced,is_db_enforced
+	) VALUES (
+		NEW.person_status,NEW.description,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.propagate_from_person = 'Y' THEN true WHEN NEW.propagate_from_person = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_forced = 'Y' THEN true WHEN NEW.is_forced = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_db_enforced = 'Y' THEN true WHEN NEW.is_db_enforced = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_person_status_ins
+	ON jazzhands_legacy.val_person_status;
+CREATE TRIGGER _trigger_val_person_status_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_person_status
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_person_status_ins();
+
+
+-- Triggers for val_property
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_property (
+		property_name,property_type,description,account_collection_type,company_collection_type,device_collection_type,dns_domain_collection_type,layer2_network_collection_type,layer3_network_collection_type,netblock_collection_type,network_range_type,property_name_collection_type,service_environment_collection_type,is_multivalue,property_value_account_collection_type_restriction,property_value_device_collection_type_restriction,property_value_netblock_collection_type_restriction,property_data_type,property_value_json_schema,permit_account_collection_id,permit_account_id,permit_account_realm_id,permit_company_id,permit_company_collection_id,permit_device_collection_id,permit_dns_domain_collection_id,permit_layer2_network_collection_id,permit_layer3_network_collection_id,permit_netblock_collection_id,permit_network_range_id,permit_operating_system_id,permit_operating_system_snapshot_id,permit_person_id,permit_property_name_collection_id,permit_service_environment_collection,permit_site_code,permit_x509_signed_certificate_id,permit_property_rank
+	) VALUES (
+		NEW.property_name,NEW.property_type,NEW.description,NEW.account_collection_type,NEW.company_collection_type,NEW.device_collection_type,NEW.dns_domain_collection_type,NEW.layer2_network_collection_type,NEW.layer3_network_collection_type,NEW.netblock_collection_type,NEW.network_range_type,NEW.property_collection_type,NEW.service_env_collection_type,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END,NEW.prop_val_acct_coll_type_rstrct,NEW.prop_val_dev_coll_type_rstrct,NEW.prop_val_nblk_coll_type_rstrct,NEW.property_data_type,NEW.property_value_json_schema,NEW.permit_account_collection_id,NEW.permit_account_id,NEW.permit_account_realm_id,NEW.permit_company_id,NEW.permit_company_collection_id,NEW.permit_device_collection_id,NEW.permit_dns_domain_coll_id,NEW.permit_layer2_network_coll_id,NEW.permit_layer3_network_coll_id,NEW.permit_netblock_collection_id,NEW.permit_network_range_id,NEW.permit_operating_system_id,NEW.permit_os_snapshot_id,NEW.permit_person_id,NEW.permit_property_collection_id,NEW.permit_service_env_collection,NEW.permit_site_code,NEW.permit_x509_signed_cert_id,NEW.permit_property_rank
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_ins
+	ON jazzhands_legacy.val_property;
+CREATE TRIGGER _trigger_val_property_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_ins();
+
+
+-- Triggers for val_property_collection_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_collection_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_property_name_collection_type (
+		property_name_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.property_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_collection_type_ins
+	ON jazzhands_legacy.val_property_collection_type;
+CREATE TRIGGER _trigger_val_property_collection_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_property_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_collection_type_ins();
+
+
+-- Triggers for val_property_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_property_type (
+		property_type,description,property_value_account_collection_type_restriction,is_multivalue
+	) VALUES (
+		NEW.property_type,NEW.description,NEW.prop_val_acct_coll_type_rstrct,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_type_ins
+	ON jazzhands_legacy.val_property_type;
+CREATE TRIGGER _trigger_val_property_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_property_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_type_ins();
+
+
+-- Triggers for val_service_env_coll_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_service_env_coll_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_service_environment_collection_type (
+		service_environment_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.service_env_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_service_env_coll_type_ins
+	ON jazzhands_legacy.val_service_env_coll_type;
+CREATE TRIGGER _trigger_val_service_env_coll_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_service_env_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_service_env_coll_type_ins();
+
+
+-- Triggers for val_slot_function
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_slot_function_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_slot_function (
+		slot_function,description,can_have_mac_address
+	) VALUES (
+		NEW.slot_function,NEW.description,CASE WHEN NEW.can_have_mac_address = 'Y' THEN true WHEN NEW.can_have_mac_address = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_slot_function_ins
+	ON jazzhands_legacy.val_slot_function;
+CREATE TRIGGER _trigger_val_slot_function_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_slot_function
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_slot_function_ins();
+
+
+-- Triggers for val_token_collection_type
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_token_collection_type_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_token_collection_type (
+		token_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
+	) VALUES (
+		NEW.token_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_token_collection_type_ins
+	ON jazzhands_legacy.val_token_collection_type;
+CREATE TRIGGER _trigger_val_token_collection_type_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_token_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_token_collection_type_ins();
+
+
+-- Triggers for val_x509_key_usage
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_x509_key_usage_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.val_x509_key_usage (
+		x509_key_usage,description,is_extended
+	) VALUES (
+		NEW.x509_key_usg,NEW.description,CASE WHEN NEW.is_extended = 'Y' THEN true WHEN NEW.is_extended = 'N' THEN false ELSE NULL END
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_x509_key_usage_ins
+	ON jazzhands_legacy.val_x509_key_usage;
+CREATE TRIGGER _trigger_val_x509_key_usage_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.val_x509_key_usage
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_x509_key_usage_ins();
+
+
+-- Triggers for x509_certificate
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_certificate_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.x509_certificate (
+		x509_cert_id,friendly_name,is_active,is_certificate_authority,signing_cert_id,x509_ca_cert_serial_number,public_key,private_key,certificate_sign_req,subject,subject_key_identifier,valid_from,valid_to,x509_revocation_date,x509_revocation_reason,passphrase,encryption_key_id,ocsp_uri,crl_uri
+	) VALUES (
+		NEW.x509_cert_id,NEW.friendly_name,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END,NEW.signing_cert_id,NEW.x509_ca_cert_serial_number,NEW.public_key,NEW.private_key,NEW.certificate_sign_req,NEW.subject,NEW.subject_key_identifier,NEW.valid_from,NEW.valid_to,NEW.x509_revocation_date,NEW.x509_revocation_reason,NEW.passphrase,NEW.encryption_key_id,NEW.ocsp_uri,NEW.crl_uri
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_x509_certificate_ins
+	ON jazzhands_legacy.x509_certificate;
+CREATE TRIGGER _trigger_x509_certificate_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.x509_certificate
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.x509_certificate_ins();
+
+
+-- Triggers for x509_signed_certificate
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_signed_certificate_ins()
+RETURNS TRIGGER AS
+$$
+BEGIN
+
+	INSERT INTO jazzhands.x509_signed_certificate (
+		x509_signed_certificate_id,x509_certificate_type,subject,friendly_name,subject_key_identifier,is_active,is_certificate_authority,signing_cert_id,x509_ca_cert_serial_number,public_key,private_key_id,certificate_signing_request_id,valid_from,valid_to,x509_revocation_date,x509_revocation_reason,ocsp_uri,crl_uri
+	) VALUES (
+		NEW.x509_signed_certificate_id,NEW.x509_certificate_type,NEW.subject,NEW.friendly_name,NEW.subject_key_identifier,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END,NEW.signing_cert_id,NEW.x509_ca_cert_serial_number,NEW.public_key,NEW.private_key_id,NEW.certificate_signing_request_id,NEW.valid_from,NEW.valid_to,NEW.x509_revocation_date,NEW.x509_revocation_reason,NEW.ocsp_uri,NEW.crl_uri
+	);
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_x509_signed_certificate_ins
+	ON jazzhands_legacy.x509_signed_certificate;
+CREATE TRIGGER _trigger_x509_signed_certificate_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.x509_signed_certificate
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.x509_signed_certificate_ins();
+
 
 
 
