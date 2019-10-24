@@ -3206,6 +3206,8 @@ BEGIN
 	) VALUES (
 		NEW.account_id,NEW.login,NEW.person_id,NEW.company_id,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.account_realm_id,NEW.account_status,NEW.account_role,NEW.account_type,NEW.description,NEW.external_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3220,6 +3222,101 @@ CREATE TRIGGER _trigger_account_ins
 	EXECUTE PROCEDURE jazzhands_legacy.account_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.account_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.account%rowtype;
+	_nr	jazzhands.account%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
+_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+	END IF;
+
+	IF OLD.login IS DISTINCT FROM NEW.login THEN
+_uq := array_append(_uq, 'login = ' || quote_nullable(NEW.login));
+	END IF;
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
+_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF OLD.account_status IS DISTINCT FROM NEW.account_status THEN
+_uq := array_append(_uq, 'account_status = ' || quote_nullable(NEW.account_status));
+	END IF;
+
+	IF OLD.account_role IS DISTINCT FROM NEW.account_role THEN
+_uq := array_append(_uq, 'account_role = ' || quote_nullable(NEW.account_role));
+	END IF;
+
+	IF OLD.account_type IS DISTINCT FROM NEW.account_type THEN
+_uq := array_append(_uq, 'account_type = ' || quote_nullable(NEW.account_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
+_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.account SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.account_id = $1 RETURNING *'  USING OLD.account_id
+			INTO _nr;
+		NEW.account_id = _nr.account_id;
+		NEW.login = _nr.login;
+		NEW.person_id = _nr.person_id;
+		NEW.company_id = _nr.company_id;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.account_status = _nr.account_status;
+		NEW.account_role = _nr.account_role;
+		NEW.account_type = _nr.account_type;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_account_upd
+	ON jazzhands_legacy.account;
+CREATE TRIGGER _trigger_account_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.account
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.account_upd();
+
+
+
 -- Triggers for account_auth_log
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.account_auth_log_ins()
@@ -3232,6 +3329,8 @@ BEGIN
 	) VALUES (
 		NEW.account_id,NEW.account_auth_ts,NEW.auth_resource,NEW.account_auth_seq,CASE WHEN NEW.was_auth_success = 'Y' THEN true WHEN NEW.was_auth_success = 'N' THEN false ELSE NULL END,NEW.auth_resource_instance,NEW.auth_origin
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3246,6 +3345,79 @@ CREATE TRIGGER _trigger_account_auth_log_ins
 	EXECUTE PROCEDURE jazzhands_legacy.account_auth_log_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.account_auth_log_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.account_auth_log%rowtype;
+	_nr	jazzhands.account_auth_log%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
+_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+	END IF;
+
+	IF OLD.account_auth_ts IS DISTINCT FROM NEW.account_auth_ts THEN
+_uq := array_append(_uq, 'account_auth_ts = ' || quote_nullable(NEW.account_auth_ts));
+	END IF;
+
+	IF OLD.auth_resource IS DISTINCT FROM NEW.auth_resource THEN
+_uq := array_append(_uq, 'auth_resource = ' || quote_nullable(NEW.auth_resource));
+	END IF;
+
+	IF OLD.account_auth_seq IS DISTINCT FROM NEW.account_auth_seq THEN
+_uq := array_append(_uq, 'account_auth_seq = ' || quote_nullable(NEW.account_auth_seq));
+	END IF;
+
+	IF OLD.was_auth_success IS DISTINCT FROM NEW.was_auth_success THEN
+IF NEW.was_auth_success = 'Y' THEN
+	_uq := array_append(_uq, 'was_auth_success = true');
+ELSIF NEW.was_auth_success = 'N' THEN
+	_uq := array_append(_uq, 'was_auth_success = false');
+ELSE
+	_uq := array_append(_uq, 'was_auth_success = NULL');
+END IF;
+	END IF;
+
+	IF OLD.auth_resource_instance IS DISTINCT FROM NEW.auth_resource_instance THEN
+_uq := array_append(_uq, 'auth_resource_instance = ' || quote_nullable(NEW.auth_resource_instance));
+	END IF;
+
+	IF OLD.auth_origin IS DISTINCT FROM NEW.auth_origin THEN
+_uq := array_append(_uq, 'auth_origin = ' || quote_nullable(NEW.auth_origin));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.account_auth_log SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.account_id = $1 AND  NEW.account_auth_ts = $2 AND  NEW.auth_resource = $3 AND  NEW.account_auth_seq = $4 RETURNING *'  USING OLD.account_id, OLD.account_auth_ts, OLD.auth_resource, OLD.account_auth_seq
+			INTO _nr;
+		NEW.account_id = _nr.account_id;
+		NEW.account_auth_ts = _nr.account_auth_ts;
+		NEW.auth_resource = _nr.auth_resource;
+		NEW.account_auth_seq = _nr.account_auth_seq;
+		NEW.was_auth_success = _nr.was_auth_success;
+		NEW.auth_resource_instance = _nr.auth_resource_instance;
+		NEW.auth_origin = _nr.auth_origin;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_ins_user = _nr.data_ins_user;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_account_auth_log_upd
+	ON jazzhands_legacy.account_auth_log;
+CREATE TRIGGER _trigger_account_auth_log_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.account_auth_log
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.account_auth_log_upd();
+
+
+
 -- Triggers for approval_instance_item
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_item_ins()
@@ -3258,6 +3430,8 @@ BEGIN
 	) VALUES (
 		NEW.approval_instance_item_id,NEW.approval_instance_link_id,NEW.approval_instance_step_id,NEW.next_approval_instance_item_id,NEW.approved_category,NEW.approved_label,NEW.approved_lhs,NEW.approved_rhs,CASE WHEN NEW.is_approved = 'Y' THEN true WHEN NEW.is_approved = 'N' THEN false ELSE NULL END,NEW.approved_account_id,NEW.approval_note
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3272,6 +3446,101 @@ CREATE TRIGGER _trigger_approval_instance_item_ins
 	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_item_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_item_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.approval_instance_item%rowtype;
+	_nr	jazzhands.approval_instance_item%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.approval_instance_item_id IS DISTINCT FROM NEW.approval_instance_item_id THEN
+_uq := array_append(_uq, 'approval_instance_item_id = ' || quote_nullable(NEW.approval_instance_item_id));
+	END IF;
+
+	IF OLD.approval_instance_link_id IS DISTINCT FROM NEW.approval_instance_link_id THEN
+_uq := array_append(_uq, 'approval_instance_link_id = ' || quote_nullable(NEW.approval_instance_link_id));
+	END IF;
+
+	IF OLD.approval_instance_step_id IS DISTINCT FROM NEW.approval_instance_step_id THEN
+_uq := array_append(_uq, 'approval_instance_step_id = ' || quote_nullable(NEW.approval_instance_step_id));
+	END IF;
+
+	IF OLD.next_approval_instance_item_id IS DISTINCT FROM NEW.next_approval_instance_item_id THEN
+_uq := array_append(_uq, 'next_approval_instance_item_id = ' || quote_nullable(NEW.next_approval_instance_item_id));
+	END IF;
+
+	IF OLD.approved_category IS DISTINCT FROM NEW.approved_category THEN
+_uq := array_append(_uq, 'approved_category = ' || quote_nullable(NEW.approved_category));
+	END IF;
+
+	IF OLD.approved_label IS DISTINCT FROM NEW.approved_label THEN
+_uq := array_append(_uq, 'approved_label = ' || quote_nullable(NEW.approved_label));
+	END IF;
+
+	IF OLD.approved_lhs IS DISTINCT FROM NEW.approved_lhs THEN
+_uq := array_append(_uq, 'approved_lhs = ' || quote_nullable(NEW.approved_lhs));
+	END IF;
+
+	IF OLD.approved_rhs IS DISTINCT FROM NEW.approved_rhs THEN
+_uq := array_append(_uq, 'approved_rhs = ' || quote_nullable(NEW.approved_rhs));
+	END IF;
+
+	IF OLD.is_approved IS DISTINCT FROM NEW.is_approved THEN
+IF NEW.is_approved = 'Y' THEN
+	_uq := array_append(_uq, 'is_approved = true');
+ELSIF NEW.is_approved = 'N' THEN
+	_uq := array_append(_uq, 'is_approved = false');
+ELSE
+	_uq := array_append(_uq, 'is_approved = NULL');
+END IF;
+	END IF;
+
+	IF OLD.approved_account_id IS DISTINCT FROM NEW.approved_account_id THEN
+_uq := array_append(_uq, 'approved_account_id = ' || quote_nullable(NEW.approved_account_id));
+	END IF;
+
+	IF OLD.approval_note IS DISTINCT FROM NEW.approval_note THEN
+_uq := array_append(_uq, 'approval_note = ' || quote_nullable(NEW.approval_note));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.approval_instance_item SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.approval_instance_item_id = $1 RETURNING *'  USING OLD.approval_instance_item_id
+			INTO _nr;
+		NEW.approval_instance_item_id = _nr.approval_instance_item_id;
+		NEW.approval_instance_link_id = _nr.approval_instance_link_id;
+		NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+		NEW.next_approval_instance_item_id = _nr.next_approval_instance_item_id;
+		NEW.approved_category = _nr.approved_category;
+		NEW.approved_label = _nr.approved_label;
+		NEW.approved_lhs = _nr.approved_lhs;
+		NEW.approved_rhs = _nr.approved_rhs;
+		NEW.is_approved = _nr.is_approved;
+		NEW.approved_account_id = _nr.approved_account_id;
+		NEW.approval_note = _nr.approval_note;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_instance_item_upd
+	ON jazzhands_legacy.approval_instance_item;
+CREATE TRIGGER _trigger_approval_instance_item_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.approval_instance_item
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_item_upd();
+
+
+
 -- Triggers for approval_instance_step
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_step_ins()
@@ -3284,6 +3553,8 @@ BEGIN
 	) VALUES (
 		NEW.approval_instance_step_id,NEW.approval_instance_id,NEW.approval_process_chain_id,NEW.approval_instance_step_name,NEW.approval_instance_step_due,NEW.approval_type,NEW.description,NEW.approval_instance_step_start,NEW.approval_instance_step_end,NEW.approver_account_id,NEW.external_reference_name,CASE WHEN NEW.is_completed = 'Y' THEN true WHEN NEW.is_completed = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3298,6 +3569,106 @@ CREATE TRIGGER _trigger_approval_instance_step_ins
 	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_step_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_step_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.approval_instance_step%rowtype;
+	_nr	jazzhands.approval_instance_step%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.approval_instance_step_id IS DISTINCT FROM NEW.approval_instance_step_id THEN
+_uq := array_append(_uq, 'approval_instance_step_id = ' || quote_nullable(NEW.approval_instance_step_id));
+	END IF;
+
+	IF OLD.approval_instance_id IS DISTINCT FROM NEW.approval_instance_id THEN
+_uq := array_append(_uq, 'approval_instance_id = ' || quote_nullable(NEW.approval_instance_id));
+	END IF;
+
+	IF OLD.approval_process_chain_id IS DISTINCT FROM NEW.approval_process_chain_id THEN
+_uq := array_append(_uq, 'approval_process_chain_id = ' || quote_nullable(NEW.approval_process_chain_id));
+	END IF;
+
+	IF OLD.approval_instance_step_name IS DISTINCT FROM NEW.approval_instance_step_name THEN
+_uq := array_append(_uq, 'approval_instance_step_name = ' || quote_nullable(NEW.approval_instance_step_name));
+	END IF;
+
+	IF OLD.approval_instance_step_due IS DISTINCT FROM NEW.approval_instance_step_due THEN
+_uq := array_append(_uq, 'approval_instance_step_due = ' || quote_nullable(NEW.approval_instance_step_due));
+	END IF;
+
+	IF OLD.approval_type IS DISTINCT FROM NEW.approval_type THEN
+_uq := array_append(_uq, 'approval_type = ' || quote_nullable(NEW.approval_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.approval_instance_step_start IS DISTINCT FROM NEW.approval_instance_step_start THEN
+_uq := array_append(_uq, 'approval_instance_step_start = ' || quote_nullable(NEW.approval_instance_step_start));
+	END IF;
+
+	IF OLD.approval_instance_step_end IS DISTINCT FROM NEW.approval_instance_step_end THEN
+_uq := array_append(_uq, 'approval_instance_step_end = ' || quote_nullable(NEW.approval_instance_step_end));
+	END IF;
+
+	IF OLD.approver_account_id IS DISTINCT FROM NEW.approver_account_id THEN
+_uq := array_append(_uq, 'approver_account_id = ' || quote_nullable(NEW.approver_account_id));
+	END IF;
+
+	IF OLD.external_reference_name IS DISTINCT FROM NEW.external_reference_name THEN
+_uq := array_append(_uq, 'external_reference_name = ' || quote_nullable(NEW.external_reference_name));
+	END IF;
+
+	IF OLD.is_completed IS DISTINCT FROM NEW.is_completed THEN
+IF NEW.is_completed = 'Y' THEN
+	_uq := array_append(_uq, 'is_completed = true');
+ELSIF NEW.is_completed = 'N' THEN
+	_uq := array_append(_uq, 'is_completed = false');
+ELSE
+	_uq := array_append(_uq, 'is_completed = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.approval_instance_step SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.approval_instance_step_id = $1 RETURNING *'  USING OLD.approval_instance_step_id
+			INTO _nr;
+		NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+		NEW.approval_instance_id = _nr.approval_instance_id;
+		NEW.approval_process_chain_id = _nr.approval_process_chain_id;
+		NEW.approval_instance_step_name = _nr.approval_instance_step_name;
+		NEW.approval_instance_step_due = _nr.approval_instance_step_due;
+		NEW.approval_type = _nr.approval_type;
+		NEW.description = _nr.description;
+		NEW.approval_instance_step_start = _nr.approval_instance_step_start;
+		NEW.approval_instance_step_end = _nr.approval_instance_step_end;
+		NEW.approver_account_id = _nr.approver_account_id;
+		NEW.external_reference_name = _nr.external_reference_name;
+		NEW.is_completed = _nr.is_completed;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_instance_step_upd
+	ON jazzhands_legacy.approval_instance_step;
+CREATE TRIGGER _trigger_approval_instance_step_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.approval_instance_step
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_step_upd();
+
+
+
 -- Triggers for approval_process_chain
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_process_chain_ins()
@@ -3310,6 +3681,8 @@ BEGIN
 	) VALUES (
 		NEW.approval_process_chain_id,NEW.approval_process_chain_name,NEW.approval_chain_response_period,NEW.description,NEW.message,NEW.email_message,NEW.email_subject_prefix,NEW.email_subject_suffix,NEW.max_escalation_level,NEW.escalation_delay,NEW.escalation_reminder_gap,NEW.approving_entity,CASE WHEN NEW.refresh_all_data = 'Y' THEN true WHEN NEW.refresh_all_data = 'N' THEN false ELSE NULL END,NEW.accept_app_process_chain_id,NEW.reject_app_process_chain_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3324,6 +3697,121 @@ CREATE TRIGGER _trigger_approval_process_chain_ins
 	EXECUTE PROCEDURE jazzhands_legacy.approval_process_chain_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_process_chain_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.approval_process_chain%rowtype;
+	_nr	jazzhands.approval_process_chain%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.approval_process_chain_id IS DISTINCT FROM NEW.approval_process_chain_id THEN
+_uq := array_append(_uq, 'approval_process_chain_id = ' || quote_nullable(NEW.approval_process_chain_id));
+	END IF;
+
+	IF OLD.approval_process_chain_name IS DISTINCT FROM NEW.approval_process_chain_name THEN
+_uq := array_append(_uq, 'approval_process_chain_name = ' || quote_nullable(NEW.approval_process_chain_name));
+	END IF;
+
+	IF OLD.approval_chain_response_period IS DISTINCT FROM NEW.approval_chain_response_period THEN
+_uq := array_append(_uq, 'approval_chain_response_period = ' || quote_nullable(NEW.approval_chain_response_period));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.message IS DISTINCT FROM NEW.message THEN
+_uq := array_append(_uq, 'message = ' || quote_nullable(NEW.message));
+	END IF;
+
+	IF OLD.email_message IS DISTINCT FROM NEW.email_message THEN
+_uq := array_append(_uq, 'email_message = ' || quote_nullable(NEW.email_message));
+	END IF;
+
+	IF OLD.email_subject_prefix IS DISTINCT FROM NEW.email_subject_prefix THEN
+_uq := array_append(_uq, 'email_subject_prefix = ' || quote_nullable(NEW.email_subject_prefix));
+	END IF;
+
+	IF OLD.email_subject_suffix IS DISTINCT FROM NEW.email_subject_suffix THEN
+_uq := array_append(_uq, 'email_subject_suffix = ' || quote_nullable(NEW.email_subject_suffix));
+	END IF;
+
+	IF OLD.max_escalation_level IS DISTINCT FROM NEW.max_escalation_level THEN
+_uq := array_append(_uq, 'max_escalation_level = ' || quote_nullable(NEW.max_escalation_level));
+	END IF;
+
+	IF OLD.escalation_delay IS DISTINCT FROM NEW.escalation_delay THEN
+_uq := array_append(_uq, 'escalation_delay = ' || quote_nullable(NEW.escalation_delay));
+	END IF;
+
+	IF OLD.escalation_reminder_gap IS DISTINCT FROM NEW.escalation_reminder_gap THEN
+_uq := array_append(_uq, 'escalation_reminder_gap = ' || quote_nullable(NEW.escalation_reminder_gap));
+	END IF;
+
+	IF OLD.approving_entity IS DISTINCT FROM NEW.approving_entity THEN
+_uq := array_append(_uq, 'approving_entity = ' || quote_nullable(NEW.approving_entity));
+	END IF;
+
+	IF OLD.refresh_all_data IS DISTINCT FROM NEW.refresh_all_data THEN
+IF NEW.refresh_all_data = 'Y' THEN
+	_uq := array_append(_uq, 'refresh_all_data = true');
+ELSIF NEW.refresh_all_data = 'N' THEN
+	_uq := array_append(_uq, 'refresh_all_data = false');
+ELSE
+	_uq := array_append(_uq, 'refresh_all_data = NULL');
+END IF;
+	END IF;
+
+	IF OLD.accept_app_process_chain_id IS DISTINCT FROM NEW.accept_app_process_chain_id THEN
+_uq := array_append(_uq, 'accept_app_process_chain_id = ' || quote_nullable(NEW.accept_app_process_chain_id));
+	END IF;
+
+	IF OLD.reject_app_process_chain_id IS DISTINCT FROM NEW.reject_app_process_chain_id THEN
+_uq := array_append(_uq, 'reject_app_process_chain_id = ' || quote_nullable(NEW.reject_app_process_chain_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.approval_process_chain SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.approval_process_chain_id = $1 RETURNING *'  USING OLD.approval_process_chain_id
+			INTO _nr;
+		NEW.approval_process_chain_id = _nr.approval_process_chain_id;
+		NEW.approval_process_chain_name = _nr.approval_process_chain_name;
+		NEW.approval_chain_response_period = _nr.approval_chain_response_period;
+		NEW.description = _nr.description;
+		NEW.message = _nr.message;
+		NEW.email_message = _nr.email_message;
+		NEW.email_subject_prefix = _nr.email_subject_prefix;
+		NEW.email_subject_suffix = _nr.email_subject_suffix;
+		NEW.max_escalation_level = _nr.max_escalation_level;
+		NEW.escalation_delay = _nr.escalation_delay;
+		NEW.escalation_reminder_gap = _nr.escalation_reminder_gap;
+		NEW.approving_entity = _nr.approving_entity;
+		NEW.refresh_all_data = _nr.refresh_all_data;
+		NEW.accept_app_process_chain_id = _nr.accept_app_process_chain_id;
+		NEW.reject_app_process_chain_id = _nr.reject_app_process_chain_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_process_chain_upd
+	ON jazzhands_legacy.approval_process_chain;
+CREATE TRIGGER _trigger_approval_process_chain_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.approval_process_chain
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_process_chain_upd();
+
+
+
 -- Triggers for circuit
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.circuit_ins()
@@ -3336,6 +3824,8 @@ BEGIN
 	) VALUES (
 		NEW.circuit_id,NEW.vendor_company_id,NEW.vendor_circuit_id_str,NEW.aloc_lec_company_id,NEW.aloc_lec_circuit_id_str,NEW.aloc_parent_circuit_id,NEW.zloc_lec_company_id,NEW.zloc_lec_circuit_id_str,NEW.zloc_parent_circuit_id,CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3350,6 +3840,96 @@ CREATE TRIGGER _trigger_circuit_ins
 	EXECUTE PROCEDURE jazzhands_legacy.circuit_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.circuit_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.circuit%rowtype;
+	_nr	jazzhands.circuit%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.circuit_id IS DISTINCT FROM NEW.circuit_id THEN
+_uq := array_append(_uq, 'circuit_id = ' || quote_nullable(NEW.circuit_id));
+	END IF;
+
+	IF OLD.vendor_company_id IS DISTINCT FROM NEW.vendor_company_id THEN
+_uq := array_append(_uq, 'vendor_company_id = ' || quote_nullable(NEW.vendor_company_id));
+	END IF;
+
+	IF OLD.vendor_circuit_id_str IS DISTINCT FROM NEW.vendor_circuit_id_str THEN
+_uq := array_append(_uq, 'vendor_circuit_id_str = ' || quote_nullable(NEW.vendor_circuit_id_str));
+	END IF;
+
+	IF OLD.aloc_lec_company_id IS DISTINCT FROM NEW.aloc_lec_company_id THEN
+_uq := array_append(_uq, 'aloc_lec_company_id = ' || quote_nullable(NEW.aloc_lec_company_id));
+	END IF;
+
+	IF OLD.aloc_lec_circuit_id_str IS DISTINCT FROM NEW.aloc_lec_circuit_id_str THEN
+_uq := array_append(_uq, 'aloc_lec_circuit_id_str = ' || quote_nullable(NEW.aloc_lec_circuit_id_str));
+	END IF;
+
+	IF OLD.aloc_parent_circuit_id IS DISTINCT FROM NEW.aloc_parent_circuit_id THEN
+_uq := array_append(_uq, 'aloc_parent_circuit_id = ' || quote_nullable(NEW.aloc_parent_circuit_id));
+	END IF;
+
+	IF OLD.zloc_lec_company_id IS DISTINCT FROM NEW.zloc_lec_company_id THEN
+_uq := array_append(_uq, 'zloc_lec_company_id = ' || quote_nullable(NEW.zloc_lec_company_id));
+	END IF;
+
+	IF OLD.zloc_lec_circuit_id_str IS DISTINCT FROM NEW.zloc_lec_circuit_id_str THEN
+_uq := array_append(_uq, 'zloc_lec_circuit_id_str = ' || quote_nullable(NEW.zloc_lec_circuit_id_str));
+	END IF;
+
+	IF OLD.zloc_parent_circuit_id IS DISTINCT FROM NEW.zloc_parent_circuit_id THEN
+_uq := array_append(_uq, 'zloc_parent_circuit_id = ' || quote_nullable(NEW.zloc_parent_circuit_id));
+	END IF;
+
+	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
+IF NEW.is_locally_managed = 'Y' THEN
+	_uq := array_append(_uq, 'is_locally_managed = true');
+ELSIF NEW.is_locally_managed = 'N' THEN
+	_uq := array_append(_uq, 'is_locally_managed = false');
+ELSE
+	_uq := array_append(_uq, 'is_locally_managed = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.circuit SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.circuit_id = $1 RETURNING *'  USING OLD.circuit_id
+			INTO _nr;
+		NEW.circuit_id = _nr.circuit_id;
+		NEW.vendor_company_id = _nr.vendor_company_id;
+		NEW.vendor_circuit_id_str = _nr.vendor_circuit_id_str;
+		NEW.aloc_lec_company_id = _nr.aloc_lec_company_id;
+		NEW.aloc_lec_circuit_id_str = _nr.aloc_lec_circuit_id_str;
+		NEW.aloc_parent_circuit_id = _nr.aloc_parent_circuit_id;
+		NEW.zloc_lec_company_id = _nr.zloc_lec_company_id;
+		NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
+		NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
+		NEW.is_locally_managed = _nr.is_locally_managed;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_circuit_upd
+	ON jazzhands_legacy.circuit;
+CREATE TRIGGER _trigger_circuit_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.circuit
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.circuit_upd();
+
+
+
 -- Triggers for component_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.component_type_ins()
@@ -3362,6 +3942,8 @@ BEGIN
 	) VALUES (
 		NEW.component_type_id,NEW.company_id,NEW.model,NEW.slot_type_id,NEW.description,NEW.part_number,CASE WHEN NEW.is_removable = 'Y' THEN true WHEN NEW.is_removable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.asset_permitted = 'Y' THEN true WHEN NEW.asset_permitted = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_rack_mountable = 'Y' THEN true WHEN NEW.is_rack_mountable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_virtual_component = 'Y' THEN true WHEN NEW.is_virtual_component = 'N' THEN false ELSE NULL END,NEW.size_units
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3376,6 +3958,119 @@ CREATE TRIGGER _trigger_component_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.component_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.component_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.component_type%rowtype;
+	_nr	jazzhands.component_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.component_type_id IS DISTINCT FROM NEW.component_type_id THEN
+_uq := array_append(_uq, 'component_type_id = ' || quote_nullable(NEW.component_type_id));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.model IS DISTINCT FROM NEW.model THEN
+_uq := array_append(_uq, 'model = ' || quote_nullable(NEW.model));
+	END IF;
+
+	IF OLD.slot_type_id IS DISTINCT FROM NEW.slot_type_id THEN
+_uq := array_append(_uq, 'slot_type_id = ' || quote_nullable(NEW.slot_type_id));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.part_number IS DISTINCT FROM NEW.part_number THEN
+_uq := array_append(_uq, 'part_number = ' || quote_nullable(NEW.part_number));
+	END IF;
+
+	IF OLD.is_removable IS DISTINCT FROM NEW.is_removable THEN
+IF NEW.is_removable = 'Y' THEN
+	_uq := array_append(_uq, 'is_removable = true');
+ELSIF NEW.is_removable = 'N' THEN
+	_uq := array_append(_uq, 'is_removable = false');
+ELSE
+	_uq := array_append(_uq, 'is_removable = NULL');
+END IF;
+	END IF;
+
+	IF OLD.asset_permitted IS DISTINCT FROM NEW.asset_permitted THEN
+IF NEW.asset_permitted = 'Y' THEN
+	_uq := array_append(_uq, 'asset_permitted = true');
+ELSIF NEW.asset_permitted = 'N' THEN
+	_uq := array_append(_uq, 'asset_permitted = false');
+ELSE
+	_uq := array_append(_uq, 'asset_permitted = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_rack_mountable IS DISTINCT FROM NEW.is_rack_mountable THEN
+IF NEW.is_rack_mountable = 'Y' THEN
+	_uq := array_append(_uq, 'is_rack_mountable = true');
+ELSIF NEW.is_rack_mountable = 'N' THEN
+	_uq := array_append(_uq, 'is_rack_mountable = false');
+ELSE
+	_uq := array_append(_uq, 'is_rack_mountable = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_virtual_component IS DISTINCT FROM NEW.is_virtual_component THEN
+IF NEW.is_virtual_component = 'Y' THEN
+	_uq := array_append(_uq, 'is_virtual_component = true');
+ELSIF NEW.is_virtual_component = 'N' THEN
+	_uq := array_append(_uq, 'is_virtual_component = false');
+ELSE
+	_uq := array_append(_uq, 'is_virtual_component = NULL');
+END IF;
+	END IF;
+
+	IF OLD.size_units IS DISTINCT FROM NEW.size_units THEN
+_uq := array_append(_uq, 'size_units = ' || quote_nullable(NEW.size_units));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.component_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.component_type_id = $1 RETURNING *'  USING OLD.component_type_id
+			INTO _nr;
+		NEW.component_type_id = _nr.component_type_id;
+		NEW.company_id = _nr.company_id;
+		NEW.model = _nr.model;
+		NEW.slot_type_id = _nr.slot_type_id;
+		NEW.description = _nr.description;
+		NEW.part_number = _nr.part_number;
+		NEW.is_removable = _nr.is_removable;
+		NEW.asset_permitted = _nr.asset_permitted;
+		NEW.is_rack_mountable = _nr.is_rack_mountable;
+		NEW.is_virtual_component = _nr.is_virtual_component;
+		NEW.size_units = _nr.size_units;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_component_type_upd
+	ON jazzhands_legacy.component_type;
+CREATE TRIGGER _trigger_component_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.component_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.component_type_upd();
+
+
+
 -- Triggers for department
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.department_ins()
@@ -3388,6 +4083,8 @@ BEGIN
 	) VALUES (
 		NEW.account_collection_id,NEW.company_id,NEW.manager_account_id,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,NEW.dept_code,NEW.cost_center_name,NEW.cost_center_number,NEW.default_badge_type_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3402,6 +4099,86 @@ CREATE TRIGGER _trigger_department_ins
 	EXECUTE PROCEDURE jazzhands_legacy.department_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.department_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.department%rowtype;
+	_nr	jazzhands.department%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.account_collection_id IS DISTINCT FROM NEW.account_collection_id THEN
+_uq := array_append(_uq, 'account_collection_id = ' || quote_nullable(NEW.account_collection_id));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.manager_account_id IS DISTINCT FROM NEW.manager_account_id THEN
+_uq := array_append(_uq, 'manager_account_id = ' || quote_nullable(NEW.manager_account_id));
+	END IF;
+
+	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
+IF NEW.is_active = 'Y' THEN
+	_uq := array_append(_uq, 'is_active = true');
+ELSIF NEW.is_active = 'N' THEN
+	_uq := array_append(_uq, 'is_active = false');
+ELSE
+	_uq := array_append(_uq, 'is_active = NULL');
+END IF;
+	END IF;
+
+	IF OLD.dept_code IS DISTINCT FROM NEW.dept_code THEN
+_uq := array_append(_uq, 'dept_code = ' || quote_nullable(NEW.dept_code));
+	END IF;
+
+	IF OLD.cost_center_name IS DISTINCT FROM NEW.cost_center_name THEN
+_uq := array_append(_uq, 'cost_center_name = ' || quote_nullable(NEW.cost_center_name));
+	END IF;
+
+	IF OLD.cost_center_number IS DISTINCT FROM NEW.cost_center_number THEN
+_uq := array_append(_uq, 'cost_center_number = ' || quote_nullable(NEW.cost_center_number));
+	END IF;
+
+	IF OLD.default_badge_type_id IS DISTINCT FROM NEW.default_badge_type_id THEN
+_uq := array_append(_uq, 'default_badge_type_id = ' || quote_nullable(NEW.default_badge_type_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.department SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.account_collection_id = $1 RETURNING *'  USING OLD.account_collection_id
+			INTO _nr;
+		NEW.account_collection_id = _nr.account_collection_id;
+		NEW.company_id = _nr.company_id;
+		NEW.manager_account_id = _nr.manager_account_id;
+		NEW.is_active = _nr.is_active;
+		NEW.dept_code = _nr.dept_code;
+		NEW.cost_center_name = _nr.cost_center_name;
+		NEW.cost_center_number = _nr.cost_center_number;
+		NEW.default_badge_type_id = _nr.default_badge_type_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_department_upd
+	ON jazzhands_legacy.department;
+CREATE TRIGGER _trigger_department_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.department
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.department_upd();
+
+
+
 -- Triggers for device
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.device_ins()
@@ -3414,6 +4191,8 @@ BEGIN
 	) VALUES (
 		NEW.device_id,NEW.component_id,NEW.device_type_id,NEW.device_name,NEW.site_code,NEW.identifying_dns_record_id,NEW.host_id,NEW.physical_label,NEW.rack_location_id,NEW.chassis_location_id,NEW.parent_device_id,NEW.description,NEW.external_id,NEW.device_status,NEW.operating_system_id,NEW.service_environment_id,CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_virtual_device = 'Y' THEN true WHEN NEW.is_virtual_device = 'N' THEN false ELSE NULL END,NEW.date_in_service
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3428,6 +4207,148 @@ CREATE TRIGGER _trigger_device_ins
 	EXECUTE PROCEDURE jazzhands_legacy.device_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.device_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.device%rowtype;
+	_nr	jazzhands.device%rowtype;
+	_uq	text[];
+BEGIN
+	-- XXX dropped columns: auto_mgmt_protocolis_monitoredshould_fetch_config
+
+	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
+_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
+	END IF;
+
+	IF OLD.component_id IS DISTINCT FROM NEW.component_id THEN
+_uq := array_append(_uq, 'component_id = ' || quote_nullable(NEW.component_id));
+	END IF;
+
+	IF OLD.device_type_id IS DISTINCT FROM NEW.device_type_id THEN
+_uq := array_append(_uq, 'device_type_id = ' || quote_nullable(NEW.device_type_id));
+	END IF;
+
+	IF OLD.device_name IS DISTINCT FROM NEW.device_name THEN
+_uq := array_append(_uq, 'device_name = ' || quote_nullable(NEW.device_name));
+	END IF;
+
+	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
+_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+	END IF;
+
+	IF OLD.identifying_dns_record_id IS DISTINCT FROM NEW.identifying_dns_record_id THEN
+_uq := array_append(_uq, 'identifying_dns_record_id = ' || quote_nullable(NEW.identifying_dns_record_id));
+	END IF;
+
+	IF OLD.host_id IS DISTINCT FROM NEW.host_id THEN
+_uq := array_append(_uq, 'host_id = ' || quote_nullable(NEW.host_id));
+	END IF;
+
+	IF OLD.physical_label IS DISTINCT FROM NEW.physical_label THEN
+_uq := array_append(_uq, 'physical_label = ' || quote_nullable(NEW.physical_label));
+	END IF;
+
+	IF OLD.rack_location_id IS DISTINCT FROM NEW.rack_location_id THEN
+_uq := array_append(_uq, 'rack_location_id = ' || quote_nullable(NEW.rack_location_id));
+	END IF;
+
+	IF OLD.chassis_location_id IS DISTINCT FROM NEW.chassis_location_id THEN
+_uq := array_append(_uq, 'chassis_location_id = ' || quote_nullable(NEW.chassis_location_id));
+	END IF;
+
+	IF OLD.parent_device_id IS DISTINCT FROM NEW.parent_device_id THEN
+_uq := array_append(_uq, 'parent_device_id = ' || quote_nullable(NEW.parent_device_id));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
+_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+	END IF;
+
+	IF OLD.device_status IS DISTINCT FROM NEW.device_status THEN
+_uq := array_append(_uq, 'device_status = ' || quote_nullable(NEW.device_status));
+	END IF;
+
+	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
+_uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
+	END IF;
+
+	IF OLD.service_environment_id IS DISTINCT FROM NEW.service_environment_id THEN
+_uq := array_append(_uq, 'service_environment_id = ' || quote_nullable(NEW.service_environment_id));
+	END IF;
+
+	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
+IF NEW.is_locally_managed = 'Y' THEN
+	_uq := array_append(_uq, 'is_locally_managed = true');
+ELSIF NEW.is_locally_managed = 'N' THEN
+	_uq := array_append(_uq, 'is_locally_managed = false');
+ELSE
+	_uq := array_append(_uq, 'is_locally_managed = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_virtual_device IS DISTINCT FROM NEW.is_virtual_device THEN
+IF NEW.is_virtual_device = 'Y' THEN
+	_uq := array_append(_uq, 'is_virtual_device = true');
+ELSIF NEW.is_virtual_device = 'N' THEN
+	_uq := array_append(_uq, 'is_virtual_device = false');
+ELSE
+	_uq := array_append(_uq, 'is_virtual_device = NULL');
+END IF;
+	END IF;
+
+	IF OLD.date_in_service IS DISTINCT FROM NEW.date_in_service THEN
+_uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_service));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.device SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.device_id = $1 RETURNING *'  USING OLD.device_id
+			INTO _nr;
+		NEW.device_id = _nr.device_id;
+		NEW.component_id = _nr.component_id;
+		NEW.device_type_id = _nr.device_type_id;
+		NEW.device_name = _nr.device_name;
+		NEW.site_code = _nr.site_code;
+		NEW.identifying_dns_record_id = _nr.identifying_dns_record_id;
+		NEW.host_id = _nr.host_id;
+		NEW.physical_label = _nr.physical_label;
+		NEW.rack_location_id = _nr.rack_location_id;
+		NEW.chassis_location_id = _nr.chassis_location_id;
+		NEW.parent_device_id = _nr.parent_device_id;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.device_status = _nr.device_status;
+		NEW.operating_system_id = _nr.operating_system_id;
+		NEW.service_environment_id = _nr.service_environment_id;
+		NEW.is_locally_managed = _nr.is_locally_managed;
+		NEW.is_virtual_device = _nr.is_virtual_device;
+		NEW.date_in_service = _nr.date_in_service;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_device_upd
+	ON jazzhands_legacy.device;
+CREATE TRIGGER _trigger_device_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.device
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.device_upd();
+
+
+
 -- Triggers for device_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.device_type_ins()
@@ -3440,6 +4361,8 @@ BEGIN
 	) VALUES (
 		NEW.device_type_id,NEW.component_type_id,NEW.device_type_name,NEW.template_device_id,NEW.idealized_device_id,NEW.description,NEW.company_id,NEW.model,NEW.device_type_depth_in_cm,NEW.processor_architecture,NEW.config_fetch_type,NEW.rack_units,CASE WHEN NEW.has_802_3_interface = 'Y' THEN true WHEN NEW.has_802_3_interface = 'N' THEN false ELSE NULL END,CASE WHEN NEW.has_802_11_interface = 'Y' THEN true WHEN NEW.has_802_11_interface = 'N' THEN false ELSE NULL END,CASE WHEN NEW.snmp_capable = 'Y' THEN true WHEN NEW.snmp_capable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_chassis = 'Y' THEN true WHEN NEW.is_chassis = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3454,6 +4377,144 @@ CREATE TRIGGER _trigger_device_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.device_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.device_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.device_type%rowtype;
+	_nr	jazzhands.device_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.device_type_id IS DISTINCT FROM NEW.device_type_id THEN
+_uq := array_append(_uq, 'device_type_id = ' || quote_nullable(NEW.device_type_id));
+	END IF;
+
+	IF OLD.component_type_id IS DISTINCT FROM NEW.component_type_id THEN
+_uq := array_append(_uq, 'component_type_id = ' || quote_nullable(NEW.component_type_id));
+	END IF;
+
+	IF OLD.device_type_name IS DISTINCT FROM NEW.device_type_name THEN
+_uq := array_append(_uq, 'device_type_name = ' || quote_nullable(NEW.device_type_name));
+	END IF;
+
+	IF OLD.template_device_id IS DISTINCT FROM NEW.template_device_id THEN
+_uq := array_append(_uq, 'template_device_id = ' || quote_nullable(NEW.template_device_id));
+	END IF;
+
+	IF OLD.idealized_device_id IS DISTINCT FROM NEW.idealized_device_id THEN
+_uq := array_append(_uq, 'idealized_device_id = ' || quote_nullable(NEW.idealized_device_id));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.model IS DISTINCT FROM NEW.model THEN
+_uq := array_append(_uq, 'model = ' || quote_nullable(NEW.model));
+	END IF;
+
+	IF OLD.device_type_depth_in_cm IS DISTINCT FROM NEW.device_type_depth_in_cm THEN
+_uq := array_append(_uq, 'device_type_depth_in_cm = ' || quote_nullable(NEW.device_type_depth_in_cm));
+	END IF;
+
+	IF OLD.processor_architecture IS DISTINCT FROM NEW.processor_architecture THEN
+_uq := array_append(_uq, 'processor_architecture = ' || quote_nullable(NEW.processor_architecture));
+	END IF;
+
+	IF OLD.config_fetch_type IS DISTINCT FROM NEW.config_fetch_type THEN
+_uq := array_append(_uq, 'config_fetch_type = ' || quote_nullable(NEW.config_fetch_type));
+	END IF;
+
+	IF OLD.rack_units IS DISTINCT FROM NEW.rack_units THEN
+_uq := array_append(_uq, 'rack_units = ' || quote_nullable(NEW.rack_units));
+	END IF;
+
+	IF OLD.has_802_3_interface IS DISTINCT FROM NEW.has_802_3_interface THEN
+IF NEW.has_802_3_interface = 'Y' THEN
+	_uq := array_append(_uq, 'has_802_3_interface = true');
+ELSIF NEW.has_802_3_interface = 'N' THEN
+	_uq := array_append(_uq, 'has_802_3_interface = false');
+ELSE
+	_uq := array_append(_uq, 'has_802_3_interface = NULL');
+END IF;
+	END IF;
+
+	IF OLD.has_802_11_interface IS DISTINCT FROM NEW.has_802_11_interface THEN
+IF NEW.has_802_11_interface = 'Y' THEN
+	_uq := array_append(_uq, 'has_802_11_interface = true');
+ELSIF NEW.has_802_11_interface = 'N' THEN
+	_uq := array_append(_uq, 'has_802_11_interface = false');
+ELSE
+	_uq := array_append(_uq, 'has_802_11_interface = NULL');
+END IF;
+	END IF;
+
+	IF OLD.snmp_capable IS DISTINCT FROM NEW.snmp_capable THEN
+IF NEW.snmp_capable = 'Y' THEN
+	_uq := array_append(_uq, 'snmp_capable = true');
+ELSIF NEW.snmp_capable = 'N' THEN
+	_uq := array_append(_uq, 'snmp_capable = false');
+ELSE
+	_uq := array_append(_uq, 'snmp_capable = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_chassis IS DISTINCT FROM NEW.is_chassis THEN
+IF NEW.is_chassis = 'Y' THEN
+	_uq := array_append(_uq, 'is_chassis = true');
+ELSIF NEW.is_chassis = 'N' THEN
+	_uq := array_append(_uq, 'is_chassis = false');
+ELSE
+	_uq := array_append(_uq, 'is_chassis = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.device_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.device_type_id = $1 RETURNING *'  USING OLD.device_type_id
+			INTO _nr;
+		NEW.device_type_id = _nr.device_type_id;
+		NEW.component_type_id = _nr.component_type_id;
+		NEW.device_type_name = _nr.device_type_name;
+		NEW.template_device_id = _nr.template_device_id;
+		NEW.idealized_device_id = _nr.idealized_device_id;
+		NEW.description = _nr.description;
+		NEW.company_id = _nr.company_id;
+		NEW.model = _nr.model;
+		NEW.device_type_depth_in_cm = _nr.device_type_depth_in_cm;
+		NEW.processor_architecture = _nr.processor_architecture;
+		NEW.config_fetch_type = _nr.config_fetch_type;
+		NEW.rack_units = _nr.rack_units;
+		NEW.has_802_3_interface = _nr.has_802_3_interface;
+		NEW.has_802_11_interface = _nr.has_802_11_interface;
+		NEW.snmp_capable = _nr.snmp_capable;
+		NEW.is_chassis = _nr.is_chassis;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_device_type_upd
+	ON jazzhands_legacy.device_type;
+CREATE TRIGGER _trigger_device_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.device_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.device_type_upd();
+
+
+
 -- Triggers for dns_domain_ip_universe
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_domain_ip_universe_ins()
@@ -3466,6 +4527,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_domain_id,NEW.ip_universe_id,NEW.soa_class,NEW.soa_ttl,NEW.soa_serial,NEW.soa_refresh,NEW.soa_retry,NEW.soa_expire,NEW.soa_minimum,NEW.soa_mname,NEW.soa_rname,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3480,6 +4543,111 @@ CREATE TRIGGER _trigger_dns_domain_ip_universe_ins
 	EXECUTE PROCEDURE jazzhands_legacy.dns_domain_ip_universe_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_domain_ip_universe_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.dns_domain_ip_universe%rowtype;
+	_nr	jazzhands.dns_domain_ip_universe%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.soa_class IS DISTINCT FROM NEW.soa_class THEN
+_uq := array_append(_uq, 'soa_class = ' || quote_nullable(NEW.soa_class));
+	END IF;
+
+	IF OLD.soa_ttl IS DISTINCT FROM NEW.soa_ttl THEN
+_uq := array_append(_uq, 'soa_ttl = ' || quote_nullable(NEW.soa_ttl));
+	END IF;
+
+	IF OLD.soa_serial IS DISTINCT FROM NEW.soa_serial THEN
+_uq := array_append(_uq, 'soa_serial = ' || quote_nullable(NEW.soa_serial));
+	END IF;
+
+	IF OLD.soa_refresh IS DISTINCT FROM NEW.soa_refresh THEN
+_uq := array_append(_uq, 'soa_refresh = ' || quote_nullable(NEW.soa_refresh));
+	END IF;
+
+	IF OLD.soa_retry IS DISTINCT FROM NEW.soa_retry THEN
+_uq := array_append(_uq, 'soa_retry = ' || quote_nullable(NEW.soa_retry));
+	END IF;
+
+	IF OLD.soa_expire IS DISTINCT FROM NEW.soa_expire THEN
+_uq := array_append(_uq, 'soa_expire = ' || quote_nullable(NEW.soa_expire));
+	END IF;
+
+	IF OLD.soa_minimum IS DISTINCT FROM NEW.soa_minimum THEN
+_uq := array_append(_uq, 'soa_minimum = ' || quote_nullable(NEW.soa_minimum));
+	END IF;
+
+	IF OLD.soa_mname IS DISTINCT FROM NEW.soa_mname THEN
+_uq := array_append(_uq, 'soa_mname = ' || quote_nullable(NEW.soa_mname));
+	END IF;
+
+	IF OLD.soa_rname IS DISTINCT FROM NEW.soa_rname THEN
+_uq := array_append(_uq, 'soa_rname = ' || quote_nullable(NEW.soa_rname));
+	END IF;
+
+	IF OLD.should_generate IS DISTINCT FROM NEW.should_generate THEN
+IF NEW.should_generate = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate = true');
+ELSIF NEW.should_generate = 'N' THEN
+	_uq := array_append(_uq, 'should_generate = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate = NULL');
+END IF;
+	END IF;
+
+	IF OLD.last_generated IS DISTINCT FROM NEW.last_generated THEN
+_uq := array_append(_uq, 'last_generated = ' || quote_nullable(NEW.last_generated));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.dns_domain_ip_universe SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.dns_domain_id = $1 AND  NEW.ip_universe_id = $2 RETURNING *'  USING OLD.dns_domain_id, OLD.ip_universe_id
+			INTO _nr;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.soa_class = _nr.soa_class;
+		NEW.soa_ttl = _nr.soa_ttl;
+		NEW.soa_serial = _nr.soa_serial;
+		NEW.soa_refresh = _nr.soa_refresh;
+		NEW.soa_retry = _nr.soa_retry;
+		NEW.soa_expire = _nr.soa_expire;
+		NEW.soa_minimum = _nr.soa_minimum;
+		NEW.soa_mname = _nr.soa_mname;
+		NEW.soa_rname = _nr.soa_rname;
+		NEW.should_generate = _nr.should_generate;
+		NEW.last_generated = _nr.last_generated;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_dns_domain_ip_universe_upd
+	ON jazzhands_legacy.dns_domain_ip_universe;
+CREATE TRIGGER _trigger_dns_domain_ip_universe_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.dns_domain_ip_universe
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.dns_domain_ip_universe_upd();
+
+
+
 -- Triggers for dns_record
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_record_ins()
@@ -3492,6 +4660,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_record_id,NEW.dns_name,NEW.dns_domain_id,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,NEW.netblock_id,NEW.ip_universe_id,NEW.reference_dns_record_id,NEW.dns_value_record_id,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3506,6 +4676,142 @@ CREATE TRIGGER _trigger_dns_record_ins
 	EXECUTE PROCEDURE jazzhands_legacy.dns_record_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_record_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.dns_record%rowtype;
+	_nr	jazzhands.dns_record%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
+_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF OLD.dns_name IS DISTINCT FROM NEW.dns_name THEN
+_uq := array_append(_uq, 'dns_name = ' || quote_nullable(NEW.dns_name));
+	END IF;
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.dns_ttl IS DISTINCT FROM NEW.dns_ttl THEN
+_uq := array_append(_uq, 'dns_ttl = ' || quote_nullable(NEW.dns_ttl));
+	END IF;
+
+	IF OLD.dns_class IS DISTINCT FROM NEW.dns_class THEN
+_uq := array_append(_uq, 'dns_class = ' || quote_nullable(NEW.dns_class));
+	END IF;
+
+	IF OLD.dns_type IS DISTINCT FROM NEW.dns_type THEN
+_uq := array_append(_uq, 'dns_type = ' || quote_nullable(NEW.dns_type));
+	END IF;
+
+	IF OLD.dns_value IS DISTINCT FROM NEW.dns_value THEN
+_uq := array_append(_uq, 'dns_value = ' || quote_nullable(NEW.dns_value));
+	END IF;
+
+	IF OLD.dns_priority IS DISTINCT FROM NEW.dns_priority THEN
+_uq := array_append(_uq, 'dns_priority = ' || quote_nullable(NEW.dns_priority));
+	END IF;
+
+	IF OLD.dns_srv_service IS DISTINCT FROM NEW.dns_srv_service THEN
+_uq := array_append(_uq, 'dns_srv_service = ' || quote_nullable(NEW.dns_srv_service));
+	END IF;
+
+	IF OLD.dns_srv_protocol IS DISTINCT FROM NEW.dns_srv_protocol THEN
+_uq := array_append(_uq, 'dns_srv_protocol = ' || quote_nullable(NEW.dns_srv_protocol));
+	END IF;
+
+	IF OLD.dns_srv_weight IS DISTINCT FROM NEW.dns_srv_weight THEN
+_uq := array_append(_uq, 'dns_srv_weight = ' || quote_nullable(NEW.dns_srv_weight));
+	END IF;
+
+	IF OLD.dns_srv_port IS DISTINCT FROM NEW.dns_srv_port THEN
+_uq := array_append(_uq, 'dns_srv_port = ' || quote_nullable(NEW.dns_srv_port));
+	END IF;
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.reference_dns_record_id IS DISTINCT FROM NEW.reference_dns_record_id THEN
+_uq := array_append(_uq, 'reference_dns_record_id = ' || quote_nullable(NEW.reference_dns_record_id));
+	END IF;
+
+	IF OLD.dns_value_record_id IS DISTINCT FROM NEW.dns_value_record_id THEN
+_uq := array_append(_uq, 'dns_value_record_id = ' || quote_nullable(NEW.dns_value_record_id));
+	END IF;
+
+	IF OLD.should_generate_ptr IS DISTINCT FROM NEW.should_generate_ptr THEN
+IF NEW.should_generate_ptr = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = true');
+ELSIF NEW.should_generate_ptr = 'N' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate_ptr = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.dns_record SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.dns_record_id = $1 RETURNING *'  USING OLD.dns_record_id
+			INTO _nr;
+		NEW.dns_record_id = _nr.dns_record_id;
+		NEW.dns_name = _nr.dns_name;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.dns_ttl = _nr.dns_ttl;
+		NEW.dns_class = _nr.dns_class;
+		NEW.dns_type = _nr.dns_type;
+		NEW.dns_value = _nr.dns_value;
+		NEW.dns_priority = _nr.dns_priority;
+		NEW.dns_srv_service = _nr.dns_srv_service;
+		NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+		NEW.dns_srv_weight = _nr.dns_srv_weight;
+		NEW.dns_srv_port = _nr.dns_srv_port;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.reference_dns_record_id = _nr.reference_dns_record_id;
+		NEW.dns_value_record_id = _nr.dns_value_record_id;
+		NEW.should_generate_ptr = _nr.should_generate_ptr;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_dns_record_upd
+	ON jazzhands_legacy.dns_record;
+CREATE TRIGGER _trigger_dns_record_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.dns_record
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.dns_record_upd();
+
+
+
 -- Triggers for ip_universe
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_ins()
@@ -3518,6 +4824,8 @@ BEGIN
 	) VALUES (
 		NEW.ip_universe_id,NEW.ip_universe_name,NEW.ip_namespace,CASE WHEN NEW.should_generate_dns = 'Y' THEN true WHEN NEW.should_generate_dns = 'N' THEN false ELSE NULL END,NEW.description
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3532,6 +4840,71 @@ CREATE TRIGGER _trigger_ip_universe_ins
 	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.ip_universe%rowtype;
+	_nr	jazzhands.ip_universe%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.ip_universe_name IS DISTINCT FROM NEW.ip_universe_name THEN
+_uq := array_append(_uq, 'ip_universe_name = ' || quote_nullable(NEW.ip_universe_name));
+	END IF;
+
+	IF OLD.ip_namespace IS DISTINCT FROM NEW.ip_namespace THEN
+_uq := array_append(_uq, 'ip_namespace = ' || quote_nullable(NEW.ip_namespace));
+	END IF;
+
+	IF OLD.should_generate_dns IS DISTINCT FROM NEW.should_generate_dns THEN
+IF NEW.should_generate_dns = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate_dns = true');
+ELSIF NEW.should_generate_dns = 'N' THEN
+	_uq := array_append(_uq, 'should_generate_dns = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate_dns = NULL');
+END IF;
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.ip_universe SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.ip_universe_id = $1 RETURNING *'  USING OLD.ip_universe_id
+			INTO _nr;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.ip_universe_name = _nr.ip_universe_name;
+		NEW.ip_namespace = _nr.ip_namespace;
+		NEW.should_generate_dns = _nr.should_generate_dns;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_ip_universe_upd
+	ON jazzhands_legacy.ip_universe;
+CREATE TRIGGER _trigger_ip_universe_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.ip_universe
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_upd();
+
+
+
 -- Triggers for ip_universe_visibility
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_visibility_ins()
@@ -3544,6 +4917,8 @@ BEGIN
 	) VALUES (
 		NEW.ip_universe_id,NEW.visible_ip_universe_id,CASE WHEN NEW.propagate_dns = 'Y' THEN true WHEN NEW.propagate_dns = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3558,6 +4933,61 @@ CREATE TRIGGER _trigger_ip_universe_visibility_ins
 	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_visibility_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_visibility_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.ip_universe_visibility%rowtype;
+	_nr	jazzhands.ip_universe_visibility%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.visible_ip_universe_id IS DISTINCT FROM NEW.visible_ip_universe_id THEN
+_uq := array_append(_uq, 'visible_ip_universe_id = ' || quote_nullable(NEW.visible_ip_universe_id));
+	END IF;
+
+	IF OLD.propagate_dns IS DISTINCT FROM NEW.propagate_dns THEN
+IF NEW.propagate_dns = 'Y' THEN
+	_uq := array_append(_uq, 'propagate_dns = true');
+ELSIF NEW.propagate_dns = 'N' THEN
+	_uq := array_append(_uq, 'propagate_dns = false');
+ELSE
+	_uq := array_append(_uq, 'propagate_dns = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.ip_universe_visibility SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.ip_universe_id = $1 AND  NEW.visible_ip_universe_id = $2 RETURNING *'  USING OLD.ip_universe_id, OLD.visible_ip_universe_id
+			INTO _nr;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
+		NEW.propagate_dns = _nr.propagate_dns;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_ip_universe_visibility_upd
+	ON jazzhands_legacy.ip_universe_visibility;
+CREATE TRIGGER _trigger_ip_universe_visibility_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.ip_universe_visibility
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_visibility_upd();
+
+
+
 -- Triggers for netblock
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.netblock_ins()
@@ -3570,6 +5000,8 @@ BEGIN
 	) VALUES (
 		NEW.netblock_id,NEW.ip_address,NEW.netblock_type,CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_subnet = 'Y' THEN true WHEN NEW.can_subnet = 'N' THEN false ELSE NULL END,NEW.parent_netblock_id,NEW.netblock_status,NEW.ip_universe_id,NEW.description,NEW.external_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3584,6 +5016,102 @@ CREATE TRIGGER _trigger_netblock_ins
 	EXECUTE PROCEDURE jazzhands_legacy.netblock_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.netblock_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.netblock%rowtype;
+	_nr	jazzhands.netblock%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ip_address IS DISTINCT FROM NEW.ip_address THEN
+_uq := array_append(_uq, 'ip_address = ' || quote_nullable(NEW.ip_address));
+	END IF;
+
+	IF OLD.netblock_type IS DISTINCT FROM NEW.netblock_type THEN
+_uq := array_append(_uq, 'netblock_type = ' || quote_nullable(NEW.netblock_type));
+	END IF;
+
+	IF OLD.is_single_address IS DISTINCT FROM NEW.is_single_address THEN
+IF NEW.is_single_address = 'Y' THEN
+	_uq := array_append(_uq, 'is_single_address = true');
+ELSIF NEW.is_single_address = 'N' THEN
+	_uq := array_append(_uq, 'is_single_address = false');
+ELSE
+	_uq := array_append(_uq, 'is_single_address = NULL');
+END IF;
+	END IF;
+
+	IF OLD.can_subnet IS DISTINCT FROM NEW.can_subnet THEN
+IF NEW.can_subnet = 'Y' THEN
+	_uq := array_append(_uq, 'can_subnet = true');
+ELSIF NEW.can_subnet = 'N' THEN
+	_uq := array_append(_uq, 'can_subnet = false');
+ELSE
+	_uq := array_append(_uq, 'can_subnet = NULL');
+END IF;
+	END IF;
+
+	IF OLD.parent_netblock_id IS DISTINCT FROM NEW.parent_netblock_id THEN
+_uq := array_append(_uq, 'parent_netblock_id = ' || quote_nullable(NEW.parent_netblock_id));
+	END IF;
+
+	IF OLD.netblock_status IS DISTINCT FROM NEW.netblock_status THEN
+_uq := array_append(_uq, 'netblock_status = ' || quote_nullable(NEW.netblock_status));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
+_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.netblock SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.netblock_id = $1 RETURNING *'  USING OLD.netblock_id
+			INTO _nr;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_address = _nr.ip_address;
+		NEW.netblock_type = _nr.netblock_type;
+		NEW.is_single_address = _nr.is_single_address;
+		NEW.can_subnet = _nr.can_subnet;
+		NEW.parent_netblock_id = _nr.parent_netblock_id;
+		NEW.netblock_status = _nr.netblock_status;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_netblock_upd
+	ON jazzhands_legacy.netblock;
+CREATE TRIGGER _trigger_netblock_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.netblock
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.netblock_upd();
+
+
+
 -- Triggers for network_interface
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.network_interface_ins()
@@ -3596,6 +5124,8 @@ BEGIN
 	) VALUES (
 		NEW.network_interface_id,NEW.device_id,NEW.network_interface_name,NEW.description,NEW.parent_network_interface_id,NEW.parent_relation_type,NEW.slot_id,NEW.logical_port_id,NEW.network_interface_type,CASE WHEN NEW.is_interface_up = 'Y' THEN true WHEN NEW.is_interface_up = 'N' THEN false ELSE NULL END,NEW.mac_addr,CASE WHEN NEW.should_monitor = 'Y' THEN true WHEN NEW.should_monitor = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_manage = 'Y' THEN true WHEN NEW.should_manage = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3610,6 +5140,124 @@ CREATE TRIGGER _trigger_network_interface_ins
 	EXECUTE PROCEDURE jazzhands_legacy.network_interface_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.network_interface_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.network_interface%rowtype;
+	_nr	jazzhands.layer3_interface%rowtype;
+	_uq	text[];
+BEGIN
+	-- XXX dropped columns: physical_port_id
+
+	IF OLD.network_interface_id IS DISTINCT FROM NEW.network_interface_id THEN
+_uq := array_append(_uq, 'layer3_interface_id = ' || quote_nullable(NEW.network_interface_id));
+	END IF;
+
+	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
+_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
+	END IF;
+
+	IF OLD.network_interface_name IS DISTINCT FROM NEW.network_interface_name THEN
+_uq := array_append(_uq, 'layer3_interface_name = ' || quote_nullable(NEW.network_interface_name));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.parent_network_interface_id IS DISTINCT FROM NEW.parent_network_interface_id THEN
+_uq := array_append(_uq, 'parent_layer3_interface_id = ' || quote_nullable(NEW.parent_network_interface_id));
+	END IF;
+
+	IF OLD.parent_relation_type IS DISTINCT FROM NEW.parent_relation_type THEN
+_uq := array_append(_uq, 'parent_relation_type = ' || quote_nullable(NEW.parent_relation_type));
+	END IF;
+
+	IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
+_uq := array_append(_uq, 'slot_id = ' || quote_nullable(NEW.slot_id));
+	END IF;
+
+	IF OLD.logical_port_id IS DISTINCT FROM NEW.logical_port_id THEN
+_uq := array_append(_uq, 'logical_port_id = ' || quote_nullable(NEW.logical_port_id));
+	END IF;
+
+	IF OLD.network_interface_type IS DISTINCT FROM NEW.network_interface_type THEN
+_uq := array_append(_uq, 'layer3_interface_type = ' || quote_nullable(NEW.network_interface_type));
+	END IF;
+
+	IF OLD.is_interface_up IS DISTINCT FROM NEW.is_interface_up THEN
+IF NEW.is_interface_up = 'Y' THEN
+	_uq := array_append(_uq, 'is_interface_up = true');
+ELSIF NEW.is_interface_up = 'N' THEN
+	_uq := array_append(_uq, 'is_interface_up = false');
+ELSE
+	_uq := array_append(_uq, 'is_interface_up = NULL');
+END IF;
+	END IF;
+
+	IF OLD.mac_addr IS DISTINCT FROM NEW.mac_addr THEN
+_uq := array_append(_uq, 'mac_addr = ' || quote_nullable(NEW.mac_addr));
+	END IF;
+
+	IF OLD.should_monitor IS DISTINCT FROM NEW.should_monitor THEN
+IF NEW.should_monitor = 'Y' THEN
+	_uq := array_append(_uq, 'should_monitor = true');
+ELSIF NEW.should_monitor = 'N' THEN
+	_uq := array_append(_uq, 'should_monitor = false');
+ELSE
+	_uq := array_append(_uq, 'should_monitor = NULL');
+END IF;
+	END IF;
+
+	IF OLD.should_manage IS DISTINCT FROM NEW.should_manage THEN
+IF NEW.should_manage = 'Y' THEN
+	_uq := array_append(_uq, 'should_manage = true');
+ELSIF NEW.should_manage = 'N' THEN
+	_uq := array_append(_uq, 'should_manage = false');
+ELSE
+	_uq := array_append(_uq, 'should_manage = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.layer3_interface SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.layer3_interface_id = $1 RETURNING *'  USING OLD.network_interface_id
+			INTO _nr;
+		NEW.network_interface_id = _nr.layer3_interface_id;
+		NEW.device_id = _nr.device_id;
+		NEW.network_interface_name = _nr.layer3_interface_name;
+		NEW.description = _nr.description;
+		NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
+		NEW.parent_relation_type = _nr.parent_relation_type;
+		NEW.slot_id = _nr.slot_id;
+		NEW.logical_port_id = _nr.logical_port_id;
+		NEW.network_interface_type = _nr.layer3_interface_type;
+		NEW.is_interface_up = _nr.is_interface_up;
+		NEW.mac_addr = _nr.mac_addr;
+		NEW.should_monitor = _nr.should_monitor;
+		NEW.should_manage = _nr.should_manage;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_network_interface_upd
+	ON jazzhands_legacy.network_interface;
+CREATE TRIGGER _trigger_network_interface_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.network_interface
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.network_interface_upd();
+
+
+
 -- Triggers for network_service
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.network_service_ins()
@@ -3622,6 +5270,8 @@ BEGIN
 	) VALUES (
 		NEW.network_service_id,NEW.name,NEW.description,NEW.network_service_type,CASE WHEN NEW.is_monitored = 'Y' THEN true WHEN NEW.is_monitored = 'N' THEN false ELSE NULL END,NEW.device_id,NEW.network_interface_id,NEW.dns_record_id,NEW.service_environment_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3636,6 +5286,91 @@ CREATE TRIGGER _trigger_network_service_ins
 	EXECUTE PROCEDURE jazzhands_legacy.network_service_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.network_service_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.network_service%rowtype;
+	_nr	jazzhands.network_service%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.network_service_id IS DISTINCT FROM NEW.network_service_id THEN
+_uq := array_append(_uq, 'network_service_id = ' || quote_nullable(NEW.network_service_id));
+	END IF;
+
+	IF OLD.name IS DISTINCT FROM NEW.name THEN
+_uq := array_append(_uq, 'name = ' || quote_nullable(NEW.name));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.network_service_type IS DISTINCT FROM NEW.network_service_type THEN
+_uq := array_append(_uq, 'network_service_type = ' || quote_nullable(NEW.network_service_type));
+	END IF;
+
+	IF OLD.is_monitored IS DISTINCT FROM NEW.is_monitored THEN
+IF NEW.is_monitored = 'Y' THEN
+	_uq := array_append(_uq, 'is_monitored = true');
+ELSIF NEW.is_monitored = 'N' THEN
+	_uq := array_append(_uq, 'is_monitored = false');
+ELSE
+	_uq := array_append(_uq, 'is_monitored = NULL');
+END IF;
+	END IF;
+
+	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
+_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
+	END IF;
+
+	IF OLD.network_interface_id IS DISTINCT FROM NEW.network_interface_id THEN
+_uq := array_append(_uq, 'network_interface_id = ' || quote_nullable(NEW.network_interface_id));
+	END IF;
+
+	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
+_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF OLD.service_environment_id IS DISTINCT FROM NEW.service_environment_id THEN
+_uq := array_append(_uq, 'service_environment_id = ' || quote_nullable(NEW.service_environment_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.network_service SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.network_service_id = $1 RETURNING *'  USING OLD.network_service_id
+			INTO _nr;
+		NEW.network_service_id = _nr.network_service_id;
+		NEW.name = _nr.name;
+		NEW.description = _nr.description;
+		NEW.network_service_type = _nr.network_service_type;
+		NEW.is_monitored = _nr.is_monitored;
+		NEW.device_id = _nr.device_id;
+		NEW.network_interface_id = _nr.network_interface_id;
+		NEW.dns_record_id = _nr.dns_record_id;
+		NEW.service_environment_id = _nr.service_environment_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_network_service_upd
+	ON jazzhands_legacy.network_service;
+CREATE TRIGGER _trigger_network_service_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.network_service
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.network_service_upd();
+
+
+
 -- Triggers for person_auth_question
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.person_auth_question_ins()
@@ -3648,6 +5383,8 @@ BEGIN
 	) VALUES (
 		NEW.auth_question_id,NEW.person_id,NEW.user_answer,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3662,6 +5399,66 @@ CREATE TRIGGER _trigger_person_auth_question_ins
 	EXECUTE PROCEDURE jazzhands_legacy.person_auth_question_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_auth_question_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.person_auth_question%rowtype;
+	_nr	jazzhands.person_auth_question%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.auth_question_id IS DISTINCT FROM NEW.auth_question_id THEN
+_uq := array_append(_uq, 'auth_question_id = ' || quote_nullable(NEW.auth_question_id));
+	END IF;
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.user_answer IS DISTINCT FROM NEW.user_answer THEN
+_uq := array_append(_uq, 'user_answer = ' || quote_nullable(NEW.user_answer));
+	END IF;
+
+	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
+IF NEW.is_active = 'Y' THEN
+	_uq := array_append(_uq, 'is_active = true');
+ELSIF NEW.is_active = 'N' THEN
+	_uq := array_append(_uq, 'is_active = false');
+ELSE
+	_uq := array_append(_uq, 'is_active = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.person_auth_question SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.auth_question_id = $1 AND  NEW.person_id = $2 RETURNING *'  USING OLD.auth_question_id, OLD.person_id
+			INTO _nr;
+		NEW.auth_question_id = _nr.auth_question_id;
+		NEW.person_id = _nr.person_id;
+		NEW.user_answer = _nr.user_answer;
+		NEW.is_active = _nr.is_active;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_auth_question_upd
+	ON jazzhands_legacy.person_auth_question;
+CREATE TRIGGER _trigger_person_auth_question_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.person_auth_question
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_auth_question_upd();
+
+
+
 -- Triggers for person_company
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.person_company_ins()
@@ -3674,6 +5471,8 @@ BEGIN
 	) VALUES (
 		NEW.company_id,NEW.person_id,NEW.person_company_status,NEW.person_company_relation,CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END,NEW.description,NEW.position_title,NEW.hire_date,NEW.termination_date,NEW.manager_person_id,NEW.nickname
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3688,6 +5487,123 @@ CREATE TRIGGER _trigger_person_company_ins
 	EXECUTE PROCEDURE jazzhands_legacy.person_company_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_company_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.person_company%rowtype;
+	_nr	jazzhands.person_company%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.person_company_status IS DISTINCT FROM NEW.person_company_status THEN
+_uq := array_append(_uq, 'person_company_status = ' || quote_nullable(NEW.person_company_status));
+	END IF;
+
+	IF OLD.person_company_relation IS DISTINCT FROM NEW.person_company_relation THEN
+_uq := array_append(_uq, 'person_company_relation = ' || quote_nullable(NEW.person_company_relation));
+	END IF;
+
+	IF OLD.is_exempt IS DISTINCT FROM NEW.is_exempt THEN
+IF NEW.is_exempt = 'Y' THEN
+	_uq := array_append(_uq, 'is_exempt = true');
+ELSIF NEW.is_exempt = 'N' THEN
+	_uq := array_append(_uq, 'is_exempt = false');
+ELSE
+	_uq := array_append(_uq, 'is_exempt = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_management IS DISTINCT FROM NEW.is_management THEN
+IF NEW.is_management = 'Y' THEN
+	_uq := array_append(_uq, 'is_management = true');
+ELSIF NEW.is_management = 'N' THEN
+	_uq := array_append(_uq, 'is_management = false');
+ELSE
+	_uq := array_append(_uq, 'is_management = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_full_time IS DISTINCT FROM NEW.is_full_time THEN
+IF NEW.is_full_time = 'Y' THEN
+	_uq := array_append(_uq, 'is_full_time = true');
+ELSIF NEW.is_full_time = 'N' THEN
+	_uq := array_append(_uq, 'is_full_time = false');
+ELSE
+	_uq := array_append(_uq, 'is_full_time = NULL');
+END IF;
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.position_title IS DISTINCT FROM NEW.position_title THEN
+_uq := array_append(_uq, 'position_title = ' || quote_nullable(NEW.position_title));
+	END IF;
+
+	IF OLD.hire_date IS DISTINCT FROM NEW.hire_date THEN
+_uq := array_append(_uq, 'hire_date = ' || quote_nullable(NEW.hire_date));
+	END IF;
+
+	IF OLD.termination_date IS DISTINCT FROM NEW.termination_date THEN
+_uq := array_append(_uq, 'termination_date = ' || quote_nullable(NEW.termination_date));
+	END IF;
+
+	IF OLD.manager_person_id IS DISTINCT FROM NEW.manager_person_id THEN
+_uq := array_append(_uq, 'manager_person_id = ' || quote_nullable(NEW.manager_person_id));
+	END IF;
+
+	IF OLD.nickname IS DISTINCT FROM NEW.nickname THEN
+_uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.person_company SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.company_id = $1 AND  NEW.person_id = $2 RETURNING *'  USING OLD.company_id, OLD.person_id
+			INTO _nr;
+		NEW.company_id = _nr.company_id;
+		NEW.person_id = _nr.person_id;
+		NEW.person_company_status = _nr.person_company_status;
+		NEW.person_company_relation = _nr.person_company_relation;
+		NEW.is_exempt = _nr.is_exempt;
+		NEW.is_management = _nr.is_management;
+		NEW.is_full_time = _nr.is_full_time;
+		NEW.description = _nr.description;
+		NEW.position_title = _nr.position_title;
+		NEW.hire_date = _nr.hire_date;
+		NEW.termination_date = _nr.termination_date;
+		NEW.manager_person_id = _nr.manager_person_id;
+		NEW.nickname = _nr.nickname;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_company_upd
+	ON jazzhands_legacy.person_company;
+CREATE TRIGGER _trigger_person_company_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.person_company
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_company_upd();
+
+
+
 -- Triggers for private_key
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.private_key_ins()
@@ -3700,6 +5616,8 @@ BEGIN
 	) VALUES (
 		NEW.private_key_id,NEW.private_key_encryption_type,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,NEW.subject_key_identifier,NEW.private_key,NEW.passphrase,NEW.encryption_key_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3714,6 +5632,81 @@ CREATE TRIGGER _trigger_private_key_ins
 	EXECUTE PROCEDURE jazzhands_legacy.private_key_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.private_key_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.private_key%rowtype;
+	_nr	jazzhands.private_key%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.private_key_id IS DISTINCT FROM NEW.private_key_id THEN
+_uq := array_append(_uq, 'private_key_id = ' || quote_nullable(NEW.private_key_id));
+	END IF;
+
+	IF OLD.private_key_encryption_type IS DISTINCT FROM NEW.private_key_encryption_type THEN
+_uq := array_append(_uq, 'private_key_encryption_type = ' || quote_nullable(NEW.private_key_encryption_type));
+	END IF;
+
+	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
+IF NEW.is_active = 'Y' THEN
+	_uq := array_append(_uq, 'is_active = true');
+ELSIF NEW.is_active = 'N' THEN
+	_uq := array_append(_uq, 'is_active = false');
+ELSE
+	_uq := array_append(_uq, 'is_active = NULL');
+END IF;
+	END IF;
+
+	IF OLD.subject_key_identifier IS DISTINCT FROM NEW.subject_key_identifier THEN
+_uq := array_append(_uq, 'subject_key_identifier = ' || quote_nullable(NEW.subject_key_identifier));
+	END IF;
+
+	IF OLD.private_key IS DISTINCT FROM NEW.private_key THEN
+_uq := array_append(_uq, 'private_key = ' || quote_nullable(NEW.private_key));
+	END IF;
+
+	IF OLD.passphrase IS DISTINCT FROM NEW.passphrase THEN
+_uq := array_append(_uq, 'passphrase = ' || quote_nullable(NEW.passphrase));
+	END IF;
+
+	IF OLD.encryption_key_id IS DISTINCT FROM NEW.encryption_key_id THEN
+_uq := array_append(_uq, 'encryption_key_id = ' || quote_nullable(NEW.encryption_key_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.private_key SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.private_key_id = $1 RETURNING *'  USING OLD.private_key_id
+			INTO _nr;
+		NEW.private_key_id = _nr.private_key_id;
+		NEW.private_key_encryption_type = _nr.private_key_encryption_type;
+		NEW.is_active = _nr.is_active;
+		NEW.subject_key_identifier = _nr.subject_key_identifier;
+		NEW.private_key = _nr.private_key;
+		NEW.passphrase = _nr.passphrase;
+		NEW.encryption_key_id = _nr.encryption_key_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_private_key_upd
+	ON jazzhands_legacy.private_key;
+CREATE TRIGGER _trigger_private_key_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.private_key
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.private_key_upd();
+
+
+
 -- Triggers for property
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.property_ins()
@@ -3726,6 +5719,8 @@ BEGIN
 	) VALUES (
 		NEW.property_id,NEW.account_collection_id,NEW.account_id,NEW.account_realm_id,NEW.company_collection_id,NEW.company_id,NEW.device_collection_id,NEW.dns_domain_collection_id,NEW.layer2_network_collection_id,NEW.layer3_network_collection_id,NEW.netblock_collection_id,NEW.network_range_id,NEW.operating_system_id,NEW.operating_system_snapshot_id,NEW.person_id,NEW.property_collection_id,NEW.service_env_collection_id,NEW.site_code,NEW.x509_signed_certificate_id,NEW.property_name,NEW.property_type,NEW.property_value,NEW.property_value_timestamp,NEW.property_value_account_coll_id,NEW.property_value_device_coll_id,NEW.property_value_json,NEW.property_value_nblk_coll_id,NEW.property_value_password_type,NEW.property_value_person_id,NEW.property_value_sw_package_id,NEW.property_value_token_col_id,NEW.property_rank,NEW.start_date,NEW.finish_date,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3740,6 +5735,221 @@ CREATE TRIGGER _trigger_property_ins
 	EXECUTE PROCEDURE jazzhands_legacy.property_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.property_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.property%rowtype;
+	_nr	jazzhands.property%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.property_id IS DISTINCT FROM NEW.property_id THEN
+_uq := array_append(_uq, 'property_id = ' || quote_nullable(NEW.property_id));
+	END IF;
+
+	IF OLD.account_collection_id IS DISTINCT FROM NEW.account_collection_id THEN
+_uq := array_append(_uq, 'account_collection_id = ' || quote_nullable(NEW.account_collection_id));
+	END IF;
+
+	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
+_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+	END IF;
+
+	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
+_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF OLD.company_collection_id IS DISTINCT FROM NEW.company_collection_id THEN
+_uq := array_append(_uq, 'company_collection_id = ' || quote_nullable(NEW.company_collection_id));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.device_collection_id IS DISTINCT FROM NEW.device_collection_id THEN
+_uq := array_append(_uq, 'device_collection_id = ' || quote_nullable(NEW.device_collection_id));
+	END IF;
+
+	IF OLD.dns_domain_collection_id IS DISTINCT FROM NEW.dns_domain_collection_id THEN
+_uq := array_append(_uq, 'dns_domain_collection_id = ' || quote_nullable(NEW.dns_domain_collection_id));
+	END IF;
+
+	IF OLD.layer2_network_collection_id IS DISTINCT FROM NEW.layer2_network_collection_id THEN
+_uq := array_append(_uq, 'layer2_network_collection_id = ' || quote_nullable(NEW.layer2_network_collection_id));
+	END IF;
+
+	IF OLD.layer3_network_collection_id IS DISTINCT FROM NEW.layer3_network_collection_id THEN
+_uq := array_append(_uq, 'layer3_network_collection_id = ' || quote_nullable(NEW.layer3_network_collection_id));
+	END IF;
+
+	IF OLD.netblock_collection_id IS DISTINCT FROM NEW.netblock_collection_id THEN
+_uq := array_append(_uq, 'netblock_collection_id = ' || quote_nullable(NEW.netblock_collection_id));
+	END IF;
+
+	IF OLD.network_range_id IS DISTINCT FROM NEW.network_range_id THEN
+_uq := array_append(_uq, 'network_range_id = ' || quote_nullable(NEW.network_range_id));
+	END IF;
+
+	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
+_uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
+	END IF;
+
+	IF OLD.operating_system_snapshot_id IS DISTINCT FROM NEW.operating_system_snapshot_id THEN
+_uq := array_append(_uq, 'operating_system_snapshot_id = ' || quote_nullable(NEW.operating_system_snapshot_id));
+	END IF;
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.property_collection_id IS DISTINCT FROM NEW.property_collection_id THEN
+_uq := array_append(_uq, 'property_name_collection_id = ' || quote_nullable(NEW.property_collection_id));
+	END IF;
+
+	IF OLD.service_env_collection_id IS DISTINCT FROM NEW.service_env_collection_id THEN
+_uq := array_append(_uq, 'service_environment_collection_id = ' || quote_nullable(NEW.service_env_collection_id));
+	END IF;
+
+	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
+_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+	END IF;
+
+	IF OLD.x509_signed_certificate_id IS DISTINCT FROM NEW.x509_signed_certificate_id THEN
+_uq := array_append(_uq, 'x509_signed_certificate_id = ' || quote_nullable(NEW.x509_signed_certificate_id));
+	END IF;
+
+	IF OLD.property_name IS DISTINCT FROM NEW.property_name THEN
+_uq := array_append(_uq, 'property_name = ' || quote_nullable(NEW.property_name));
+	END IF;
+
+	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
+_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+	END IF;
+
+	IF OLD.property_value IS DISTINCT FROM NEW.property_value THEN
+_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+	END IF;
+
+	IF OLD.property_value_timestamp IS DISTINCT FROM NEW.property_value_timestamp THEN
+_uq := array_append(_uq, 'property_value_timestamp = ' || quote_nullable(NEW.property_value_timestamp));
+	END IF;
+
+	IF OLD.property_value_account_coll_id IS DISTINCT FROM NEW.property_value_account_coll_id THEN
+_uq := array_append(_uq, 'property_value_account_collection_id = ' || quote_nullable(NEW.property_value_account_coll_id));
+	END IF;
+
+	IF OLD.property_value_device_coll_id IS DISTINCT FROM NEW.property_value_device_coll_id THEN
+_uq := array_append(_uq, 'property_value_device_collection_id = ' || quote_nullable(NEW.property_value_device_coll_id));
+	END IF;
+
+	IF OLD.property_value_json IS DISTINCT FROM NEW.property_value_json THEN
+_uq := array_append(_uq, 'property_value_json = ' || quote_nullable(NEW.property_value_json));
+	END IF;
+
+	IF OLD.property_value_nblk_coll_id IS DISTINCT FROM NEW.property_value_nblk_coll_id THEN
+_uq := array_append(_uq, 'property_value_netblock_collection_id = ' || quote_nullable(NEW.property_value_nblk_coll_id));
+	END IF;
+
+	IF OLD.property_value_password_type IS DISTINCT FROM NEW.property_value_password_type THEN
+_uq := array_append(_uq, 'property_value_password_type = ' || quote_nullable(NEW.property_value_password_type));
+	END IF;
+
+	IF OLD.property_value_person_id IS DISTINCT FROM NEW.property_value_person_id THEN
+_uq := array_append(_uq, 'property_value_person_id = ' || quote_nullable(NEW.property_value_person_id));
+	END IF;
+
+	IF OLD.property_value_sw_package_id IS DISTINCT FROM NEW.property_value_sw_package_id THEN
+_uq := array_append(_uq, 'property_value_sw_package_id = ' || quote_nullable(NEW.property_value_sw_package_id));
+	END IF;
+
+	IF OLD.property_value_token_col_id IS DISTINCT FROM NEW.property_value_token_col_id THEN
+_uq := array_append(_uq, 'property_value_token_collection_id = ' || quote_nullable(NEW.property_value_token_col_id));
+	END IF;
+
+	IF OLD.property_rank IS DISTINCT FROM NEW.property_rank THEN
+_uq := array_append(_uq, 'property_rank = ' || quote_nullable(NEW.property_rank));
+	END IF;
+
+	IF OLD.start_date IS DISTINCT FROM NEW.start_date THEN
+_uq := array_append(_uq, 'start_date = ' || quote_nullable(NEW.start_date));
+	END IF;
+
+	IF OLD.finish_date IS DISTINCT FROM NEW.finish_date THEN
+_uq := array_append(_uq, 'finish_date = ' || quote_nullable(NEW.finish_date));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.property SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.property_id = $1 RETURNING *'  USING OLD.property_id
+			INTO _nr;
+		NEW.property_id = _nr.property_id;
+		NEW.account_collection_id = _nr.account_collection_id;
+		NEW.account_id = _nr.account_id;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.company_collection_id = _nr.company_collection_id;
+		NEW.company_id = _nr.company_id;
+		NEW.device_collection_id = _nr.device_collection_id;
+		NEW.dns_domain_collection_id = _nr.dns_domain_collection_id;
+		NEW.layer2_network_collection_id = _nr.layer2_network_collection_id;
+		NEW.layer3_network_collection_id = _nr.layer3_network_collection_id;
+		NEW.netblock_collection_id = _nr.netblock_collection_id;
+		NEW.network_range_id = _nr.network_range_id;
+		NEW.operating_system_id = _nr.operating_system_id;
+		NEW.operating_system_snapshot_id = _nr.operating_system_snapshot_id;
+		NEW.person_id = _nr.person_id;
+		NEW.property_collection_id = _nr.property_name_collection_id;
+		NEW.service_env_collection_id = _nr.service_environment_collection_id;
+		NEW.site_code = _nr.site_code;
+		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+		NEW.property_name = _nr.property_name;
+		NEW.property_type = _nr.property_type;
+		NEW.property_value = _nr.property_value;
+		NEW.property_value_timestamp = _nr.property_value_timestamp;
+		NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
+		NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
+		NEW.property_value_json = _nr.property_value_json;
+		NEW.property_value_nblk_coll_id = _nr.property_value_netblock_collection_id;
+		NEW.property_value_password_type = _nr.property_value_password_type;
+		NEW.property_value_person_id = _nr.property_value_person_id;
+		NEW.property_value_sw_package_id = _nr.property_value_sw_package_id;
+		NEW.property_value_token_col_id = _nr.property_value_token_collection_id;
+		NEW.property_rank = _nr.property_rank;
+		NEW.start_date = _nr.start_date;
+		NEW.finish_date = _nr.finish_date;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_property_upd
+	ON jazzhands_legacy.property;
+CREATE TRIGGER _trigger_property_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.property_upd();
+
+
+
 -- Triggers for rack
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.rack_ins()
@@ -3752,6 +5962,8 @@ BEGIN
 	) VALUES (
 		NEW.rack_id,NEW.site_code,NEW.room,NEW.sub_room,NEW.rack_row,NEW.rack_name,NEW.rack_style,NEW.rack_type,NEW.description,NEW.rack_height_in_u,CASE WHEN NEW.display_from_bottom = 'Y' THEN true WHEN NEW.display_from_bottom = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3766,6 +5978,101 @@ CREATE TRIGGER _trigger_rack_ins
 	EXECUTE PROCEDURE jazzhands_legacy.rack_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.rack_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.rack%rowtype;
+	_nr	jazzhands.rack%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.rack_id IS DISTINCT FROM NEW.rack_id THEN
+_uq := array_append(_uq, 'rack_id = ' || quote_nullable(NEW.rack_id));
+	END IF;
+
+	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
+_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+	END IF;
+
+	IF OLD.room IS DISTINCT FROM NEW.room THEN
+_uq := array_append(_uq, 'room = ' || quote_nullable(NEW.room));
+	END IF;
+
+	IF OLD.sub_room IS DISTINCT FROM NEW.sub_room THEN
+_uq := array_append(_uq, 'sub_room = ' || quote_nullable(NEW.sub_room));
+	END IF;
+
+	IF OLD.rack_row IS DISTINCT FROM NEW.rack_row THEN
+_uq := array_append(_uq, 'rack_row = ' || quote_nullable(NEW.rack_row));
+	END IF;
+
+	IF OLD.rack_name IS DISTINCT FROM NEW.rack_name THEN
+_uq := array_append(_uq, 'rack_name = ' || quote_nullable(NEW.rack_name));
+	END IF;
+
+	IF OLD.rack_style IS DISTINCT FROM NEW.rack_style THEN
+_uq := array_append(_uq, 'rack_style = ' || quote_nullable(NEW.rack_style));
+	END IF;
+
+	IF OLD.rack_type IS DISTINCT FROM NEW.rack_type THEN
+_uq := array_append(_uq, 'rack_type = ' || quote_nullable(NEW.rack_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.rack_height_in_u IS DISTINCT FROM NEW.rack_height_in_u THEN
+_uq := array_append(_uq, 'rack_height_in_u = ' || quote_nullable(NEW.rack_height_in_u));
+	END IF;
+
+	IF OLD.display_from_bottom IS DISTINCT FROM NEW.display_from_bottom THEN
+IF NEW.display_from_bottom = 'Y' THEN
+	_uq := array_append(_uq, 'display_from_bottom = true');
+ELSIF NEW.display_from_bottom = 'N' THEN
+	_uq := array_append(_uq, 'display_from_bottom = false');
+ELSE
+	_uq := array_append(_uq, 'display_from_bottom = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.rack SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.rack_id = $1 RETURNING *'  USING OLD.rack_id
+			INTO _nr;
+		NEW.rack_id = _nr.rack_id;
+		NEW.site_code = _nr.site_code;
+		NEW.room = _nr.room;
+		NEW.sub_room = _nr.sub_room;
+		NEW.rack_row = _nr.rack_row;
+		NEW.rack_name = _nr.rack_name;
+		NEW.rack_style = _nr.rack_style;
+		NEW.rack_type = _nr.rack_type;
+		NEW.description = _nr.description;
+		NEW.rack_height_in_u = _nr.rack_height_in_u;
+		NEW.display_from_bottom = _nr.display_from_bottom;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_rack_upd
+	ON jazzhands_legacy.rack;
+CREATE TRIGGER _trigger_rack_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.rack
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.rack_upd();
+
+
+
 -- Triggers for slot
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_ins()
@@ -3778,6 +6085,8 @@ BEGIN
 	) VALUES (
 		NEW.slot_id,NEW.component_id,NEW.slot_name,NEW.slot_index,NEW.slot_type_id,NEW.component_type_slot_tmplt_id,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.physical_label,NEW.mac_address,NEW.description,NEW.slot_x_offset,NEW.slot_y_offset,NEW.slot_z_offset,NEW.slot_side
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3792,6 +6101,116 @@ CREATE TRIGGER _trigger_slot_ins
 	EXECUTE PROCEDURE jazzhands_legacy.slot_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.slot%rowtype;
+	_nr	jazzhands.slot%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
+_uq := array_append(_uq, 'slot_id = ' || quote_nullable(NEW.slot_id));
+	END IF;
+
+	IF OLD.component_id IS DISTINCT FROM NEW.component_id THEN
+_uq := array_append(_uq, 'component_id = ' || quote_nullable(NEW.component_id));
+	END IF;
+
+	IF OLD.slot_name IS DISTINCT FROM NEW.slot_name THEN
+_uq := array_append(_uq, 'slot_name = ' || quote_nullable(NEW.slot_name));
+	END IF;
+
+	IF OLD.slot_index IS DISTINCT FROM NEW.slot_index THEN
+_uq := array_append(_uq, 'slot_index = ' || quote_nullable(NEW.slot_index));
+	END IF;
+
+	IF OLD.slot_type_id IS DISTINCT FROM NEW.slot_type_id THEN
+_uq := array_append(_uq, 'slot_type_id = ' || quote_nullable(NEW.slot_type_id));
+	END IF;
+
+	IF OLD.component_type_slot_tmplt_id IS DISTINCT FROM NEW.component_type_slot_tmplt_id THEN
+_uq := array_append(_uq, 'component_type_slot_template_id = ' || quote_nullable(NEW.component_type_slot_tmplt_id));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.physical_label IS DISTINCT FROM NEW.physical_label THEN
+_uq := array_append(_uq, 'physical_label = ' || quote_nullable(NEW.physical_label));
+	END IF;
+
+	IF OLD.mac_address IS DISTINCT FROM NEW.mac_address THEN
+_uq := array_append(_uq, 'mac_address = ' || quote_nullable(NEW.mac_address));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.slot_x_offset IS DISTINCT FROM NEW.slot_x_offset THEN
+_uq := array_append(_uq, 'slot_x_offset = ' || quote_nullable(NEW.slot_x_offset));
+	END IF;
+
+	IF OLD.slot_y_offset IS DISTINCT FROM NEW.slot_y_offset THEN
+_uq := array_append(_uq, 'slot_y_offset = ' || quote_nullable(NEW.slot_y_offset));
+	END IF;
+
+	IF OLD.slot_z_offset IS DISTINCT FROM NEW.slot_z_offset THEN
+_uq := array_append(_uq, 'slot_z_offset = ' || quote_nullable(NEW.slot_z_offset));
+	END IF;
+
+	IF OLD.slot_side IS DISTINCT FROM NEW.slot_side THEN
+_uq := array_append(_uq, 'slot_side = ' || quote_nullable(NEW.slot_side));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.slot SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.slot_id = $1 RETURNING *'  USING OLD.slot_id
+			INTO _nr;
+		NEW.slot_id = _nr.slot_id;
+		NEW.component_id = _nr.component_id;
+		NEW.slot_name = _nr.slot_name;
+		NEW.slot_index = _nr.slot_index;
+		NEW.slot_type_id = _nr.slot_type_id;
+		NEW.component_type_slot_tmplt_id = _nr.component_type_slot_template_id;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.physical_label = _nr.physical_label;
+		NEW.mac_address = _nr.mac_address;
+		NEW.description = _nr.description;
+		NEW.slot_x_offset = _nr.slot_x_offset;
+		NEW.slot_y_offset = _nr.slot_y_offset;
+		NEW.slot_z_offset = _nr.slot_z_offset;
+		NEW.slot_side = _nr.slot_side;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_slot_upd
+	ON jazzhands_legacy.slot;
+CREATE TRIGGER _trigger_slot_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.slot
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.slot_upd();
+
+
+
 -- Triggers for slot_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_type_ins()
@@ -3804,6 +6223,8 @@ BEGIN
 	) VALUES (
 		NEW.slot_type_id,NEW.slot_type,NEW.slot_function,NEW.slot_physical_interface_type,NEW.description,CASE WHEN NEW.remote_slot_permitted = 'Y' THEN true WHEN NEW.remote_slot_permitted = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3818,6 +6239,76 @@ CREATE TRIGGER _trigger_slot_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.slot_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.slot_type%rowtype;
+	_nr	jazzhands.slot_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.slot_type_id IS DISTINCT FROM NEW.slot_type_id THEN
+_uq := array_append(_uq, 'slot_type_id = ' || quote_nullable(NEW.slot_type_id));
+	END IF;
+
+	IF OLD.slot_type IS DISTINCT FROM NEW.slot_type THEN
+_uq := array_append(_uq, 'slot_type = ' || quote_nullable(NEW.slot_type));
+	END IF;
+
+	IF OLD.slot_function IS DISTINCT FROM NEW.slot_function THEN
+_uq := array_append(_uq, 'slot_function = ' || quote_nullable(NEW.slot_function));
+	END IF;
+
+	IF OLD.slot_physical_interface_type IS DISTINCT FROM NEW.slot_physical_interface_type THEN
+_uq := array_append(_uq, 'slot_physical_interface_type = ' || quote_nullable(NEW.slot_physical_interface_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.remote_slot_permitted IS DISTINCT FROM NEW.remote_slot_permitted THEN
+IF NEW.remote_slot_permitted = 'Y' THEN
+	_uq := array_append(_uq, 'remote_slot_permitted = true');
+ELSIF NEW.remote_slot_permitted = 'N' THEN
+	_uq := array_append(_uq, 'remote_slot_permitted = false');
+ELSE
+	_uq := array_append(_uq, 'remote_slot_permitted = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.slot_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.slot_type_id = $1 RETURNING *'  USING OLD.slot_type_id
+			INTO _nr;
+		NEW.slot_type_id = _nr.slot_type_id;
+		NEW.slot_type = _nr.slot_type;
+		NEW.slot_function = _nr.slot_function;
+		NEW.slot_physical_interface_type = _nr.slot_physical_interface_type;
+		NEW.description = _nr.description;
+		NEW.remote_slot_permitted = _nr.remote_slot_permitted;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_slot_type_upd
+	ON jazzhands_legacy.slot_type;
+CREATE TRIGGER _trigger_slot_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.slot_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.slot_type_upd();
+
+
+
 -- Triggers for sudo_acct_col_device_collectio
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.sudo_acct_col_device_collectio_ins()
@@ -3830,6 +6321,8 @@ BEGIN
 	) VALUES (
 		NEW.sudo_alias_name,NEW.device_collection_id,NEW.account_collection_id,NEW.run_as_account_collection_id,CASE WHEN NEW.requires_password = 'Y' THEN true WHEN NEW.requires_password = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_exec_child = 'Y' THEN true WHEN NEW.can_exec_child = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3844,6 +6337,82 @@ CREATE TRIGGER _trigger_sudo_acct_col_device_collectio_ins
 	EXECUTE PROCEDURE jazzhands_legacy.sudo_acct_col_device_collectio_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.sudo_acct_col_device_collectio_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.sudo_acct_col_device_collectio%rowtype;
+	_nr	jazzhands.sudo_account_collection_device_collection%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.sudo_alias_name IS DISTINCT FROM NEW.sudo_alias_name THEN
+_uq := array_append(_uq, 'sudo_alias_name = ' || quote_nullable(NEW.sudo_alias_name));
+	END IF;
+
+	IF OLD.device_collection_id IS DISTINCT FROM NEW.device_collection_id THEN
+_uq := array_append(_uq, 'device_collection_id = ' || quote_nullable(NEW.device_collection_id));
+	END IF;
+
+	IF OLD.account_collection_id IS DISTINCT FROM NEW.account_collection_id THEN
+_uq := array_append(_uq, 'account_collection_id = ' || quote_nullable(NEW.account_collection_id));
+	END IF;
+
+	IF OLD.run_as_account_collection_id IS DISTINCT FROM NEW.run_as_account_collection_id THEN
+_uq := array_append(_uq, 'run_as_account_collection_id = ' || quote_nullable(NEW.run_as_account_collection_id));
+	END IF;
+
+	IF OLD.requires_password IS DISTINCT FROM NEW.requires_password THEN
+IF NEW.requires_password = 'Y' THEN
+	_uq := array_append(_uq, 'requires_password = true');
+ELSIF NEW.requires_password = 'N' THEN
+	_uq := array_append(_uq, 'requires_password = false');
+ELSE
+	_uq := array_append(_uq, 'requires_password = NULL');
+END IF;
+	END IF;
+
+	IF OLD.can_exec_child IS DISTINCT FROM NEW.can_exec_child THEN
+IF NEW.can_exec_child = 'Y' THEN
+	_uq := array_append(_uq, 'can_exec_child = true');
+ELSIF NEW.can_exec_child = 'N' THEN
+	_uq := array_append(_uq, 'can_exec_child = false');
+ELSE
+	_uq := array_append(_uq, 'can_exec_child = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.sudo_account_collection_device_collection SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.sudo_alias_name = $1 AND  NEW.device_collection_id = $2 AND  NEW.account_collection_id = $3 RETURNING *'  USING OLD.sudo_alias_name, OLD.device_collection_id, OLD.account_collection_id
+			INTO _nr;
+		NEW.sudo_alias_name = _nr.sudo_alias_name;
+		NEW.device_collection_id = _nr.device_collection_id;
+		NEW.account_collection_id = _nr.account_collection_id;
+		NEW.run_as_account_collection_id = _nr.run_as_account_collection_id;
+		NEW.requires_password = _nr.requires_password;
+		NEW.can_exec_child = _nr.can_exec_child;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_sudo_acct_col_device_collectio_upd
+	ON jazzhands_legacy.sudo_acct_col_device_collectio;
+CREATE TRIGGER _trigger_sudo_acct_col_device_collectio_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.sudo_acct_col_device_collectio
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.sudo_acct_col_device_collectio_upd();
+
+
+
 -- Triggers for token
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.token_ins()
@@ -3856,6 +6425,8 @@ BEGIN
 	) VALUES (
 		NEW.token_id,NEW.token_type,NEW.token_status,NEW.description,NEW.external_id,NEW.token_serial,NEW.zero_time,NEW.time_modulo,NEW.time_skew,NEW.token_key,NEW.encryption_key_id,NEW.token_password,NEW.expire_time,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.last_updated
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3870,6 +6441,131 @@ CREATE TRIGGER _trigger_token_ins
 	EXECUTE PROCEDURE jazzhands_legacy.token_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.token_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.token%rowtype;
+	_nr	jazzhands.token%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.token_id IS DISTINCT FROM NEW.token_id THEN
+_uq := array_append(_uq, 'token_id = ' || quote_nullable(NEW.token_id));
+	END IF;
+
+	IF OLD.token_type IS DISTINCT FROM NEW.token_type THEN
+_uq := array_append(_uq, 'token_type = ' || quote_nullable(NEW.token_type));
+	END IF;
+
+	IF OLD.token_status IS DISTINCT FROM NEW.token_status THEN
+_uq := array_append(_uq, 'token_status = ' || quote_nullable(NEW.token_status));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
+_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+	END IF;
+
+	IF OLD.token_serial IS DISTINCT FROM NEW.token_serial THEN
+_uq := array_append(_uq, 'token_serial = ' || quote_nullable(NEW.token_serial));
+	END IF;
+
+	IF OLD.zero_time IS DISTINCT FROM NEW.zero_time THEN
+_uq := array_append(_uq, 'zero_time = ' || quote_nullable(NEW.zero_time));
+	END IF;
+
+	IF OLD.time_modulo IS DISTINCT FROM NEW.time_modulo THEN
+_uq := array_append(_uq, 'time_modulo = ' || quote_nullable(NEW.time_modulo));
+	END IF;
+
+	IF OLD.time_skew IS DISTINCT FROM NEW.time_skew THEN
+_uq := array_append(_uq, 'time_skew = ' || quote_nullable(NEW.time_skew));
+	END IF;
+
+	IF OLD.token_key IS DISTINCT FROM NEW.token_key THEN
+_uq := array_append(_uq, 'token_key = ' || quote_nullable(NEW.token_key));
+	END IF;
+
+	IF OLD.encryption_key_id IS DISTINCT FROM NEW.encryption_key_id THEN
+_uq := array_append(_uq, 'encryption_key_id = ' || quote_nullable(NEW.encryption_key_id));
+	END IF;
+
+	IF OLD.token_password IS DISTINCT FROM NEW.token_password THEN
+_uq := array_append(_uq, 'token_password = ' || quote_nullable(NEW.token_password));
+	END IF;
+
+	IF OLD.expire_time IS DISTINCT FROM NEW.expire_time THEN
+_uq := array_append(_uq, 'expire_time = ' || quote_nullable(NEW.expire_time));
+	END IF;
+
+	IF OLD.is_token_locked IS DISTINCT FROM NEW.is_token_locked THEN
+IF NEW.is_token_locked = 'Y' THEN
+	_uq := array_append(_uq, 'is_token_locked = true');
+ELSIF NEW.is_token_locked = 'N' THEN
+	_uq := array_append(_uq, 'is_token_locked = false');
+ELSE
+	_uq := array_append(_uq, 'is_token_locked = NULL');
+END IF;
+	END IF;
+
+	IF OLD.token_unlock_time IS DISTINCT FROM NEW.token_unlock_time THEN
+_uq := array_append(_uq, 'token_unlock_time = ' || quote_nullable(NEW.token_unlock_time));
+	END IF;
+
+	IF OLD.bad_logins IS DISTINCT FROM NEW.bad_logins THEN
+_uq := array_append(_uq, 'bad_logins = ' || quote_nullable(NEW.bad_logins));
+	END IF;
+
+	IF OLD.last_updated IS DISTINCT FROM NEW.last_updated THEN
+_uq := array_append(_uq, 'last_updated = ' || quote_nullable(NEW.last_updated));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.token SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.token_id = $1 RETURNING *'  USING OLD.token_id
+			INTO _nr;
+		NEW.token_id = _nr.token_id;
+		NEW.token_type = _nr.token_type;
+		NEW.token_status = _nr.token_status;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.token_serial = _nr.token_serial;
+		NEW.zero_time = _nr.zero_time;
+		NEW.time_modulo = _nr.time_modulo;
+		NEW.time_skew = _nr.time_skew;
+		NEW.token_key = _nr.token_key;
+		NEW.encryption_key_id = _nr.encryption_key_id;
+		NEW.token_password = _nr.token_password;
+		NEW.expire_time = _nr.expire_time;
+		NEW.is_token_locked = _nr.is_token_locked;
+		NEW.token_unlock_time = _nr.token_unlock_time;
+		NEW.bad_logins = _nr.bad_logins;
+		NEW.last_updated = _nr.last_updated;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_token_upd
+	ON jazzhands_legacy.token;
+CREATE TRIGGER _trigger_token_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.token_upd();
+
+
+
 -- Triggers for v_approval_instance_step_expanded
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_approval_instance_step_expanded_ins()
@@ -3882,6 +6578,8 @@ BEGIN
 	) VALUES (
 		NEW.first_approval_instance_item_id,NEW.root_step_id,NEW.approval_instance_item_id,NEW.approval_instance_step_id,NEW.tier,NEW.level,CASE WHEN NEW.is_approved = 'Y' THEN true WHEN NEW.is_approved = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3896,6 +6594,77 @@ CREATE TRIGGER _trigger_v_approval_instance_step_expanded_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_approval_instance_step_expanded_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_approval_instance_step_expanded_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_approval_instance_step_expanded%rowtype;
+	_nr	jazzhands.v_approval_instance_step_expanded%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.first_approval_instance_item_id IS DISTINCT FROM NEW.first_approval_instance_item_id THEN
+_uq := array_append(_uq, 'first_approval_instance_item_id = ' || quote_nullable(NEW.first_approval_instance_item_id));
+	END IF;
+
+	IF OLD.root_step_id IS DISTINCT FROM NEW.root_step_id THEN
+_uq := array_append(_uq, 'root_step_id = ' || quote_nullable(NEW.root_step_id));
+	END IF;
+
+	IF OLD.approval_instance_item_id IS DISTINCT FROM NEW.approval_instance_item_id THEN
+_uq := array_append(_uq, 'approval_instance_item_id = ' || quote_nullable(NEW.approval_instance_item_id));
+	END IF;
+
+	IF OLD.approval_instance_step_id IS DISTINCT FROM NEW.approval_instance_step_id THEN
+_uq := array_append(_uq, 'approval_instance_step_id = ' || quote_nullable(NEW.approval_instance_step_id));
+	END IF;
+
+	IF OLD.tier IS DISTINCT FROM NEW.tier THEN
+_uq := array_append(_uq, 'tier = ' || quote_nullable(NEW.tier));
+	END IF;
+
+	IF OLD.level IS DISTINCT FROM NEW.level THEN
+_uq := array_append(_uq, 'level = ' || quote_nullable(NEW.level));
+	END IF;
+
+	IF OLD.is_approved IS DISTINCT FROM NEW.is_approved THEN
+IF NEW.is_approved = 'Y' THEN
+	_uq := array_append(_uq, 'is_approved = true');
+ELSIF NEW.is_approved = 'N' THEN
+	_uq := array_append(_uq, 'is_approved = false');
+ELSE
+	_uq := array_append(_uq, 'is_approved = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_approval_instance_step_expanded SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.first_approval_instance_item_id = _nr.first_approval_instance_item_id;
+		NEW.root_step_id = _nr.root_step_id;
+		NEW.approval_instance_item_id = _nr.approval_instance_item_id;
+		NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+		NEW.tier = _nr.tier;
+		NEW.level = _nr.level;
+		NEW.is_approved = _nr.is_approved;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_approval_instance_step_expanded_upd
+	ON jazzhands_legacy.v_approval_instance_step_expanded;
+CREATE TRIGGER _trigger_v_approval_instance_step_expanded_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_approval_instance_step_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_approval_instance_step_expanded_upd();
+
+
+
 -- Triggers for v_corp_family_account
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_corp_family_account_ins()
@@ -3908,6 +6677,8 @@ BEGIN
 	) VALUES (
 		NEW.account_id,NEW.login,NEW.person_id,NEW.company_id,NEW.account_realm_id,NEW.account_status,NEW.account_role,NEW.account_type,NEW.description,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3922,6 +6693,96 @@ CREATE TRIGGER _trigger_v_corp_family_account_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_corp_family_account_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_corp_family_account_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_corp_family_account%rowtype;
+	_nr	jazzhands.v_corp_family_account%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
+_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+	END IF;
+
+	IF OLD.login IS DISTINCT FROM NEW.login THEN
+_uq := array_append(_uq, 'login = ' || quote_nullable(NEW.login));
+	END IF;
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
+_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF OLD.account_status IS DISTINCT FROM NEW.account_status THEN
+_uq := array_append(_uq, 'account_status = ' || quote_nullable(NEW.account_status));
+	END IF;
+
+	IF OLD.account_role IS DISTINCT FROM NEW.account_role THEN
+_uq := array_append(_uq, 'account_role = ' || quote_nullable(NEW.account_role));
+	END IF;
+
+	IF OLD.account_type IS DISTINCT FROM NEW.account_type THEN
+_uq := array_append(_uq, 'account_type = ' || quote_nullable(NEW.account_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_corp_family_account SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.account_id = _nr.account_id;
+		NEW.login = _nr.login;
+		NEW.person_id = _nr.person_id;
+		NEW.company_id = _nr.company_id;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.account_status = _nr.account_status;
+		NEW.account_role = _nr.account_role;
+		NEW.account_type = _nr.account_type;
+		NEW.description = _nr.description;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_corp_family_account_upd
+	ON jazzhands_legacy.v_corp_family_account;
+CREATE TRIGGER _trigger_v_corp_family_account_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_corp_family_account
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_corp_family_account_upd();
+
+
+
 -- Triggers for v_dev_col_user_prop_expanded
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dev_col_user_prop_expanded_ins()
@@ -3934,6 +6795,8 @@ BEGIN
 	) VALUES (
 		NEW.property_id,NEW.device_collection_id,NEW.account_id,NEW.login,NEW.account_status,NEW.account_realm_id,NEW.account_realm_name,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.property_type,NEW.property_name,NEW.property_rank,NEW.property_value,NEW.is_multivalue,NEW.is_boolean
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3948,6 +6811,112 @@ CREATE TRIGGER _trigger_v_dev_col_user_prop_expanded_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_dev_col_user_prop_expanded_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dev_col_user_prop_expanded_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_dev_col_user_prop_expanded%rowtype;
+	_nr	jazzhands.v_device_collection_account_property_expanded%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.property_id IS DISTINCT FROM NEW.property_id THEN
+_uq := array_append(_uq, 'property_id = ' || quote_nullable(NEW.property_id));
+	END IF;
+
+	IF OLD.device_collection_id IS DISTINCT FROM NEW.device_collection_id THEN
+_uq := array_append(_uq, 'device_collection_id = ' || quote_nullable(NEW.device_collection_id));
+	END IF;
+
+	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
+_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+	END IF;
+
+	IF OLD.login IS DISTINCT FROM NEW.login THEN
+_uq := array_append(_uq, 'login = ' || quote_nullable(NEW.login));
+	END IF;
+
+	IF OLD.account_status IS DISTINCT FROM NEW.account_status THEN
+_uq := array_append(_uq, 'account_status = ' || quote_nullable(NEW.account_status));
+	END IF;
+
+	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
+_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF OLD.account_realm_name IS DISTINCT FROM NEW.account_realm_name THEN
+_uq := array_append(_uq, 'account_realm_name = ' || quote_nullable(NEW.account_realm_name));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
+_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+	END IF;
+
+	IF OLD.property_name IS DISTINCT FROM NEW.property_name THEN
+_uq := array_append(_uq, 'property_name = ' || quote_nullable(NEW.property_name));
+	END IF;
+
+	IF OLD.property_rank IS DISTINCT FROM NEW.property_rank THEN
+_uq := array_append(_uq, 'property_rank = ' || quote_nullable(NEW.property_rank));
+	END IF;
+
+	IF OLD.property_value IS DISTINCT FROM NEW.property_value THEN
+_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+	END IF;
+
+	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
+_uq := array_append(_uq, 'is_multivalue = ' || quote_nullable(NEW.is_multivalue));
+	END IF;
+
+	IF OLD.is_boolean IS DISTINCT FROM NEW.is_boolean THEN
+_uq := array_append(_uq, 'is_boolean = ' || quote_nullable(NEW.is_boolean));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_device_collection_account_property_expanded SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.property_id = _nr.property_id;
+		NEW.device_collection_id = _nr.device_collection_id;
+		NEW.account_id = _nr.account_id;
+		NEW.login = _nr.login;
+		NEW.account_status = _nr.account_status;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.account_realm_name = _nr.account_realm_name;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.property_type = _nr.property_type;
+		NEW.property_name = _nr.property_name;
+		NEW.property_rank = _nr.property_rank;
+		NEW.property_value = _nr.property_value;
+		NEW.is_multivalue = _nr.is_multivalue;
+		NEW.is_boolean = _nr.is_boolean;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dev_col_user_prop_expanded_upd
+	ON jazzhands_legacy.v_dev_col_user_prop_expanded;
+CREATE TRIGGER _trigger_v_dev_col_user_prop_expanded_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dev_col_user_prop_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dev_col_user_prop_expanded_upd();
+
+
+
 -- Triggers for v_dns
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_ins()
@@ -3960,6 +6929,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_record_id,NEW.network_range_id,NEW.dns_domain_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ip_universe_id,NEW.ref_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,NEW.dns_value_record_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -3974,6 +6945,148 @@ CREATE TRIGGER _trigger_v_dns_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_dns%rowtype;
+	_nr	jazzhands.v_dns%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
+_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF OLD.network_range_id IS DISTINCT FROM NEW.network_range_id THEN
+_uq := array_append(_uq, 'network_range_id = ' || quote_nullable(NEW.network_range_id));
+	END IF;
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.dns_name IS DISTINCT FROM NEW.dns_name THEN
+_uq := array_append(_uq, 'dns_name = ' || quote_nullable(NEW.dns_name));
+	END IF;
+
+	IF OLD.dns_ttl IS DISTINCT FROM NEW.dns_ttl THEN
+_uq := array_append(_uq, 'dns_ttl = ' || quote_nullable(NEW.dns_ttl));
+	END IF;
+
+	IF OLD.dns_class IS DISTINCT FROM NEW.dns_class THEN
+_uq := array_append(_uq, 'dns_class = ' || quote_nullable(NEW.dns_class));
+	END IF;
+
+	IF OLD.dns_type IS DISTINCT FROM NEW.dns_type THEN
+_uq := array_append(_uq, 'dns_type = ' || quote_nullable(NEW.dns_type));
+	END IF;
+
+	IF OLD.dns_value IS DISTINCT FROM NEW.dns_value THEN
+_uq := array_append(_uq, 'dns_value = ' || quote_nullable(NEW.dns_value));
+	END IF;
+
+	IF OLD.dns_priority IS DISTINCT FROM NEW.dns_priority THEN
+_uq := array_append(_uq, 'dns_priority = ' || quote_nullable(NEW.dns_priority));
+	END IF;
+
+	IF OLD.ip IS DISTINCT FROM NEW.ip THEN
+_uq := array_append(_uq, 'ip = ' || quote_nullable(NEW.ip));
+	END IF;
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.ref_record_id IS DISTINCT FROM NEW.ref_record_id THEN
+_uq := array_append(_uq, 'ref_record_id = ' || quote_nullable(NEW.ref_record_id));
+	END IF;
+
+	IF OLD.dns_srv_service IS DISTINCT FROM NEW.dns_srv_service THEN
+_uq := array_append(_uq, 'dns_srv_service = ' || quote_nullable(NEW.dns_srv_service));
+	END IF;
+
+	IF OLD.dns_srv_protocol IS DISTINCT FROM NEW.dns_srv_protocol THEN
+_uq := array_append(_uq, 'dns_srv_protocol = ' || quote_nullable(NEW.dns_srv_protocol));
+	END IF;
+
+	IF OLD.dns_srv_weight IS DISTINCT FROM NEW.dns_srv_weight THEN
+_uq := array_append(_uq, 'dns_srv_weight = ' || quote_nullable(NEW.dns_srv_weight));
+	END IF;
+
+	IF OLD.dns_srv_port IS DISTINCT FROM NEW.dns_srv_port THEN
+_uq := array_append(_uq, 'dns_srv_port = ' || quote_nullable(NEW.dns_srv_port));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.should_generate_ptr IS DISTINCT FROM NEW.should_generate_ptr THEN
+IF NEW.should_generate_ptr = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = true');
+ELSIF NEW.should_generate_ptr = 'N' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate_ptr = NULL');
+END IF;
+	END IF;
+
+	IF OLD.dns_value_record_id IS DISTINCT FROM NEW.dns_value_record_id THEN
+_uq := array_append(_uq, 'dns_value_record_id = ' || quote_nullable(NEW.dns_value_record_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_dns SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.dns_record_id = _nr.dns_record_id;
+		NEW.network_range_id = _nr.network_range_id;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.dns_name = _nr.dns_name;
+		NEW.dns_ttl = _nr.dns_ttl;
+		NEW.dns_class = _nr.dns_class;
+		NEW.dns_type = _nr.dns_type;
+		NEW.dns_value = _nr.dns_value;
+		NEW.dns_priority = _nr.dns_priority;
+		NEW.ip = _nr.ip;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.ref_record_id = _nr.ref_record_id;
+		NEW.dns_srv_service = _nr.dns_srv_service;
+		NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+		NEW.dns_srv_weight = _nr.dns_srv_weight;
+		NEW.dns_srv_port = _nr.dns_srv_port;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.should_generate_ptr = _nr.should_generate_ptr;
+		NEW.dns_value_record_id = _nr.dns_value_record_id;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_upd
+	ON jazzhands_legacy.v_dns;
+CREATE TRIGGER _trigger_v_dns_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_upd();
+
+
+
 -- Triggers for v_dns_changes_pending
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_changes_pending_ins()
@@ -3986,6 +7099,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_change_record_id,NEW.dns_domain_id,NEW.ip_universe_id,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated,NEW.soa_name,NEW.ip_address
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4000,6 +7115,77 @@ CREATE TRIGGER _trigger_v_dns_changes_pending_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_changes_pending_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_changes_pending_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_dns_changes_pending%rowtype;
+	_nr	jazzhands.v_dns_changes_pending%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_change_record_id IS DISTINCT FROM NEW.dns_change_record_id THEN
+_uq := array_append(_uq, 'dns_change_record_id = ' || quote_nullable(NEW.dns_change_record_id));
+	END IF;
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.should_generate IS DISTINCT FROM NEW.should_generate THEN
+IF NEW.should_generate = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate = true');
+ELSIF NEW.should_generate = 'N' THEN
+	_uq := array_append(_uq, 'should_generate = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate = NULL');
+END IF;
+	END IF;
+
+	IF OLD.last_generated IS DISTINCT FROM NEW.last_generated THEN
+_uq := array_append(_uq, 'last_generated = ' || quote_nullable(NEW.last_generated));
+	END IF;
+
+	IF OLD.soa_name IS DISTINCT FROM NEW.soa_name THEN
+_uq := array_append(_uq, 'soa_name = ' || quote_nullable(NEW.soa_name));
+	END IF;
+
+	IF OLD.ip_address IS DISTINCT FROM NEW.ip_address THEN
+_uq := array_append(_uq, 'ip_address = ' || quote_nullable(NEW.ip_address));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_dns_changes_pending SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.dns_change_record_id = _nr.dns_change_record_id;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.should_generate = _nr.should_generate;
+		NEW.last_generated = _nr.last_generated;
+		NEW.soa_name = _nr.soa_name;
+		NEW.ip_address = _nr.ip_address;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_changes_pending_upd
+	ON jazzhands_legacy.v_dns_changes_pending;
+CREATE TRIGGER _trigger_v_dns_changes_pending_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_changes_pending
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_changes_pending_upd();
+
+
+
 -- Triggers for v_dns_domain_nouniverse
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_domain_nouniverse_ins()
@@ -4012,6 +7198,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_domain_id,NEW.soa_name,NEW.soa_class,NEW.soa_ttl,NEW.soa_serial,NEW.soa_refresh,NEW.soa_retry,NEW.soa_expire,NEW.soa_minimum,NEW.soa_mname,NEW.soa_rname,NEW.parent_dns_domain_id,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated,NEW.dns_domain_type
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4026,6 +7214,121 @@ CREATE TRIGGER _trigger_v_dns_domain_nouniverse_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_domain_nouniverse_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_domain_nouniverse_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_dns_domain_nouniverse%rowtype;
+	_nr	jazzhands.v_dns_domain_nouniverse%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.soa_name IS DISTINCT FROM NEW.soa_name THEN
+_uq := array_append(_uq, 'soa_name = ' || quote_nullable(NEW.soa_name));
+	END IF;
+
+	IF OLD.soa_class IS DISTINCT FROM NEW.soa_class THEN
+_uq := array_append(_uq, 'soa_class = ' || quote_nullable(NEW.soa_class));
+	END IF;
+
+	IF OLD.soa_ttl IS DISTINCT FROM NEW.soa_ttl THEN
+_uq := array_append(_uq, 'soa_ttl = ' || quote_nullable(NEW.soa_ttl));
+	END IF;
+
+	IF OLD.soa_serial IS DISTINCT FROM NEW.soa_serial THEN
+_uq := array_append(_uq, 'soa_serial = ' || quote_nullable(NEW.soa_serial));
+	END IF;
+
+	IF OLD.soa_refresh IS DISTINCT FROM NEW.soa_refresh THEN
+_uq := array_append(_uq, 'soa_refresh = ' || quote_nullable(NEW.soa_refresh));
+	END IF;
+
+	IF OLD.soa_retry IS DISTINCT FROM NEW.soa_retry THEN
+_uq := array_append(_uq, 'soa_retry = ' || quote_nullable(NEW.soa_retry));
+	END IF;
+
+	IF OLD.soa_expire IS DISTINCT FROM NEW.soa_expire THEN
+_uq := array_append(_uq, 'soa_expire = ' || quote_nullable(NEW.soa_expire));
+	END IF;
+
+	IF OLD.soa_minimum IS DISTINCT FROM NEW.soa_minimum THEN
+_uq := array_append(_uq, 'soa_minimum = ' || quote_nullable(NEW.soa_minimum));
+	END IF;
+
+	IF OLD.soa_mname IS DISTINCT FROM NEW.soa_mname THEN
+_uq := array_append(_uq, 'soa_mname = ' || quote_nullable(NEW.soa_mname));
+	END IF;
+
+	IF OLD.soa_rname IS DISTINCT FROM NEW.soa_rname THEN
+_uq := array_append(_uq, 'soa_rname = ' || quote_nullable(NEW.soa_rname));
+	END IF;
+
+	IF OLD.parent_dns_domain_id IS DISTINCT FROM NEW.parent_dns_domain_id THEN
+_uq := array_append(_uq, 'parent_dns_domain_id = ' || quote_nullable(NEW.parent_dns_domain_id));
+	END IF;
+
+	IF OLD.should_generate IS DISTINCT FROM NEW.should_generate THEN
+IF NEW.should_generate = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate = true');
+ELSIF NEW.should_generate = 'N' THEN
+	_uq := array_append(_uq, 'should_generate = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate = NULL');
+END IF;
+	END IF;
+
+	IF OLD.last_generated IS DISTINCT FROM NEW.last_generated THEN
+_uq := array_append(_uq, 'last_generated = ' || quote_nullable(NEW.last_generated));
+	END IF;
+
+	IF OLD.dns_domain_type IS DISTINCT FROM NEW.dns_domain_type THEN
+_uq := array_append(_uq, 'dns_domain_type = ' || quote_nullable(NEW.dns_domain_type));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_dns_domain_nouniverse SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.soa_name = _nr.soa_name;
+		NEW.soa_class = _nr.soa_class;
+		NEW.soa_ttl = _nr.soa_ttl;
+		NEW.soa_serial = _nr.soa_serial;
+		NEW.soa_refresh = _nr.soa_refresh;
+		NEW.soa_retry = _nr.soa_retry;
+		NEW.soa_expire = _nr.soa_expire;
+		NEW.soa_minimum = _nr.soa_minimum;
+		NEW.soa_mname = _nr.soa_mname;
+		NEW.soa_rname = _nr.soa_rname;
+		NEW.parent_dns_domain_id = _nr.parent_dns_domain_id;
+		NEW.should_generate = _nr.should_generate;
+		NEW.last_generated = _nr.last_generated;
+		NEW.dns_domain_type = _nr.dns_domain_type;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_domain_nouniverse_upd
+	ON jazzhands_legacy.v_dns_domain_nouniverse;
+CREATE TRIGGER _trigger_v_dns_domain_nouniverse_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_domain_nouniverse
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_domain_nouniverse_upd();
+
+
+
 -- Triggers for v_dns_fwd
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_fwd_ins()
@@ -4038,6 +7341,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_record_id,NEW.network_range_id,NEW.dns_domain_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ip_universe_id,NEW.ref_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,NEW.dns_value_record_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4052,6 +7357,148 @@ CREATE TRIGGER _trigger_v_dns_fwd_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_fwd_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_fwd_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_dns_fwd%rowtype;
+	_nr	jazzhands.v_dns_fwd%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
+_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF OLD.network_range_id IS DISTINCT FROM NEW.network_range_id THEN
+_uq := array_append(_uq, 'network_range_id = ' || quote_nullable(NEW.network_range_id));
+	END IF;
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.dns_name IS DISTINCT FROM NEW.dns_name THEN
+_uq := array_append(_uq, 'dns_name = ' || quote_nullable(NEW.dns_name));
+	END IF;
+
+	IF OLD.dns_ttl IS DISTINCT FROM NEW.dns_ttl THEN
+_uq := array_append(_uq, 'dns_ttl = ' || quote_nullable(NEW.dns_ttl));
+	END IF;
+
+	IF OLD.dns_class IS DISTINCT FROM NEW.dns_class THEN
+_uq := array_append(_uq, 'dns_class = ' || quote_nullable(NEW.dns_class));
+	END IF;
+
+	IF OLD.dns_type IS DISTINCT FROM NEW.dns_type THEN
+_uq := array_append(_uq, 'dns_type = ' || quote_nullable(NEW.dns_type));
+	END IF;
+
+	IF OLD.dns_value IS DISTINCT FROM NEW.dns_value THEN
+_uq := array_append(_uq, 'dns_value = ' || quote_nullable(NEW.dns_value));
+	END IF;
+
+	IF OLD.dns_priority IS DISTINCT FROM NEW.dns_priority THEN
+_uq := array_append(_uq, 'dns_priority = ' || quote_nullable(NEW.dns_priority));
+	END IF;
+
+	IF OLD.ip IS DISTINCT FROM NEW.ip THEN
+_uq := array_append(_uq, 'ip = ' || quote_nullable(NEW.ip));
+	END IF;
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.ref_record_id IS DISTINCT FROM NEW.ref_record_id THEN
+_uq := array_append(_uq, 'ref_record_id = ' || quote_nullable(NEW.ref_record_id));
+	END IF;
+
+	IF OLD.dns_srv_service IS DISTINCT FROM NEW.dns_srv_service THEN
+_uq := array_append(_uq, 'dns_srv_service = ' || quote_nullable(NEW.dns_srv_service));
+	END IF;
+
+	IF OLD.dns_srv_protocol IS DISTINCT FROM NEW.dns_srv_protocol THEN
+_uq := array_append(_uq, 'dns_srv_protocol = ' || quote_nullable(NEW.dns_srv_protocol));
+	END IF;
+
+	IF OLD.dns_srv_weight IS DISTINCT FROM NEW.dns_srv_weight THEN
+_uq := array_append(_uq, 'dns_srv_weight = ' || quote_nullable(NEW.dns_srv_weight));
+	END IF;
+
+	IF OLD.dns_srv_port IS DISTINCT FROM NEW.dns_srv_port THEN
+_uq := array_append(_uq, 'dns_srv_port = ' || quote_nullable(NEW.dns_srv_port));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.should_generate_ptr IS DISTINCT FROM NEW.should_generate_ptr THEN
+IF NEW.should_generate_ptr = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = true');
+ELSIF NEW.should_generate_ptr = 'N' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate_ptr = NULL');
+END IF;
+	END IF;
+
+	IF OLD.dns_value_record_id IS DISTINCT FROM NEW.dns_value_record_id THEN
+_uq := array_append(_uq, 'dns_value_record_id = ' || quote_nullable(NEW.dns_value_record_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_dns_fwd SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.dns_record_id = _nr.dns_record_id;
+		NEW.network_range_id = _nr.network_range_id;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.dns_name = _nr.dns_name;
+		NEW.dns_ttl = _nr.dns_ttl;
+		NEW.dns_class = _nr.dns_class;
+		NEW.dns_type = _nr.dns_type;
+		NEW.dns_value = _nr.dns_value;
+		NEW.dns_priority = _nr.dns_priority;
+		NEW.ip = _nr.ip;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.ref_record_id = _nr.ref_record_id;
+		NEW.dns_srv_service = _nr.dns_srv_service;
+		NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+		NEW.dns_srv_weight = _nr.dns_srv_weight;
+		NEW.dns_srv_port = _nr.dns_srv_port;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.should_generate_ptr = _nr.should_generate_ptr;
+		NEW.dns_value_record_id = _nr.dns_value_record_id;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_fwd_upd
+	ON jazzhands_legacy.v_dns_fwd;
+CREATE TRIGGER _trigger_v_dns_fwd_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_fwd
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_fwd_upd();
+
+
+
 -- Triggers for v_dns_rvs
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_rvs_ins()
@@ -4064,6 +7511,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_record_id,NEW.network_range_id,NEW.dns_domain_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ip_universe_id,NEW.rdns_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_srv_port,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,NEW.dns_value_record_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4078,6 +7527,148 @@ CREATE TRIGGER _trigger_v_dns_rvs_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_rvs_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_rvs_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_dns_rvs%rowtype;
+	_nr	jazzhands.v_dns_rvs%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
+_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF OLD.network_range_id IS DISTINCT FROM NEW.network_range_id THEN
+_uq := array_append(_uq, 'network_range_id = ' || quote_nullable(NEW.network_range_id));
+	END IF;
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.dns_name IS DISTINCT FROM NEW.dns_name THEN
+_uq := array_append(_uq, 'dns_name = ' || quote_nullable(NEW.dns_name));
+	END IF;
+
+	IF OLD.dns_ttl IS DISTINCT FROM NEW.dns_ttl THEN
+_uq := array_append(_uq, 'dns_ttl = ' || quote_nullable(NEW.dns_ttl));
+	END IF;
+
+	IF OLD.dns_class IS DISTINCT FROM NEW.dns_class THEN
+_uq := array_append(_uq, 'dns_class = ' || quote_nullable(NEW.dns_class));
+	END IF;
+
+	IF OLD.dns_type IS DISTINCT FROM NEW.dns_type THEN
+_uq := array_append(_uq, 'dns_type = ' || quote_nullable(NEW.dns_type));
+	END IF;
+
+	IF OLD.dns_value IS DISTINCT FROM NEW.dns_value THEN
+_uq := array_append(_uq, 'dns_value = ' || quote_nullable(NEW.dns_value));
+	END IF;
+
+	IF OLD.dns_priority IS DISTINCT FROM NEW.dns_priority THEN
+_uq := array_append(_uq, 'dns_priority = ' || quote_nullable(NEW.dns_priority));
+	END IF;
+
+	IF OLD.ip IS DISTINCT FROM NEW.ip THEN
+_uq := array_append(_uq, 'ip = ' || quote_nullable(NEW.ip));
+	END IF;
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.rdns_record_id IS DISTINCT FROM NEW.rdns_record_id THEN
+_uq := array_append(_uq, 'rdns_record_id = ' || quote_nullable(NEW.rdns_record_id));
+	END IF;
+
+	IF OLD.dns_srv_service IS DISTINCT FROM NEW.dns_srv_service THEN
+_uq := array_append(_uq, 'dns_srv_service = ' || quote_nullable(NEW.dns_srv_service));
+	END IF;
+
+	IF OLD.dns_srv_protocol IS DISTINCT FROM NEW.dns_srv_protocol THEN
+_uq := array_append(_uq, 'dns_srv_protocol = ' || quote_nullable(NEW.dns_srv_protocol));
+	END IF;
+
+	IF OLD.dns_srv_weight IS DISTINCT FROM NEW.dns_srv_weight THEN
+_uq := array_append(_uq, 'dns_srv_weight = ' || quote_nullable(NEW.dns_srv_weight));
+	END IF;
+
+	IF OLD.dns_srv_srv_port IS DISTINCT FROM NEW.dns_srv_srv_port THEN
+_uq := array_append(_uq, 'dns_srv_srv_port = ' || quote_nullable(NEW.dns_srv_srv_port));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.should_generate_ptr IS DISTINCT FROM NEW.should_generate_ptr THEN
+IF NEW.should_generate_ptr = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = true');
+ELSIF NEW.should_generate_ptr = 'N' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate_ptr = NULL');
+END IF;
+	END IF;
+
+	IF OLD.dns_value_record_id IS DISTINCT FROM NEW.dns_value_record_id THEN
+_uq := array_append(_uq, 'dns_value_record_id = ' || quote_nullable(NEW.dns_value_record_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_dns_rvs SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.dns_record_id = _nr.dns_record_id;
+		NEW.network_range_id = _nr.network_range_id;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.dns_name = _nr.dns_name;
+		NEW.dns_ttl = _nr.dns_ttl;
+		NEW.dns_class = _nr.dns_class;
+		NEW.dns_type = _nr.dns_type;
+		NEW.dns_value = _nr.dns_value;
+		NEW.dns_priority = _nr.dns_priority;
+		NEW.ip = _nr.ip;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.rdns_record_id = _nr.rdns_record_id;
+		NEW.dns_srv_service = _nr.dns_srv_service;
+		NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+		NEW.dns_srv_weight = _nr.dns_srv_weight;
+		NEW.dns_srv_srv_port = _nr.dns_srv_srv_port;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.should_generate_ptr = _nr.should_generate_ptr;
+		NEW.dns_value_record_id = _nr.dns_value_record_id;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_rvs_upd
+	ON jazzhands_legacy.v_dns_rvs;
+CREATE TRIGGER _trigger_v_dns_rvs_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_rvs
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_rvs_upd();
+
+
+
 -- Triggers for v_dns_sorted
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_sorted_ins()
@@ -4090,6 +7681,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_record_id,NEW.network_range_id,NEW.dns_value_record_id,NEW.dns_name,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.ip,NEW.netblock_id,NEW.ref_record_id,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.dns_domain_id,NEW.anchor_record_id,NEW.anchor_rank
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4104,6 +7697,153 @@ CREATE TRIGGER _trigger_v_dns_sorted_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_sorted_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_sorted_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_dns_sorted%rowtype;
+	_nr	jazzhands.v_dns_sorted%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
+_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF OLD.network_range_id IS DISTINCT FROM NEW.network_range_id THEN
+_uq := array_append(_uq, 'network_range_id = ' || quote_nullable(NEW.network_range_id));
+	END IF;
+
+	IF OLD.dns_value_record_id IS DISTINCT FROM NEW.dns_value_record_id THEN
+_uq := array_append(_uq, 'dns_value_record_id = ' || quote_nullable(NEW.dns_value_record_id));
+	END IF;
+
+	IF OLD.dns_name IS DISTINCT FROM NEW.dns_name THEN
+_uq := array_append(_uq, 'dns_name = ' || quote_nullable(NEW.dns_name));
+	END IF;
+
+	IF OLD.dns_ttl IS DISTINCT FROM NEW.dns_ttl THEN
+_uq := array_append(_uq, 'dns_ttl = ' || quote_nullable(NEW.dns_ttl));
+	END IF;
+
+	IF OLD.dns_class IS DISTINCT FROM NEW.dns_class THEN
+_uq := array_append(_uq, 'dns_class = ' || quote_nullable(NEW.dns_class));
+	END IF;
+
+	IF OLD.dns_type IS DISTINCT FROM NEW.dns_type THEN
+_uq := array_append(_uq, 'dns_type = ' || quote_nullable(NEW.dns_type));
+	END IF;
+
+	IF OLD.dns_value IS DISTINCT FROM NEW.dns_value THEN
+_uq := array_append(_uq, 'dns_value = ' || quote_nullable(NEW.dns_value));
+	END IF;
+
+	IF OLD.dns_priority IS DISTINCT FROM NEW.dns_priority THEN
+_uq := array_append(_uq, 'dns_priority = ' || quote_nullable(NEW.dns_priority));
+	END IF;
+
+	IF OLD.ip IS DISTINCT FROM NEW.ip THEN
+_uq := array_append(_uq, 'ip = ' || quote_nullable(NEW.ip));
+	END IF;
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ref_record_id IS DISTINCT FROM NEW.ref_record_id THEN
+_uq := array_append(_uq, 'ref_record_id = ' || quote_nullable(NEW.ref_record_id));
+	END IF;
+
+	IF OLD.dns_srv_service IS DISTINCT FROM NEW.dns_srv_service THEN
+_uq := array_append(_uq, 'dns_srv_service = ' || quote_nullable(NEW.dns_srv_service));
+	END IF;
+
+	IF OLD.dns_srv_protocol IS DISTINCT FROM NEW.dns_srv_protocol THEN
+_uq := array_append(_uq, 'dns_srv_protocol = ' || quote_nullable(NEW.dns_srv_protocol));
+	END IF;
+
+	IF OLD.dns_srv_weight IS DISTINCT FROM NEW.dns_srv_weight THEN
+_uq := array_append(_uq, 'dns_srv_weight = ' || quote_nullable(NEW.dns_srv_weight));
+	END IF;
+
+	IF OLD.dns_srv_port IS DISTINCT FROM NEW.dns_srv_port THEN
+_uq := array_append(_uq, 'dns_srv_port = ' || quote_nullable(NEW.dns_srv_port));
+	END IF;
+
+	IF OLD.should_generate_ptr IS DISTINCT FROM NEW.should_generate_ptr THEN
+IF NEW.should_generate_ptr = 'Y' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = true');
+ELSIF NEW.should_generate_ptr = 'N' THEN
+	_uq := array_append(_uq, 'should_generate_ptr = false');
+ELSE
+	_uq := array_append(_uq, 'should_generate_ptr = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
+_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF OLD.anchor_record_id IS DISTINCT FROM NEW.anchor_record_id THEN
+_uq := array_append(_uq, 'anchor_record_id = ' || quote_nullable(NEW.anchor_record_id));
+	END IF;
+
+	IF OLD.anchor_rank IS DISTINCT FROM NEW.anchor_rank THEN
+_uq := array_append(_uq, 'anchor_rank = ' || quote_nullable(NEW.anchor_rank));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_dns_sorted SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.dns_record_id = _nr.dns_record_id;
+		NEW.network_range_id = _nr.network_range_id;
+		NEW.dns_value_record_id = _nr.dns_value_record_id;
+		NEW.dns_name = _nr.dns_name;
+		NEW.dns_ttl = _nr.dns_ttl;
+		NEW.dns_class = _nr.dns_class;
+		NEW.dns_type = _nr.dns_type;
+		NEW.dns_value = _nr.dns_value;
+		NEW.dns_priority = _nr.dns_priority;
+		NEW.ip = _nr.ip;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ref_record_id = _nr.ref_record_id;
+		NEW.dns_srv_service = _nr.dns_srv_service;
+		NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+		NEW.dns_srv_weight = _nr.dns_srv_weight;
+		NEW.dns_srv_port = _nr.dns_srv_port;
+		NEW.should_generate_ptr = _nr.should_generate_ptr;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.anchor_record_id = _nr.anchor_record_id;
+		NEW.anchor_rank = _nr.anchor_rank;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_sorted_upd
+	ON jazzhands_legacy.v_dns_sorted;
+CREATE TRIGGER _trigger_v_dns_sorted_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_sorted
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_sorted_upd();
+
+
+
 -- Triggers for v_hotpants_token
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_hotpants_token_ins()
@@ -4116,6 +7856,8 @@ BEGIN
 	) VALUES (
 		NEW.token_id,NEW.token_type,NEW.token_status,NEW.token_serial,NEW.token_key,NEW.zero_time,NEW.time_modulo,NEW.token_password,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.token_sequence,NEW.last_updated,NEW.encryption_key_db_value,NEW.encryption_key_purpose,NEW.encryption_key_purpose_version,NEW.encryption_method
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4130,6 +7872,127 @@ CREATE TRIGGER _trigger_v_hotpants_token_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_hotpants_token_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_hotpants_token_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_hotpants_token%rowtype;
+	_nr	jazzhands.v_hotpants_token%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.token_id IS DISTINCT FROM NEW.token_id THEN
+_uq := array_append(_uq, 'token_id = ' || quote_nullable(NEW.token_id));
+	END IF;
+
+	IF OLD.token_type IS DISTINCT FROM NEW.token_type THEN
+_uq := array_append(_uq, 'token_type = ' || quote_nullable(NEW.token_type));
+	END IF;
+
+	IF OLD.token_status IS DISTINCT FROM NEW.token_status THEN
+_uq := array_append(_uq, 'token_status = ' || quote_nullable(NEW.token_status));
+	END IF;
+
+	IF OLD.token_serial IS DISTINCT FROM NEW.token_serial THEN
+_uq := array_append(_uq, 'token_serial = ' || quote_nullable(NEW.token_serial));
+	END IF;
+
+	IF OLD.token_key IS DISTINCT FROM NEW.token_key THEN
+_uq := array_append(_uq, 'token_key = ' || quote_nullable(NEW.token_key));
+	END IF;
+
+	IF OLD.zero_time IS DISTINCT FROM NEW.zero_time THEN
+_uq := array_append(_uq, 'zero_time = ' || quote_nullable(NEW.zero_time));
+	END IF;
+
+	IF OLD.time_modulo IS DISTINCT FROM NEW.time_modulo THEN
+_uq := array_append(_uq, 'time_modulo = ' || quote_nullable(NEW.time_modulo));
+	END IF;
+
+	IF OLD.token_password IS DISTINCT FROM NEW.token_password THEN
+_uq := array_append(_uq, 'token_password = ' || quote_nullable(NEW.token_password));
+	END IF;
+
+	IF OLD.is_token_locked IS DISTINCT FROM NEW.is_token_locked THEN
+IF NEW.is_token_locked = 'Y' THEN
+	_uq := array_append(_uq, 'is_token_locked = true');
+ELSIF NEW.is_token_locked = 'N' THEN
+	_uq := array_append(_uq, 'is_token_locked = false');
+ELSE
+	_uq := array_append(_uq, 'is_token_locked = NULL');
+END IF;
+	END IF;
+
+	IF OLD.token_unlock_time IS DISTINCT FROM NEW.token_unlock_time THEN
+_uq := array_append(_uq, 'token_unlock_time = ' || quote_nullable(NEW.token_unlock_time));
+	END IF;
+
+	IF OLD.bad_logins IS DISTINCT FROM NEW.bad_logins THEN
+_uq := array_append(_uq, 'bad_logins = ' || quote_nullable(NEW.bad_logins));
+	END IF;
+
+	IF OLD.token_sequence IS DISTINCT FROM NEW.token_sequence THEN
+_uq := array_append(_uq, 'token_sequence = ' || quote_nullable(NEW.token_sequence));
+	END IF;
+
+	IF OLD.last_updated IS DISTINCT FROM NEW.last_updated THEN
+_uq := array_append(_uq, 'last_updated = ' || quote_nullable(NEW.last_updated));
+	END IF;
+
+	IF OLD.encryption_key_db_value IS DISTINCT FROM NEW.encryption_key_db_value THEN
+_uq := array_append(_uq, 'encryption_key_db_value = ' || quote_nullable(NEW.encryption_key_db_value));
+	END IF;
+
+	IF OLD.encryption_key_purpose IS DISTINCT FROM NEW.encryption_key_purpose THEN
+_uq := array_append(_uq, 'encryption_key_purpose = ' || quote_nullable(NEW.encryption_key_purpose));
+	END IF;
+
+	IF OLD.encryption_key_purpose_version IS DISTINCT FROM NEW.encryption_key_purpose_version THEN
+_uq := array_append(_uq, 'encryption_key_purpose_version = ' || quote_nullable(NEW.encryption_key_purpose_version));
+	END IF;
+
+	IF OLD.encryption_method IS DISTINCT FROM NEW.encryption_method THEN
+_uq := array_append(_uq, 'encryption_method = ' || quote_nullable(NEW.encryption_method));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_hotpants_token SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.token_id = _nr.token_id;
+		NEW.token_type = _nr.token_type;
+		NEW.token_status = _nr.token_status;
+		NEW.token_serial = _nr.token_serial;
+		NEW.token_key = _nr.token_key;
+		NEW.zero_time = _nr.zero_time;
+		NEW.time_modulo = _nr.time_modulo;
+		NEW.token_password = _nr.token_password;
+		NEW.is_token_locked = _nr.is_token_locked;
+		NEW.token_unlock_time = _nr.token_unlock_time;
+		NEW.bad_logins = _nr.bad_logins;
+		NEW.token_sequence = _nr.token_sequence;
+		NEW.last_updated = _nr.last_updated;
+		NEW.encryption_key_db_value = _nr.encryption_key_db_value;
+		NEW.encryption_key_purpose = _nr.encryption_key_purpose;
+		NEW.encryption_key_purpose_version = _nr.encryption_key_purpose_version;
+		NEW.encryption_method = _nr.encryption_method;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_hotpants_token_upd
+	ON jazzhands_legacy.v_hotpants_token;
+CREATE TRIGGER _trigger_v_hotpants_token_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_hotpants_token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_hotpants_token_upd();
+
+
+
 -- Triggers for v_netblock_hier
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_ins()
@@ -4142,6 +8005,8 @@ BEGIN
 	) VALUES (
 		NEW.netblock_level,NEW.root_netblock_id,NEW.ip,NEW.netblock_id,NEW.ip_address,NEW.netblock_status,CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END,NEW.description,NEW.parent_netblock_id,NEW.site_code,NEW.text_path,NEW.array_path,NEW.array_ip_path
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4156,6 +8021,107 @@ CREATE TRIGGER _trigger_v_netblock_hier_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_netblock_hier%rowtype;
+	_nr	jazzhands.v_netblock_hier%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.netblock_level IS DISTINCT FROM NEW.netblock_level THEN
+_uq := array_append(_uq, 'netblock_level = ' || quote_nullable(NEW.netblock_level));
+	END IF;
+
+	IF OLD.root_netblock_id IS DISTINCT FROM NEW.root_netblock_id THEN
+_uq := array_append(_uq, 'root_netblock_id = ' || quote_nullable(NEW.root_netblock_id));
+	END IF;
+
+	IF OLD.ip IS DISTINCT FROM NEW.ip THEN
+_uq := array_append(_uq, 'ip = ' || quote_nullable(NEW.ip));
+	END IF;
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ip_address IS DISTINCT FROM NEW.ip_address THEN
+_uq := array_append(_uq, 'ip_address = ' || quote_nullable(NEW.ip_address));
+	END IF;
+
+	IF OLD.netblock_status IS DISTINCT FROM NEW.netblock_status THEN
+_uq := array_append(_uq, 'netblock_status = ' || quote_nullable(NEW.netblock_status));
+	END IF;
+
+	IF OLD.is_single_address IS DISTINCT FROM NEW.is_single_address THEN
+IF NEW.is_single_address = 'Y' THEN
+	_uq := array_append(_uq, 'is_single_address = true');
+ELSIF NEW.is_single_address = 'N' THEN
+	_uq := array_append(_uq, 'is_single_address = false');
+ELSE
+	_uq := array_append(_uq, 'is_single_address = NULL');
+END IF;
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.parent_netblock_id IS DISTINCT FROM NEW.parent_netblock_id THEN
+_uq := array_append(_uq, 'parent_netblock_id = ' || quote_nullable(NEW.parent_netblock_id));
+	END IF;
+
+	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
+_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+	END IF;
+
+	IF OLD.text_path IS DISTINCT FROM NEW.text_path THEN
+_uq := array_append(_uq, 'text_path = ' || quote_nullable(NEW.text_path));
+	END IF;
+
+	IF OLD.array_path IS DISTINCT FROM NEW.array_path THEN
+_uq := array_append(_uq, 'array_path = ' || quote_nullable(NEW.array_path));
+	END IF;
+
+	IF OLD.array_ip_path IS DISTINCT FROM NEW.array_ip_path THEN
+_uq := array_append(_uq, 'array_ip_path = ' || quote_nullable(NEW.array_ip_path));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_netblock_hier SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.netblock_level = _nr.netblock_level;
+		NEW.root_netblock_id = _nr.root_netblock_id;
+		NEW.ip = _nr.ip;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_address = _nr.ip_address;
+		NEW.netblock_status = _nr.netblock_status;
+		NEW.is_single_address = _nr.is_single_address;
+		NEW.description = _nr.description;
+		NEW.parent_netblock_id = _nr.parent_netblock_id;
+		NEW.site_code = _nr.site_code;
+		NEW.text_path = _nr.text_path;
+		NEW.array_path = _nr.array_path;
+		NEW.array_ip_path = _nr.array_ip_path;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_netblock_hier_upd
+	ON jazzhands_legacy.v_netblock_hier;
+CREATE TRIGGER _trigger_v_netblock_hier_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_netblock_hier
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_upd();
+
+
+
 -- Triggers for v_netblock_hier_expanded
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_expanded_ins()
@@ -4168,6 +8134,8 @@ BEGIN
 	) VALUES (
 		NEW.netblock_level,NEW.root_netblock_id,NEW.site_code,NEW.path,NEW.netblock_id,NEW.ip_address,NEW.netblock_type,CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_subnet = 'Y' THEN true WHEN NEW.can_subnet = 'N' THEN false ELSE NULL END,NEW.parent_netblock_id,NEW.netblock_status,NEW.ip_universe_id,NEW.description,NEW.external_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4182,6 +8150,122 @@ CREATE TRIGGER _trigger_v_netblock_hier_expanded_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_expanded_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_expanded_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_netblock_hier_expanded%rowtype;
+	_nr	jazzhands.v_netblock_hier_expanded%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.netblock_level IS DISTINCT FROM NEW.netblock_level THEN
+_uq := array_append(_uq, 'netblock_level = ' || quote_nullable(NEW.netblock_level));
+	END IF;
+
+	IF OLD.root_netblock_id IS DISTINCT FROM NEW.root_netblock_id THEN
+_uq := array_append(_uq, 'root_netblock_id = ' || quote_nullable(NEW.root_netblock_id));
+	END IF;
+
+	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
+_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+	END IF;
+
+	IF OLD.path IS DISTINCT FROM NEW.path THEN
+_uq := array_append(_uq, 'path = ' || quote_nullable(NEW.path));
+	END IF;
+
+	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
+_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF OLD.ip_address IS DISTINCT FROM NEW.ip_address THEN
+_uq := array_append(_uq, 'ip_address = ' || quote_nullable(NEW.ip_address));
+	END IF;
+
+	IF OLD.netblock_type IS DISTINCT FROM NEW.netblock_type THEN
+_uq := array_append(_uq, 'netblock_type = ' || quote_nullable(NEW.netblock_type));
+	END IF;
+
+	IF OLD.is_single_address IS DISTINCT FROM NEW.is_single_address THEN
+IF NEW.is_single_address = 'Y' THEN
+	_uq := array_append(_uq, 'is_single_address = true');
+ELSIF NEW.is_single_address = 'N' THEN
+	_uq := array_append(_uq, 'is_single_address = false');
+ELSE
+	_uq := array_append(_uq, 'is_single_address = NULL');
+END IF;
+	END IF;
+
+	IF OLD.can_subnet IS DISTINCT FROM NEW.can_subnet THEN
+IF NEW.can_subnet = 'Y' THEN
+	_uq := array_append(_uq, 'can_subnet = true');
+ELSIF NEW.can_subnet = 'N' THEN
+	_uq := array_append(_uq, 'can_subnet = false');
+ELSE
+	_uq := array_append(_uq, 'can_subnet = NULL');
+END IF;
+	END IF;
+
+	IF OLD.parent_netblock_id IS DISTINCT FROM NEW.parent_netblock_id THEN
+_uq := array_append(_uq, 'parent_netblock_id = ' || quote_nullable(NEW.parent_netblock_id));
+	END IF;
+
+	IF OLD.netblock_status IS DISTINCT FROM NEW.netblock_status THEN
+_uq := array_append(_uq, 'netblock_status = ' || quote_nullable(NEW.netblock_status));
+	END IF;
+
+	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
+_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
+_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_netblock_hier_expanded SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.netblock_level = _nr.netblock_level;
+		NEW.root_netblock_id = _nr.root_netblock_id;
+		NEW.site_code = _nr.site_code;
+		NEW.path = _nr.path;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_address = _nr.ip_address;
+		NEW.netblock_type = _nr.netblock_type;
+		NEW.is_single_address = _nr.is_single_address;
+		NEW.can_subnet = _nr.can_subnet;
+		NEW.parent_netblock_id = _nr.parent_netblock_id;
+		NEW.netblock_status = _nr.netblock_status;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_netblock_hier_expanded_upd
+	ON jazzhands_legacy.v_netblock_hier_expanded;
+CREATE TRIGGER _trigger_v_netblock_hier_expanded_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_netblock_hier_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_expanded_upd();
+
+
+
 -- Triggers for v_person_company
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_person_company_ins()
@@ -4194,6 +8278,8 @@ BEGIN
 	) VALUES (
 		NEW.company_id,NEW.person_id,NEW.person_company_status,NEW.person_company_relation,CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END,NEW.description,NEW.employee_id,NEW.payroll_id,NEW.external_hr_id,NEW.position_title,NEW.badge_system_id,NEW.hire_date,NEW.termination_date,NEW.manager_person_id,NEW.supervisor_person_id,NEW.nickname
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4208,6 +8294,148 @@ CREATE TRIGGER _trigger_v_person_company_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_person_company_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_person_company_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_person_company%rowtype;
+	_nr	jazzhands.v_person_company%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.person_company_status IS DISTINCT FROM NEW.person_company_status THEN
+_uq := array_append(_uq, 'person_company_status = ' || quote_nullable(NEW.person_company_status));
+	END IF;
+
+	IF OLD.person_company_relation IS DISTINCT FROM NEW.person_company_relation THEN
+_uq := array_append(_uq, 'person_company_relation = ' || quote_nullable(NEW.person_company_relation));
+	END IF;
+
+	IF OLD.is_exempt IS DISTINCT FROM NEW.is_exempt THEN
+IF NEW.is_exempt = 'Y' THEN
+	_uq := array_append(_uq, 'is_exempt = true');
+ELSIF NEW.is_exempt = 'N' THEN
+	_uq := array_append(_uq, 'is_exempt = false');
+ELSE
+	_uq := array_append(_uq, 'is_exempt = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_management IS DISTINCT FROM NEW.is_management THEN
+IF NEW.is_management = 'Y' THEN
+	_uq := array_append(_uq, 'is_management = true');
+ELSIF NEW.is_management = 'N' THEN
+	_uq := array_append(_uq, 'is_management = false');
+ELSE
+	_uq := array_append(_uq, 'is_management = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_full_time IS DISTINCT FROM NEW.is_full_time THEN
+IF NEW.is_full_time = 'Y' THEN
+	_uq := array_append(_uq, 'is_full_time = true');
+ELSIF NEW.is_full_time = 'N' THEN
+	_uq := array_append(_uq, 'is_full_time = false');
+ELSE
+	_uq := array_append(_uq, 'is_full_time = NULL');
+END IF;
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.employee_id IS DISTINCT FROM NEW.employee_id THEN
+_uq := array_append(_uq, 'employee_id = ' || quote_nullable(NEW.employee_id));
+	END IF;
+
+	IF OLD.payroll_id IS DISTINCT FROM NEW.payroll_id THEN
+_uq := array_append(_uq, 'payroll_id = ' || quote_nullable(NEW.payroll_id));
+	END IF;
+
+	IF OLD.external_hr_id IS DISTINCT FROM NEW.external_hr_id THEN
+_uq := array_append(_uq, 'external_hr_id = ' || quote_nullable(NEW.external_hr_id));
+	END IF;
+
+	IF OLD.position_title IS DISTINCT FROM NEW.position_title THEN
+_uq := array_append(_uq, 'position_title = ' || quote_nullable(NEW.position_title));
+	END IF;
+
+	IF OLD.badge_system_id IS DISTINCT FROM NEW.badge_system_id THEN
+_uq := array_append(_uq, 'badge_system_id = ' || quote_nullable(NEW.badge_system_id));
+	END IF;
+
+	IF OLD.hire_date IS DISTINCT FROM NEW.hire_date THEN
+_uq := array_append(_uq, 'hire_date = ' || quote_nullable(NEW.hire_date));
+	END IF;
+
+	IF OLD.termination_date IS DISTINCT FROM NEW.termination_date THEN
+_uq := array_append(_uq, 'termination_date = ' || quote_nullable(NEW.termination_date));
+	END IF;
+
+	IF OLD.manager_person_id IS DISTINCT FROM NEW.manager_person_id THEN
+_uq := array_append(_uq, 'manager_person_id = ' || quote_nullable(NEW.manager_person_id));
+	END IF;
+
+	IF OLD.supervisor_person_id IS DISTINCT FROM NEW.supervisor_person_id THEN
+_uq := array_append(_uq, 'supervisor_person_id = ' || quote_nullable(NEW.supervisor_person_id));
+	END IF;
+
+	IF OLD.nickname IS DISTINCT FROM NEW.nickname THEN
+_uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_person_company SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.company_id = _nr.company_id;
+		NEW.person_id = _nr.person_id;
+		NEW.person_company_status = _nr.person_company_status;
+		NEW.person_company_relation = _nr.person_company_relation;
+		NEW.is_exempt = _nr.is_exempt;
+		NEW.is_management = _nr.is_management;
+		NEW.is_full_time = _nr.is_full_time;
+		NEW.description = _nr.description;
+		NEW.employee_id = _nr.employee_id;
+		NEW.payroll_id = _nr.payroll_id;
+		NEW.external_hr_id = _nr.external_hr_id;
+		NEW.position_title = _nr.position_title;
+		NEW.badge_system_id = _nr.badge_system_id;
+		NEW.hire_date = _nr.hire_date;
+		NEW.termination_date = _nr.termination_date;
+		NEW.manager_person_id = _nr.manager_person_id;
+		NEW.supervisor_person_id = _nr.supervisor_person_id;
+		NEW.nickname = _nr.nickname;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_person_company_upd
+	ON jazzhands_legacy.v_person_company;
+CREATE TRIGGER _trigger_v_person_company_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_person_company
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_person_company_upd();
+
+
+
 -- Triggers for v_property
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_property_ins()
@@ -4220,6 +8448,8 @@ BEGIN
 	) VALUES (
 		NEW.property_id,NEW.account_collection_id,NEW.account_id,NEW.account_realm_id,NEW.company_collection_id,NEW.company_id,NEW.device_collection_id,NEW.dns_domain_collection_id,NEW.layer2_network_collection_id,NEW.layer3_network_collection_id,NEW.netblock_collection_id,NEW.network_range_id,NEW.operating_system_id,NEW.operating_system_snapshot_id,NEW.person_id,NEW.property_collection_id,NEW.service_env_collection_id,NEW.site_code,NEW.x509_signed_certificate_id,NEW.property_name,NEW.property_type,NEW.property_value,NEW.property_value_timestamp,NEW.property_value_account_coll_id,NEW.property_value_device_coll_id,NEW.property_value_json,NEW.property_value_nblk_coll_id,NEW.property_value_password_type,NEW.property_value_person_id,NEW.property_value_sw_package_id,NEW.property_value_token_col_id,NEW.property_rank,NEW.start_date,NEW.finish_date,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4234,6 +8464,221 @@ CREATE TRIGGER _trigger_v_property_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_property_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_property_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_property%rowtype;
+	_nr	jazzhands.v_property%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.property_id IS DISTINCT FROM NEW.property_id THEN
+_uq := array_append(_uq, 'property_id = ' || quote_nullable(NEW.property_id));
+	END IF;
+
+	IF OLD.account_collection_id IS DISTINCT FROM NEW.account_collection_id THEN
+_uq := array_append(_uq, 'account_collection_id = ' || quote_nullable(NEW.account_collection_id));
+	END IF;
+
+	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
+_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+	END IF;
+
+	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
+_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF OLD.company_collection_id IS DISTINCT FROM NEW.company_collection_id THEN
+_uq := array_append(_uq, 'company_collection_id = ' || quote_nullable(NEW.company_collection_id));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.device_collection_id IS DISTINCT FROM NEW.device_collection_id THEN
+_uq := array_append(_uq, 'device_collection_id = ' || quote_nullable(NEW.device_collection_id));
+	END IF;
+
+	IF OLD.dns_domain_collection_id IS DISTINCT FROM NEW.dns_domain_collection_id THEN
+_uq := array_append(_uq, 'dns_domain_collection_id = ' || quote_nullable(NEW.dns_domain_collection_id));
+	END IF;
+
+	IF OLD.layer2_network_collection_id IS DISTINCT FROM NEW.layer2_network_collection_id THEN
+_uq := array_append(_uq, 'layer2_network_collection_id = ' || quote_nullable(NEW.layer2_network_collection_id));
+	END IF;
+
+	IF OLD.layer3_network_collection_id IS DISTINCT FROM NEW.layer3_network_collection_id THEN
+_uq := array_append(_uq, 'layer3_network_collection_id = ' || quote_nullable(NEW.layer3_network_collection_id));
+	END IF;
+
+	IF OLD.netblock_collection_id IS DISTINCT FROM NEW.netblock_collection_id THEN
+_uq := array_append(_uq, 'netblock_collection_id = ' || quote_nullable(NEW.netblock_collection_id));
+	END IF;
+
+	IF OLD.network_range_id IS DISTINCT FROM NEW.network_range_id THEN
+_uq := array_append(_uq, 'network_range_id = ' || quote_nullable(NEW.network_range_id));
+	END IF;
+
+	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
+_uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
+	END IF;
+
+	IF OLD.operating_system_snapshot_id IS DISTINCT FROM NEW.operating_system_snapshot_id THEN
+_uq := array_append(_uq, 'operating_system_snapshot_id = ' || quote_nullable(NEW.operating_system_snapshot_id));
+	END IF;
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.property_collection_id IS DISTINCT FROM NEW.property_collection_id THEN
+_uq := array_append(_uq, 'property_name_collection_id = ' || quote_nullable(NEW.property_collection_id));
+	END IF;
+
+	IF OLD.service_env_collection_id IS DISTINCT FROM NEW.service_env_collection_id THEN
+_uq := array_append(_uq, 'service_environment_collection_id = ' || quote_nullable(NEW.service_env_collection_id));
+	END IF;
+
+	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
+_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+	END IF;
+
+	IF OLD.x509_signed_certificate_id IS DISTINCT FROM NEW.x509_signed_certificate_id THEN
+_uq := array_append(_uq, 'x509_signed_certificate_id = ' || quote_nullable(NEW.x509_signed_certificate_id));
+	END IF;
+
+	IF OLD.property_name IS DISTINCT FROM NEW.property_name THEN
+_uq := array_append(_uq, 'property_name = ' || quote_nullable(NEW.property_name));
+	END IF;
+
+	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
+_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+	END IF;
+
+	IF OLD.property_value IS DISTINCT FROM NEW.property_value THEN
+_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+	END IF;
+
+	IF OLD.property_value_timestamp IS DISTINCT FROM NEW.property_value_timestamp THEN
+_uq := array_append(_uq, 'property_value_timestamp = ' || quote_nullable(NEW.property_value_timestamp));
+	END IF;
+
+	IF OLD.property_value_account_coll_id IS DISTINCT FROM NEW.property_value_account_coll_id THEN
+_uq := array_append(_uq, 'property_value_account_collection_id = ' || quote_nullable(NEW.property_value_account_coll_id));
+	END IF;
+
+	IF OLD.property_value_device_coll_id IS DISTINCT FROM NEW.property_value_device_coll_id THEN
+_uq := array_append(_uq, 'property_value_device_collection_id = ' || quote_nullable(NEW.property_value_device_coll_id));
+	END IF;
+
+	IF OLD.property_value_json IS DISTINCT FROM NEW.property_value_json THEN
+_uq := array_append(_uq, 'property_value_json = ' || quote_nullable(NEW.property_value_json));
+	END IF;
+
+	IF OLD.property_value_nblk_coll_id IS DISTINCT FROM NEW.property_value_nblk_coll_id THEN
+_uq := array_append(_uq, 'property_value_netblock_collection_id = ' || quote_nullable(NEW.property_value_nblk_coll_id));
+	END IF;
+
+	IF OLD.property_value_password_type IS DISTINCT FROM NEW.property_value_password_type THEN
+_uq := array_append(_uq, 'property_value_password_type = ' || quote_nullable(NEW.property_value_password_type));
+	END IF;
+
+	IF OLD.property_value_person_id IS DISTINCT FROM NEW.property_value_person_id THEN
+_uq := array_append(_uq, 'property_value_person_id = ' || quote_nullable(NEW.property_value_person_id));
+	END IF;
+
+	IF OLD.property_value_sw_package_id IS DISTINCT FROM NEW.property_value_sw_package_id THEN
+_uq := array_append(_uq, 'property_value_sw_package_id = ' || quote_nullable(NEW.property_value_sw_package_id));
+	END IF;
+
+	IF OLD.property_value_token_col_id IS DISTINCT FROM NEW.property_value_token_col_id THEN
+_uq := array_append(_uq, 'property_value_token_collection_id = ' || quote_nullable(NEW.property_value_token_col_id));
+	END IF;
+
+	IF OLD.property_rank IS DISTINCT FROM NEW.property_rank THEN
+_uq := array_append(_uq, 'property_rank = ' || quote_nullable(NEW.property_rank));
+	END IF;
+
+	IF OLD.start_date IS DISTINCT FROM NEW.start_date THEN
+_uq := array_append(_uq, 'start_date = ' || quote_nullable(NEW.start_date));
+	END IF;
+
+	IF OLD.finish_date IS DISTINCT FROM NEW.finish_date THEN
+_uq := array_append(_uq, 'finish_date = ' || quote_nullable(NEW.finish_date));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_property SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.property_id = _nr.property_id;
+		NEW.account_collection_id = _nr.account_collection_id;
+		NEW.account_id = _nr.account_id;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.company_collection_id = _nr.company_collection_id;
+		NEW.company_id = _nr.company_id;
+		NEW.device_collection_id = _nr.device_collection_id;
+		NEW.dns_domain_collection_id = _nr.dns_domain_collection_id;
+		NEW.layer2_network_collection_id = _nr.layer2_network_collection_id;
+		NEW.layer3_network_collection_id = _nr.layer3_network_collection_id;
+		NEW.netblock_collection_id = _nr.netblock_collection_id;
+		NEW.network_range_id = _nr.network_range_id;
+		NEW.operating_system_id = _nr.operating_system_id;
+		NEW.operating_system_snapshot_id = _nr.operating_system_snapshot_id;
+		NEW.person_id = _nr.person_id;
+		NEW.property_collection_id = _nr.property_name_collection_id;
+		NEW.service_env_collection_id = _nr.service_environment_collection_id;
+		NEW.site_code = _nr.site_code;
+		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+		NEW.property_name = _nr.property_name;
+		NEW.property_type = _nr.property_type;
+		NEW.property_value = _nr.property_value;
+		NEW.property_value_timestamp = _nr.property_value_timestamp;
+		NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
+		NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
+		NEW.property_value_json = _nr.property_value_json;
+		NEW.property_value_nblk_coll_id = _nr.property_value_netblock_collection_id;
+		NEW.property_value_password_type = _nr.property_value_password_type;
+		NEW.property_value_person_id = _nr.property_value_person_id;
+		NEW.property_value_sw_package_id = _nr.property_value_sw_package_id;
+		NEW.property_value_token_col_id = _nr.property_value_token_collection_id;
+		NEW.property_rank = _nr.property_rank;
+		NEW.start_date = _nr.start_date;
+		NEW.finish_date = _nr.finish_date;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_property_upd
+	ON jazzhands_legacy.v_property;
+CREATE TRIGGER _trigger_v_property_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_property_upd();
+
+
+
 -- Triggers for v_token
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_token_ins()
@@ -4246,6 +8691,8 @@ BEGIN
 	) VALUES (
 		NEW.token_id,NEW.token_type,NEW.token_status,NEW.token_serial,NEW.token_sequence,NEW.account_id,NEW.token_password,NEW.zero_time,NEW.time_modulo,NEW.time_skew,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.issued_date,NEW.token_last_updated,NEW.token_sequence_last_updated,NEW.lock_status_last_updated
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4260,6 +8707,127 @@ CREATE TRIGGER _trigger_v_token_ins
 	EXECUTE PROCEDURE jazzhands_legacy.v_token_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_token_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.v_token%rowtype;
+	_nr	jazzhands.v_token%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.token_id IS DISTINCT FROM NEW.token_id THEN
+_uq := array_append(_uq, 'token_id = ' || quote_nullable(NEW.token_id));
+	END IF;
+
+	IF OLD.token_type IS DISTINCT FROM NEW.token_type THEN
+_uq := array_append(_uq, 'token_type = ' || quote_nullable(NEW.token_type));
+	END IF;
+
+	IF OLD.token_status IS DISTINCT FROM NEW.token_status THEN
+_uq := array_append(_uq, 'token_status = ' || quote_nullable(NEW.token_status));
+	END IF;
+
+	IF OLD.token_serial IS DISTINCT FROM NEW.token_serial THEN
+_uq := array_append(_uq, 'token_serial = ' || quote_nullable(NEW.token_serial));
+	END IF;
+
+	IF OLD.token_sequence IS DISTINCT FROM NEW.token_sequence THEN
+_uq := array_append(_uq, 'token_sequence = ' || quote_nullable(NEW.token_sequence));
+	END IF;
+
+	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
+_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+	END IF;
+
+	IF OLD.token_password IS DISTINCT FROM NEW.token_password THEN
+_uq := array_append(_uq, 'token_password = ' || quote_nullable(NEW.token_password));
+	END IF;
+
+	IF OLD.zero_time IS DISTINCT FROM NEW.zero_time THEN
+_uq := array_append(_uq, 'zero_time = ' || quote_nullable(NEW.zero_time));
+	END IF;
+
+	IF OLD.time_modulo IS DISTINCT FROM NEW.time_modulo THEN
+_uq := array_append(_uq, 'time_modulo = ' || quote_nullable(NEW.time_modulo));
+	END IF;
+
+	IF OLD.time_skew IS DISTINCT FROM NEW.time_skew THEN
+_uq := array_append(_uq, 'time_skew = ' || quote_nullable(NEW.time_skew));
+	END IF;
+
+	IF OLD.is_token_locked IS DISTINCT FROM NEW.is_token_locked THEN
+IF NEW.is_token_locked = 'Y' THEN
+	_uq := array_append(_uq, 'is_token_locked = true');
+ELSIF NEW.is_token_locked = 'N' THEN
+	_uq := array_append(_uq, 'is_token_locked = false');
+ELSE
+	_uq := array_append(_uq, 'is_token_locked = NULL');
+END IF;
+	END IF;
+
+	IF OLD.token_unlock_time IS DISTINCT FROM NEW.token_unlock_time THEN
+_uq := array_append(_uq, 'token_unlock_time = ' || quote_nullable(NEW.token_unlock_time));
+	END IF;
+
+	IF OLD.bad_logins IS DISTINCT FROM NEW.bad_logins THEN
+_uq := array_append(_uq, 'bad_logins = ' || quote_nullable(NEW.bad_logins));
+	END IF;
+
+	IF OLD.issued_date IS DISTINCT FROM NEW.issued_date THEN
+_uq := array_append(_uq, 'issued_date = ' || quote_nullable(NEW.issued_date));
+	END IF;
+
+	IF OLD.token_last_updated IS DISTINCT FROM NEW.token_last_updated THEN
+_uq := array_append(_uq, 'token_last_updated = ' || quote_nullable(NEW.token_last_updated));
+	END IF;
+
+	IF OLD.token_sequence_last_updated IS DISTINCT FROM NEW.token_sequence_last_updated THEN
+_uq := array_append(_uq, 'token_sequence_last_updated = ' || quote_nullable(NEW.token_sequence_last_updated));
+	END IF;
+
+	IF OLD.lock_status_last_updated IS DISTINCT FROM NEW.lock_status_last_updated THEN
+_uq := array_append(_uq, 'lock_status_last_updated = ' || quote_nullable(NEW.lock_status_last_updated));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.v_token SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.token_id = _nr.token_id;
+		NEW.token_type = _nr.token_type;
+		NEW.token_status = _nr.token_status;
+		NEW.token_serial = _nr.token_serial;
+		NEW.token_sequence = _nr.token_sequence;
+		NEW.account_id = _nr.account_id;
+		NEW.token_password = _nr.token_password;
+		NEW.zero_time = _nr.zero_time;
+		NEW.time_modulo = _nr.time_modulo;
+		NEW.time_skew = _nr.time_skew;
+		NEW.is_token_locked = _nr.is_token_locked;
+		NEW.token_unlock_time = _nr.token_unlock_time;
+		NEW.bad_logins = _nr.bad_logins;
+		NEW.issued_date = _nr.issued_date;
+		NEW.token_last_updated = _nr.token_last_updated;
+		NEW.token_sequence_last_updated = _nr.token_sequence_last_updated;
+		NEW.lock_status_last_updated = _nr.lock_status_last_updated;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_token_upd
+	ON jazzhands_legacy.v_token;
+CREATE TRIGGER _trigger_v_token_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_token_upd();
+
+
+
 -- Triggers for val_account_collection_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_collection_type_ins()
@@ -4272,6 +8840,8 @@ BEGIN
 	) VALUES (
 		NEW.account_collection_type,NEW.description,CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END,NEW.account_realm_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4286,6 +8856,87 @@ CREATE TRIGGER _trigger_val_account_collection_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_account_collection_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_collection_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_account_collection_type%rowtype;
+	_nr	jazzhands.val_account_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.account_collection_type IS DISTINCT FROM NEW.account_collection_type THEN
+_uq := array_append(_uq, 'account_collection_type = ' || quote_nullable(NEW.account_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.is_infrastructure_type IS DISTINCT FROM NEW.is_infrastructure_type THEN
+IF NEW.is_infrastructure_type = 'Y' THEN
+	_uq := array_append(_uq, 'is_infrastructure_type = true');
+ELSIF NEW.is_infrastructure_type = 'N' THEN
+	_uq := array_append(_uq, 'is_infrastructure_type = false');
+ELSE
+	_uq := array_append(_uq, 'is_infrastructure_type = NULL');
+END IF;
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
+_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_account_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.account_collection_type = $1 RETURNING *'  USING OLD.account_collection_type
+			INTO _nr;
+		NEW.account_collection_type = _nr.account_collection_type;
+		NEW.description = _nr.description;
+		NEW.is_infrastructure_type = _nr.is_infrastructure_type;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_collection_type_upd
+	ON jazzhands_legacy.val_account_collection_type;
+CREATE TRIGGER _trigger_val_account_collection_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_account_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_collection_type_upd();
+
+
+
 -- Triggers for val_account_role
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_role_ins()
@@ -4298,6 +8949,8 @@ BEGIN
 	) VALUES (
 		NEW.account_role,CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END,NEW.description
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4312,6 +8965,61 @@ CREATE TRIGGER _trigger_val_account_role_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_account_role_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_role_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_account_role%rowtype;
+	_nr	jazzhands.val_account_role%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.account_role IS DISTINCT FROM NEW.account_role THEN
+_uq := array_append(_uq, 'account_role = ' || quote_nullable(NEW.account_role));
+	END IF;
+
+	IF OLD.uid_gid_forced IS DISTINCT FROM NEW.uid_gid_forced THEN
+IF NEW.uid_gid_forced = 'Y' THEN
+	_uq := array_append(_uq, 'uid_gid_forced = true');
+ELSIF NEW.uid_gid_forced = 'N' THEN
+	_uq := array_append(_uq, 'uid_gid_forced = false');
+ELSE
+	_uq := array_append(_uq, 'uid_gid_forced = NULL');
+END IF;
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_account_role SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.account_role = $1 RETURNING *'  USING OLD.account_role
+			INTO _nr;
+		NEW.account_role = _nr.account_role;
+		NEW.uid_gid_forced = _nr.uid_gid_forced;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_role_upd
+	ON jazzhands_legacy.val_account_role;
+CREATE TRIGGER _trigger_val_account_role_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_account_role
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_role_upd();
+
+
+
 -- Triggers for val_account_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_type_ins()
@@ -4324,6 +9032,8 @@ BEGIN
 	) VALUES (
 		NEW.account_type,CASE WHEN NEW.is_person = 'Y' THEN true WHEN NEW.is_person = 'N' THEN false ELSE NULL END,CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END,NEW.description
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4338,6 +9048,72 @@ CREATE TRIGGER _trigger_val_account_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_account_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_account_type%rowtype;
+	_nr	jazzhands.val_account_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.account_type IS DISTINCT FROM NEW.account_type THEN
+_uq := array_append(_uq, 'account_type = ' || quote_nullable(NEW.account_type));
+	END IF;
+
+	IF OLD.is_person IS DISTINCT FROM NEW.is_person THEN
+IF NEW.is_person = 'Y' THEN
+	_uq := array_append(_uq, 'is_person = true');
+ELSIF NEW.is_person = 'N' THEN
+	_uq := array_append(_uq, 'is_person = false');
+ELSE
+	_uq := array_append(_uq, 'is_person = NULL');
+END IF;
+	END IF;
+
+	IF OLD.uid_gid_forced IS DISTINCT FROM NEW.uid_gid_forced THEN
+IF NEW.uid_gid_forced = 'Y' THEN
+	_uq := array_append(_uq, 'uid_gid_forced = true');
+ELSIF NEW.uid_gid_forced = 'N' THEN
+	_uq := array_append(_uq, 'uid_gid_forced = false');
+ELSE
+	_uq := array_append(_uq, 'uid_gid_forced = NULL');
+END IF;
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_account_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.account_type = $1 RETURNING *'  USING OLD.account_type
+			INTO _nr;
+		NEW.account_type = _nr.account_type;
+		NEW.is_person = _nr.is_person;
+		NEW.uid_gid_forced = _nr.uid_gid_forced;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_type_upd
+	ON jazzhands_legacy.val_account_type;
+CREATE TRIGGER _trigger_val_account_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_account_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_type_upd();
+
+
+
 -- Triggers for val_company_collection_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_company_collection_type_ins()
@@ -4350,6 +9126,8 @@ BEGIN
 	) VALUES (
 		NEW.company_collection_type,NEW.description,CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4364,6 +9142,82 @@ CREATE TRIGGER _trigger_val_company_collection_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_company_collection_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_company_collection_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_company_collection_type%rowtype;
+	_nr	jazzhands.val_company_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.company_collection_type IS DISTINCT FROM NEW.company_collection_type THEN
+_uq := array_append(_uq, 'company_collection_type = ' || quote_nullable(NEW.company_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.is_infrastructure_type IS DISTINCT FROM NEW.is_infrastructure_type THEN
+IF NEW.is_infrastructure_type = 'Y' THEN
+	_uq := array_append(_uq, 'is_infrastructure_type = true');
+ELSIF NEW.is_infrastructure_type = 'N' THEN
+	_uq := array_append(_uq, 'is_infrastructure_type = false');
+ELSE
+	_uq := array_append(_uq, 'is_infrastructure_type = NULL');
+END IF;
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_company_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.company_collection_type = $1 RETURNING *'  USING OLD.company_collection_type
+			INTO _nr;
+		NEW.company_collection_type = _nr.company_collection_type;
+		NEW.description = _nr.description;
+		NEW.is_infrastructure_type = _nr.is_infrastructure_type;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_company_collection_type_upd
+	ON jazzhands_legacy.val_company_collection_type;
+CREATE TRIGGER _trigger_val_company_collection_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_company_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_company_collection_type_upd();
+
+
+
 -- Triggers for val_component_property
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_ins()
@@ -4376,6 +9230,8 @@ BEGIN
 	) VALUES (
 		NEW.component_property_name,NEW.component_property_type,NEW.description,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END,NEW.property_data_type,NEW.permit_component_type_id,NEW.required_component_type_id,NEW.permit_component_function,NEW.required_component_function,NEW.permit_component_id,NEW.permit_intcomp_conn_id,NEW.permit_slot_type_id,NEW.required_slot_type_id,NEW.permit_slot_function,NEW.required_slot_function,NEW.permit_slot_id
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4390,6 +9246,126 @@ CREATE TRIGGER _trigger_val_component_property_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_component_property%rowtype;
+	_nr	jazzhands.val_component_property%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.component_property_name IS DISTINCT FROM NEW.component_property_name THEN
+_uq := array_append(_uq, 'component_property_name = ' || quote_nullable(NEW.component_property_name));
+	END IF;
+
+	IF OLD.component_property_type IS DISTINCT FROM NEW.component_property_type THEN
+_uq := array_append(_uq, 'component_property_type = ' || quote_nullable(NEW.component_property_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
+IF NEW.is_multivalue = 'Y' THEN
+	_uq := array_append(_uq, 'is_multivalue = true');
+ELSIF NEW.is_multivalue = 'N' THEN
+	_uq := array_append(_uq, 'is_multivalue = false');
+ELSE
+	_uq := array_append(_uq, 'is_multivalue = NULL');
+END IF;
+	END IF;
+
+	IF OLD.property_data_type IS DISTINCT FROM NEW.property_data_type THEN
+_uq := array_append(_uq, 'property_data_type = ' || quote_nullable(NEW.property_data_type));
+	END IF;
+
+	IF OLD.permit_component_type_id IS DISTINCT FROM NEW.permit_component_type_id THEN
+_uq := array_append(_uq, 'permit_component_type_id = ' || quote_nullable(NEW.permit_component_type_id));
+	END IF;
+
+	IF OLD.required_component_type_id IS DISTINCT FROM NEW.required_component_type_id THEN
+_uq := array_append(_uq, 'required_component_type_id = ' || quote_nullable(NEW.required_component_type_id));
+	END IF;
+
+	IF OLD.permit_component_function IS DISTINCT FROM NEW.permit_component_function THEN
+_uq := array_append(_uq, 'permit_component_function = ' || quote_nullable(NEW.permit_component_function));
+	END IF;
+
+	IF OLD.required_component_function IS DISTINCT FROM NEW.required_component_function THEN
+_uq := array_append(_uq, 'required_component_function = ' || quote_nullable(NEW.required_component_function));
+	END IF;
+
+	IF OLD.permit_component_id IS DISTINCT FROM NEW.permit_component_id THEN
+_uq := array_append(_uq, 'permit_component_id = ' || quote_nullable(NEW.permit_component_id));
+	END IF;
+
+	IF OLD.permit_intcomp_conn_id IS DISTINCT FROM NEW.permit_intcomp_conn_id THEN
+_uq := array_append(_uq, 'permit_inter_component_connection_id = ' || quote_nullable(NEW.permit_intcomp_conn_id));
+	END IF;
+
+	IF OLD.permit_slot_type_id IS DISTINCT FROM NEW.permit_slot_type_id THEN
+_uq := array_append(_uq, 'permit_slot_type_id = ' || quote_nullable(NEW.permit_slot_type_id));
+	END IF;
+
+	IF OLD.required_slot_type_id IS DISTINCT FROM NEW.required_slot_type_id THEN
+_uq := array_append(_uq, 'required_slot_type_id = ' || quote_nullable(NEW.required_slot_type_id));
+	END IF;
+
+	IF OLD.permit_slot_function IS DISTINCT FROM NEW.permit_slot_function THEN
+_uq := array_append(_uq, 'permit_slot_function = ' || quote_nullable(NEW.permit_slot_function));
+	END IF;
+
+	IF OLD.required_slot_function IS DISTINCT FROM NEW.required_slot_function THEN
+_uq := array_append(_uq, 'required_slot_function = ' || quote_nullable(NEW.required_slot_function));
+	END IF;
+
+	IF OLD.permit_slot_id IS DISTINCT FROM NEW.permit_slot_id THEN
+_uq := array_append(_uq, 'permit_slot_id = ' || quote_nullable(NEW.permit_slot_id));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_component_property SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.component_property_name = $1 AND  NEW.component_property_type = $2 RETURNING *'  USING OLD.component_property_name, OLD.component_property_type
+			INTO _nr;
+		NEW.component_property_name = _nr.component_property_name;
+		NEW.component_property_type = _nr.component_property_type;
+		NEW.description = _nr.description;
+		NEW.is_multivalue = _nr.is_multivalue;
+		NEW.property_data_type = _nr.property_data_type;
+		NEW.permit_component_type_id = _nr.permit_component_type_id;
+		NEW.required_component_type_id = _nr.required_component_type_id;
+		NEW.permit_component_function = _nr.permit_component_function;
+		NEW.required_component_function = _nr.required_component_function;
+		NEW.permit_component_id = _nr.permit_component_id;
+		NEW.permit_intcomp_conn_id = _nr.permit_inter_component_connection_id;
+		NEW.permit_slot_type_id = _nr.permit_slot_type_id;
+		NEW.required_slot_type_id = _nr.required_slot_type_id;
+		NEW.permit_slot_function = _nr.permit_slot_function;
+		NEW.required_slot_function = _nr.required_slot_function;
+		NEW.permit_slot_id = _nr.permit_slot_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_component_property_upd
+	ON jazzhands_legacy.val_component_property;
+CREATE TRIGGER _trigger_val_component_property_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_component_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_upd();
+
+
+
 -- Triggers for val_component_property_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_type_ins()
@@ -4402,6 +9378,8 @@ BEGIN
 	) VALUES (
 		NEW.component_property_type,NEW.description,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4416,6 +9394,61 @@ CREATE TRIGGER _trigger_val_component_property_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_component_property_type%rowtype;
+	_nr	jazzhands.val_component_property_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.component_property_type IS DISTINCT FROM NEW.component_property_type THEN
+_uq := array_append(_uq, 'component_property_type = ' || quote_nullable(NEW.component_property_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
+IF NEW.is_multivalue = 'Y' THEN
+	_uq := array_append(_uq, 'is_multivalue = true');
+ELSIF NEW.is_multivalue = 'N' THEN
+	_uq := array_append(_uq, 'is_multivalue = false');
+ELSE
+	_uq := array_append(_uq, 'is_multivalue = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_component_property_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.component_property_type = $1 RETURNING *'  USING OLD.component_property_type
+			INTO _nr;
+		NEW.component_property_type = _nr.component_property_type;
+		NEW.description = _nr.description;
+		NEW.is_multivalue = _nr.is_multivalue;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_component_property_type_upd
+	ON jazzhands_legacy.val_component_property_type;
+CREATE TRIGGER _trigger_val_component_property_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_component_property_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_type_upd();
+
+
+
 -- Triggers for val_device_collection_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_device_collection_type_ins()
@@ -4428,6 +9461,8 @@ BEGIN
 	) VALUES (
 		NEW.device_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4442,6 +9477,71 @@ CREATE TRIGGER _trigger_val_device_collection_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_device_collection_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_device_collection_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_device_collection_type%rowtype;
+	_nr	jazzhands.val_device_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.device_collection_type IS DISTINCT FROM NEW.device_collection_type THEN
+_uq := array_append(_uq, 'device_collection_type = ' || quote_nullable(NEW.device_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_device_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.device_collection_type = $1 RETURNING *'  USING OLD.device_collection_type
+			INTO _nr;
+		NEW.device_collection_type = _nr.device_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_device_collection_type_upd
+	ON jazzhands_legacy.val_device_collection_type;
+CREATE TRIGGER _trigger_val_device_collection_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_device_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_device_collection_type_upd();
+
+
+
 -- Triggers for val_dns_domain_collection_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_collection_type_ins()
@@ -4454,6 +9554,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_domain_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4468,6 +9570,71 @@ CREATE TRIGGER _trigger_val_dns_domain_collection_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_collection_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_collection_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_dns_domain_collection_type%rowtype;
+	_nr	jazzhands.val_dns_domain_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_domain_collection_type IS DISTINCT FROM NEW.dns_domain_collection_type THEN
+_uq := array_append(_uq, 'dns_domain_collection_type = ' || quote_nullable(NEW.dns_domain_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_dns_domain_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.dns_domain_collection_type = $1 RETURNING *'  USING OLD.dns_domain_collection_type
+			INTO _nr;
+		NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_dns_domain_collection_type_upd
+	ON jazzhands_legacy.val_dns_domain_collection_type;
+CREATE TRIGGER _trigger_val_dns_domain_collection_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_dns_domain_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_collection_type_upd();
+
+
+
 -- Triggers for val_dns_domain_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_type_ins()
@@ -4480,6 +9647,8 @@ BEGIN
 	) VALUES (
 		NEW.dns_domain_type,CASE WHEN NEW.can_generate = 'Y' THEN true WHEN NEW.can_generate = 'N' THEN false ELSE NULL END,NEW.description
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4494,6 +9663,61 @@ CREATE TRIGGER _trigger_val_dns_domain_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_dns_domain_type%rowtype;
+	_nr	jazzhands.val_dns_domain_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.dns_domain_type IS DISTINCT FROM NEW.dns_domain_type THEN
+_uq := array_append(_uq, 'dns_domain_type = ' || quote_nullable(NEW.dns_domain_type));
+	END IF;
+
+	IF OLD.can_generate IS DISTINCT FROM NEW.can_generate THEN
+IF NEW.can_generate = 'Y' THEN
+	_uq := array_append(_uq, 'can_generate = true');
+ELSIF NEW.can_generate = 'N' THEN
+	_uq := array_append(_uq, 'can_generate = false');
+ELSE
+	_uq := array_append(_uq, 'can_generate = NULL');
+END IF;
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_dns_domain_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.dns_domain_type = $1 RETURNING *'  USING OLD.dns_domain_type
+			INTO _nr;
+		NEW.dns_domain_type = _nr.dns_domain_type;
+		NEW.can_generate = _nr.can_generate;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_dns_domain_type_upd
+	ON jazzhands_legacy.val_dns_domain_type;
+CREATE TRIGGER _trigger_val_dns_domain_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_dns_domain_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_type_upd();
+
+
+
 -- Triggers for val_layer2_network_coll_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer2_network_coll_type_ins()
@@ -4506,6 +9730,8 @@ BEGIN
 	) VALUES (
 		NEW.layer2_network_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4520,6 +9746,71 @@ CREATE TRIGGER _trigger_val_layer2_network_coll_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_layer2_network_coll_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer2_network_coll_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_layer2_network_coll_type%rowtype;
+	_nr	jazzhands.val_layer2_network_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.layer2_network_collection_type IS DISTINCT FROM NEW.layer2_network_collection_type THEN
+_uq := array_append(_uq, 'layer2_network_collection_type = ' || quote_nullable(NEW.layer2_network_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_layer2_network_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.layer2_network_collection_type = $1 RETURNING *'  USING OLD.layer2_network_collection_type
+			INTO _nr;
+		NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_layer2_network_coll_type_upd
+	ON jazzhands_legacy.val_layer2_network_coll_type;
+CREATE TRIGGER _trigger_val_layer2_network_coll_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_layer2_network_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_layer2_network_coll_type_upd();
+
+
+
 -- Triggers for val_layer3_network_coll_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer3_network_coll_type_ins()
@@ -4532,6 +9823,8 @@ BEGIN
 	) VALUES (
 		NEW.layer3_network_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4546,6 +9839,71 @@ CREATE TRIGGER _trigger_val_layer3_network_coll_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_layer3_network_coll_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer3_network_coll_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_layer3_network_coll_type%rowtype;
+	_nr	jazzhands.val_layer3_network_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.layer3_network_collection_type IS DISTINCT FROM NEW.layer3_network_collection_type THEN
+_uq := array_append(_uq, 'layer3_network_collection_type = ' || quote_nullable(NEW.layer3_network_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_layer3_network_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.layer3_network_collection_type = $1 RETURNING *'  USING OLD.layer3_network_collection_type
+			INTO _nr;
+		NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_layer3_network_coll_type_upd
+	ON jazzhands_legacy.val_layer3_network_coll_type;
+CREATE TRIGGER _trigger_val_layer3_network_coll_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_layer3_network_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_layer3_network_coll_type_upd();
+
+
+
 -- Triggers for val_netblock_collection_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_collection_type_ins()
@@ -4558,6 +9916,8 @@ BEGIN
 	) VALUES (
 		NEW.netblock_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END,NEW.netblock_single_addr_restrict,NEW.netblock_ip_family_restrict
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4572,6 +9932,81 @@ CREATE TRIGGER _trigger_val_netblock_collection_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_collection_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_collection_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_netblock_collection_type%rowtype;
+	_nr	jazzhands.val_netblock_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.netblock_collection_type IS DISTINCT FROM NEW.netblock_collection_type THEN
+_uq := array_append(_uq, 'netblock_collection_type = ' || quote_nullable(NEW.netblock_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF OLD.netblock_single_addr_restrict IS DISTINCT FROM NEW.netblock_single_addr_restrict THEN
+_uq := array_append(_uq, 'netblock_is_single_address_restriction = ' || quote_nullable(NEW.netblock_single_addr_restrict));
+	END IF;
+
+	IF OLD.netblock_ip_family_restrict IS DISTINCT FROM NEW.netblock_ip_family_restrict THEN
+_uq := array_append(_uq, 'netblock_ip_family_restriction = ' || quote_nullable(NEW.netblock_ip_family_restrict));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_netblock_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.netblock_collection_type = $1 RETURNING *'  USING OLD.netblock_collection_type
+			INTO _nr;
+		NEW.netblock_collection_type = _nr.netblock_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.netblock_single_addr_restrict = _nr.netblock_is_single_address_restriction;
+		NEW.netblock_ip_family_restrict = _nr.netblock_ip_family_restriction;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_netblock_collection_type_upd
+	ON jazzhands_legacy.val_netblock_collection_type;
+CREATE TRIGGER _trigger_val_netblock_collection_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_netblock_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_collection_type_upd();
+
+
+
 -- Triggers for val_netblock_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_type_ins()
@@ -4584,6 +10019,8 @@ BEGIN
 	) VALUES (
 		NEW.netblock_type,NEW.description,CASE WHEN NEW.db_forced_hierarchy = 'Y' THEN true WHEN NEW.db_forced_hierarchy = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_validated_hierarchy = 'Y' THEN true WHEN NEW.is_validated_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4598,6 +10035,72 @@ CREATE TRIGGER _trigger_val_netblock_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_netblock_type%rowtype;
+	_nr	jazzhands.val_netblock_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.netblock_type IS DISTINCT FROM NEW.netblock_type THEN
+_uq := array_append(_uq, 'netblock_type = ' || quote_nullable(NEW.netblock_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.db_forced_hierarchy IS DISTINCT FROM NEW.db_forced_hierarchy THEN
+IF NEW.db_forced_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'db_forced_hierarchy = true');
+ELSIF NEW.db_forced_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'db_forced_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'db_forced_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_validated_hierarchy IS DISTINCT FROM NEW.is_validated_hierarchy THEN
+IF NEW.is_validated_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'is_validated_hierarchy = true');
+ELSIF NEW.is_validated_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'is_validated_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'is_validated_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_netblock_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.netblock_type = $1 RETURNING *'  USING OLD.netblock_type
+			INTO _nr;
+		NEW.netblock_type = _nr.netblock_type;
+		NEW.description = _nr.description;
+		NEW.db_forced_hierarchy = _nr.db_forced_hierarchy;
+		NEW.is_validated_hierarchy = _nr.is_validated_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_netblock_type_upd
+	ON jazzhands_legacy.val_netblock_type;
+CREATE TRIGGER _trigger_val_netblock_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_netblock_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_type_upd();
+
+
+
 -- Triggers for val_network_range_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_network_range_type_ins()
@@ -4610,6 +10113,8 @@ BEGIN
 	) VALUES (
 		NEW.network_range_type,NEW.description,NEW.dns_domain_required,NEW.default_dns_prefix,NEW.netblock_type,CASE WHEN NEW.can_overlap = 'Y' THEN true WHEN NEW.can_overlap = 'N' THEN false ELSE NULL END,CASE WHEN NEW.require_cidr_boundary = 'Y' THEN true WHEN NEW.require_cidr_boundary = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4624,6 +10129,87 @@ CREATE TRIGGER _trigger_val_network_range_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_network_range_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_network_range_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_network_range_type%rowtype;
+	_nr	jazzhands.val_network_range_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.network_range_type IS DISTINCT FROM NEW.network_range_type THEN
+_uq := array_append(_uq, 'network_range_type = ' || quote_nullable(NEW.network_range_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.dns_domain_required IS DISTINCT FROM NEW.dns_domain_required THEN
+_uq := array_append(_uq, 'dns_domain_required = ' || quote_nullable(NEW.dns_domain_required));
+	END IF;
+
+	IF OLD.default_dns_prefix IS DISTINCT FROM NEW.default_dns_prefix THEN
+_uq := array_append(_uq, 'default_dns_prefix = ' || quote_nullable(NEW.default_dns_prefix));
+	END IF;
+
+	IF OLD.netblock_type IS DISTINCT FROM NEW.netblock_type THEN
+_uq := array_append(_uq, 'netblock_type = ' || quote_nullable(NEW.netblock_type));
+	END IF;
+
+	IF OLD.can_overlap IS DISTINCT FROM NEW.can_overlap THEN
+IF NEW.can_overlap = 'Y' THEN
+	_uq := array_append(_uq, 'can_overlap = true');
+ELSIF NEW.can_overlap = 'N' THEN
+	_uq := array_append(_uq, 'can_overlap = false');
+ELSE
+	_uq := array_append(_uq, 'can_overlap = NULL');
+END IF;
+	END IF;
+
+	IF OLD.require_cidr_boundary IS DISTINCT FROM NEW.require_cidr_boundary THEN
+IF NEW.require_cidr_boundary = 'Y' THEN
+	_uq := array_append(_uq, 'require_cidr_boundary = true');
+ELSIF NEW.require_cidr_boundary = 'N' THEN
+	_uq := array_append(_uq, 'require_cidr_boundary = false');
+ELSE
+	_uq := array_append(_uq, 'require_cidr_boundary = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_network_range_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.network_range_type = $1 RETURNING *'  USING OLD.network_range_type
+			INTO _nr;
+		NEW.network_range_type = _nr.network_range_type;
+		NEW.description = _nr.description;
+		NEW.dns_domain_required = _nr.dns_domain_required;
+		NEW.default_dns_prefix = _nr.default_dns_prefix;
+		NEW.netblock_type = _nr.netblock_type;
+		NEW.can_overlap = _nr.can_overlap;
+		NEW.require_cidr_boundary = _nr.require_cidr_boundary;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_network_range_type_upd
+	ON jazzhands_legacy.val_network_range_type;
+CREATE TRIGGER _trigger_val_network_range_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_network_range_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_network_range_type_upd();
+
+
+
 -- Triggers for val_person_image_usage
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_image_usage_ins()
@@ -4636,6 +10222,8 @@ BEGIN
 	) VALUES (
 		NEW.person_image_usage,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4650,6 +10238,56 @@ CREATE TRIGGER _trigger_val_person_image_usage_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_person_image_usage_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_image_usage_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_person_image_usage%rowtype;
+	_nr	jazzhands.val_person_image_usage%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.person_image_usage IS DISTINCT FROM NEW.person_image_usage THEN
+_uq := array_append(_uq, 'person_image_usage = ' || quote_nullable(NEW.person_image_usage));
+	END IF;
+
+	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
+IF NEW.is_multivalue = 'Y' THEN
+	_uq := array_append(_uq, 'is_multivalue = true');
+ELSIF NEW.is_multivalue = 'N' THEN
+	_uq := array_append(_uq, 'is_multivalue = false');
+ELSE
+	_uq := array_append(_uq, 'is_multivalue = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_person_image_usage SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.person_image_usage = $1 RETURNING *'  USING OLD.person_image_usage
+			INTO _nr;
+		NEW.person_image_usage = _nr.person_image_usage;
+		NEW.is_multivalue = _nr.is_multivalue;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_person_image_usage_upd
+	ON jazzhands_legacy.val_person_image_usage;
+CREATE TRIGGER _trigger_val_person_image_usage_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_person_image_usage
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_person_image_usage_upd();
+
+
+
 -- Triggers for val_person_status
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_status_ins()
@@ -4662,6 +10300,8 @@ BEGIN
 	) VALUES (
 		NEW.person_status,NEW.description,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.propagate_from_person = 'Y' THEN true WHEN NEW.propagate_from_person = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_forced = 'Y' THEN true WHEN NEW.is_forced = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_db_enforced = 'Y' THEN true WHEN NEW.is_db_enforced = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4676,6 +10316,94 @@ CREATE TRIGGER _trigger_val_person_status_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_person_status_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_status_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_person_status%rowtype;
+	_nr	jazzhands.val_person_status%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.person_status IS DISTINCT FROM NEW.person_status THEN
+_uq := array_append(_uq, 'person_status = ' || quote_nullable(NEW.person_status));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
+IF NEW.is_enabled = 'Y' THEN
+	_uq := array_append(_uq, 'is_enabled = true');
+ELSIF NEW.is_enabled = 'N' THEN
+	_uq := array_append(_uq, 'is_enabled = false');
+ELSE
+	_uq := array_append(_uq, 'is_enabled = NULL');
+END IF;
+	END IF;
+
+	IF OLD.propagate_from_person IS DISTINCT FROM NEW.propagate_from_person THEN
+IF NEW.propagate_from_person = 'Y' THEN
+	_uq := array_append(_uq, 'propagate_from_person = true');
+ELSIF NEW.propagate_from_person = 'N' THEN
+	_uq := array_append(_uq, 'propagate_from_person = false');
+ELSE
+	_uq := array_append(_uq, 'propagate_from_person = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_forced IS DISTINCT FROM NEW.is_forced THEN
+IF NEW.is_forced = 'Y' THEN
+	_uq := array_append(_uq, 'is_forced = true');
+ELSIF NEW.is_forced = 'N' THEN
+	_uq := array_append(_uq, 'is_forced = false');
+ELSE
+	_uq := array_append(_uq, 'is_forced = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_db_enforced IS DISTINCT FROM NEW.is_db_enforced THEN
+IF NEW.is_db_enforced = 'Y' THEN
+	_uq := array_append(_uq, 'is_db_enforced = true');
+ELSIF NEW.is_db_enforced = 'N' THEN
+	_uq := array_append(_uq, 'is_db_enforced = false');
+ELSE
+	_uq := array_append(_uq, 'is_db_enforced = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_person_status SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.person_status = $1 RETURNING *'  USING OLD.person_status
+			INTO _nr;
+		NEW.person_status = _nr.person_status;
+		NEW.description = _nr.description;
+		NEW.is_enabled = _nr.is_enabled;
+		NEW.propagate_from_person = _nr.propagate_from_person;
+		NEW.is_forced = _nr.is_forced;
+		NEW.is_db_enforced = _nr.is_db_enforced;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_person_status_upd
+	ON jazzhands_legacy.val_person_status;
+CREATE TRIGGER _trigger_val_person_status_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_person_status
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_person_status_upd();
+
+
+
 -- Triggers for val_property
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_ins()
@@ -4688,6 +10416,8 @@ BEGIN
 	) VALUES (
 		NEW.property_name,NEW.property_type,NEW.description,NEW.account_collection_type,NEW.company_collection_type,NEW.device_collection_type,NEW.dns_domain_collection_type,NEW.layer2_network_collection_type,NEW.layer3_network_collection_type,NEW.netblock_collection_type,NEW.network_range_type,NEW.property_collection_type,NEW.service_env_collection_type,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END,NEW.prop_val_acct_coll_type_rstrct,NEW.prop_val_dev_coll_type_rstrct,NEW.prop_val_nblk_coll_type_rstrct,NEW.property_data_type,NEW.property_value_json_schema,NEW.permit_account_collection_id,NEW.permit_account_id,NEW.permit_account_realm_id,NEW.permit_company_id,NEW.permit_company_collection_id,NEW.permit_device_collection_id,NEW.permit_dns_domain_coll_id,NEW.permit_layer2_network_coll_id,NEW.permit_layer3_network_coll_id,NEW.permit_netblock_collection_id,NEW.permit_network_range_id,NEW.permit_operating_system_id,NEW.permit_os_snapshot_id,NEW.permit_person_id,NEW.permit_property_collection_id,NEW.permit_service_env_collection,NEW.permit_site_code,NEW.permit_x509_signed_cert_id,NEW.permit_property_rank
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4702,6 +10432,236 @@ CREATE TRIGGER _trigger_val_property_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_property_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_property%rowtype;
+	_nr	jazzhands.val_property%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.property_name IS DISTINCT FROM NEW.property_name THEN
+_uq := array_append(_uq, 'property_name = ' || quote_nullable(NEW.property_name));
+	END IF;
+
+	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
+_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.account_collection_type IS DISTINCT FROM NEW.account_collection_type THEN
+_uq := array_append(_uq, 'account_collection_type = ' || quote_nullable(NEW.account_collection_type));
+	END IF;
+
+	IF OLD.company_collection_type IS DISTINCT FROM NEW.company_collection_type THEN
+_uq := array_append(_uq, 'company_collection_type = ' || quote_nullable(NEW.company_collection_type));
+	END IF;
+
+	IF OLD.device_collection_type IS DISTINCT FROM NEW.device_collection_type THEN
+_uq := array_append(_uq, 'device_collection_type = ' || quote_nullable(NEW.device_collection_type));
+	END IF;
+
+	IF OLD.dns_domain_collection_type IS DISTINCT FROM NEW.dns_domain_collection_type THEN
+_uq := array_append(_uq, 'dns_domain_collection_type = ' || quote_nullable(NEW.dns_domain_collection_type));
+	END IF;
+
+	IF OLD.layer2_network_collection_type IS DISTINCT FROM NEW.layer2_network_collection_type THEN
+_uq := array_append(_uq, 'layer2_network_collection_type = ' || quote_nullable(NEW.layer2_network_collection_type));
+	END IF;
+
+	IF OLD.layer3_network_collection_type IS DISTINCT FROM NEW.layer3_network_collection_type THEN
+_uq := array_append(_uq, 'layer3_network_collection_type = ' || quote_nullable(NEW.layer3_network_collection_type));
+	END IF;
+
+	IF OLD.netblock_collection_type IS DISTINCT FROM NEW.netblock_collection_type THEN
+_uq := array_append(_uq, 'netblock_collection_type = ' || quote_nullable(NEW.netblock_collection_type));
+	END IF;
+
+	IF OLD.network_range_type IS DISTINCT FROM NEW.network_range_type THEN
+_uq := array_append(_uq, 'network_range_type = ' || quote_nullable(NEW.network_range_type));
+	END IF;
+
+	IF OLD.property_collection_type IS DISTINCT FROM NEW.property_collection_type THEN
+_uq := array_append(_uq, 'property_name_collection_type = ' || quote_nullable(NEW.property_collection_type));
+	END IF;
+
+	IF OLD.service_env_collection_type IS DISTINCT FROM NEW.service_env_collection_type THEN
+_uq := array_append(_uq, 'service_environment_collection_type = ' || quote_nullable(NEW.service_env_collection_type));
+	END IF;
+
+	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
+IF NEW.is_multivalue = 'Y' THEN
+	_uq := array_append(_uq, 'is_multivalue = true');
+ELSIF NEW.is_multivalue = 'N' THEN
+	_uq := array_append(_uq, 'is_multivalue = false');
+ELSE
+	_uq := array_append(_uq, 'is_multivalue = NULL');
+END IF;
+	END IF;
+
+	IF OLD.prop_val_acct_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_acct_coll_type_rstrct THEN
+_uq := array_append(_uq, 'property_value_account_collection_type_restriction = ' || quote_nullable(NEW.prop_val_acct_coll_type_rstrct));
+	END IF;
+
+	IF OLD.prop_val_dev_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_dev_coll_type_rstrct THEN
+_uq := array_append(_uq, 'property_value_device_collection_type_restriction = ' || quote_nullable(NEW.prop_val_dev_coll_type_rstrct));
+	END IF;
+
+	IF OLD.prop_val_nblk_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_nblk_coll_type_rstrct THEN
+_uq := array_append(_uq, 'property_value_netblock_collection_type_restriction = ' || quote_nullable(NEW.prop_val_nblk_coll_type_rstrct));
+	END IF;
+
+	IF OLD.property_data_type IS DISTINCT FROM NEW.property_data_type THEN
+_uq := array_append(_uq, 'property_data_type = ' || quote_nullable(NEW.property_data_type));
+	END IF;
+
+	IF OLD.property_value_json_schema IS DISTINCT FROM NEW.property_value_json_schema THEN
+_uq := array_append(_uq, 'property_value_json_schema = ' || quote_nullable(NEW.property_value_json_schema));
+	END IF;
+
+	IF OLD.permit_account_collection_id IS DISTINCT FROM NEW.permit_account_collection_id THEN
+_uq := array_append(_uq, 'permit_account_collection_id = ' || quote_nullable(NEW.permit_account_collection_id));
+	END IF;
+
+	IF OLD.permit_account_id IS DISTINCT FROM NEW.permit_account_id THEN
+_uq := array_append(_uq, 'permit_account_id = ' || quote_nullable(NEW.permit_account_id));
+	END IF;
+
+	IF OLD.permit_account_realm_id IS DISTINCT FROM NEW.permit_account_realm_id THEN
+_uq := array_append(_uq, 'permit_account_realm_id = ' || quote_nullable(NEW.permit_account_realm_id));
+	END IF;
+
+	IF OLD.permit_company_id IS DISTINCT FROM NEW.permit_company_id THEN
+_uq := array_append(_uq, 'permit_company_id = ' || quote_nullable(NEW.permit_company_id));
+	END IF;
+
+	IF OLD.permit_company_collection_id IS DISTINCT FROM NEW.permit_company_collection_id THEN
+_uq := array_append(_uq, 'permit_company_collection_id = ' || quote_nullable(NEW.permit_company_collection_id));
+	END IF;
+
+	IF OLD.permit_device_collection_id IS DISTINCT FROM NEW.permit_device_collection_id THEN
+_uq := array_append(_uq, 'permit_device_collection_id = ' || quote_nullable(NEW.permit_device_collection_id));
+	END IF;
+
+	IF OLD.permit_dns_domain_coll_id IS DISTINCT FROM NEW.permit_dns_domain_coll_id THEN
+_uq := array_append(_uq, 'permit_dns_domain_collection_id = ' || quote_nullable(NEW.permit_dns_domain_coll_id));
+	END IF;
+
+	IF OLD.permit_layer2_network_coll_id IS DISTINCT FROM NEW.permit_layer2_network_coll_id THEN
+_uq := array_append(_uq, 'permit_layer2_network_collection_id = ' || quote_nullable(NEW.permit_layer2_network_coll_id));
+	END IF;
+
+	IF OLD.permit_layer3_network_coll_id IS DISTINCT FROM NEW.permit_layer3_network_coll_id THEN
+_uq := array_append(_uq, 'permit_layer3_network_collection_id = ' || quote_nullable(NEW.permit_layer3_network_coll_id));
+	END IF;
+
+	IF OLD.permit_netblock_collection_id IS DISTINCT FROM NEW.permit_netblock_collection_id THEN
+_uq := array_append(_uq, 'permit_netblock_collection_id = ' || quote_nullable(NEW.permit_netblock_collection_id));
+	END IF;
+
+	IF OLD.permit_network_range_id IS DISTINCT FROM NEW.permit_network_range_id THEN
+_uq := array_append(_uq, 'permit_network_range_id = ' || quote_nullable(NEW.permit_network_range_id));
+	END IF;
+
+	IF OLD.permit_operating_system_id IS DISTINCT FROM NEW.permit_operating_system_id THEN
+_uq := array_append(_uq, 'permit_operating_system_id = ' || quote_nullable(NEW.permit_operating_system_id));
+	END IF;
+
+	IF OLD.permit_os_snapshot_id IS DISTINCT FROM NEW.permit_os_snapshot_id THEN
+_uq := array_append(_uq, 'permit_operating_system_snapshot_id = ' || quote_nullable(NEW.permit_os_snapshot_id));
+	END IF;
+
+	IF OLD.permit_person_id IS DISTINCT FROM NEW.permit_person_id THEN
+_uq := array_append(_uq, 'permit_person_id = ' || quote_nullable(NEW.permit_person_id));
+	END IF;
+
+	IF OLD.permit_property_collection_id IS DISTINCT FROM NEW.permit_property_collection_id THEN
+_uq := array_append(_uq, 'permit_property_name_collection_id = ' || quote_nullable(NEW.permit_property_collection_id));
+	END IF;
+
+	IF OLD.permit_service_env_collection IS DISTINCT FROM NEW.permit_service_env_collection THEN
+_uq := array_append(_uq, 'permit_service_environment_collection = ' || quote_nullable(NEW.permit_service_env_collection));
+	END IF;
+
+	IF OLD.permit_site_code IS DISTINCT FROM NEW.permit_site_code THEN
+_uq := array_append(_uq, 'permit_site_code = ' || quote_nullable(NEW.permit_site_code));
+	END IF;
+
+	IF OLD.permit_x509_signed_cert_id IS DISTINCT FROM NEW.permit_x509_signed_cert_id THEN
+_uq := array_append(_uq, 'permit_x509_signed_certificate_id = ' || quote_nullable(NEW.permit_x509_signed_cert_id));
+	END IF;
+
+	IF OLD.permit_property_rank IS DISTINCT FROM NEW.permit_property_rank THEN
+_uq := array_append(_uq, 'permit_property_rank = ' || quote_nullable(NEW.permit_property_rank));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_property SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.property_name = $1 AND  NEW.property_type = $2 RETURNING *'  USING OLD.property_name, OLD.property_type
+			INTO _nr;
+		NEW.property_name = _nr.property_name;
+		NEW.property_type = _nr.property_type;
+		NEW.description = _nr.description;
+		NEW.account_collection_type = _nr.account_collection_type;
+		NEW.company_collection_type = _nr.company_collection_type;
+		NEW.device_collection_type = _nr.device_collection_type;
+		NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
+		NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
+		NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
+		NEW.netblock_collection_type = _nr.netblock_collection_type;
+		NEW.network_range_type = _nr.network_range_type;
+		NEW.property_collection_type = _nr.property_name_collection_type;
+		NEW.service_env_collection_type = _nr.service_environment_collection_type;
+		NEW.is_multivalue = _nr.is_multivalue;
+		NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+		NEW.prop_val_dev_coll_type_rstrct = _nr.property_value_device_collection_type_restriction;
+		NEW.prop_val_nblk_coll_type_rstrct = _nr.property_value_netblock_collection_type_restriction;
+		NEW.property_data_type = _nr.property_data_type;
+		NEW.property_value_json_schema = _nr.property_value_json_schema;
+		NEW.permit_account_collection_id = _nr.permit_account_collection_id;
+		NEW.permit_account_id = _nr.permit_account_id;
+		NEW.permit_account_realm_id = _nr.permit_account_realm_id;
+		NEW.permit_company_id = _nr.permit_company_id;
+		NEW.permit_company_collection_id = _nr.permit_company_collection_id;
+		NEW.permit_device_collection_id = _nr.permit_device_collection_id;
+		NEW.permit_dns_domain_coll_id = _nr.permit_dns_domain_collection_id;
+		NEW.permit_layer2_network_coll_id = _nr.permit_layer2_network_collection_id;
+		NEW.permit_layer3_network_coll_id = _nr.permit_layer3_network_collection_id;
+		NEW.permit_netblock_collection_id = _nr.permit_netblock_collection_id;
+		NEW.permit_network_range_id = _nr.permit_network_range_id;
+		NEW.permit_operating_system_id = _nr.permit_operating_system_id;
+		NEW.permit_os_snapshot_id = _nr.permit_operating_system_snapshot_id;
+		NEW.permit_person_id = _nr.permit_person_id;
+		NEW.permit_property_collection_id = _nr.permit_property_name_collection_id;
+		NEW.permit_service_env_collection = _nr.permit_service_environment_collection;
+		NEW.permit_site_code = _nr.permit_site_code;
+		NEW.permit_x509_signed_cert_id = _nr.permit_x509_signed_certificate_id;
+		NEW.permit_property_rank = _nr.permit_property_rank;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_upd
+	ON jazzhands_legacy.val_property;
+CREATE TRIGGER _trigger_val_property_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_upd();
+
+
+
 -- Triggers for val_property_collection_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_collection_type_ins()
@@ -4714,6 +10674,8 @@ BEGIN
 	) VALUES (
 		NEW.property_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4728,6 +10690,71 @@ CREATE TRIGGER _trigger_val_property_collection_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_property_collection_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_collection_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_property_collection_type%rowtype;
+	_nr	jazzhands.val_property_name_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.property_collection_type IS DISTINCT FROM NEW.property_collection_type THEN
+_uq := array_append(_uq, 'property_name_collection_type = ' || quote_nullable(NEW.property_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_property_name_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.property_name_collection_type = $1 RETURNING *'  USING OLD.property_collection_type
+			INTO _nr;
+		NEW.property_collection_type = _nr.property_name_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_collection_type_upd
+	ON jazzhands_legacy.val_property_collection_type;
+CREATE TRIGGER _trigger_val_property_collection_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_property_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_collection_type_upd();
+
+
+
 -- Triggers for val_property_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_type_ins()
@@ -4740,6 +10767,8 @@ BEGIN
 	) VALUES (
 		NEW.property_type,NEW.description,NEW.prop_val_acct_coll_type_rstrct,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4754,6 +10783,66 @@ CREATE TRIGGER _trigger_val_property_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_property_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_property_type%rowtype;
+	_nr	jazzhands.val_property_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
+_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.prop_val_acct_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_acct_coll_type_rstrct THEN
+_uq := array_append(_uq, 'property_value_account_collection_type_restriction = ' || quote_nullable(NEW.prop_val_acct_coll_type_rstrct));
+	END IF;
+
+	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
+IF NEW.is_multivalue = 'Y' THEN
+	_uq := array_append(_uq, 'is_multivalue = true');
+ELSIF NEW.is_multivalue = 'N' THEN
+	_uq := array_append(_uq, 'is_multivalue = false');
+ELSE
+	_uq := array_append(_uq, 'is_multivalue = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_property_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.property_type = $1 RETURNING *'  USING OLD.property_type
+			INTO _nr;
+		NEW.property_type = _nr.property_type;
+		NEW.description = _nr.description;
+		NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+		NEW.is_multivalue = _nr.is_multivalue;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_type_upd
+	ON jazzhands_legacy.val_property_type;
+CREATE TRIGGER _trigger_val_property_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_property_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_type_upd();
+
+
+
 -- Triggers for val_service_env_coll_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_service_env_coll_type_ins()
@@ -4766,6 +10855,8 @@ BEGIN
 	) VALUES (
 		NEW.service_env_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4780,6 +10871,71 @@ CREATE TRIGGER _trigger_val_service_env_coll_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_service_env_coll_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_service_env_coll_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_service_env_coll_type%rowtype;
+	_nr	jazzhands.val_service_environment_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.service_env_collection_type IS DISTINCT FROM NEW.service_env_collection_type THEN
+_uq := array_append(_uq, 'service_environment_collection_type = ' || quote_nullable(NEW.service_env_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_service_environment_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.service_environment_collection_type = $1 RETURNING *'  USING OLD.service_env_collection_type
+			INTO _nr;
+		NEW.service_env_collection_type = _nr.service_environment_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_service_env_coll_type_upd
+	ON jazzhands_legacy.val_service_env_coll_type;
+CREATE TRIGGER _trigger_val_service_env_coll_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_service_env_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_service_env_coll_type_upd();
+
+
+
 -- Triggers for val_slot_function
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_slot_function_ins()
@@ -4792,6 +10948,8 @@ BEGIN
 	) VALUES (
 		NEW.slot_function,NEW.description,CASE WHEN NEW.can_have_mac_address = 'Y' THEN true WHEN NEW.can_have_mac_address = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4806,6 +10964,61 @@ CREATE TRIGGER _trigger_val_slot_function_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_slot_function_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_slot_function_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_slot_function%rowtype;
+	_nr	jazzhands.val_slot_function%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.slot_function IS DISTINCT FROM NEW.slot_function THEN
+_uq := array_append(_uq, 'slot_function = ' || quote_nullable(NEW.slot_function));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.can_have_mac_address IS DISTINCT FROM NEW.can_have_mac_address THEN
+IF NEW.can_have_mac_address = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_mac_address = true');
+ELSIF NEW.can_have_mac_address = 'N' THEN
+	_uq := array_append(_uq, 'can_have_mac_address = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_mac_address = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_slot_function SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.slot_function = $1 RETURNING *'  USING OLD.slot_function
+			INTO _nr;
+		NEW.slot_function = _nr.slot_function;
+		NEW.description = _nr.description;
+		NEW.can_have_mac_address = _nr.can_have_mac_address;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_slot_function_upd
+	ON jazzhands_legacy.val_slot_function;
+CREATE TRIGGER _trigger_val_slot_function_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_slot_function
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_slot_function_upd();
+
+
+
 -- Triggers for val_token_collection_type
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_token_collection_type_ins()
@@ -4818,6 +11031,8 @@ BEGIN
 	) VALUES (
 		NEW.token_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4832,6 +11047,71 @@ CREATE TRIGGER _trigger_val_token_collection_type_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_token_collection_type_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_token_collection_type_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_token_collection_type%rowtype;
+	_nr	jazzhands.val_token_collection_type%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.token_collection_type IS DISTINCT FROM NEW.token_collection_type THEN
+_uq := array_append(_uq, 'token_collection_type = ' || quote_nullable(NEW.token_collection_type));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
+_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
+_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
+IF NEW.can_have_hierarchy = 'Y' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = true');
+ELSIF NEW.can_have_hierarchy = 'N' THEN
+	_uq := array_append(_uq, 'can_have_hierarchy = false');
+ELSE
+	_uq := array_append(_uq, 'can_have_hierarchy = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_token_collection_type SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.token_collection_type = $1 RETURNING *'  USING OLD.token_collection_type
+			INTO _nr;
+		NEW.token_collection_type = _nr.token_collection_type;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_token_collection_type_upd
+	ON jazzhands_legacy.val_token_collection_type;
+CREATE TRIGGER _trigger_val_token_collection_type_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_token_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_token_collection_type_upd();
+
+
+
 -- Triggers for val_x509_key_usage
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_x509_key_usage_ins()
@@ -4844,6 +11124,8 @@ BEGIN
 	) VALUES (
 		NEW.x509_key_usg,NEW.description,CASE WHEN NEW.is_extended = 'Y' THEN true WHEN NEW.is_extended = 'N' THEN false ELSE NULL END
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4858,6 +11140,61 @@ CREATE TRIGGER _trigger_val_x509_key_usage_ins
 	EXECUTE PROCEDURE jazzhands_legacy.val_x509_key_usage_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_x509_key_usage_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.val_x509_key_usage%rowtype;
+	_nr	jazzhands.val_x509_key_usage%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.x509_key_usg IS DISTINCT FROM NEW.x509_key_usg THEN
+_uq := array_append(_uq, 'x509_key_usage = ' || quote_nullable(NEW.x509_key_usg));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.is_extended IS DISTINCT FROM NEW.is_extended THEN
+IF NEW.is_extended = 'Y' THEN
+	_uq := array_append(_uq, 'is_extended = true');
+ELSIF NEW.is_extended = 'N' THEN
+	_uq := array_append(_uq, 'is_extended = false');
+ELSE
+	_uq := array_append(_uq, 'is_extended = NULL');
+END IF;
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.val_x509_key_usage SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.x509_key_usage = $1 RETURNING *'  USING OLD.x509_key_usg
+			INTO _nr;
+		NEW.x509_key_usg = _nr.x509_key_usage;
+		NEW.description = _nr.description;
+		NEW.is_extended = _nr.is_extended;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_x509_key_usage_upd
+	ON jazzhands_legacy.val_x509_key_usage;
+CREATE TRIGGER _trigger_val_x509_key_usage_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_x509_key_usage
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_x509_key_usage_upd();
+
+
+
 -- Triggers for x509_certificate
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_certificate_ins()
@@ -4870,6 +11207,8 @@ BEGIN
 	) VALUES (
 		NEW.x509_cert_id,NEW.friendly_name,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END,NEW.signing_cert_id,NEW.x509_ca_cert_serial_number,NEW.public_key,NEW.private_key,NEW.certificate_sign_req,NEW.subject,NEW.subject_key_identifier,NEW.valid_from,NEW.valid_to,NEW.x509_revocation_date,NEW.x509_revocation_reason,NEW.passphrase,NEW.encryption_key_id,NEW.ocsp_uri,NEW.crl_uri
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4884,6 +11223,147 @@ CREATE TRIGGER _trigger_x509_certificate_ins
 	EXECUTE PROCEDURE jazzhands_legacy.x509_certificate_ins();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_certificate_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.x509_certificate%rowtype;
+	_nr	jazzhands.x509_certificate%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.x509_cert_id IS DISTINCT FROM NEW.x509_cert_id THEN
+_uq := array_append(_uq, 'x509_cert_id = ' || quote_nullable(NEW.x509_cert_id));
+	END IF;
+
+	IF OLD.friendly_name IS DISTINCT FROM NEW.friendly_name THEN
+_uq := array_append(_uq, 'friendly_name = ' || quote_nullable(NEW.friendly_name));
+	END IF;
+
+	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
+IF NEW.is_active = 'Y' THEN
+	_uq := array_append(_uq, 'is_active = true');
+ELSIF NEW.is_active = 'N' THEN
+	_uq := array_append(_uq, 'is_active = false');
+ELSE
+	_uq := array_append(_uq, 'is_active = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_certificate_authority IS DISTINCT FROM NEW.is_certificate_authority THEN
+IF NEW.is_certificate_authority = 'Y' THEN
+	_uq := array_append(_uq, 'is_certificate_authority = true');
+ELSIF NEW.is_certificate_authority = 'N' THEN
+	_uq := array_append(_uq, 'is_certificate_authority = false');
+ELSE
+	_uq := array_append(_uq, 'is_certificate_authority = NULL');
+END IF;
+	END IF;
+
+	IF OLD.signing_cert_id IS DISTINCT FROM NEW.signing_cert_id THEN
+_uq := array_append(_uq, 'signing_cert_id = ' || quote_nullable(NEW.signing_cert_id));
+	END IF;
+
+	IF OLD.x509_ca_cert_serial_number IS DISTINCT FROM NEW.x509_ca_cert_serial_number THEN
+_uq := array_append(_uq, 'x509_ca_cert_serial_number = ' || quote_nullable(NEW.x509_ca_cert_serial_number));
+	END IF;
+
+	IF OLD.public_key IS DISTINCT FROM NEW.public_key THEN
+_uq := array_append(_uq, 'public_key = ' || quote_nullable(NEW.public_key));
+	END IF;
+
+	IF OLD.private_key IS DISTINCT FROM NEW.private_key THEN
+_uq := array_append(_uq, 'private_key = ' || quote_nullable(NEW.private_key));
+	END IF;
+
+	IF OLD.certificate_sign_req IS DISTINCT FROM NEW.certificate_sign_req THEN
+_uq := array_append(_uq, 'certificate_sign_req = ' || quote_nullable(NEW.certificate_sign_req));
+	END IF;
+
+	IF OLD.subject IS DISTINCT FROM NEW.subject THEN
+_uq := array_append(_uq, 'subject = ' || quote_nullable(NEW.subject));
+	END IF;
+
+	IF OLD.subject_key_identifier IS DISTINCT FROM NEW.subject_key_identifier THEN
+_uq := array_append(_uq, 'subject_key_identifier = ' || quote_nullable(NEW.subject_key_identifier));
+	END IF;
+
+	IF OLD.valid_from IS DISTINCT FROM NEW.valid_from THEN
+_uq := array_append(_uq, 'valid_from = ' || quote_nullable(NEW.valid_from));
+	END IF;
+
+	IF OLD.valid_to IS DISTINCT FROM NEW.valid_to THEN
+_uq := array_append(_uq, 'valid_to = ' || quote_nullable(NEW.valid_to));
+	END IF;
+
+	IF OLD.x509_revocation_date IS DISTINCT FROM NEW.x509_revocation_date THEN
+_uq := array_append(_uq, 'x509_revocation_date = ' || quote_nullable(NEW.x509_revocation_date));
+	END IF;
+
+	IF OLD.x509_revocation_reason IS DISTINCT FROM NEW.x509_revocation_reason THEN
+_uq := array_append(_uq, 'x509_revocation_reason = ' || quote_nullable(NEW.x509_revocation_reason));
+	END IF;
+
+	IF OLD.passphrase IS DISTINCT FROM NEW.passphrase THEN
+_uq := array_append(_uq, 'passphrase = ' || quote_nullable(NEW.passphrase));
+	END IF;
+
+	IF OLD.encryption_key_id IS DISTINCT FROM NEW.encryption_key_id THEN
+_uq := array_append(_uq, 'encryption_key_id = ' || quote_nullable(NEW.encryption_key_id));
+	END IF;
+
+	IF OLD.ocsp_uri IS DISTINCT FROM NEW.ocsp_uri THEN
+_uq := array_append(_uq, 'ocsp_uri = ' || quote_nullable(NEW.ocsp_uri));
+	END IF;
+
+	IF OLD.crl_uri IS DISTINCT FROM NEW.crl_uri THEN
+_uq := array_append(_uq, 'crl_uri = ' || quote_nullable(NEW.crl_uri));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.x509_certificate SET ' ||
+			array_to_string(_uq, ', ') ||
+			1 = 0
+			INTO _nr;
+		NEW.x509_cert_id = _nr.x509_cert_id;
+		NEW.friendly_name = _nr.friendly_name;
+		NEW.is_active = _nr.is_active;
+		NEW.is_certificate_authority = _nr.is_certificate_authority;
+		NEW.signing_cert_id = _nr.signing_cert_id;
+		NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+		NEW.public_key = _nr.public_key;
+		NEW.private_key = _nr.private_key;
+		NEW.certificate_sign_req = _nr.certificate_sign_req;
+		NEW.subject = _nr.subject;
+		NEW.subject_key_identifier = _nr.subject_key_identifier;
+		NEW.valid_from = _nr.valid_from;
+		NEW.valid_to = _nr.valid_to;
+		NEW.x509_revocation_date = _nr.x509_revocation_date;
+		NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+		NEW.passphrase = _nr.passphrase;
+		NEW.encryption_key_id = _nr.encryption_key_id;
+		NEW.ocsp_uri = _nr.ocsp_uri;
+		NEW.crl_uri = _nr.crl_uri;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_x509_certificate_upd
+	ON jazzhands_legacy.x509_certificate;
+CREATE TRIGGER _trigger_x509_certificate_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.x509_certificate
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.x509_certificate_upd();
+
+
+
 -- Triggers for x509_signed_certificate
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_signed_certificate_ins()
@@ -4896,6 +11376,8 @@ BEGIN
 	) VALUES (
 		NEW.x509_signed_certificate_id,NEW.x509_certificate_type,NEW.subject,NEW.friendly_name,NEW.subject_key_identifier,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END,NEW.signing_cert_id,NEW.x509_ca_cert_serial_number,NEW.public_key,NEW.private_key_id,NEW.certificate_signing_request_id,NEW.valid_from,NEW.valid_to,NEW.x509_revocation_date,NEW.x509_revocation_reason,NEW.ocsp_uri,NEW.crl_uri
 	);
+	-- XXX note if the insert trigger changes anything then it is not
+	-- returned properly..  ugh
 	RETURN NEW;
 END;
 $$
@@ -4908,6 +11390,142 @@ CREATE TRIGGER _trigger_x509_signed_certificate_ins
 	INSTEAD OF INSERT ON jazzhands_legacy.x509_signed_certificate
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.x509_signed_certificate_ins();
+
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_signed_certificate_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.x509_signed_certificate%rowtype;
+	_nr	jazzhands.x509_signed_certificate%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.x509_signed_certificate_id IS DISTINCT FROM NEW.x509_signed_certificate_id THEN
+_uq := array_append(_uq, 'x509_signed_certificate_id = ' || quote_nullable(NEW.x509_signed_certificate_id));
+	END IF;
+
+	IF OLD.x509_certificate_type IS DISTINCT FROM NEW.x509_certificate_type THEN
+_uq := array_append(_uq, 'x509_certificate_type = ' || quote_nullable(NEW.x509_certificate_type));
+	END IF;
+
+	IF OLD.subject IS DISTINCT FROM NEW.subject THEN
+_uq := array_append(_uq, 'subject = ' || quote_nullable(NEW.subject));
+	END IF;
+
+	IF OLD.friendly_name IS DISTINCT FROM NEW.friendly_name THEN
+_uq := array_append(_uq, 'friendly_name = ' || quote_nullable(NEW.friendly_name));
+	END IF;
+
+	IF OLD.subject_key_identifier IS DISTINCT FROM NEW.subject_key_identifier THEN
+_uq := array_append(_uq, 'subject_key_identifier = ' || quote_nullable(NEW.subject_key_identifier));
+	END IF;
+
+	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
+IF NEW.is_active = 'Y' THEN
+	_uq := array_append(_uq, 'is_active = true');
+ELSIF NEW.is_active = 'N' THEN
+	_uq := array_append(_uq, 'is_active = false');
+ELSE
+	_uq := array_append(_uq, 'is_active = NULL');
+END IF;
+	END IF;
+
+	IF OLD.is_certificate_authority IS DISTINCT FROM NEW.is_certificate_authority THEN
+IF NEW.is_certificate_authority = 'Y' THEN
+	_uq := array_append(_uq, 'is_certificate_authority = true');
+ELSIF NEW.is_certificate_authority = 'N' THEN
+	_uq := array_append(_uq, 'is_certificate_authority = false');
+ELSE
+	_uq := array_append(_uq, 'is_certificate_authority = NULL');
+END IF;
+	END IF;
+
+	IF OLD.signing_cert_id IS DISTINCT FROM NEW.signing_cert_id THEN
+_uq := array_append(_uq, 'signing_cert_id = ' || quote_nullable(NEW.signing_cert_id));
+	END IF;
+
+	IF OLD.x509_ca_cert_serial_number IS DISTINCT FROM NEW.x509_ca_cert_serial_number THEN
+_uq := array_append(_uq, 'x509_ca_cert_serial_number = ' || quote_nullable(NEW.x509_ca_cert_serial_number));
+	END IF;
+
+	IF OLD.public_key IS DISTINCT FROM NEW.public_key THEN
+_uq := array_append(_uq, 'public_key = ' || quote_nullable(NEW.public_key));
+	END IF;
+
+	IF OLD.private_key_id IS DISTINCT FROM NEW.private_key_id THEN
+_uq := array_append(_uq, 'private_key_id = ' || quote_nullable(NEW.private_key_id));
+	END IF;
+
+	IF OLD.certificate_signing_request_id IS DISTINCT FROM NEW.certificate_signing_request_id THEN
+_uq := array_append(_uq, 'certificate_signing_request_id = ' || quote_nullable(NEW.certificate_signing_request_id));
+	END IF;
+
+	IF OLD.valid_from IS DISTINCT FROM NEW.valid_from THEN
+_uq := array_append(_uq, 'valid_from = ' || quote_nullable(NEW.valid_from));
+	END IF;
+
+	IF OLD.valid_to IS DISTINCT FROM NEW.valid_to THEN
+_uq := array_append(_uq, 'valid_to = ' || quote_nullable(NEW.valid_to));
+	END IF;
+
+	IF OLD.x509_revocation_date IS DISTINCT FROM NEW.x509_revocation_date THEN
+_uq := array_append(_uq, 'x509_revocation_date = ' || quote_nullable(NEW.x509_revocation_date));
+	END IF;
+
+	IF OLD.x509_revocation_reason IS DISTINCT FROM NEW.x509_revocation_reason THEN
+_uq := array_append(_uq, 'x509_revocation_reason = ' || quote_nullable(NEW.x509_revocation_reason));
+	END IF;
+
+	IF OLD.ocsp_uri IS DISTINCT FROM NEW.ocsp_uri THEN
+_uq := array_append(_uq, 'ocsp_uri = ' || quote_nullable(NEW.ocsp_uri));
+	END IF;
+
+	IF OLD.crl_uri IS DISTINCT FROM NEW.crl_uri THEN
+_uq := array_append(_uq, 'crl_uri = ' || quote_nullable(NEW.crl_uri));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.x509_signed_certificate SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  NEW.x509_signed_certificate_id = $1 RETURNING *'  USING OLD.x509_signed_certificate_id
+			INTO _nr;
+		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+		NEW.x509_certificate_type = _nr.x509_certificate_type;
+		NEW.subject = _nr.subject;
+		NEW.friendly_name = _nr.friendly_name;
+		NEW.subject_key_identifier = _nr.subject_key_identifier;
+		NEW.is_active = _nr.is_active;
+		NEW.is_certificate_authority = _nr.is_certificate_authority;
+		NEW.signing_cert_id = _nr.signing_cert_id;
+		NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+		NEW.public_key = _nr.public_key;
+		NEW.private_key_id = _nr.private_key_id;
+		NEW.certificate_signing_request_id = _nr.certificate_signing_request_id;
+		NEW.valid_from = _nr.valid_from;
+		NEW.valid_to = _nr.valid_to;
+		NEW.x509_revocation_date = _nr.x509_revocation_date;
+		NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+		NEW.ocsp_uri = _nr.ocsp_uri;
+		NEW.crl_uri = _nr.crl_uri;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_x509_signed_certificate_upd
+	ON jazzhands_legacy.x509_signed_certificate;
+CREATE TRIGGER _trigger_x509_signed_certificate_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.x509_signed_certificate
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.x509_signed_certificate_upd();
+
 
 
 
