@@ -3353,7 +3353,7 @@ _uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.account SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.account_id = $1 RETURNING *'  USING OLD.account_id
+			' WHERE  account_id = $1 RETURNING *'  USING OLD.account_id
 			INTO _nr;
 		NEW.account_id = _nr.account_id;
 		NEW.login = _nr.login;
@@ -3542,7 +3542,7 @@ _uq := array_append(_uq, 'auth_origin = NEW.' || quote_ident('auth_origin'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.account_auth_log SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.account_id = $1 AND  NEW.account_auth_ts = $2 AND  NEW.auth_resource = $3 AND  NEW.account_auth_seq = $4 RETURNING *'  USING OLD.account_id, OLD.account_auth_ts, OLD.auth_resource, OLD.account_auth_seq
+			' WHERE  account_id = $1 AND  account_auth_ts = $2 AND  auth_resource = $3 AND  account_auth_seq = $4 RETURNING *'  USING OLD.account_id, OLD.account_auth_ts, OLD.auth_resource, OLD.account_auth_seq
 			INTO _nr;
 		NEW.account_id = _nr.account_id;
 		NEW.account_auth_ts = _nr.account_auth_ts;
@@ -3759,7 +3759,7 @@ _uq := array_append(_uq, 'approval_note = NEW.' || quote_ident('approval_note'))
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.approval_instance_item SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.approval_instance_item_id = $1 RETURNING *'  USING OLD.approval_instance_item_id
+			' WHERE  approval_instance_item_id = $1 RETURNING *'  USING OLD.approval_instance_item_id
 			INTO _nr;
 		NEW.approval_instance_item_id = _nr.approval_instance_item_id;
 		NEW.approval_instance_link_id = _nr.approval_instance_link_id;
@@ -3998,7 +3998,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.approval_instance_step SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.approval_instance_step_id = $1 RETURNING *'  USING OLD.approval_instance_step_id
+			' WHERE  approval_instance_step_id = $1 RETURNING *'  USING OLD.approval_instance_step_id
 			INTO _nr;
 		NEW.approval_instance_step_id = _nr.approval_instance_step_id;
 		NEW.approval_instance_id = _nr.approval_instance_id;
@@ -4269,7 +4269,7 @@ _uq := array_append(_uq, 'reject_app_process_chain_id = NEW.' || quote_ident('re
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.approval_process_chain SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.approval_process_chain_id = $1 RETURNING *'  USING OLD.approval_process_chain_id
+			' WHERE  approval_process_chain_id = $1 RETURNING *'  USING OLD.approval_process_chain_id
 			INTO _nr;
 		NEW.approval_process_chain_id = _nr.approval_process_chain_id;
 		NEW.approval_process_chain_name = _nr.approval_process_chain_name;
@@ -4496,7 +4496,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.circuit SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.circuit_id = $1 RETURNING *'  USING OLD.circuit_id
+			' WHERE  circuit_id = $1 RETURNING *'  USING OLD.circuit_id
 			INTO _nr;
 		NEW.circuit_id = _nr.circuit_id;
 		NEW.vendor_company_id = _nr.vendor_company_id;
@@ -4741,7 +4741,7 @@ _uq := array_append(_uq, 'size_units = NEW.' || quote_ident('size_units'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.component_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.component_type_id = $1 RETURNING *'  USING OLD.component_type_id
+			' WHERE  component_type_id = $1 RETURNING *'  USING OLD.component_type_id
 			INTO _nr;
 		NEW.component_type_id = _nr.component_type_id;
 		NEW.company_id = _nr.company_id;
@@ -4940,7 +4940,7 @@ _uq := array_append(_uq, 'default_badge_type_id = NEW.' || quote_ident('default_
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.department SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.account_collection_id = $1 RETURNING *'  USING OLD.account_collection_id
+			' WHERE  account_collection_id = $1 RETURNING *'  USING OLD.account_collection_id
 			INTO _nr;
 		NEW.account_collection_id = _nr.account_collection_id;
 		NEW.company_id = _nr.company_id;
@@ -5251,7 +5251,7 @@ _uq := array_append(_uq, 'date_in_service = NEW.' || quote_ident('date_in_servic
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.device SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.device_id = $1 RETURNING *'  USING OLD.device_id
+			' WHERE  device_id = $1 RETURNING *'  USING OLD.device_id
 			INTO _nr;
 		NEW.device_id = _nr.device_id;
 		NEW.component_id = _nr.component_id;
@@ -5564,7 +5564,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.device_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.device_type_id = $1 RETURNING *'  USING OLD.device_type_id
+			' WHERE  device_type_id = $1 RETURNING *'  USING OLD.device_type_id
 			INTO _nr;
 		NEW.device_type_id = _nr.device_type_id;
 		NEW.component_type_id = _nr.component_type_id;
@@ -5823,7 +5823,7 @@ _uq := array_append(_uq, 'last_generated = NEW.' || quote_ident('last_generated'
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.dns_domain_ip_universe SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.dns_domain_id = $1 AND  NEW.ip_universe_id = $2 RETURNING *'  USING OLD.dns_domain_id, OLD.ip_universe_id
+			' WHERE  dns_domain_id = $1 AND  ip_universe_id = $2 RETURNING *'  USING OLD.dns_domain_id, OLD.ip_universe_id
 			INTO _nr;
 		NEW.dns_domain_id = _nr.dns_domain_id;
 		NEW.ip_universe_id = _nr.ip_universe_id;
@@ -6132,7 +6132,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.dns_record SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.dns_record_id = $1 RETURNING *'  USING OLD.dns_record_id
+			' WHERE  dns_record_id = $1 RETURNING *'  USING OLD.dns_record_id
 			INTO _nr;
 		NEW.dns_record_id = _nr.dns_record_id;
 		NEW.dns_name = _nr.dns_name;
@@ -6315,7 +6315,7 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.ip_universe SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.ip_universe_id = $1 RETURNING *'  USING OLD.ip_universe_id
+			' WHERE  ip_universe_id = $1 RETURNING *'  USING OLD.ip_universe_id
 			INTO _nr;
 		NEW.ip_universe_id = _nr.ip_universe_id;
 		NEW.ip_universe_name = _nr.ip_universe_name;
@@ -6452,7 +6452,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.ip_universe_visibility SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.ip_universe_id = $1 AND  NEW.visible_ip_universe_id = $2 RETURNING *'  USING OLD.ip_universe_id, OLD.visible_ip_universe_id
+			' WHERE  ip_universe_id = $1 AND  visible_ip_universe_id = $2 RETURNING *'  USING OLD.ip_universe_id, OLD.visible_ip_universe_id
 			INTO _nr;
 		NEW.ip_universe_id = _nr.ip_universe_id;
 		NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
@@ -6661,7 +6661,7 @@ _uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.netblock SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.netblock_id = $1 RETURNING *'  USING OLD.netblock_id
+			' WHERE  netblock_id = $1 RETURNING *'  USING OLD.netblock_id
 			INTO _nr;
 		NEW.netblock_id = _nr.netblock_id;
 		NEW.ip_address = _nr.ip_address;
@@ -6922,7 +6922,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.layer3_interface SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.layer3_interface_id = $1 RETURNING *'  USING OLD.network_interface_id
+			' WHERE  layer3_interface_id = $1 RETURNING *'  USING OLD.network_interface_id
 			INTO _nr;
 		NEW.network_interface_id = _nr.layer3_interface_id;
 		NEW.device_id = _nr.device_id;
@@ -7135,7 +7135,7 @@ _uq := array_append(_uq, 'service_environment_id = NEW.' || quote_ident('service
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.network_service SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.network_service_id = $1 RETURNING *'  USING OLD.network_service_id
+			' WHERE  network_service_id = $1 RETURNING *'  USING OLD.network_service_id
 			INTO _nr;
 		NEW.network_service_id = _nr.network_service_id;
 		NEW.name = _nr.name;
@@ -7290,7 +7290,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.person_auth_question SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.auth_question_id = $1 AND  NEW.person_id = $2 RETURNING *'  USING OLD.auth_question_id, OLD.person_id
+			' WHERE  auth_question_id = $1 AND  person_id = $2 RETURNING *'  USING OLD.auth_question_id, OLD.person_id
 			INTO _nr;
 		NEW.auth_question_id = _nr.auth_question_id;
 		NEW.person_id = _nr.person_id;
@@ -7537,7 +7537,7 @@ _uq := array_append(_uq, 'nickname = NEW.' || quote_ident('nickname'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.person_company SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.company_id = $1 AND  NEW.person_id = $2 RETURNING *'  USING OLD.company_id, OLD.person_id
+			' WHERE  company_id = $1 AND  person_id = $2 RETURNING *'  USING OLD.company_id, OLD.person_id
 			INTO _nr;
 		NEW.company_id = _nr.company_id;
 		NEW.person_id = _nr.person_id;
@@ -7730,7 +7730,7 @@ _uq := array_append(_uq, 'encryption_key_id = NEW.' || quote_ident('encryption_k
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.private_key SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.private_key_id = $1 RETURNING *'  USING OLD.private_key_id
+			' WHERE  private_key_id = $1 RETURNING *'  USING OLD.private_key_id
 			INTO _nr;
 		NEW.private_key_id = _nr.private_key_id;
 		NEW.private_key_encryption_type = _nr.private_key_encryption_type;
@@ -8191,7 +8191,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.property SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.property_id = $1 RETURNING *'  USING OLD.property_id
+			' WHERE  property_id = $1 RETURNING *'  USING OLD.property_id
 			INTO _nr;
 		NEW.property_id = _nr.property_id;
 		NEW.account_collection_id = _nr.account_collection_id;
@@ -8468,7 +8468,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.rack SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.rack_id = $1 RETURNING *'  USING OLD.rack_id
+			' WHERE  rack_id = $1 RETURNING *'  USING OLD.rack_id
 			INTO _nr;
 		NEW.rack_id = _nr.rack_id;
 		NEW.site_code = _nr.site_code;
@@ -8727,7 +8727,7 @@ _uq := array_append(_uq, 'slot_side = NEW.' || quote_ident('slot_side'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.slot SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.slot_id = $1 RETURNING *'  USING OLD.slot_id
+			' WHERE  slot_id = $1 RETURNING *'  USING OLD.slot_id
 			INTO _nr;
 		NEW.slot_id = _nr.slot_id;
 		NEW.component_id = _nr.component_id;
@@ -8912,7 +8912,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.slot_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.slot_type_id = $1 RETURNING *'  USING OLD.slot_type_id
+			' WHERE  slot_type_id = $1 RETURNING *'  USING OLD.slot_type_id
 			INTO _nr;
 		NEW.slot_type_id = _nr.slot_type_id;
 		NEW.slot_type = _nr.slot_type;
@@ -9087,7 +9087,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.sudo_account_collection_device_collection SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.sudo_alias_name = $1 AND  NEW.device_collection_id = $2 AND  NEW.account_collection_id = $3 RETURNING *'  USING OLD.sudo_alias_name, OLD.device_collection_id, OLD.account_collection_id
+			' WHERE  sudo_alias_name = $1 AND  device_collection_id = $2 AND  account_collection_id = $3 RETURNING *'  USING OLD.sudo_alias_name, OLD.device_collection_id, OLD.account_collection_id
 			INTO _nr;
 		NEW.sudo_alias_name = _nr.sudo_alias_name;
 		NEW.device_collection_id = _nr.device_collection_id;
@@ -9366,7 +9366,7 @@ _uq := array_append(_uq, 'last_updated = NEW.' || quote_ident('last_updated'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.token SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.token_id = $1 RETURNING *'  USING OLD.token_id
+			' WHERE  token_id = $1 RETURNING *'  USING OLD.token_id
 			INTO _nr;
 		NEW.token_id = _nr.token_id;
 		NEW.token_type = _nr.token_type;
@@ -9597,7 +9597,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_corp_family_account SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.account_id = $1 RETURNING *'  USING OLD.account_id
+			' WHERE  account_id = $1 RETURNING *'  USING OLD.account_id
 			INTO _nr;
 		NEW.account_id = _nr.account_id;
 		NEW.login = _nr.login;
@@ -9864,7 +9864,7 @@ _uq := array_append(_uq, 'dns_domain_type = NEW.' || quote_ident('dns_domain_typ
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_dns_domain_nouniverse SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.dns_domain_id = $1 RETURNING *'  USING OLD.dns_domain_id
+			' WHERE  dns_domain_id = $1 RETURNING *'  USING OLD.dns_domain_id
 			INTO _nr;
 		NEW.dns_domain_id = _nr.dns_domain_id;
 		NEW.soa_name = _nr.soa_name;
@@ -10161,7 +10161,7 @@ _uq := array_append(_uq, 'encryption_method = NEW.' || quote_ident('encryption_m
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_hotpants_token SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.token_id = $1 RETURNING *'  USING OLD.token_id
+			' WHERE  token_id = $1 RETURNING *'  USING OLD.token_id
 			INTO _nr;
 		NEW.token_id = _nr.token_id;
 		NEW.token_type = _nr.token_type;
@@ -10476,7 +10476,7 @@ _uq := array_append(_uq, 'nickname = NEW.' || quote_ident('nickname'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_person_company SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.person_id = $1 AND  NEW.company_id = $2 RETURNING *'  USING OLD.person_id, OLD.company_id
+			' WHERE  person_id = $1 AND  company_id = $2 RETURNING *'  USING OLD.person_id, OLD.company_id
 			INTO _nr;
 		NEW.company_id = _nr.company_id;
 		NEW.person_id = _nr.person_id;
@@ -10685,7 +10685,7 @@ _uq := array_append(_uq, 'account_realm_id = NEW.' || quote_ident('account_realm
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_account_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.account_collection_type = $1 RETURNING *'  USING OLD.account_collection_type
+			' WHERE  account_collection_type = $1 RETURNING *'  USING OLD.account_collection_type
 			INTO _nr;
 		NEW.account_collection_type = _nr.account_collection_type;
 		NEW.description = _nr.description;
@@ -10826,7 +10826,7 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_account_role SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.account_role = $1 RETURNING *'  USING OLD.account_role
+			' WHERE  account_role = $1 RETURNING *'  USING OLD.account_role
 			INTO _nr;
 		NEW.account_role = _nr.account_role;
 		NEW.uid_gid_forced = _nr.uid_gid_forced;
@@ -10975,7 +10975,7 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_account_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.account_type = $1 RETURNING *'  USING OLD.account_type
+			' WHERE  account_type = $1 RETURNING *'  USING OLD.account_type
 			INTO _nr;
 		NEW.account_type = _nr.account_type;
 		NEW.is_person = _nr.is_person;
@@ -11146,7 +11146,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_company_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.company_collection_type = $1 RETURNING *'  USING OLD.company_collection_type
+			' WHERE  company_collection_type = $1 RETURNING *'  USING OLD.company_collection_type
 			INTO _nr;
 		NEW.company_collection_type = _nr.company_collection_type;
 		NEW.description = _nr.description;
@@ -11415,7 +11415,7 @@ _uq := array_append(_uq, 'permit_slot_id = NEW.' || quote_ident('permit_slot_id'
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_component_property SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.component_property_name = $1 AND  NEW.component_property_type = $2 RETURNING *'  USING OLD.component_property_name, OLD.component_property_type
+			' WHERE  component_property_name = $1 AND  component_property_type = $2 RETURNING *'  USING OLD.component_property_name, OLD.component_property_type
 			INTO _nr;
 		NEW.component_property_name = _nr.component_property_name;
 		NEW.component_property_type = _nr.component_property_type;
@@ -11574,7 +11574,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_component_property_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.component_property_type = $1 RETURNING *'  USING OLD.component_property_type
+			' WHERE  component_property_type = $1 RETURNING *'  USING OLD.component_property_type
 			INTO _nr;
 		NEW.component_property_type = _nr.component_property_type;
 		NEW.description = _nr.description;
@@ -11727,7 +11727,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_device_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.device_collection_type = $1 RETURNING *'  USING OLD.device_collection_type
+			' WHERE  device_collection_type = $1 RETURNING *'  USING OLD.device_collection_type
 			INTO _nr;
 		NEW.device_collection_type = _nr.device_collection_type;
 		NEW.description = _nr.description;
@@ -11884,7 +11884,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_dns_domain_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.dns_domain_collection_type = $1 RETURNING *'  USING OLD.dns_domain_collection_type
+			' WHERE  dns_domain_collection_type = $1 RETURNING *'  USING OLD.dns_domain_collection_type
 			INTO _nr;
 		NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
 		NEW.description = _nr.description;
@@ -12021,7 +12021,7 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_dns_domain_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.dns_domain_type = $1 RETURNING *'  USING OLD.dns_domain_type
+			' WHERE  dns_domain_type = $1 RETURNING *'  USING OLD.dns_domain_type
 			INTO _nr;
 		NEW.dns_domain_type = _nr.dns_domain_type;
 		NEW.can_generate = _nr.can_generate;
@@ -12174,7 +12174,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_layer2_network_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.layer2_network_collection_type = $1 RETURNING *'  USING OLD.layer2_network_collection_type
+			' WHERE  layer2_network_collection_type = $1 RETURNING *'  USING OLD.layer2_network_collection_type
 			INTO _nr;
 		NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
 		NEW.description = _nr.description;
@@ -12331,7 +12331,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_layer3_network_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.layer3_network_collection_type = $1 RETURNING *'  USING OLD.layer3_network_collection_type
+			' WHERE  layer3_network_collection_type = $1 RETURNING *'  USING OLD.layer3_network_collection_type
 			INTO _nr;
 		NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
 		NEW.description = _nr.description;
@@ -12508,7 +12508,7 @@ _uq := array_append(_uq, 'netblock_ip_family_restriction = NEW.' || quote_ident(
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_netblock_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.netblock_collection_type = $1 RETURNING *'  USING OLD.netblock_collection_type
+			' WHERE  netblock_collection_type = $1 RETURNING *'  USING OLD.netblock_collection_type
 			INTO _nr;
 		NEW.netblock_collection_type = _nr.netblock_collection_type;
 		NEW.description = _nr.description;
@@ -12665,7 +12665,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_netblock_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.netblock_type = $1 RETURNING *'  USING OLD.netblock_type
+			' WHERE  netblock_type = $1 RETURNING *'  USING OLD.netblock_type
 			INTO _nr;
 		NEW.netblock_type = _nr.netblock_type;
 		NEW.description = _nr.description;
@@ -12846,7 +12846,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_network_range_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.network_range_type = $1 RETURNING *'  USING OLD.network_range_type
+			' WHERE  network_range_type = $1 RETURNING *'  USING OLD.network_range_type
 			INTO _nr;
 		NEW.network_range_type = _nr.network_range_type;
 		NEW.description = _nr.description;
@@ -12977,7 +12977,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_person_image_usage SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.person_image_usage = $1 RETURNING *'  USING OLD.person_image_usage
+			' WHERE  person_image_usage = $1 RETURNING *'  USING OLD.person_image_usage
 			INTO _nr;
 		NEW.person_image_usage = _nr.person_image_usage;
 		NEW.is_multivalue = _nr.is_multivalue;
@@ -13156,7 +13156,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_person_status SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.person_status = $1 RETURNING *'  USING OLD.person_status
+			' WHERE  person_status = $1 RETURNING *'  USING OLD.person_status
 			INTO _nr;
 		NEW.person_status = _nr.person_status;
 		NEW.description = _nr.description;
@@ -13645,7 +13645,7 @@ _uq := array_append(_uq, 'permit_property_rank = NEW.' || quote_ident('permit_pr
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_property SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.property_name = $1 AND  NEW.property_type = $2 RETURNING *'  USING OLD.property_name, OLD.property_type
+			' WHERE  property_name = $1 AND  property_type = $2 RETURNING *'  USING OLD.property_name, OLD.property_type
 			INTO _nr;
 		NEW.property_name = _nr.property_name;
 		NEW.property_type = _nr.property_type;
@@ -13868,7 +13868,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_property_name_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.property_name_collection_type = $1 RETURNING *'  USING OLD.property_collection_type
+			' WHERE  property_name_collection_type = $1 RETURNING *'  USING OLD.property_collection_type
 			INTO _nr;
 		NEW.property_collection_type = _nr.property_name_collection_type;
 		NEW.description = _nr.description;
@@ -14015,7 +14015,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_property_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.property_type = $1 RETURNING *'  USING OLD.property_type
+			' WHERE  property_type = $1 RETURNING *'  USING OLD.property_type
 			INTO _nr;
 		NEW.property_type = _nr.property_type;
 		NEW.description = _nr.description;
@@ -14170,7 +14170,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_service_environment_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.service_environment_collection_type = $1 RETURNING *'  USING OLD.service_env_collection_type
+			' WHERE  service_environment_collection_type = $1 RETURNING *'  USING OLD.service_env_collection_type
 			INTO _nr;
 		NEW.service_env_collection_type = _nr.service_environment_collection_type;
 		NEW.description = _nr.description;
@@ -14307,7 +14307,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_slot_function SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.slot_function = $1 RETURNING *'  USING OLD.slot_function
+			' WHERE  slot_function = $1 RETURNING *'  USING OLD.slot_function
 			INTO _nr;
 		NEW.slot_function = _nr.slot_function;
 		NEW.description = _nr.description;
@@ -14460,7 +14460,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_token_collection_type SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.token_collection_type = $1 RETURNING *'  USING OLD.token_collection_type
+			' WHERE  token_collection_type = $1 RETURNING *'  USING OLD.token_collection_type
 			INTO _nr;
 		NEW.token_collection_type = _nr.token_collection_type;
 		NEW.description = _nr.description;
@@ -14597,7 +14597,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.val_x509_key_usage SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.x509_key_usage = $1 RETURNING *'  USING OLD.x509_key_usg
+			' WHERE  x509_key_usage = $1 RETURNING *'  USING OLD.x509_key_usg
 			INTO _nr;
 		NEW.x509_key_usg = _nr.x509_key_usage;
 		NEW.description = _nr.description;
@@ -14896,7 +14896,7 @@ _uq := array_append(_uq, 'crl_uri = NEW.' || quote_ident('crl_uri'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.x509_certificate SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.x509_cert_id = $1 RETURNING *'  USING OLD.x509_cert_id
+			' WHERE  x509_cert_id = $1 RETURNING *'  USING OLD.x509_cert_id
 			INTO _nr;
 		NEW.x509_cert_id = _nr.x509_cert_id;
 		NEW.friendly_name = _nr.friendly_name;
@@ -15217,7 +15217,7 @@ _uq := array_append(_uq, 'crl_uri = NEW.' || quote_ident('crl_uri'));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.x509_signed_certificate SET ' ||
 			array_to_string(_uq, ', ') ||
-			' WHERE  NEW.x509_signed_certificate_id = $1 RETURNING *'  USING OLD.x509_signed_certificate_id
+			' WHERE  x509_signed_certificate_id = $1 RETURNING *'  USING OLD.x509_signed_certificate_id
 			INTO _nr;
 		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
 		NEW.x509_certificate_type = _nr.x509_certificate_type;
