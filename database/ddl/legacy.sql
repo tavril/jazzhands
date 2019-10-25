@@ -3199,15 +3199,84 @@ FROM jazzhands.x509_signed_certificate;
 CREATE OR REPLACE FUNCTION jazzhands_legacy.account_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.account%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.account (
-		account_id,login,person_id,company_id,is_enabled,account_realm_id,account_status,account_role,account_type,description,external_id
-	) VALUES (
-		NEW.account_id,NEW.login,NEW.person_id,NEW.company_id,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.account_realm_id,NEW.account_status,NEW.account_role,NEW.account_type,NEW.description,NEW.external_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_id));
+	END IF;
+
+	IF NEW.login IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('login'));
+		_vq := array_append(_vq, quote_nullable(NEW.login));
+	END IF;
+
+	IF NEW.person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_id));
+	END IF;
+
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.is_enabled IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_enabled'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.account_realm_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_realm_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF NEW.account_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_status));
+	END IF;
+
+	IF NEW.account_role IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_role'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_role));
+	END IF;
+
+	IF NEW.account_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.external_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('external_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.external_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.account (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.account_id = _nr.account_id;
+	NEW.login = _nr.login;
+	NEW.person_id = _nr.person_id;
+	NEW.company_id = _nr.company_id;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.account_status = _nr.account_status;
+	NEW.account_role = _nr.account_role;
+	NEW.account_type = _nr.account_type;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
 	RETURN NEW;
 END;
 $$
@@ -3232,19 +3301,19 @@ DECLARE
 BEGIN
 
 	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
-_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+_uq := array_append(_uq, 'account_id = NEW.' || quote_ident('account_id'));
 	END IF;
 
 	IF OLD.login IS DISTINCT FROM NEW.login THEN
-_uq := array_append(_uq, 'login = ' || quote_nullable(NEW.login));
+_uq := array_append(_uq, 'login = NEW.' || quote_ident('login'));
 	END IF;
 
 	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
-_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+_uq := array_append(_uq, 'person_id = NEW.' || quote_ident('person_id'));
 	END IF;
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
@@ -3258,27 +3327,27 @@ END IF;
 	END IF;
 
 	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
-_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+_uq := array_append(_uq, 'account_realm_id = NEW.' || quote_ident('account_realm_id'));
 	END IF;
 
 	IF OLD.account_status IS DISTINCT FROM NEW.account_status THEN
-_uq := array_append(_uq, 'account_status = ' || quote_nullable(NEW.account_status));
+_uq := array_append(_uq, 'account_status = NEW.' || quote_ident('account_status'));
 	END IF;
 
 	IF OLD.account_role IS DISTINCT FROM NEW.account_role THEN
-_uq := array_append(_uq, 'account_role = ' || quote_nullable(NEW.account_role));
+_uq := array_append(_uq, 'account_role = NEW.' || quote_ident('account_role'));
 	END IF;
 
 	IF OLD.account_type IS DISTINCT FROM NEW.account_type THEN
-_uq := array_append(_uq, 'account_type = ' || quote_nullable(NEW.account_type));
+_uq := array_append(_uq, 'account_type = NEW.' || quote_ident('account_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
-_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+_uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -3359,15 +3428,60 @@ CREATE TRIGGER _trigger_account_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.account_auth_log_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.account_auth_log%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.account_auth_log (
-		account_id,account_auth_ts,auth_resource,account_auth_seq,was_auth_success,auth_resource_instance,auth_origin
-	) VALUES (
-		NEW.account_id,NEW.account_auth_ts,NEW.auth_resource,NEW.account_auth_seq,CASE WHEN NEW.was_auth_success = 'Y' THEN true WHEN NEW.was_auth_success = 'N' THEN false ELSE NULL END,NEW.auth_resource_instance,NEW.auth_origin
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_id));
+	END IF;
+
+	IF NEW.account_auth_ts IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_auth_ts'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_auth_ts));
+	END IF;
+
+	IF NEW.auth_resource IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('auth_resource'));
+		_vq := array_append(_vq, quote_nullable(NEW.auth_resource));
+	END IF;
+
+	IF NEW.account_auth_seq IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_auth_seq'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_auth_seq));
+	END IF;
+
+	IF NEW.was_auth_success IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('was_auth_success'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.was_auth_success = 'Y' THEN true WHEN NEW.was_auth_success = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.auth_resource_instance IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('auth_resource_instance'));
+		_vq := array_append(_vq, quote_nullable(NEW.auth_resource_instance));
+	END IF;
+
+	IF NEW.auth_origin IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('auth_origin'));
+		_vq := array_append(_vq, quote_nullable(NEW.auth_origin));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.account_auth_log (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.account_id = _nr.account_id;
+	NEW.account_auth_ts = _nr.account_auth_ts;
+	NEW.auth_resource = _nr.auth_resource;
+	NEW.account_auth_seq = _nr.account_auth_seq;
+	NEW.was_auth_success = _nr.was_auth_success;
+	NEW.auth_resource_instance = _nr.auth_resource_instance;
+	NEW.auth_origin = _nr.auth_origin;
 	RETURN NEW;
 END;
 $$
@@ -3392,19 +3506,19 @@ DECLARE
 BEGIN
 
 	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
-_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+_uq := array_append(_uq, 'account_id = NEW.' || quote_ident('account_id'));
 	END IF;
 
 	IF OLD.account_auth_ts IS DISTINCT FROM NEW.account_auth_ts THEN
-_uq := array_append(_uq, 'account_auth_ts = ' || quote_nullable(NEW.account_auth_ts));
+_uq := array_append(_uq, 'account_auth_ts = NEW.' || quote_ident('account_auth_ts'));
 	END IF;
 
 	IF OLD.auth_resource IS DISTINCT FROM NEW.auth_resource THEN
-_uq := array_append(_uq, 'auth_resource = ' || quote_nullable(NEW.auth_resource));
+_uq := array_append(_uq, 'auth_resource = NEW.' || quote_ident('auth_resource'));
 	END IF;
 
 	IF OLD.account_auth_seq IS DISTINCT FROM NEW.account_auth_seq THEN
-_uq := array_append(_uq, 'account_auth_seq = ' || quote_nullable(NEW.account_auth_seq));
+_uq := array_append(_uq, 'account_auth_seq = NEW.' || quote_ident('account_auth_seq'));
 	END IF;
 
 	IF OLD.was_auth_success IS DISTINCT FROM NEW.was_auth_success THEN
@@ -3418,11 +3532,11 @@ END IF;
 	END IF;
 
 	IF OLD.auth_resource_instance IS DISTINCT FROM NEW.auth_resource_instance THEN
-_uq := array_append(_uq, 'auth_resource_instance = ' || quote_nullable(NEW.auth_resource_instance));
+_uq := array_append(_uq, 'auth_resource_instance = NEW.' || quote_ident('auth_resource_instance'));
 	END IF;
 
 	IF OLD.auth_origin IS DISTINCT FROM NEW.auth_origin THEN
-_uq := array_append(_uq, 'auth_origin = ' || quote_nullable(NEW.auth_origin));
+_uq := array_append(_uq, 'auth_origin = NEW.' || quote_ident('auth_origin'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -3491,15 +3605,84 @@ CREATE TRIGGER _trigger_account_auth_log_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_item_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.approval_instance_item%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.approval_instance_item (
-		approval_instance_item_id,approval_instance_link_id,approval_instance_step_id,next_approval_instance_item_id,approved_category,approved_label,approved_lhs,approved_rhs,is_approved,approved_account_id,approval_note
-	) VALUES (
-		NEW.approval_instance_item_id,NEW.approval_instance_link_id,NEW.approval_instance_step_id,NEW.next_approval_instance_item_id,NEW.approved_category,NEW.approved_label,NEW.approved_lhs,NEW.approved_rhs,CASE WHEN NEW.is_approved = 'Y' THEN true WHEN NEW.is_approved = 'N' THEN false ELSE NULL END,NEW.approved_account_id,NEW.approval_note
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.approval_instance_item_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_item_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_item_id));
+	END IF;
+
+	IF NEW.approval_instance_link_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_link_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_link_id));
+	END IF;
+
+	IF NEW.approval_instance_step_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_step_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_step_id));
+	END IF;
+
+	IF NEW.next_approval_instance_item_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('next_approval_instance_item_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.next_approval_instance_item_id));
+	END IF;
+
+	IF NEW.approved_category IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approved_category'));
+		_vq := array_append(_vq, quote_nullable(NEW.approved_category));
+	END IF;
+
+	IF NEW.approved_label IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approved_label'));
+		_vq := array_append(_vq, quote_nullable(NEW.approved_label));
+	END IF;
+
+	IF NEW.approved_lhs IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approved_lhs'));
+		_vq := array_append(_vq, quote_nullable(NEW.approved_lhs));
+	END IF;
+
+	IF NEW.approved_rhs IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approved_rhs'));
+		_vq := array_append(_vq, quote_nullable(NEW.approved_rhs));
+	END IF;
+
+	IF NEW.is_approved IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_approved'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_approved = 'Y' THEN true WHEN NEW.is_approved = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.approved_account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approved_account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approved_account_id));
+	END IF;
+
+	IF NEW.approval_note IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_note'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_note));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.approval_instance_item (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.approval_instance_item_id = _nr.approval_instance_item_id;
+	NEW.approval_instance_link_id = _nr.approval_instance_link_id;
+	NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+	NEW.next_approval_instance_item_id = _nr.next_approval_instance_item_id;
+	NEW.approved_category = _nr.approved_category;
+	NEW.approved_label = _nr.approved_label;
+	NEW.approved_lhs = _nr.approved_lhs;
+	NEW.approved_rhs = _nr.approved_rhs;
+	NEW.is_approved = _nr.is_approved;
+	NEW.approved_account_id = _nr.approved_account_id;
+	NEW.approval_note = _nr.approval_note;
 	RETURN NEW;
 END;
 $$
@@ -3524,35 +3707,35 @@ DECLARE
 BEGIN
 
 	IF OLD.approval_instance_item_id IS DISTINCT FROM NEW.approval_instance_item_id THEN
-_uq := array_append(_uq, 'approval_instance_item_id = ' || quote_nullable(NEW.approval_instance_item_id));
+_uq := array_append(_uq, 'approval_instance_item_id = NEW.' || quote_ident('approval_instance_item_id'));
 	END IF;
 
 	IF OLD.approval_instance_link_id IS DISTINCT FROM NEW.approval_instance_link_id THEN
-_uq := array_append(_uq, 'approval_instance_link_id = ' || quote_nullable(NEW.approval_instance_link_id));
+_uq := array_append(_uq, 'approval_instance_link_id = NEW.' || quote_ident('approval_instance_link_id'));
 	END IF;
 
 	IF OLD.approval_instance_step_id IS DISTINCT FROM NEW.approval_instance_step_id THEN
-_uq := array_append(_uq, 'approval_instance_step_id = ' || quote_nullable(NEW.approval_instance_step_id));
+_uq := array_append(_uq, 'approval_instance_step_id = NEW.' || quote_ident('approval_instance_step_id'));
 	END IF;
 
 	IF OLD.next_approval_instance_item_id IS DISTINCT FROM NEW.next_approval_instance_item_id THEN
-_uq := array_append(_uq, 'next_approval_instance_item_id = ' || quote_nullable(NEW.next_approval_instance_item_id));
+_uq := array_append(_uq, 'next_approval_instance_item_id = NEW.' || quote_ident('next_approval_instance_item_id'));
 	END IF;
 
 	IF OLD.approved_category IS DISTINCT FROM NEW.approved_category THEN
-_uq := array_append(_uq, 'approved_category = ' || quote_nullable(NEW.approved_category));
+_uq := array_append(_uq, 'approved_category = NEW.' || quote_ident('approved_category'));
 	END IF;
 
 	IF OLD.approved_label IS DISTINCT FROM NEW.approved_label THEN
-_uq := array_append(_uq, 'approved_label = ' || quote_nullable(NEW.approved_label));
+_uq := array_append(_uq, 'approved_label = NEW.' || quote_ident('approved_label'));
 	END IF;
 
 	IF OLD.approved_lhs IS DISTINCT FROM NEW.approved_lhs THEN
-_uq := array_append(_uq, 'approved_lhs = ' || quote_nullable(NEW.approved_lhs));
+_uq := array_append(_uq, 'approved_lhs = NEW.' || quote_ident('approved_lhs'));
 	END IF;
 
 	IF OLD.approved_rhs IS DISTINCT FROM NEW.approved_rhs THEN
-_uq := array_append(_uq, 'approved_rhs = ' || quote_nullable(NEW.approved_rhs));
+_uq := array_append(_uq, 'approved_rhs = NEW.' || quote_ident('approved_rhs'));
 	END IF;
 
 	IF OLD.is_approved IS DISTINCT FROM NEW.is_approved THEN
@@ -3566,11 +3749,11 @@ END IF;
 	END IF;
 
 	IF OLD.approved_account_id IS DISTINCT FROM NEW.approved_account_id THEN
-_uq := array_append(_uq, 'approved_account_id = ' || quote_nullable(NEW.approved_account_id));
+_uq := array_append(_uq, 'approved_account_id = NEW.' || quote_ident('approved_account_id'));
 	END IF;
 
 	IF OLD.approval_note IS DISTINCT FROM NEW.approval_note THEN
-_uq := array_append(_uq, 'approval_note = ' || quote_nullable(NEW.approval_note));
+_uq := array_append(_uq, 'approval_note = NEW.' || quote_ident('approval_note'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -3651,15 +3834,90 @@ CREATE TRIGGER _trigger_approval_instance_item_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_step_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.approval_instance_step%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.approval_instance_step (
-		approval_instance_step_id,approval_instance_id,approval_process_chain_id,approval_instance_step_name,approval_instance_step_due,approval_type,description,approval_instance_step_start,approval_instance_step_end,approver_account_id,external_reference_name,is_completed
-	) VALUES (
-		NEW.approval_instance_step_id,NEW.approval_instance_id,NEW.approval_process_chain_id,NEW.approval_instance_step_name,NEW.approval_instance_step_due,NEW.approval_type,NEW.description,NEW.approval_instance_step_start,NEW.approval_instance_step_end,NEW.approver_account_id,NEW.external_reference_name,CASE WHEN NEW.is_completed = 'Y' THEN true WHEN NEW.is_completed = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.approval_instance_step_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_step_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_step_id));
+	END IF;
+
+	IF NEW.approval_instance_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_id));
+	END IF;
+
+	IF NEW.approval_process_chain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_process_chain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_process_chain_id));
+	END IF;
+
+	IF NEW.approval_instance_step_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_step_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_step_name));
+	END IF;
+
+	IF NEW.approval_instance_step_due IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_step_due'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_step_due));
+	END IF;
+
+	IF NEW.approval_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.approval_instance_step_start IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_step_start'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_step_start));
+	END IF;
+
+	IF NEW.approval_instance_step_end IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_instance_step_end'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_instance_step_end));
+	END IF;
+
+	IF NEW.approver_account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approver_account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approver_account_id));
+	END IF;
+
+	IF NEW.external_reference_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('external_reference_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.external_reference_name));
+	END IF;
+
+	IF NEW.is_completed IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_completed'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_completed = 'Y' THEN true WHEN NEW.is_completed = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.approval_instance_step (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+	NEW.approval_instance_id = _nr.approval_instance_id;
+	NEW.approval_process_chain_id = _nr.approval_process_chain_id;
+	NEW.approval_instance_step_name = _nr.approval_instance_step_name;
+	NEW.approval_instance_step_due = _nr.approval_instance_step_due;
+	NEW.approval_type = _nr.approval_type;
+	NEW.description = _nr.description;
+	NEW.approval_instance_step_start = _nr.approval_instance_step_start;
+	NEW.approval_instance_step_end = _nr.approval_instance_step_end;
+	NEW.approver_account_id = _nr.approver_account_id;
+	NEW.external_reference_name = _nr.external_reference_name;
+	NEW.is_completed = _nr.is_completed;
 	RETURN NEW;
 END;
 $$
@@ -3684,47 +3942,47 @@ DECLARE
 BEGIN
 
 	IF OLD.approval_instance_step_id IS DISTINCT FROM NEW.approval_instance_step_id THEN
-_uq := array_append(_uq, 'approval_instance_step_id = ' || quote_nullable(NEW.approval_instance_step_id));
+_uq := array_append(_uq, 'approval_instance_step_id = NEW.' || quote_ident('approval_instance_step_id'));
 	END IF;
 
 	IF OLD.approval_instance_id IS DISTINCT FROM NEW.approval_instance_id THEN
-_uq := array_append(_uq, 'approval_instance_id = ' || quote_nullable(NEW.approval_instance_id));
+_uq := array_append(_uq, 'approval_instance_id = NEW.' || quote_ident('approval_instance_id'));
 	END IF;
 
 	IF OLD.approval_process_chain_id IS DISTINCT FROM NEW.approval_process_chain_id THEN
-_uq := array_append(_uq, 'approval_process_chain_id = ' || quote_nullable(NEW.approval_process_chain_id));
+_uq := array_append(_uq, 'approval_process_chain_id = NEW.' || quote_ident('approval_process_chain_id'));
 	END IF;
 
 	IF OLD.approval_instance_step_name IS DISTINCT FROM NEW.approval_instance_step_name THEN
-_uq := array_append(_uq, 'approval_instance_step_name = ' || quote_nullable(NEW.approval_instance_step_name));
+_uq := array_append(_uq, 'approval_instance_step_name = NEW.' || quote_ident('approval_instance_step_name'));
 	END IF;
 
 	IF OLD.approval_instance_step_due IS DISTINCT FROM NEW.approval_instance_step_due THEN
-_uq := array_append(_uq, 'approval_instance_step_due = ' || quote_nullable(NEW.approval_instance_step_due));
+_uq := array_append(_uq, 'approval_instance_step_due = NEW.' || quote_ident('approval_instance_step_due'));
 	END IF;
 
 	IF OLD.approval_type IS DISTINCT FROM NEW.approval_type THEN
-_uq := array_append(_uq, 'approval_type = ' || quote_nullable(NEW.approval_type));
+_uq := array_append(_uq, 'approval_type = NEW.' || quote_ident('approval_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.approval_instance_step_start IS DISTINCT FROM NEW.approval_instance_step_start THEN
-_uq := array_append(_uq, 'approval_instance_step_start = ' || quote_nullable(NEW.approval_instance_step_start));
+_uq := array_append(_uq, 'approval_instance_step_start = NEW.' || quote_ident('approval_instance_step_start'));
 	END IF;
 
 	IF OLD.approval_instance_step_end IS DISTINCT FROM NEW.approval_instance_step_end THEN
-_uq := array_append(_uq, 'approval_instance_step_end = ' || quote_nullable(NEW.approval_instance_step_end));
+_uq := array_append(_uq, 'approval_instance_step_end = NEW.' || quote_ident('approval_instance_step_end'));
 	END IF;
 
 	IF OLD.approver_account_id IS DISTINCT FROM NEW.approver_account_id THEN
-_uq := array_append(_uq, 'approver_account_id = ' || quote_nullable(NEW.approver_account_id));
+_uq := array_append(_uq, 'approver_account_id = NEW.' || quote_ident('approver_account_id'));
 	END IF;
 
 	IF OLD.external_reference_name IS DISTINCT FROM NEW.external_reference_name THEN
-_uq := array_append(_uq, 'external_reference_name = ' || quote_nullable(NEW.external_reference_name));
+_uq := array_append(_uq, 'external_reference_name = NEW.' || quote_ident('external_reference_name'));
 	END IF;
 
 	IF OLD.is_completed IS DISTINCT FROM NEW.is_completed THEN
@@ -3817,15 +4075,108 @@ CREATE TRIGGER _trigger_approval_instance_step_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_process_chain_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.approval_process_chain%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.approval_process_chain (
-		approval_process_chain_id,approval_process_chain_name,approval_chain_response_period,description,message,email_message,email_subject_prefix,email_subject_suffix,max_escalation_level,escalation_delay,escalation_reminder_gap,approving_entity,refresh_all_data,accept_app_process_chain_id,reject_app_process_chain_id
-	) VALUES (
-		NEW.approval_process_chain_id,NEW.approval_process_chain_name,NEW.approval_chain_response_period,NEW.description,NEW.message,NEW.email_message,NEW.email_subject_prefix,NEW.email_subject_suffix,NEW.max_escalation_level,NEW.escalation_delay,NEW.escalation_reminder_gap,NEW.approving_entity,CASE WHEN NEW.refresh_all_data = 'Y' THEN true WHEN NEW.refresh_all_data = 'N' THEN false ELSE NULL END,NEW.accept_app_process_chain_id,NEW.reject_app_process_chain_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.approval_process_chain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_process_chain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_process_chain_id));
+	END IF;
+
+	IF NEW.approval_process_chain_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_process_chain_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_process_chain_name));
+	END IF;
+
+	IF NEW.approval_chain_response_period IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approval_chain_response_period'));
+		_vq := array_append(_vq, quote_nullable(NEW.approval_chain_response_period));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.message IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('message'));
+		_vq := array_append(_vq, quote_nullable(NEW.message));
+	END IF;
+
+	IF NEW.email_message IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('email_message'));
+		_vq := array_append(_vq, quote_nullable(NEW.email_message));
+	END IF;
+
+	IF NEW.email_subject_prefix IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('email_subject_prefix'));
+		_vq := array_append(_vq, quote_nullable(NEW.email_subject_prefix));
+	END IF;
+
+	IF NEW.email_subject_suffix IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('email_subject_suffix'));
+		_vq := array_append(_vq, quote_nullable(NEW.email_subject_suffix));
+	END IF;
+
+	IF NEW.max_escalation_level IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_escalation_level'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_escalation_level));
+	END IF;
+
+	IF NEW.escalation_delay IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('escalation_delay'));
+		_vq := array_append(_vq, quote_nullable(NEW.escalation_delay));
+	END IF;
+
+	IF NEW.escalation_reminder_gap IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('escalation_reminder_gap'));
+		_vq := array_append(_vq, quote_nullable(NEW.escalation_reminder_gap));
+	END IF;
+
+	IF NEW.approving_entity IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('approving_entity'));
+		_vq := array_append(_vq, quote_nullable(NEW.approving_entity));
+	END IF;
+
+	IF NEW.refresh_all_data IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('refresh_all_data'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.refresh_all_data = 'Y' THEN true WHEN NEW.refresh_all_data = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.accept_app_process_chain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('accept_app_process_chain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.accept_app_process_chain_id));
+	END IF;
+
+	IF NEW.reject_app_process_chain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('reject_app_process_chain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.reject_app_process_chain_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.approval_process_chain (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.approval_process_chain_id = _nr.approval_process_chain_id;
+	NEW.approval_process_chain_name = _nr.approval_process_chain_name;
+	NEW.approval_chain_response_period = _nr.approval_chain_response_period;
+	NEW.description = _nr.description;
+	NEW.message = _nr.message;
+	NEW.email_message = _nr.email_message;
+	NEW.email_subject_prefix = _nr.email_subject_prefix;
+	NEW.email_subject_suffix = _nr.email_subject_suffix;
+	NEW.max_escalation_level = _nr.max_escalation_level;
+	NEW.escalation_delay = _nr.escalation_delay;
+	NEW.escalation_reminder_gap = _nr.escalation_reminder_gap;
+	NEW.approving_entity = _nr.approving_entity;
+	NEW.refresh_all_data = _nr.refresh_all_data;
+	NEW.accept_app_process_chain_id = _nr.accept_app_process_chain_id;
+	NEW.reject_app_process_chain_id = _nr.reject_app_process_chain_id;
 	RETURN NEW;
 END;
 $$
@@ -3850,51 +4201,51 @@ DECLARE
 BEGIN
 
 	IF OLD.approval_process_chain_id IS DISTINCT FROM NEW.approval_process_chain_id THEN
-_uq := array_append(_uq, 'approval_process_chain_id = ' || quote_nullable(NEW.approval_process_chain_id));
+_uq := array_append(_uq, 'approval_process_chain_id = NEW.' || quote_ident('approval_process_chain_id'));
 	END IF;
 
 	IF OLD.approval_process_chain_name IS DISTINCT FROM NEW.approval_process_chain_name THEN
-_uq := array_append(_uq, 'approval_process_chain_name = ' || quote_nullable(NEW.approval_process_chain_name));
+_uq := array_append(_uq, 'approval_process_chain_name = NEW.' || quote_ident('approval_process_chain_name'));
 	END IF;
 
 	IF OLD.approval_chain_response_period IS DISTINCT FROM NEW.approval_chain_response_period THEN
-_uq := array_append(_uq, 'approval_chain_response_period = ' || quote_nullable(NEW.approval_chain_response_period));
+_uq := array_append(_uq, 'approval_chain_response_period = NEW.' || quote_ident('approval_chain_response_period'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.message IS DISTINCT FROM NEW.message THEN
-_uq := array_append(_uq, 'message = ' || quote_nullable(NEW.message));
+_uq := array_append(_uq, 'message = NEW.' || quote_ident('message'));
 	END IF;
 
 	IF OLD.email_message IS DISTINCT FROM NEW.email_message THEN
-_uq := array_append(_uq, 'email_message = ' || quote_nullable(NEW.email_message));
+_uq := array_append(_uq, 'email_message = NEW.' || quote_ident('email_message'));
 	END IF;
 
 	IF OLD.email_subject_prefix IS DISTINCT FROM NEW.email_subject_prefix THEN
-_uq := array_append(_uq, 'email_subject_prefix = ' || quote_nullable(NEW.email_subject_prefix));
+_uq := array_append(_uq, 'email_subject_prefix = NEW.' || quote_ident('email_subject_prefix'));
 	END IF;
 
 	IF OLD.email_subject_suffix IS DISTINCT FROM NEW.email_subject_suffix THEN
-_uq := array_append(_uq, 'email_subject_suffix = ' || quote_nullable(NEW.email_subject_suffix));
+_uq := array_append(_uq, 'email_subject_suffix = NEW.' || quote_ident('email_subject_suffix'));
 	END IF;
 
 	IF OLD.max_escalation_level IS DISTINCT FROM NEW.max_escalation_level THEN
-_uq := array_append(_uq, 'max_escalation_level = ' || quote_nullable(NEW.max_escalation_level));
+_uq := array_append(_uq, 'max_escalation_level = NEW.' || quote_ident('max_escalation_level'));
 	END IF;
 
 	IF OLD.escalation_delay IS DISTINCT FROM NEW.escalation_delay THEN
-_uq := array_append(_uq, 'escalation_delay = ' || quote_nullable(NEW.escalation_delay));
+_uq := array_append(_uq, 'escalation_delay = NEW.' || quote_ident('escalation_delay'));
 	END IF;
 
 	IF OLD.escalation_reminder_gap IS DISTINCT FROM NEW.escalation_reminder_gap THEN
-_uq := array_append(_uq, 'escalation_reminder_gap = ' || quote_nullable(NEW.escalation_reminder_gap));
+_uq := array_append(_uq, 'escalation_reminder_gap = NEW.' || quote_ident('escalation_reminder_gap'));
 	END IF;
 
 	IF OLD.approving_entity IS DISTINCT FROM NEW.approving_entity THEN
-_uq := array_append(_uq, 'approving_entity = ' || quote_nullable(NEW.approving_entity));
+_uq := array_append(_uq, 'approving_entity = NEW.' || quote_ident('approving_entity'));
 	END IF;
 
 	IF OLD.refresh_all_data IS DISTINCT FROM NEW.refresh_all_data THEN
@@ -3908,11 +4259,11 @@ END IF;
 	END IF;
 
 	IF OLD.accept_app_process_chain_id IS DISTINCT FROM NEW.accept_app_process_chain_id THEN
-_uq := array_append(_uq, 'accept_app_process_chain_id = ' || quote_nullable(NEW.accept_app_process_chain_id));
+_uq := array_append(_uq, 'accept_app_process_chain_id = NEW.' || quote_ident('accept_app_process_chain_id'));
 	END IF;
 
 	IF OLD.reject_app_process_chain_id IS DISTINCT FROM NEW.reject_app_process_chain_id THEN
-_uq := array_append(_uq, 'reject_app_process_chain_id = ' || quote_nullable(NEW.reject_app_process_chain_id));
+_uq := array_append(_uq, 'reject_app_process_chain_id = NEW.' || quote_ident('reject_app_process_chain_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -4001,15 +4352,78 @@ CREATE TRIGGER _trigger_approval_process_chain_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.circuit_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.circuit%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.circuit (
-		circuit_id,vendor_company_id,vendor_circuit_id_str,aloc_lec_company_id,aloc_lec_circuit_id_str,aloc_parent_circuit_id,zloc_lec_company_id,zloc_lec_circuit_id_str,zloc_parent_circuit_id,is_locally_managed
-	) VALUES (
-		NEW.circuit_id,NEW.vendor_company_id,NEW.vendor_circuit_id_str,NEW.aloc_lec_company_id,NEW.aloc_lec_circuit_id_str,NEW.aloc_parent_circuit_id,NEW.zloc_lec_company_id,NEW.zloc_lec_circuit_id_str,NEW.zloc_parent_circuit_id,CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.circuit_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('circuit_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.circuit_id));
+	END IF;
+
+	IF NEW.vendor_company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('vendor_company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.vendor_company_id));
+	END IF;
+
+	IF NEW.vendor_circuit_id_str IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('vendor_circuit_id_str'));
+		_vq := array_append(_vq, quote_nullable(NEW.vendor_circuit_id_str));
+	END IF;
+
+	IF NEW.aloc_lec_company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('aloc_lec_company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.aloc_lec_company_id));
+	END IF;
+
+	IF NEW.aloc_lec_circuit_id_str IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('aloc_lec_circuit_id_str'));
+		_vq := array_append(_vq, quote_nullable(NEW.aloc_lec_circuit_id_str));
+	END IF;
+
+	IF NEW.aloc_parent_circuit_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('aloc_parent_circuit_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.aloc_parent_circuit_id));
+	END IF;
+
+	IF NEW.zloc_lec_company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('zloc_lec_company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.zloc_lec_company_id));
+	END IF;
+
+	IF NEW.zloc_lec_circuit_id_str IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('zloc_lec_circuit_id_str'));
+		_vq := array_append(_vq, quote_nullable(NEW.zloc_lec_circuit_id_str));
+	END IF;
+
+	IF NEW.zloc_parent_circuit_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('zloc_parent_circuit_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.zloc_parent_circuit_id));
+	END IF;
+
+	IF NEW.is_locally_managed IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_locally_managed'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.circuit (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.circuit_id = _nr.circuit_id;
+	NEW.vendor_company_id = _nr.vendor_company_id;
+	NEW.vendor_circuit_id_str = _nr.vendor_circuit_id_str;
+	NEW.aloc_lec_company_id = _nr.aloc_lec_company_id;
+	NEW.aloc_lec_circuit_id_str = _nr.aloc_lec_circuit_id_str;
+	NEW.aloc_parent_circuit_id = _nr.aloc_parent_circuit_id;
+	NEW.zloc_lec_company_id = _nr.zloc_lec_company_id;
+	NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
+	NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
+	NEW.is_locally_managed = _nr.is_locally_managed;
 	RETURN NEW;
 END;
 $$
@@ -4034,39 +4448,39 @@ DECLARE
 BEGIN
 
 	IF OLD.circuit_id IS DISTINCT FROM NEW.circuit_id THEN
-_uq := array_append(_uq, 'circuit_id = ' || quote_nullable(NEW.circuit_id));
+_uq := array_append(_uq, 'circuit_id = NEW.' || quote_ident('circuit_id'));
 	END IF;
 
 	IF OLD.vendor_company_id IS DISTINCT FROM NEW.vendor_company_id THEN
-_uq := array_append(_uq, 'vendor_company_id = ' || quote_nullable(NEW.vendor_company_id));
+_uq := array_append(_uq, 'vendor_company_id = NEW.' || quote_ident('vendor_company_id'));
 	END IF;
 
 	IF OLD.vendor_circuit_id_str IS DISTINCT FROM NEW.vendor_circuit_id_str THEN
-_uq := array_append(_uq, 'vendor_circuit_id_str = ' || quote_nullable(NEW.vendor_circuit_id_str));
+_uq := array_append(_uq, 'vendor_circuit_id_str = NEW.' || quote_ident('vendor_circuit_id_str'));
 	END IF;
 
 	IF OLD.aloc_lec_company_id IS DISTINCT FROM NEW.aloc_lec_company_id THEN
-_uq := array_append(_uq, 'aloc_lec_company_id = ' || quote_nullable(NEW.aloc_lec_company_id));
+_uq := array_append(_uq, 'aloc_lec_company_id = NEW.' || quote_ident('aloc_lec_company_id'));
 	END IF;
 
 	IF OLD.aloc_lec_circuit_id_str IS DISTINCT FROM NEW.aloc_lec_circuit_id_str THEN
-_uq := array_append(_uq, 'aloc_lec_circuit_id_str = ' || quote_nullable(NEW.aloc_lec_circuit_id_str));
+_uq := array_append(_uq, 'aloc_lec_circuit_id_str = NEW.' || quote_ident('aloc_lec_circuit_id_str'));
 	END IF;
 
 	IF OLD.aloc_parent_circuit_id IS DISTINCT FROM NEW.aloc_parent_circuit_id THEN
-_uq := array_append(_uq, 'aloc_parent_circuit_id = ' || quote_nullable(NEW.aloc_parent_circuit_id));
+_uq := array_append(_uq, 'aloc_parent_circuit_id = NEW.' || quote_ident('aloc_parent_circuit_id'));
 	END IF;
 
 	IF OLD.zloc_lec_company_id IS DISTINCT FROM NEW.zloc_lec_company_id THEN
-_uq := array_append(_uq, 'zloc_lec_company_id = ' || quote_nullable(NEW.zloc_lec_company_id));
+_uq := array_append(_uq, 'zloc_lec_company_id = NEW.' || quote_ident('zloc_lec_company_id'));
 	END IF;
 
 	IF OLD.zloc_lec_circuit_id_str IS DISTINCT FROM NEW.zloc_lec_circuit_id_str THEN
-_uq := array_append(_uq, 'zloc_lec_circuit_id_str = ' || quote_nullable(NEW.zloc_lec_circuit_id_str));
+_uq := array_append(_uq, 'zloc_lec_circuit_id_str = NEW.' || quote_ident('zloc_lec_circuit_id_str'));
 	END IF;
 
 	IF OLD.zloc_parent_circuit_id IS DISTINCT FROM NEW.zloc_parent_circuit_id THEN
-_uq := array_append(_uq, 'zloc_parent_circuit_id = ' || quote_nullable(NEW.zloc_parent_circuit_id));
+_uq := array_append(_uq, 'zloc_parent_circuit_id = NEW.' || quote_ident('zloc_parent_circuit_id'));
 	END IF;
 
 	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
@@ -4155,15 +4569,84 @@ CREATE TRIGGER _trigger_circuit_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.component_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.component_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.component_type (
-		component_type_id,company_id,model,slot_type_id,description,part_number,is_removable,asset_permitted,is_rack_mountable,is_virtual_component,size_units
-	) VALUES (
-		NEW.component_type_id,NEW.company_id,NEW.model,NEW.slot_type_id,NEW.description,NEW.part_number,CASE WHEN NEW.is_removable = 'Y' THEN true WHEN NEW.is_removable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.asset_permitted = 'Y' THEN true WHEN NEW.asset_permitted = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_rack_mountable = 'Y' THEN true WHEN NEW.is_rack_mountable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_virtual_component = 'Y' THEN true WHEN NEW.is_virtual_component = 'N' THEN false ELSE NULL END,NEW.size_units
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.component_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_type_id));
+	END IF;
+
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.model IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('model'));
+		_vq := array_append(_vq, quote_nullable(NEW.model));
+	END IF;
+
+	IF NEW.slot_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_type_id));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.part_number IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('part_number'));
+		_vq := array_append(_vq, quote_nullable(NEW.part_number));
+	END IF;
+
+	IF NEW.is_removable IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_removable'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_removable = 'Y' THEN true WHEN NEW.is_removable = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.asset_permitted IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('asset_permitted'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.asset_permitted = 'Y' THEN true WHEN NEW.asset_permitted = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_rack_mountable IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_rack_mountable'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_rack_mountable = 'Y' THEN true WHEN NEW.is_rack_mountable = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_virtual_component IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_virtual_component'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_virtual_component = 'Y' THEN true WHEN NEW.is_virtual_component = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.size_units IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('size_units'));
+		_vq := array_append(_vq, quote_nullable(NEW.size_units));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.component_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.component_type_id = _nr.component_type_id;
+	NEW.company_id = _nr.company_id;
+	NEW.model = _nr.model;
+	NEW.slot_type_id = _nr.slot_type_id;
+	NEW.description = _nr.description;
+	NEW.part_number = _nr.part_number;
+	NEW.is_removable = _nr.is_removable;
+	NEW.asset_permitted = _nr.asset_permitted;
+	NEW.is_rack_mountable = _nr.is_rack_mountable;
+	NEW.is_virtual_component = _nr.is_virtual_component;
+	NEW.size_units = _nr.size_units;
 	RETURN NEW;
 END;
 $$
@@ -4188,27 +4671,27 @@ DECLARE
 BEGIN
 
 	IF OLD.component_type_id IS DISTINCT FROM NEW.component_type_id THEN
-_uq := array_append(_uq, 'component_type_id = ' || quote_nullable(NEW.component_type_id));
+_uq := array_append(_uq, 'component_type_id = NEW.' || quote_ident('component_type_id'));
 	END IF;
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.model IS DISTINCT FROM NEW.model THEN
-_uq := array_append(_uq, 'model = ' || quote_nullable(NEW.model));
+_uq := array_append(_uq, 'model = NEW.' || quote_ident('model'));
 	END IF;
 
 	IF OLD.slot_type_id IS DISTINCT FROM NEW.slot_type_id THEN
-_uq := array_append(_uq, 'slot_type_id = ' || quote_nullable(NEW.slot_type_id));
+_uq := array_append(_uq, 'slot_type_id = NEW.' || quote_ident('slot_type_id'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.part_number IS DISTINCT FROM NEW.part_number THEN
-_uq := array_append(_uq, 'part_number = ' || quote_nullable(NEW.part_number));
+_uq := array_append(_uq, 'part_number = NEW.' || quote_ident('part_number'));
 	END IF;
 
 	IF OLD.is_removable IS DISTINCT FROM NEW.is_removable THEN
@@ -4252,7 +4735,7 @@ END IF;
 	END IF;
 
 	IF OLD.size_units IS DISTINCT FROM NEW.size_units THEN
-_uq := array_append(_uq, 'size_units = ' || quote_nullable(NEW.size_units));
+_uq := array_append(_uq, 'size_units = NEW.' || quote_ident('size_units'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -4333,15 +4816,66 @@ CREATE TRIGGER _trigger_component_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.department_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.department%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.department (
-		account_collection_id,company_id,manager_account_id,is_active,dept_code,cost_center_name,cost_center_number,default_badge_type_id
-	) VALUES (
-		NEW.account_collection_id,NEW.company_id,NEW.manager_account_id,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,NEW.dept_code,NEW.cost_center_name,NEW.cost_center_number,NEW.default_badge_type_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.account_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_collection_id));
+	END IF;
+
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.manager_account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('manager_account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.manager_account_id));
+	END IF;
+
+	IF NEW.is_active IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_active'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.dept_code IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dept_code'));
+		_vq := array_append(_vq, quote_nullable(NEW.dept_code));
+	END IF;
+
+	IF NEW.cost_center_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('cost_center_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.cost_center_name));
+	END IF;
+
+	IF NEW.cost_center_number IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('cost_center_number'));
+		_vq := array_append(_vq, quote_nullable(NEW.cost_center_number));
+	END IF;
+
+	IF NEW.default_badge_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('default_badge_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.default_badge_type_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.department (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.account_collection_id = _nr.account_collection_id;
+	NEW.company_id = _nr.company_id;
+	NEW.manager_account_id = _nr.manager_account_id;
+	NEW.is_active = _nr.is_active;
+	NEW.dept_code = _nr.dept_code;
+	NEW.cost_center_name = _nr.cost_center_name;
+	NEW.cost_center_number = _nr.cost_center_number;
+	NEW.default_badge_type_id = _nr.default_badge_type_id;
 	RETURN NEW;
 END;
 $$
@@ -4366,15 +4900,15 @@ DECLARE
 BEGIN
 
 	IF OLD.account_collection_id IS DISTINCT FROM NEW.account_collection_id THEN
-_uq := array_append(_uq, 'account_collection_id = ' || quote_nullable(NEW.account_collection_id));
+_uq := array_append(_uq, 'account_collection_id = NEW.' || quote_ident('account_collection_id'));
 	END IF;
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.manager_account_id IS DISTINCT FROM NEW.manager_account_id THEN
-_uq := array_append(_uq, 'manager_account_id = ' || quote_nullable(NEW.manager_account_id));
+_uq := array_append(_uq, 'manager_account_id = NEW.' || quote_ident('manager_account_id'));
 	END IF;
 
 	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
@@ -4388,19 +4922,19 @@ END IF;
 	END IF;
 
 	IF OLD.dept_code IS DISTINCT FROM NEW.dept_code THEN
-_uq := array_append(_uq, 'dept_code = ' || quote_nullable(NEW.dept_code));
+_uq := array_append(_uq, 'dept_code = NEW.' || quote_ident('dept_code'));
 	END IF;
 
 	IF OLD.cost_center_name IS DISTINCT FROM NEW.cost_center_name THEN
-_uq := array_append(_uq, 'cost_center_name = ' || quote_nullable(NEW.cost_center_name));
+_uq := array_append(_uq, 'cost_center_name = NEW.' || quote_ident('cost_center_name'));
 	END IF;
 
 	IF OLD.cost_center_number IS DISTINCT FROM NEW.cost_center_number THEN
-_uq := array_append(_uq, 'cost_center_number = ' || quote_nullable(NEW.cost_center_number));
+_uq := array_append(_uq, 'cost_center_number = NEW.' || quote_ident('cost_center_number'));
 	END IF;
 
 	IF OLD.default_badge_type_id IS DISTINCT FROM NEW.default_badge_type_id THEN
-_uq := array_append(_uq, 'default_badge_type_id = ' || quote_nullable(NEW.default_badge_type_id));
+_uq := array_append(_uq, 'default_badge_type_id = NEW.' || quote_ident('default_badge_type_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -4475,15 +5009,133 @@ CREATE TRIGGER _trigger_department_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.device_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.device%rowtype;
 BEGIN
 	-- XXX dropped columns: auto_mgmt_protocolis_monitoredshould_fetch_config
-	INSERT INTO jazzhands.device (
-		device_id,component_id,device_type_id,device_name,site_code,identifying_dns_record_id,host_id,physical_label,rack_location_id,chassis_location_id,parent_device_id,description,external_id,device_status,operating_system_id,service_environment_id,is_locally_managed,is_virtual_device,date_in_service
-	) VALUES (
-		NEW.device_id,NEW.component_id,NEW.device_type_id,NEW.device_name,NEW.site_code,NEW.identifying_dns_record_id,NEW.host_id,NEW.physical_label,NEW.rack_location_id,NEW.chassis_location_id,NEW.parent_device_id,NEW.description,NEW.external_id,NEW.device_status,NEW.operating_system_id,NEW.service_environment_id,CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_virtual_device = 'Y' THEN true WHEN NEW.is_virtual_device = 'N' THEN false ELSE NULL END,NEW.date_in_service
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+
+	IF NEW.device_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_id));
+	END IF;
+
+	IF NEW.component_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_id));
+	END IF;
+
+	IF NEW.device_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_type_id));
+	END IF;
+
+	IF NEW.device_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_name));
+	END IF;
+
+	IF NEW.site_code IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('site_code'));
+		_vq := array_append(_vq, quote_nullable(NEW.site_code));
+	END IF;
+
+	IF NEW.identifying_dns_record_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('identifying_dns_record_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.identifying_dns_record_id));
+	END IF;
+
+	IF NEW.host_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('host_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.host_id));
+	END IF;
+
+	IF NEW.physical_label IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('physical_label'));
+		_vq := array_append(_vq, quote_nullable(NEW.physical_label));
+	END IF;
+
+	IF NEW.rack_location_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_location_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_location_id));
+	END IF;
+
+	IF NEW.chassis_location_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('chassis_location_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.chassis_location_id));
+	END IF;
+
+	IF NEW.parent_device_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('parent_device_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.parent_device_id));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.external_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('external_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.external_id));
+	END IF;
+
+	IF NEW.device_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_status));
+	END IF;
+
+	IF NEW.operating_system_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('operating_system_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.operating_system_id));
+	END IF;
+
+	IF NEW.service_environment_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('service_environment_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.service_environment_id));
+	END IF;
+
+	IF NEW.is_locally_managed IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_locally_managed'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_virtual_device IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_virtual_device'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_virtual_device = 'Y' THEN true WHEN NEW.is_virtual_device = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.date_in_service IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('date_in_service'));
+		_vq := array_append(_vq, quote_nullable(NEW.date_in_service));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.device (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.device_id = _nr.device_id;
+	NEW.component_id = _nr.component_id;
+	NEW.device_type_id = _nr.device_type_id;
+	NEW.device_name = _nr.device_name;
+	NEW.site_code = _nr.site_code;
+	NEW.identifying_dns_record_id = _nr.identifying_dns_record_id;
+	NEW.host_id = _nr.host_id;
+	NEW.physical_label = _nr.physical_label;
+	NEW.rack_location_id = _nr.rack_location_id;
+	NEW.chassis_location_id = _nr.chassis_location_id;
+	NEW.parent_device_id = _nr.parent_device_id;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
+	NEW.device_status = _nr.device_status;
+	NEW.operating_system_id = _nr.operating_system_id;
+	NEW.service_environment_id = _nr.service_environment_id;
+	NEW.is_locally_managed = _nr.is_locally_managed;
+	NEW.is_virtual_device = _nr.is_virtual_device;
+	NEW.date_in_service = _nr.date_in_service;
 	RETURN NEW;
 END;
 $$
@@ -4509,67 +5161,67 @@ BEGIN
 	-- XXX dropped columns: auto_mgmt_protocolis_monitoredshould_fetch_config
 
 	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
-_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
+_uq := array_append(_uq, 'device_id = NEW.' || quote_ident('device_id'));
 	END IF;
 
 	IF OLD.component_id IS DISTINCT FROM NEW.component_id THEN
-_uq := array_append(_uq, 'component_id = ' || quote_nullable(NEW.component_id));
+_uq := array_append(_uq, 'component_id = NEW.' || quote_ident('component_id'));
 	END IF;
 
 	IF OLD.device_type_id IS DISTINCT FROM NEW.device_type_id THEN
-_uq := array_append(_uq, 'device_type_id = ' || quote_nullable(NEW.device_type_id));
+_uq := array_append(_uq, 'device_type_id = NEW.' || quote_ident('device_type_id'));
 	END IF;
 
 	IF OLD.device_name IS DISTINCT FROM NEW.device_name THEN
-_uq := array_append(_uq, 'device_name = ' || quote_nullable(NEW.device_name));
+_uq := array_append(_uq, 'device_name = NEW.' || quote_ident('device_name'));
 	END IF;
 
 	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
-_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+_uq := array_append(_uq, 'site_code = NEW.' || quote_ident('site_code'));
 	END IF;
 
 	IF OLD.identifying_dns_record_id IS DISTINCT FROM NEW.identifying_dns_record_id THEN
-_uq := array_append(_uq, 'identifying_dns_record_id = ' || quote_nullable(NEW.identifying_dns_record_id));
+_uq := array_append(_uq, 'identifying_dns_record_id = NEW.' || quote_ident('identifying_dns_record_id'));
 	END IF;
 
 	IF OLD.host_id IS DISTINCT FROM NEW.host_id THEN
-_uq := array_append(_uq, 'host_id = ' || quote_nullable(NEW.host_id));
+_uq := array_append(_uq, 'host_id = NEW.' || quote_ident('host_id'));
 	END IF;
 
 	IF OLD.physical_label IS DISTINCT FROM NEW.physical_label THEN
-_uq := array_append(_uq, 'physical_label = ' || quote_nullable(NEW.physical_label));
+_uq := array_append(_uq, 'physical_label = NEW.' || quote_ident('physical_label'));
 	END IF;
 
 	IF OLD.rack_location_id IS DISTINCT FROM NEW.rack_location_id THEN
-_uq := array_append(_uq, 'rack_location_id = ' || quote_nullable(NEW.rack_location_id));
+_uq := array_append(_uq, 'rack_location_id = NEW.' || quote_ident('rack_location_id'));
 	END IF;
 
 	IF OLD.chassis_location_id IS DISTINCT FROM NEW.chassis_location_id THEN
-_uq := array_append(_uq, 'chassis_location_id = ' || quote_nullable(NEW.chassis_location_id));
+_uq := array_append(_uq, 'chassis_location_id = NEW.' || quote_ident('chassis_location_id'));
 	END IF;
 
 	IF OLD.parent_device_id IS DISTINCT FROM NEW.parent_device_id THEN
-_uq := array_append(_uq, 'parent_device_id = ' || quote_nullable(NEW.parent_device_id));
+_uq := array_append(_uq, 'parent_device_id = NEW.' || quote_ident('parent_device_id'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
-_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+_uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 	END IF;
 
 	IF OLD.device_status IS DISTINCT FROM NEW.device_status THEN
-_uq := array_append(_uq, 'device_status = ' || quote_nullable(NEW.device_status));
+_uq := array_append(_uq, 'device_status = NEW.' || quote_ident('device_status'));
 	END IF;
 
 	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
-_uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
+_uq := array_append(_uq, 'operating_system_id = NEW.' || quote_ident('operating_system_id'));
 	END IF;
 
 	IF OLD.service_environment_id IS DISTINCT FROM NEW.service_environment_id THEN
-_uq := array_append(_uq, 'service_environment_id = ' || quote_nullable(NEW.service_environment_id));
+_uq := array_append(_uq, 'service_environment_id = NEW.' || quote_ident('service_environment_id'));
 	END IF;
 
 	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
@@ -4593,7 +5245,7 @@ END IF;
 	END IF;
 
 	IF OLD.date_in_service IS DISTINCT FROM NEW.date_in_service THEN
-_uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_service));
+_uq := array_append(_uq, 'date_in_service = NEW.' || quote_ident('date_in_service'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -4690,15 +5342,114 @@ CREATE TRIGGER _trigger_device_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.device_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.device_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.device_type (
-		device_type_id,component_type_id,device_type_name,template_device_id,idealized_device_id,description,company_id,model,device_type_depth_in_cm,processor_architecture,config_fetch_type,rack_units,has_802_3_interface,has_802_11_interface,snmp_capable,is_chassis
-	) VALUES (
-		NEW.device_type_id,NEW.component_type_id,NEW.device_type_name,NEW.template_device_id,NEW.idealized_device_id,NEW.description,NEW.company_id,NEW.model,NEW.device_type_depth_in_cm,NEW.processor_architecture,NEW.config_fetch_type,NEW.rack_units,CASE WHEN NEW.has_802_3_interface = 'Y' THEN true WHEN NEW.has_802_3_interface = 'N' THEN false ELSE NULL END,CASE WHEN NEW.has_802_11_interface = 'Y' THEN true WHEN NEW.has_802_11_interface = 'N' THEN false ELSE NULL END,CASE WHEN NEW.snmp_capable = 'Y' THEN true WHEN NEW.snmp_capable = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_chassis = 'Y' THEN true WHEN NEW.is_chassis = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.device_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_type_id));
+	END IF;
+
+	IF NEW.component_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_type_id));
+	END IF;
+
+	IF NEW.device_type_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_type_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_type_name));
+	END IF;
+
+	IF NEW.template_device_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('template_device_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.template_device_id));
+	END IF;
+
+	IF NEW.idealized_device_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('idealized_device_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.idealized_device_id));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.model IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('model'));
+		_vq := array_append(_vq, quote_nullable(NEW.model));
+	END IF;
+
+	IF NEW.device_type_depth_in_cm IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_type_depth_in_cm'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_type_depth_in_cm));
+	END IF;
+
+	IF NEW.processor_architecture IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('processor_architecture'));
+		_vq := array_append(_vq, quote_nullable(NEW.processor_architecture));
+	END IF;
+
+	IF NEW.config_fetch_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('config_fetch_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.config_fetch_type));
+	END IF;
+
+	IF NEW.rack_units IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_units'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_units));
+	END IF;
+
+	IF NEW.has_802_3_interface IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('has_802_3_interface'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.has_802_3_interface = 'Y' THEN true WHEN NEW.has_802_3_interface = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.has_802_11_interface IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('has_802_11_interface'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.has_802_11_interface = 'Y' THEN true WHEN NEW.has_802_11_interface = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.snmp_capable IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('snmp_capable'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.snmp_capable = 'Y' THEN true WHEN NEW.snmp_capable = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_chassis IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_chassis'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_chassis = 'Y' THEN true WHEN NEW.is_chassis = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.device_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.device_type_id = _nr.device_type_id;
+	NEW.component_type_id = _nr.component_type_id;
+	NEW.device_type_name = _nr.device_type_name;
+	NEW.template_device_id = _nr.template_device_id;
+	NEW.idealized_device_id = _nr.idealized_device_id;
+	NEW.description = _nr.description;
+	NEW.company_id = _nr.company_id;
+	NEW.model = _nr.model;
+	NEW.device_type_depth_in_cm = _nr.device_type_depth_in_cm;
+	NEW.processor_architecture = _nr.processor_architecture;
+	NEW.config_fetch_type = _nr.config_fetch_type;
+	NEW.rack_units = _nr.rack_units;
+	NEW.has_802_3_interface = _nr.has_802_3_interface;
+	NEW.has_802_11_interface = _nr.has_802_11_interface;
+	NEW.snmp_capable = _nr.snmp_capable;
+	NEW.is_chassis = _nr.is_chassis;
 	RETURN NEW;
 END;
 $$
@@ -4723,51 +5474,51 @@ DECLARE
 BEGIN
 
 	IF OLD.device_type_id IS DISTINCT FROM NEW.device_type_id THEN
-_uq := array_append(_uq, 'device_type_id = ' || quote_nullable(NEW.device_type_id));
+_uq := array_append(_uq, 'device_type_id = NEW.' || quote_ident('device_type_id'));
 	END IF;
 
 	IF OLD.component_type_id IS DISTINCT FROM NEW.component_type_id THEN
-_uq := array_append(_uq, 'component_type_id = ' || quote_nullable(NEW.component_type_id));
+_uq := array_append(_uq, 'component_type_id = NEW.' || quote_ident('component_type_id'));
 	END IF;
 
 	IF OLD.device_type_name IS DISTINCT FROM NEW.device_type_name THEN
-_uq := array_append(_uq, 'device_type_name = ' || quote_nullable(NEW.device_type_name));
+_uq := array_append(_uq, 'device_type_name = NEW.' || quote_ident('device_type_name'));
 	END IF;
 
 	IF OLD.template_device_id IS DISTINCT FROM NEW.template_device_id THEN
-_uq := array_append(_uq, 'template_device_id = ' || quote_nullable(NEW.template_device_id));
+_uq := array_append(_uq, 'template_device_id = NEW.' || quote_ident('template_device_id'));
 	END IF;
 
 	IF OLD.idealized_device_id IS DISTINCT FROM NEW.idealized_device_id THEN
-_uq := array_append(_uq, 'idealized_device_id = ' || quote_nullable(NEW.idealized_device_id));
+_uq := array_append(_uq, 'idealized_device_id = NEW.' || quote_ident('idealized_device_id'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.model IS DISTINCT FROM NEW.model THEN
-_uq := array_append(_uq, 'model = ' || quote_nullable(NEW.model));
+_uq := array_append(_uq, 'model = NEW.' || quote_ident('model'));
 	END IF;
 
 	IF OLD.device_type_depth_in_cm IS DISTINCT FROM NEW.device_type_depth_in_cm THEN
-_uq := array_append(_uq, 'device_type_depth_in_cm = ' || quote_nullable(NEW.device_type_depth_in_cm));
+_uq := array_append(_uq, 'device_type_depth_in_cm = NEW.' || quote_ident('device_type_depth_in_cm'));
 	END IF;
 
 	IF OLD.processor_architecture IS DISTINCT FROM NEW.processor_architecture THEN
-_uq := array_append(_uq, 'processor_architecture = ' || quote_nullable(NEW.processor_architecture));
+_uq := array_append(_uq, 'processor_architecture = NEW.' || quote_ident('processor_architecture'));
 	END IF;
 
 	IF OLD.config_fetch_type IS DISTINCT FROM NEW.config_fetch_type THEN
-_uq := array_append(_uq, 'config_fetch_type = ' || quote_nullable(NEW.config_fetch_type));
+_uq := array_append(_uq, 'config_fetch_type = NEW.' || quote_ident('config_fetch_type'));
 	END IF;
 
 	IF OLD.rack_units IS DISTINCT FROM NEW.rack_units THEN
-_uq := array_append(_uq, 'rack_units = ' || quote_nullable(NEW.rack_units));
+_uq := array_append(_uq, 'rack_units = NEW.' || quote_ident('rack_units'));
 	END IF;
 
 	IF OLD.has_802_3_interface IS DISTINCT FROM NEW.has_802_3_interface THEN
@@ -4898,15 +5649,96 @@ CREATE TRIGGER _trigger_device_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_domain_ip_universe_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.dns_domain_ip_universe%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.dns_domain_ip_universe (
-		dns_domain_id,ip_universe_id,soa_class,soa_ttl,soa_serial,soa_refresh,soa_retry,soa_expire,soa_minimum,soa_mname,soa_rname,should_generate,last_generated
-	) VALUES (
-		NEW.dns_domain_id,NEW.ip_universe_id,NEW.soa_class,NEW.soa_ttl,NEW.soa_serial,NEW.soa_refresh,NEW.soa_retry,NEW.soa_expire,NEW.soa_minimum,NEW.soa_mname,NEW.soa_rname,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.dns_domain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF NEW.ip_universe_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_universe_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF NEW.soa_class IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_class'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_class));
+	END IF;
+
+	IF NEW.soa_ttl IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_ttl'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_ttl));
+	END IF;
+
+	IF NEW.soa_serial IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_serial'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_serial));
+	END IF;
+
+	IF NEW.soa_refresh IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_refresh'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_refresh));
+	END IF;
+
+	IF NEW.soa_retry IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_retry'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_retry));
+	END IF;
+
+	IF NEW.soa_expire IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_expire'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_expire));
+	END IF;
+
+	IF NEW.soa_minimum IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_minimum'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_minimum));
+	END IF;
+
+	IF NEW.soa_mname IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_mname'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_mname));
+	END IF;
+
+	IF NEW.soa_rname IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_rname'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_rname));
+	END IF;
+
+	IF NEW.should_generate IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('should_generate'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.last_generated IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('last_generated'));
+		_vq := array_append(_vq, quote_nullable(NEW.last_generated));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.dns_domain_ip_universe (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.dns_domain_id = _nr.dns_domain_id;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.soa_class = _nr.soa_class;
+	NEW.soa_ttl = _nr.soa_ttl;
+	NEW.soa_serial = _nr.soa_serial;
+	NEW.soa_refresh = _nr.soa_refresh;
+	NEW.soa_retry = _nr.soa_retry;
+	NEW.soa_expire = _nr.soa_expire;
+	NEW.soa_minimum = _nr.soa_minimum;
+	NEW.soa_mname = _nr.soa_mname;
+	NEW.soa_rname = _nr.soa_rname;
+	NEW.should_generate = _nr.should_generate;
+	NEW.last_generated = _nr.last_generated;
 	RETURN NEW;
 END;
 $$
@@ -4931,47 +5763,47 @@ DECLARE
 BEGIN
 
 	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
-_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+_uq := array_append(_uq, 'dns_domain_id = NEW.' || quote_ident('dns_domain_id'));
 	END IF;
 
 	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
-_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+_uq := array_append(_uq, 'ip_universe_id = NEW.' || quote_ident('ip_universe_id'));
 	END IF;
 
 	IF OLD.soa_class IS DISTINCT FROM NEW.soa_class THEN
-_uq := array_append(_uq, 'soa_class = ' || quote_nullable(NEW.soa_class));
+_uq := array_append(_uq, 'soa_class = NEW.' || quote_ident('soa_class'));
 	END IF;
 
 	IF OLD.soa_ttl IS DISTINCT FROM NEW.soa_ttl THEN
-_uq := array_append(_uq, 'soa_ttl = ' || quote_nullable(NEW.soa_ttl));
+_uq := array_append(_uq, 'soa_ttl = NEW.' || quote_ident('soa_ttl'));
 	END IF;
 
 	IF OLD.soa_serial IS DISTINCT FROM NEW.soa_serial THEN
-_uq := array_append(_uq, 'soa_serial = ' || quote_nullable(NEW.soa_serial));
+_uq := array_append(_uq, 'soa_serial = NEW.' || quote_ident('soa_serial'));
 	END IF;
 
 	IF OLD.soa_refresh IS DISTINCT FROM NEW.soa_refresh THEN
-_uq := array_append(_uq, 'soa_refresh = ' || quote_nullable(NEW.soa_refresh));
+_uq := array_append(_uq, 'soa_refresh = NEW.' || quote_ident('soa_refresh'));
 	END IF;
 
 	IF OLD.soa_retry IS DISTINCT FROM NEW.soa_retry THEN
-_uq := array_append(_uq, 'soa_retry = ' || quote_nullable(NEW.soa_retry));
+_uq := array_append(_uq, 'soa_retry = NEW.' || quote_ident('soa_retry'));
 	END IF;
 
 	IF OLD.soa_expire IS DISTINCT FROM NEW.soa_expire THEN
-_uq := array_append(_uq, 'soa_expire = ' || quote_nullable(NEW.soa_expire));
+_uq := array_append(_uq, 'soa_expire = NEW.' || quote_ident('soa_expire'));
 	END IF;
 
 	IF OLD.soa_minimum IS DISTINCT FROM NEW.soa_minimum THEN
-_uq := array_append(_uq, 'soa_minimum = ' || quote_nullable(NEW.soa_minimum));
+_uq := array_append(_uq, 'soa_minimum = NEW.' || quote_ident('soa_minimum'));
 	END IF;
 
 	IF OLD.soa_mname IS DISTINCT FROM NEW.soa_mname THEN
-_uq := array_append(_uq, 'soa_mname = ' || quote_nullable(NEW.soa_mname));
+_uq := array_append(_uq, 'soa_mname = NEW.' || quote_ident('soa_mname'));
 	END IF;
 
 	IF OLD.soa_rname IS DISTINCT FROM NEW.soa_rname THEN
-_uq := array_append(_uq, 'soa_rname = ' || quote_nullable(NEW.soa_rname));
+_uq := array_append(_uq, 'soa_rname = NEW.' || quote_ident('soa_rname'));
 	END IF;
 
 	IF OLD.should_generate IS DISTINCT FROM NEW.should_generate THEN
@@ -4985,7 +5817,7 @@ END IF;
 	END IF;
 
 	IF OLD.last_generated IS DISTINCT FROM NEW.last_generated THEN
-_uq := array_append(_uq, 'last_generated = ' || quote_nullable(NEW.last_generated));
+_uq := array_append(_uq, 'last_generated = NEW.' || quote_ident('last_generated'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -5070,15 +5902,126 @@ CREATE TRIGGER _trigger_dns_domain_ip_universe_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_record_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.dns_record%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.dns_record (
-		dns_record_id,dns_name,dns_domain_id,dns_ttl,dns_class,dns_type,dns_value,dns_priority,dns_srv_service,dns_srv_protocol,dns_srv_weight,dns_srv_port,netblock_id,ip_universe_id,reference_dns_record_id,dns_value_record_id,should_generate_ptr,is_enabled
-	) VALUES (
-		NEW.dns_record_id,NEW.dns_name,NEW.dns_domain_id,NEW.dns_ttl,NEW.dns_class,NEW.dns_type,NEW.dns_value,NEW.dns_priority,NEW.dns_srv_service,NEW.dns_srv_protocol,NEW.dns_srv_weight,NEW.dns_srv_port,NEW.netblock_id,NEW.ip_universe_id,NEW.reference_dns_record_id,NEW.dns_value_record_id,CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.dns_record_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_record_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF NEW.dns_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_name));
+	END IF;
+
+	IF NEW.dns_domain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF NEW.dns_ttl IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_ttl'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_ttl));
+	END IF;
+
+	IF NEW.dns_class IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_class'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_class));
+	END IF;
+
+	IF NEW.dns_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_type));
+	END IF;
+
+	IF NEW.dns_value IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_value'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_value));
+	END IF;
+
+	IF NEW.dns_priority IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_priority'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_priority));
+	END IF;
+
+	IF NEW.dns_srv_service IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_srv_service'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_srv_service));
+	END IF;
+
+	IF NEW.dns_srv_protocol IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_srv_protocol'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_srv_protocol));
+	END IF;
+
+	IF NEW.dns_srv_weight IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_srv_weight'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_srv_weight));
+	END IF;
+
+	IF NEW.dns_srv_port IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_srv_port'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_srv_port));
+	END IF;
+
+	IF NEW.netblock_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF NEW.ip_universe_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_universe_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF NEW.reference_dns_record_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('reference_dns_record_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.reference_dns_record_id));
+	END IF;
+
+	IF NEW.dns_value_record_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_value_record_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_value_record_id));
+	END IF;
+
+	IF NEW.should_generate_ptr IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('should_generate_ptr'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.should_generate_ptr = 'Y' THEN true WHEN NEW.should_generate_ptr = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_enabled IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_enabled'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.dns_record (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.dns_record_id = _nr.dns_record_id;
+	NEW.dns_name = _nr.dns_name;
+	NEW.dns_domain_id = _nr.dns_domain_id;
+	NEW.dns_ttl = _nr.dns_ttl;
+	NEW.dns_class = _nr.dns_class;
+	NEW.dns_type = _nr.dns_type;
+	NEW.dns_value = _nr.dns_value;
+	NEW.dns_priority = _nr.dns_priority;
+	NEW.dns_srv_service = _nr.dns_srv_service;
+	NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+	NEW.dns_srv_weight = _nr.dns_srv_weight;
+	NEW.dns_srv_port = _nr.dns_srv_port;
+	NEW.netblock_id = _nr.netblock_id;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.reference_dns_record_id = _nr.reference_dns_record_id;
+	NEW.dns_value_record_id = _nr.dns_value_record_id;
+	NEW.should_generate_ptr = _nr.should_generate_ptr;
+	NEW.is_enabled = _nr.is_enabled;
 	RETURN NEW;
 END;
 $$
@@ -5103,67 +6046,67 @@ DECLARE
 BEGIN
 
 	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
-_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+_uq := array_append(_uq, 'dns_record_id = NEW.' || quote_ident('dns_record_id'));
 	END IF;
 
 	IF OLD.dns_name IS DISTINCT FROM NEW.dns_name THEN
-_uq := array_append(_uq, 'dns_name = ' || quote_nullable(NEW.dns_name));
+_uq := array_append(_uq, 'dns_name = NEW.' || quote_ident('dns_name'));
 	END IF;
 
 	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
-_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+_uq := array_append(_uq, 'dns_domain_id = NEW.' || quote_ident('dns_domain_id'));
 	END IF;
 
 	IF OLD.dns_ttl IS DISTINCT FROM NEW.dns_ttl THEN
-_uq := array_append(_uq, 'dns_ttl = ' || quote_nullable(NEW.dns_ttl));
+_uq := array_append(_uq, 'dns_ttl = NEW.' || quote_ident('dns_ttl'));
 	END IF;
 
 	IF OLD.dns_class IS DISTINCT FROM NEW.dns_class THEN
-_uq := array_append(_uq, 'dns_class = ' || quote_nullable(NEW.dns_class));
+_uq := array_append(_uq, 'dns_class = NEW.' || quote_ident('dns_class'));
 	END IF;
 
 	IF OLD.dns_type IS DISTINCT FROM NEW.dns_type THEN
-_uq := array_append(_uq, 'dns_type = ' || quote_nullable(NEW.dns_type));
+_uq := array_append(_uq, 'dns_type = NEW.' || quote_ident('dns_type'));
 	END IF;
 
 	IF OLD.dns_value IS DISTINCT FROM NEW.dns_value THEN
-_uq := array_append(_uq, 'dns_value = ' || quote_nullable(NEW.dns_value));
+_uq := array_append(_uq, 'dns_value = NEW.' || quote_ident('dns_value'));
 	END IF;
 
 	IF OLD.dns_priority IS DISTINCT FROM NEW.dns_priority THEN
-_uq := array_append(_uq, 'dns_priority = ' || quote_nullable(NEW.dns_priority));
+_uq := array_append(_uq, 'dns_priority = NEW.' || quote_ident('dns_priority'));
 	END IF;
 
 	IF OLD.dns_srv_service IS DISTINCT FROM NEW.dns_srv_service THEN
-_uq := array_append(_uq, 'dns_srv_service = ' || quote_nullable(NEW.dns_srv_service));
+_uq := array_append(_uq, 'dns_srv_service = NEW.' || quote_ident('dns_srv_service'));
 	END IF;
 
 	IF OLD.dns_srv_protocol IS DISTINCT FROM NEW.dns_srv_protocol THEN
-_uq := array_append(_uq, 'dns_srv_protocol = ' || quote_nullable(NEW.dns_srv_protocol));
+_uq := array_append(_uq, 'dns_srv_protocol = NEW.' || quote_ident('dns_srv_protocol'));
 	END IF;
 
 	IF OLD.dns_srv_weight IS DISTINCT FROM NEW.dns_srv_weight THEN
-_uq := array_append(_uq, 'dns_srv_weight = ' || quote_nullable(NEW.dns_srv_weight));
+_uq := array_append(_uq, 'dns_srv_weight = NEW.' || quote_ident('dns_srv_weight'));
 	END IF;
 
 	IF OLD.dns_srv_port IS DISTINCT FROM NEW.dns_srv_port THEN
-_uq := array_append(_uq, 'dns_srv_port = ' || quote_nullable(NEW.dns_srv_port));
+_uq := array_append(_uq, 'dns_srv_port = NEW.' || quote_ident('dns_srv_port'));
 	END IF;
 
 	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
-_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+_uq := array_append(_uq, 'netblock_id = NEW.' || quote_ident('netblock_id'));
 	END IF;
 
 	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
-_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+_uq := array_append(_uq, 'ip_universe_id = NEW.' || quote_ident('ip_universe_id'));
 	END IF;
 
 	IF OLD.reference_dns_record_id IS DISTINCT FROM NEW.reference_dns_record_id THEN
-_uq := array_append(_uq, 'reference_dns_record_id = ' || quote_nullable(NEW.reference_dns_record_id));
+_uq := array_append(_uq, 'reference_dns_record_id = NEW.' || quote_ident('reference_dns_record_id'));
 	END IF;
 
 	IF OLD.dns_value_record_id IS DISTINCT FROM NEW.dns_value_record_id THEN
-_uq := array_append(_uq, 'dns_value_record_id = ' || quote_nullable(NEW.dns_value_record_id));
+_uq := array_append(_uq, 'dns_value_record_id = NEW.' || quote_ident('dns_value_record_id'));
 	END IF;
 
 	IF OLD.should_generate_ptr IS DISTINCT FROM NEW.should_generate_ptr THEN
@@ -5278,15 +6221,48 @@ CREATE TRIGGER _trigger_dns_record_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.ip_universe%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.ip_universe (
-		ip_universe_id,ip_universe_name,ip_namespace,should_generate_dns,description
-	) VALUES (
-		NEW.ip_universe_id,NEW.ip_universe_name,NEW.ip_namespace,CASE WHEN NEW.should_generate_dns = 'Y' THEN true WHEN NEW.should_generate_dns = 'N' THEN false ELSE NULL END,NEW.description
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.ip_universe_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_universe_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF NEW.ip_universe_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_universe_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_universe_name));
+	END IF;
+
+	IF NEW.ip_namespace IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_namespace'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_namespace));
+	END IF;
+
+	IF NEW.should_generate_dns IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('should_generate_dns'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.should_generate_dns = 'Y' THEN true WHEN NEW.should_generate_dns = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.ip_universe (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.ip_universe_name = _nr.ip_universe_name;
+	NEW.ip_namespace = _nr.ip_namespace;
+	NEW.should_generate_dns = _nr.should_generate_dns;
+	NEW.description = _nr.description;
 	RETURN NEW;
 END;
 $$
@@ -5311,15 +6287,15 @@ DECLARE
 BEGIN
 
 	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
-_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+_uq := array_append(_uq, 'ip_universe_id = NEW.' || quote_ident('ip_universe_id'));
 	END IF;
 
 	IF OLD.ip_universe_name IS DISTINCT FROM NEW.ip_universe_name THEN
-_uq := array_append(_uq, 'ip_universe_name = ' || quote_nullable(NEW.ip_universe_name));
+_uq := array_append(_uq, 'ip_universe_name = NEW.' || quote_ident('ip_universe_name'));
 	END IF;
 
 	IF OLD.ip_namespace IS DISTINCT FROM NEW.ip_namespace THEN
-_uq := array_append(_uq, 'ip_namespace = ' || quote_nullable(NEW.ip_namespace));
+_uq := array_append(_uq, 'ip_namespace = NEW.' || quote_ident('ip_namespace'));
 	END IF;
 
 	IF OLD.should_generate_dns IS DISTINCT FROM NEW.should_generate_dns THEN
@@ -5333,7 +6309,7 @@ END IF;
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -5402,15 +6378,36 @@ CREATE TRIGGER _trigger_ip_universe_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_visibility_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.ip_universe_visibility%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.ip_universe_visibility (
-		ip_universe_id,visible_ip_universe_id,propagate_dns
-	) VALUES (
-		NEW.ip_universe_id,NEW.visible_ip_universe_id,CASE WHEN NEW.propagate_dns = 'Y' THEN true WHEN NEW.propagate_dns = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.ip_universe_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_universe_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF NEW.visible_ip_universe_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('visible_ip_universe_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.visible_ip_universe_id));
+	END IF;
+
+	IF NEW.propagate_dns IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('propagate_dns'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.propagate_dns = 'Y' THEN true WHEN NEW.propagate_dns = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.ip_universe_visibility (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
+	NEW.propagate_dns = _nr.propagate_dns;
 	RETURN NEW;
 END;
 $$
@@ -5435,11 +6432,11 @@ DECLARE
 BEGIN
 
 	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
-_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+_uq := array_append(_uq, 'ip_universe_id = NEW.' || quote_ident('ip_universe_id'));
 	END IF;
 
 	IF OLD.visible_ip_universe_id IS DISTINCT FROM NEW.visible_ip_universe_id THEN
-_uq := array_append(_uq, 'visible_ip_universe_id = ' || quote_nullable(NEW.visible_ip_universe_id));
+_uq := array_append(_uq, 'visible_ip_universe_id = NEW.' || quote_ident('visible_ip_universe_id'));
 	END IF;
 
 	IF OLD.propagate_dns IS DISTINCT FROM NEW.propagate_dns THEN
@@ -5514,15 +6511,78 @@ CREATE TRIGGER _trigger_ip_universe_visibility_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.netblock_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.netblock%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.netblock (
-		netblock_id,ip_address,netblock_type,is_single_address,can_subnet,parent_netblock_id,netblock_status,ip_universe_id,description,external_id
-	) VALUES (
-		NEW.netblock_id,NEW.ip_address,NEW.netblock_type,CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_subnet = 'Y' THEN true WHEN NEW.can_subnet = 'N' THEN false ELSE NULL END,NEW.parent_netblock_id,NEW.netblock_status,NEW.ip_universe_id,NEW.description,NEW.external_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.netblock_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_id));
+	END IF;
+
+	IF NEW.ip_address IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_address'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_address));
+	END IF;
+
+	IF NEW.netblock_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_type));
+	END IF;
+
+	IF NEW.is_single_address IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_single_address'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_single_address = 'Y' THEN true WHEN NEW.is_single_address = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.can_subnet IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_subnet'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_subnet = 'Y' THEN true WHEN NEW.can_subnet = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.parent_netblock_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('parent_netblock_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.parent_netblock_id));
+	END IF;
+
+	IF NEW.netblock_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_status));
+	END IF;
+
+	IF NEW.ip_universe_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ip_universe_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.ip_universe_id));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.external_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('external_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.external_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.netblock (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.netblock_id = _nr.netblock_id;
+	NEW.ip_address = _nr.ip_address;
+	NEW.netblock_type = _nr.netblock_type;
+	NEW.is_single_address = _nr.is_single_address;
+	NEW.can_subnet = _nr.can_subnet;
+	NEW.parent_netblock_id = _nr.parent_netblock_id;
+	NEW.netblock_status = _nr.netblock_status;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
 	RETURN NEW;
 END;
 $$
@@ -5547,15 +6607,15 @@ DECLARE
 BEGIN
 
 	IF OLD.netblock_id IS DISTINCT FROM NEW.netblock_id THEN
-_uq := array_append(_uq, 'netblock_id = ' || quote_nullable(NEW.netblock_id));
+_uq := array_append(_uq, 'netblock_id = NEW.' || quote_ident('netblock_id'));
 	END IF;
 
 	IF OLD.ip_address IS DISTINCT FROM NEW.ip_address THEN
-_uq := array_append(_uq, 'ip_address = ' || quote_nullable(NEW.ip_address));
+_uq := array_append(_uq, 'ip_address = NEW.' || quote_ident('ip_address'));
 	END IF;
 
 	IF OLD.netblock_type IS DISTINCT FROM NEW.netblock_type THEN
-_uq := array_append(_uq, 'netblock_type = ' || quote_nullable(NEW.netblock_type));
+_uq := array_append(_uq, 'netblock_type = NEW.' || quote_ident('netblock_type'));
 	END IF;
 
 	IF OLD.is_single_address IS DISTINCT FROM NEW.is_single_address THEN
@@ -5579,23 +6639,23 @@ END IF;
 	END IF;
 
 	IF OLD.parent_netblock_id IS DISTINCT FROM NEW.parent_netblock_id THEN
-_uq := array_append(_uq, 'parent_netblock_id = ' || quote_nullable(NEW.parent_netblock_id));
+_uq := array_append(_uq, 'parent_netblock_id = NEW.' || quote_ident('parent_netblock_id'));
 	END IF;
 
 	IF OLD.netblock_status IS DISTINCT FROM NEW.netblock_status THEN
-_uq := array_append(_uq, 'netblock_status = ' || quote_nullable(NEW.netblock_status));
+_uq := array_append(_uq, 'netblock_status = NEW.' || quote_ident('netblock_status'));
 	END IF;
 
 	IF OLD.ip_universe_id IS DISTINCT FROM NEW.ip_universe_id THEN
-_uq := array_append(_uq, 'ip_universe_id = ' || quote_nullable(NEW.ip_universe_id));
+_uq := array_append(_uq, 'ip_universe_id = NEW.' || quote_ident('ip_universe_id'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
-_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+_uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -5674,15 +6734,97 @@ CREATE TRIGGER _trigger_netblock_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.network_interface_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.layer3_interface%rowtype;
 BEGIN
 	-- XXX dropped columns: physical_port_id
-	INSERT INTO jazzhands.layer3_interface (
-		layer3_interface_id,device_id,layer3_interface_name,description,parent_layer3_interface_id,parent_relation_type,slot_id,logical_port_id,layer3_interface_type,is_interface_up,mac_addr,should_monitor,should_manage
-	) VALUES (
-		NEW.network_interface_id,NEW.device_id,NEW.network_interface_name,NEW.description,NEW.parent_network_interface_id,NEW.parent_relation_type,NEW.slot_id,NEW.logical_port_id,NEW.network_interface_type,CASE WHEN NEW.is_interface_up = 'Y' THEN true WHEN NEW.is_interface_up = 'N' THEN false ELSE NULL END,NEW.mac_addr,CASE WHEN NEW.should_monitor = 'Y' THEN true WHEN NEW.should_monitor = 'N' THEN false ELSE NULL END,CASE WHEN NEW.should_manage = 'Y' THEN true WHEN NEW.should_manage = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+
+	IF NEW.network_interface_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer3_interface_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_interface_id));
+	END IF;
+
+	IF NEW.device_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_id));
+	END IF;
+
+	IF NEW.network_interface_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer3_interface_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_interface_name));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.parent_network_interface_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('parent_layer3_interface_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.parent_network_interface_id));
+	END IF;
+
+	IF NEW.parent_relation_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('parent_relation_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.parent_relation_type));
+	END IF;
+
+	IF NEW.slot_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_id));
+	END IF;
+
+	IF NEW.logical_port_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('logical_port_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.logical_port_id));
+	END IF;
+
+	IF NEW.network_interface_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer3_interface_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_interface_type));
+	END IF;
+
+	IF NEW.is_interface_up IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_interface_up'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_interface_up = 'Y' THEN true WHEN NEW.is_interface_up = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.mac_addr IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('mac_addr'));
+		_vq := array_append(_vq, quote_nullable(NEW.mac_addr));
+	END IF;
+
+	IF NEW.should_monitor IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('should_monitor'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.should_monitor = 'Y' THEN true WHEN NEW.should_monitor = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.should_manage IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('should_manage'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.should_manage = 'Y' THEN true WHEN NEW.should_manage = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.layer3_interface (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.network_interface_id = _nr.layer3_interface_id;
+	NEW.device_id = _nr.device_id;
+	NEW.network_interface_name = _nr.layer3_interface_name;
+	NEW.description = _nr.description;
+	NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
+	NEW.parent_relation_type = _nr.parent_relation_type;
+	NEW.slot_id = _nr.slot_id;
+	NEW.logical_port_id = _nr.logical_port_id;
+	NEW.network_interface_type = _nr.layer3_interface_type;
+	NEW.is_interface_up = _nr.is_interface_up;
+	NEW.mac_addr = _nr.mac_addr;
+	NEW.should_monitor = _nr.should_monitor;
+	NEW.should_manage = _nr.should_manage;
 	RETURN NEW;
 END;
 $$
@@ -5708,39 +6850,39 @@ BEGIN
 	-- XXX dropped columns: physical_port_id
 
 	IF OLD.network_interface_id IS DISTINCT FROM NEW.network_interface_id THEN
-_uq := array_append(_uq, 'layer3_interface_id = ' || quote_nullable(NEW.network_interface_id));
+_uq := array_append(_uq, 'layer3_interface_id = NEW.' || quote_ident('network_interface_id'));
 	END IF;
 
 	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
-_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
+_uq := array_append(_uq, 'device_id = NEW.' || quote_ident('device_id'));
 	END IF;
 
 	IF OLD.network_interface_name IS DISTINCT FROM NEW.network_interface_name THEN
-_uq := array_append(_uq, 'layer3_interface_name = ' || quote_nullable(NEW.network_interface_name));
+_uq := array_append(_uq, 'layer3_interface_name = NEW.' || quote_ident('network_interface_name'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.parent_network_interface_id IS DISTINCT FROM NEW.parent_network_interface_id THEN
-_uq := array_append(_uq, 'parent_layer3_interface_id = ' || quote_nullable(NEW.parent_network_interface_id));
+_uq := array_append(_uq, 'parent_layer3_interface_id = NEW.' || quote_ident('parent_network_interface_id'));
 	END IF;
 
 	IF OLD.parent_relation_type IS DISTINCT FROM NEW.parent_relation_type THEN
-_uq := array_append(_uq, 'parent_relation_type = ' || quote_nullable(NEW.parent_relation_type));
+_uq := array_append(_uq, 'parent_relation_type = NEW.' || quote_ident('parent_relation_type'));
 	END IF;
 
 	IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
-_uq := array_append(_uq, 'slot_id = ' || quote_nullable(NEW.slot_id));
+_uq := array_append(_uq, 'slot_id = NEW.' || quote_ident('slot_id'));
 	END IF;
 
 	IF OLD.logical_port_id IS DISTINCT FROM NEW.logical_port_id THEN
-_uq := array_append(_uq, 'logical_port_id = ' || quote_nullable(NEW.logical_port_id));
+_uq := array_append(_uq, 'logical_port_id = NEW.' || quote_ident('logical_port_id'));
 	END IF;
 
 	IF OLD.network_interface_type IS DISTINCT FROM NEW.network_interface_type THEN
-_uq := array_append(_uq, 'layer3_interface_type = ' || quote_nullable(NEW.network_interface_type));
+_uq := array_append(_uq, 'layer3_interface_type = NEW.' || quote_ident('network_interface_type'));
 	END IF;
 
 	IF OLD.is_interface_up IS DISTINCT FROM NEW.is_interface_up THEN
@@ -5754,7 +6896,7 @@ END IF;
 	END IF;
 
 	IF OLD.mac_addr IS DISTINCT FROM NEW.mac_addr THEN
-_uq := array_append(_uq, 'mac_addr = ' || quote_nullable(NEW.mac_addr));
+_uq := array_append(_uq, 'mac_addr = NEW.' || quote_ident('mac_addr'));
 	END IF;
 
 	IF OLD.should_monitor IS DISTINCT FROM NEW.should_monitor THEN
@@ -5859,15 +7001,72 @@ CREATE TRIGGER _trigger_network_interface_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.network_service_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.network_service%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.network_service (
-		network_service_id,name,description,network_service_type,is_monitored,device_id,network_interface_id,dns_record_id,service_environment_id
-	) VALUES (
-		NEW.network_service_id,NEW.name,NEW.description,NEW.network_service_type,CASE WHEN NEW.is_monitored = 'Y' THEN true WHEN NEW.is_monitored = 'N' THEN false ELSE NULL END,NEW.device_id,NEW.network_interface_id,NEW.dns_record_id,NEW.service_environment_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.network_service_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('network_service_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_service_id));
+	END IF;
+
+	IF NEW.name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('name'));
+		_vq := array_append(_vq, quote_nullable(NEW.name));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.network_service_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('network_service_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_service_type));
+	END IF;
+
+	IF NEW.is_monitored IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_monitored'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_monitored = 'Y' THEN true WHEN NEW.is_monitored = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.device_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_id));
+	END IF;
+
+	IF NEW.network_interface_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('network_interface_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_interface_id));
+	END IF;
+
+	IF NEW.dns_record_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_record_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_record_id));
+	END IF;
+
+	IF NEW.service_environment_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('service_environment_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.service_environment_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.network_service (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.network_service_id = _nr.network_service_id;
+	NEW.name = _nr.name;
+	NEW.description = _nr.description;
+	NEW.network_service_type = _nr.network_service_type;
+	NEW.is_monitored = _nr.is_monitored;
+	NEW.device_id = _nr.device_id;
+	NEW.network_interface_id = _nr.network_interface_id;
+	NEW.dns_record_id = _nr.dns_record_id;
+	NEW.service_environment_id = _nr.service_environment_id;
 	RETURN NEW;
 END;
 $$
@@ -5892,19 +7091,19 @@ DECLARE
 BEGIN
 
 	IF OLD.network_service_id IS DISTINCT FROM NEW.network_service_id THEN
-_uq := array_append(_uq, 'network_service_id = ' || quote_nullable(NEW.network_service_id));
+_uq := array_append(_uq, 'network_service_id = NEW.' || quote_ident('network_service_id'));
 	END IF;
 
 	IF OLD.name IS DISTINCT FROM NEW.name THEN
-_uq := array_append(_uq, 'name = ' || quote_nullable(NEW.name));
+_uq := array_append(_uq, 'name = NEW.' || quote_ident('name'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.network_service_type IS DISTINCT FROM NEW.network_service_type THEN
-_uq := array_append(_uq, 'network_service_type = ' || quote_nullable(NEW.network_service_type));
+_uq := array_append(_uq, 'network_service_type = NEW.' || quote_ident('network_service_type'));
 	END IF;
 
 	IF OLD.is_monitored IS DISTINCT FROM NEW.is_monitored THEN
@@ -5918,19 +7117,19 @@ END IF;
 	END IF;
 
 	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
-_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
+_uq := array_append(_uq, 'device_id = NEW.' || quote_ident('device_id'));
 	END IF;
 
 	IF OLD.network_interface_id IS DISTINCT FROM NEW.network_interface_id THEN
-_uq := array_append(_uq, 'network_interface_id = ' || quote_nullable(NEW.network_interface_id));
+_uq := array_append(_uq, 'network_interface_id = NEW.' || quote_ident('network_interface_id'));
 	END IF;
 
 	IF OLD.dns_record_id IS DISTINCT FROM NEW.dns_record_id THEN
-_uq := array_append(_uq, 'dns_record_id = ' || quote_nullable(NEW.dns_record_id));
+_uq := array_append(_uq, 'dns_record_id = NEW.' || quote_ident('dns_record_id'));
 	END IF;
 
 	IF OLD.service_environment_id IS DISTINCT FROM NEW.service_environment_id THEN
-_uq := array_append(_uq, 'service_environment_id = ' || quote_nullable(NEW.service_environment_id));
+_uq := array_append(_uq, 'service_environment_id = NEW.' || quote_ident('service_environment_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -6007,15 +7206,42 @@ CREATE TRIGGER _trigger_network_service_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.person_auth_question_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.person_auth_question%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.person_auth_question (
-		auth_question_id,person_id,user_answer,is_active
-	) VALUES (
-		NEW.auth_question_id,NEW.person_id,NEW.user_answer,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.auth_question_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('auth_question_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.auth_question_id));
+	END IF;
+
+	IF NEW.person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_id));
+	END IF;
+
+	IF NEW.user_answer IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('user_answer'));
+		_vq := array_append(_vq, quote_nullable(NEW.user_answer));
+	END IF;
+
+	IF NEW.is_active IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_active'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.person_auth_question (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.auth_question_id = _nr.auth_question_id;
+	NEW.person_id = _nr.person_id;
+	NEW.user_answer = _nr.user_answer;
+	NEW.is_active = _nr.is_active;
 	RETURN NEW;
 END;
 $$
@@ -6040,15 +7266,15 @@ DECLARE
 BEGIN
 
 	IF OLD.auth_question_id IS DISTINCT FROM NEW.auth_question_id THEN
-_uq := array_append(_uq, 'auth_question_id = ' || quote_nullable(NEW.auth_question_id));
+_uq := array_append(_uq, 'auth_question_id = NEW.' || quote_ident('auth_question_id'));
 	END IF;
 
 	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
-_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+_uq := array_append(_uq, 'person_id = NEW.' || quote_ident('person_id'));
 	END IF;
 
 	IF OLD.user_answer IS DISTINCT FROM NEW.user_answer THEN
-_uq := array_append(_uq, 'user_answer = ' || quote_nullable(NEW.user_answer));
+_uq := array_append(_uq, 'user_answer = NEW.' || quote_ident('user_answer'));
 	END IF;
 
 	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
@@ -6125,15 +7351,96 @@ CREATE TRIGGER _trigger_person_auth_question_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.person_company_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.person_company%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.person_company (
-		company_id,person_id,person_company_status,person_company_relation,is_exempt,is_management,is_full_time,description,position_title,hire_date,termination_date,manager_person_id,nickname
-	) VALUES (
-		NEW.company_id,NEW.person_id,NEW.person_company_status,NEW.person_company_relation,CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END,NEW.description,NEW.position_title,NEW.hire_date,NEW.termination_date,NEW.manager_person_id,NEW.nickname
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_id));
+	END IF;
+
+	IF NEW.person_company_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_company_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_company_status));
+	END IF;
+
+	IF NEW.person_company_relation IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_company_relation'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_company_relation));
+	END IF;
+
+	IF NEW.is_exempt IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_exempt'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_management IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_management'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_full_time IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_full_time'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.position_title IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('position_title'));
+		_vq := array_append(_vq, quote_nullable(NEW.position_title));
+	END IF;
+
+	IF NEW.hire_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('hire_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.hire_date));
+	END IF;
+
+	IF NEW.termination_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('termination_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.termination_date));
+	END IF;
+
+	IF NEW.manager_person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('manager_person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.manager_person_id));
+	END IF;
+
+	IF NEW.nickname IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('nickname'));
+		_vq := array_append(_vq, quote_nullable(NEW.nickname));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.person_company (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.company_id = _nr.company_id;
+	NEW.person_id = _nr.person_id;
+	NEW.person_company_status = _nr.person_company_status;
+	NEW.person_company_relation = _nr.person_company_relation;
+	NEW.is_exempt = _nr.is_exempt;
+	NEW.is_management = _nr.is_management;
+	NEW.is_full_time = _nr.is_full_time;
+	NEW.description = _nr.description;
+	NEW.position_title = _nr.position_title;
+	NEW.hire_date = _nr.hire_date;
+	NEW.termination_date = _nr.termination_date;
+	NEW.manager_person_id = _nr.manager_person_id;
+	NEW.nickname = _nr.nickname;
 	RETURN NEW;
 END;
 $$
@@ -6158,19 +7465,19 @@ DECLARE
 BEGIN
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
-_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+_uq := array_append(_uq, 'person_id = NEW.' || quote_ident('person_id'));
 	END IF;
 
 	IF OLD.person_company_status IS DISTINCT FROM NEW.person_company_status THEN
-_uq := array_append(_uq, 'person_company_status = ' || quote_nullable(NEW.person_company_status));
+_uq := array_append(_uq, 'person_company_status = NEW.' || quote_ident('person_company_status'));
 	END IF;
 
 	IF OLD.person_company_relation IS DISTINCT FROM NEW.person_company_relation THEN
-_uq := array_append(_uq, 'person_company_relation = ' || quote_nullable(NEW.person_company_relation));
+_uq := array_append(_uq, 'person_company_relation = NEW.' || quote_ident('person_company_relation'));
 	END IF;
 
 	IF OLD.is_exempt IS DISTINCT FROM NEW.is_exempt THEN
@@ -6204,27 +7511,27 @@ END IF;
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.position_title IS DISTINCT FROM NEW.position_title THEN
-_uq := array_append(_uq, 'position_title = ' || quote_nullable(NEW.position_title));
+_uq := array_append(_uq, 'position_title = NEW.' || quote_ident('position_title'));
 	END IF;
 
 	IF OLD.hire_date IS DISTINCT FROM NEW.hire_date THEN
-_uq := array_append(_uq, 'hire_date = ' || quote_nullable(NEW.hire_date));
+_uq := array_append(_uq, 'hire_date = NEW.' || quote_ident('hire_date'));
 	END IF;
 
 	IF OLD.termination_date IS DISTINCT FROM NEW.termination_date THEN
-_uq := array_append(_uq, 'termination_date = ' || quote_nullable(NEW.termination_date));
+_uq := array_append(_uq, 'termination_date = NEW.' || quote_ident('termination_date'));
 	END IF;
 
 	IF OLD.manager_person_id IS DISTINCT FROM NEW.manager_person_id THEN
-_uq := array_append(_uq, 'manager_person_id = ' || quote_nullable(NEW.manager_person_id));
+_uq := array_append(_uq, 'manager_person_id = NEW.' || quote_ident('manager_person_id'));
 	END IF;
 
 	IF OLD.nickname IS DISTINCT FROM NEW.nickname THEN
-_uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
+_uq := array_append(_uq, 'nickname = NEW.' || quote_ident('nickname'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -6309,15 +7616,60 @@ CREATE TRIGGER _trigger_person_company_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.private_key_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.private_key%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.private_key (
-		private_key_id,private_key_encryption_type,is_active,subject_key_identifier,private_key,passphrase,encryption_key_id
-	) VALUES (
-		NEW.private_key_id,NEW.private_key_encryption_type,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,NEW.subject_key_identifier,NEW.private_key,NEW.passphrase,NEW.encryption_key_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.private_key_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('private_key_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.private_key_id));
+	END IF;
+
+	IF NEW.private_key_encryption_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('private_key_encryption_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.private_key_encryption_type));
+	END IF;
+
+	IF NEW.is_active IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_active'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.subject_key_identifier IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('subject_key_identifier'));
+		_vq := array_append(_vq, quote_nullable(NEW.subject_key_identifier));
+	END IF;
+
+	IF NEW.private_key IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('private_key'));
+		_vq := array_append(_vq, quote_nullable(NEW.private_key));
+	END IF;
+
+	IF NEW.passphrase IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('passphrase'));
+		_vq := array_append(_vq, quote_nullable(NEW.passphrase));
+	END IF;
+
+	IF NEW.encryption_key_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('encryption_key_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.encryption_key_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.private_key (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.private_key_id = _nr.private_key_id;
+	NEW.private_key_encryption_type = _nr.private_key_encryption_type;
+	NEW.is_active = _nr.is_active;
+	NEW.subject_key_identifier = _nr.subject_key_identifier;
+	NEW.private_key = _nr.private_key;
+	NEW.passphrase = _nr.passphrase;
+	NEW.encryption_key_id = _nr.encryption_key_id;
 	RETURN NEW;
 END;
 $$
@@ -6342,11 +7694,11 @@ DECLARE
 BEGIN
 
 	IF OLD.private_key_id IS DISTINCT FROM NEW.private_key_id THEN
-_uq := array_append(_uq, 'private_key_id = ' || quote_nullable(NEW.private_key_id));
+_uq := array_append(_uq, 'private_key_id = NEW.' || quote_ident('private_key_id'));
 	END IF;
 
 	IF OLD.private_key_encryption_type IS DISTINCT FROM NEW.private_key_encryption_type THEN
-_uq := array_append(_uq, 'private_key_encryption_type = ' || quote_nullable(NEW.private_key_encryption_type));
+_uq := array_append(_uq, 'private_key_encryption_type = NEW.' || quote_ident('private_key_encryption_type'));
 	END IF;
 
 	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
@@ -6360,19 +7712,19 @@ END IF;
 	END IF;
 
 	IF OLD.subject_key_identifier IS DISTINCT FROM NEW.subject_key_identifier THEN
-_uq := array_append(_uq, 'subject_key_identifier = ' || quote_nullable(NEW.subject_key_identifier));
+_uq := array_append(_uq, 'subject_key_identifier = NEW.' || quote_ident('subject_key_identifier'));
 	END IF;
 
 	IF OLD.private_key IS DISTINCT FROM NEW.private_key THEN
-_uq := array_append(_uq, 'private_key = ' || quote_nullable(NEW.private_key));
+_uq := array_append(_uq, 'private_key = NEW.' || quote_ident('private_key'));
 	END IF;
 
 	IF OLD.passphrase IS DISTINCT FROM NEW.passphrase THEN
-_uq := array_append(_uq, 'passphrase = ' || quote_nullable(NEW.passphrase));
+_uq := array_append(_uq, 'passphrase = NEW.' || quote_ident('passphrase'));
 	END IF;
 
 	IF OLD.encryption_key_id IS DISTINCT FROM NEW.encryption_key_id THEN
-_uq := array_append(_uq, 'encryption_key_id = ' || quote_nullable(NEW.encryption_key_id));
+_uq := array_append(_uq, 'encryption_key_id = NEW.' || quote_ident('encryption_key_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -6445,15 +7797,228 @@ CREATE TRIGGER _trigger_private_key_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.property_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.property%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.property (
-		property_id,account_collection_id,account_id,account_realm_id,company_collection_id,company_id,device_collection_id,dns_domain_collection_id,layer2_network_collection_id,layer3_network_collection_id,netblock_collection_id,network_range_id,operating_system_id,operating_system_snapshot_id,person_id,property_name_collection_id,service_environment_collection_id,site_code,x509_signed_certificate_id,property_name,property_type,property_value,property_value_timestamp,property_value_account_collection_id,property_value_device_collection_id,property_value_json,property_value_netblock_collection_id,property_value_password_type,property_value_person_id,property_value_sw_package_id,property_value_token_collection_id,property_rank,start_date,finish_date,is_enabled
-	) VALUES (
-		NEW.property_id,NEW.account_collection_id,NEW.account_id,NEW.account_realm_id,NEW.company_collection_id,NEW.company_id,NEW.device_collection_id,NEW.dns_domain_collection_id,NEW.layer2_network_collection_id,NEW.layer3_network_collection_id,NEW.netblock_collection_id,NEW.network_range_id,NEW.operating_system_id,NEW.operating_system_snapshot_id,NEW.person_id,NEW.property_collection_id,NEW.service_env_collection_id,NEW.site_code,NEW.x509_signed_certificate_id,NEW.property_name,NEW.property_type,NEW.property_value,NEW.property_value_timestamp,NEW.property_value_account_coll_id,NEW.property_value_device_coll_id,NEW.property_value_json,NEW.property_value_nblk_coll_id,NEW.property_value_password_type,NEW.property_value_person_id,NEW.property_value_sw_package_id,NEW.property_value_token_col_id,NEW.property_rank,NEW.start_date,NEW.finish_date,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.property_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_id));
+	END IF;
+
+	IF NEW.account_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_collection_id));
+	END IF;
+
+	IF NEW.account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_id));
+	END IF;
+
+	IF NEW.account_realm_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_realm_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF NEW.company_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_collection_id));
+	END IF;
+
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.device_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_collection_id));
+	END IF;
+
+	IF NEW.dns_domain_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_collection_id));
+	END IF;
+
+	IF NEW.layer2_network_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer2_network_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.layer2_network_collection_id));
+	END IF;
+
+	IF NEW.layer3_network_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer3_network_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.layer3_network_collection_id));
+	END IF;
+
+	IF NEW.netblock_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_collection_id));
+	END IF;
+
+	IF NEW.network_range_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('network_range_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_range_id));
+	END IF;
+
+	IF NEW.operating_system_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('operating_system_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.operating_system_id));
+	END IF;
+
+	IF NEW.operating_system_snapshot_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('operating_system_snapshot_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.operating_system_snapshot_id));
+	END IF;
+
+	IF NEW.person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_id));
+	END IF;
+
+	IF NEW.property_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_name_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_collection_id));
+	END IF;
+
+	IF NEW.service_env_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('service_environment_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.service_env_collection_id));
+	END IF;
+
+	IF NEW.site_code IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('site_code'));
+		_vq := array_append(_vq, quote_nullable(NEW.site_code));
+	END IF;
+
+	IF NEW.x509_signed_certificate_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_signed_certificate_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_signed_certificate_id));
+	END IF;
+
+	IF NEW.property_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_name));
+	END IF;
+
+	IF NEW.property_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_type));
+	END IF;
+
+	IF NEW.property_value IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value));
+	END IF;
+
+	IF NEW.property_value_timestamp IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_timestamp'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_timestamp));
+	END IF;
+
+	IF NEW.property_value_account_coll_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_account_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_account_coll_id));
+	END IF;
+
+	IF NEW.property_value_device_coll_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_device_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_device_coll_id));
+	END IF;
+
+	IF NEW.property_value_json IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_json'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_json));
+	END IF;
+
+	IF NEW.property_value_nblk_coll_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_netblock_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_nblk_coll_id));
+	END IF;
+
+	IF NEW.property_value_password_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_password_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_password_type));
+	END IF;
+
+	IF NEW.property_value_person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_person_id));
+	END IF;
+
+	IF NEW.property_value_sw_package_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_sw_package_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_sw_package_id));
+	END IF;
+
+	IF NEW.property_value_token_col_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_token_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_token_col_id));
+	END IF;
+
+	IF NEW.property_rank IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_rank'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_rank));
+	END IF;
+
+	IF NEW.start_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('start_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.start_date));
+	END IF;
+
+	IF NEW.finish_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('finish_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.finish_date));
+	END IF;
+
+	IF NEW.is_enabled IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_enabled'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.property (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.property_id = _nr.property_id;
+	NEW.account_collection_id = _nr.account_collection_id;
+	NEW.account_id = _nr.account_id;
+	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.company_collection_id = _nr.company_collection_id;
+	NEW.company_id = _nr.company_id;
+	NEW.device_collection_id = _nr.device_collection_id;
+	NEW.dns_domain_collection_id = _nr.dns_domain_collection_id;
+	NEW.layer2_network_collection_id = _nr.layer2_network_collection_id;
+	NEW.layer3_network_collection_id = _nr.layer3_network_collection_id;
+	NEW.netblock_collection_id = _nr.netblock_collection_id;
+	NEW.network_range_id = _nr.network_range_id;
+	NEW.operating_system_id = _nr.operating_system_id;
+	NEW.operating_system_snapshot_id = _nr.operating_system_snapshot_id;
+	NEW.person_id = _nr.person_id;
+	NEW.property_collection_id = _nr.property_name_collection_id;
+	NEW.service_env_collection_id = _nr.service_environment_collection_id;
+	NEW.site_code = _nr.site_code;
+	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+	NEW.property_name = _nr.property_name;
+	NEW.property_type = _nr.property_type;
+	NEW.property_value = _nr.property_value;
+	NEW.property_value_timestamp = _nr.property_value_timestamp;
+	NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
+	NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
+	NEW.property_value_json = _nr.property_value_json;
+	NEW.property_value_nblk_coll_id = _nr.property_value_netblock_collection_id;
+	NEW.property_value_password_type = _nr.property_value_password_type;
+	NEW.property_value_person_id = _nr.property_value_person_id;
+	NEW.property_value_sw_package_id = _nr.property_value_sw_package_id;
+	NEW.property_value_token_col_id = _nr.property_value_token_collection_id;
+	NEW.property_rank = _nr.property_rank;
+	NEW.start_date = _nr.start_date;
+	NEW.finish_date = _nr.finish_date;
+	NEW.is_enabled = _nr.is_enabled;
 	RETURN NEW;
 END;
 $$
@@ -6478,139 +8043,139 @@ DECLARE
 BEGIN
 
 	IF OLD.property_id IS DISTINCT FROM NEW.property_id THEN
-_uq := array_append(_uq, 'property_id = ' || quote_nullable(NEW.property_id));
+_uq := array_append(_uq, 'property_id = NEW.' || quote_ident('property_id'));
 	END IF;
 
 	IF OLD.account_collection_id IS DISTINCT FROM NEW.account_collection_id THEN
-_uq := array_append(_uq, 'account_collection_id = ' || quote_nullable(NEW.account_collection_id));
+_uq := array_append(_uq, 'account_collection_id = NEW.' || quote_ident('account_collection_id'));
 	END IF;
 
 	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
-_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+_uq := array_append(_uq, 'account_id = NEW.' || quote_ident('account_id'));
 	END IF;
 
 	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
-_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+_uq := array_append(_uq, 'account_realm_id = NEW.' || quote_ident('account_realm_id'));
 	END IF;
 
 	IF OLD.company_collection_id IS DISTINCT FROM NEW.company_collection_id THEN
-_uq := array_append(_uq, 'company_collection_id = ' || quote_nullable(NEW.company_collection_id));
+_uq := array_append(_uq, 'company_collection_id = NEW.' || quote_ident('company_collection_id'));
 	END IF;
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.device_collection_id IS DISTINCT FROM NEW.device_collection_id THEN
-_uq := array_append(_uq, 'device_collection_id = ' || quote_nullable(NEW.device_collection_id));
+_uq := array_append(_uq, 'device_collection_id = NEW.' || quote_ident('device_collection_id'));
 	END IF;
 
 	IF OLD.dns_domain_collection_id IS DISTINCT FROM NEW.dns_domain_collection_id THEN
-_uq := array_append(_uq, 'dns_domain_collection_id = ' || quote_nullable(NEW.dns_domain_collection_id));
+_uq := array_append(_uq, 'dns_domain_collection_id = NEW.' || quote_ident('dns_domain_collection_id'));
 	END IF;
 
 	IF OLD.layer2_network_collection_id IS DISTINCT FROM NEW.layer2_network_collection_id THEN
-_uq := array_append(_uq, 'layer2_network_collection_id = ' || quote_nullable(NEW.layer2_network_collection_id));
+_uq := array_append(_uq, 'layer2_network_collection_id = NEW.' || quote_ident('layer2_network_collection_id'));
 	END IF;
 
 	IF OLD.layer3_network_collection_id IS DISTINCT FROM NEW.layer3_network_collection_id THEN
-_uq := array_append(_uq, 'layer3_network_collection_id = ' || quote_nullable(NEW.layer3_network_collection_id));
+_uq := array_append(_uq, 'layer3_network_collection_id = NEW.' || quote_ident('layer3_network_collection_id'));
 	END IF;
 
 	IF OLD.netblock_collection_id IS DISTINCT FROM NEW.netblock_collection_id THEN
-_uq := array_append(_uq, 'netblock_collection_id = ' || quote_nullable(NEW.netblock_collection_id));
+_uq := array_append(_uq, 'netblock_collection_id = NEW.' || quote_ident('netblock_collection_id'));
 	END IF;
 
 	IF OLD.network_range_id IS DISTINCT FROM NEW.network_range_id THEN
-_uq := array_append(_uq, 'network_range_id = ' || quote_nullable(NEW.network_range_id));
+_uq := array_append(_uq, 'network_range_id = NEW.' || quote_ident('network_range_id'));
 	END IF;
 
 	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
-_uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
+_uq := array_append(_uq, 'operating_system_id = NEW.' || quote_ident('operating_system_id'));
 	END IF;
 
 	IF OLD.operating_system_snapshot_id IS DISTINCT FROM NEW.operating_system_snapshot_id THEN
-_uq := array_append(_uq, 'operating_system_snapshot_id = ' || quote_nullable(NEW.operating_system_snapshot_id));
+_uq := array_append(_uq, 'operating_system_snapshot_id = NEW.' || quote_ident('operating_system_snapshot_id'));
 	END IF;
 
 	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
-_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+_uq := array_append(_uq, 'person_id = NEW.' || quote_ident('person_id'));
 	END IF;
 
 	IF OLD.property_collection_id IS DISTINCT FROM NEW.property_collection_id THEN
-_uq := array_append(_uq, 'property_name_collection_id = ' || quote_nullable(NEW.property_collection_id));
+_uq := array_append(_uq, 'property_name_collection_id = NEW.' || quote_ident('property_collection_id'));
 	END IF;
 
 	IF OLD.service_env_collection_id IS DISTINCT FROM NEW.service_env_collection_id THEN
-_uq := array_append(_uq, 'service_environment_collection_id = ' || quote_nullable(NEW.service_env_collection_id));
+_uq := array_append(_uq, 'service_environment_collection_id = NEW.' || quote_ident('service_env_collection_id'));
 	END IF;
 
 	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
-_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+_uq := array_append(_uq, 'site_code = NEW.' || quote_ident('site_code'));
 	END IF;
 
 	IF OLD.x509_signed_certificate_id IS DISTINCT FROM NEW.x509_signed_certificate_id THEN
-_uq := array_append(_uq, 'x509_signed_certificate_id = ' || quote_nullable(NEW.x509_signed_certificate_id));
+_uq := array_append(_uq, 'x509_signed_certificate_id = NEW.' || quote_ident('x509_signed_certificate_id'));
 	END IF;
 
 	IF OLD.property_name IS DISTINCT FROM NEW.property_name THEN
-_uq := array_append(_uq, 'property_name = ' || quote_nullable(NEW.property_name));
+_uq := array_append(_uq, 'property_name = NEW.' || quote_ident('property_name'));
 	END IF;
 
 	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
-_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+_uq := array_append(_uq, 'property_type = NEW.' || quote_ident('property_type'));
 	END IF;
 
 	IF OLD.property_value IS DISTINCT FROM NEW.property_value THEN
-_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+_uq := array_append(_uq, 'property_value = NEW.' || quote_ident('property_value'));
 	END IF;
 
 	IF OLD.property_value_timestamp IS DISTINCT FROM NEW.property_value_timestamp THEN
-_uq := array_append(_uq, 'property_value_timestamp = ' || quote_nullable(NEW.property_value_timestamp));
+_uq := array_append(_uq, 'property_value_timestamp = NEW.' || quote_ident('property_value_timestamp'));
 	END IF;
 
 	IF OLD.property_value_account_coll_id IS DISTINCT FROM NEW.property_value_account_coll_id THEN
-_uq := array_append(_uq, 'property_value_account_collection_id = ' || quote_nullable(NEW.property_value_account_coll_id));
+_uq := array_append(_uq, 'property_value_account_collection_id = NEW.' || quote_ident('property_value_account_coll_id'));
 	END IF;
 
 	IF OLD.property_value_device_coll_id IS DISTINCT FROM NEW.property_value_device_coll_id THEN
-_uq := array_append(_uq, 'property_value_device_collection_id = ' || quote_nullable(NEW.property_value_device_coll_id));
+_uq := array_append(_uq, 'property_value_device_collection_id = NEW.' || quote_ident('property_value_device_coll_id'));
 	END IF;
 
 	IF OLD.property_value_json IS DISTINCT FROM NEW.property_value_json THEN
-_uq := array_append(_uq, 'property_value_json = ' || quote_nullable(NEW.property_value_json));
+_uq := array_append(_uq, 'property_value_json = NEW.' || quote_ident('property_value_json'));
 	END IF;
 
 	IF OLD.property_value_nblk_coll_id IS DISTINCT FROM NEW.property_value_nblk_coll_id THEN
-_uq := array_append(_uq, 'property_value_netblock_collection_id = ' || quote_nullable(NEW.property_value_nblk_coll_id));
+_uq := array_append(_uq, 'property_value_netblock_collection_id = NEW.' || quote_ident('property_value_nblk_coll_id'));
 	END IF;
 
 	IF OLD.property_value_password_type IS DISTINCT FROM NEW.property_value_password_type THEN
-_uq := array_append(_uq, 'property_value_password_type = ' || quote_nullable(NEW.property_value_password_type));
+_uq := array_append(_uq, 'property_value_password_type = NEW.' || quote_ident('property_value_password_type'));
 	END IF;
 
 	IF OLD.property_value_person_id IS DISTINCT FROM NEW.property_value_person_id THEN
-_uq := array_append(_uq, 'property_value_person_id = ' || quote_nullable(NEW.property_value_person_id));
+_uq := array_append(_uq, 'property_value_person_id = NEW.' || quote_ident('property_value_person_id'));
 	END IF;
 
 	IF OLD.property_value_sw_package_id IS DISTINCT FROM NEW.property_value_sw_package_id THEN
-_uq := array_append(_uq, 'property_value_sw_package_id = ' || quote_nullable(NEW.property_value_sw_package_id));
+_uq := array_append(_uq, 'property_value_sw_package_id = NEW.' || quote_ident('property_value_sw_package_id'));
 	END IF;
 
 	IF OLD.property_value_token_col_id IS DISTINCT FROM NEW.property_value_token_col_id THEN
-_uq := array_append(_uq, 'property_value_token_collection_id = ' || quote_nullable(NEW.property_value_token_col_id));
+_uq := array_append(_uq, 'property_value_token_collection_id = NEW.' || quote_ident('property_value_token_col_id'));
 	END IF;
 
 	IF OLD.property_rank IS DISTINCT FROM NEW.property_rank THEN
-_uq := array_append(_uq, 'property_rank = ' || quote_nullable(NEW.property_rank));
+_uq := array_append(_uq, 'property_rank = NEW.' || quote_ident('property_rank'));
 	END IF;
 
 	IF OLD.start_date IS DISTINCT FROM NEW.start_date THEN
-_uq := array_append(_uq, 'start_date = ' || quote_nullable(NEW.start_date));
+_uq := array_append(_uq, 'start_date = NEW.' || quote_ident('start_date'));
 	END IF;
 
 	IF OLD.finish_date IS DISTINCT FROM NEW.finish_date THEN
-_uq := array_append(_uq, 'finish_date = ' || quote_nullable(NEW.finish_date));
+_uq := array_append(_uq, 'finish_date = NEW.' || quote_ident('finish_date'));
 	END IF;
 
 	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
@@ -6749,15 +8314,84 @@ CREATE TRIGGER _trigger_property_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.rack_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.rack%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.rack (
-		rack_id,site_code,room,sub_room,rack_row,rack_name,rack_style,rack_type,description,rack_height_in_u,display_from_bottom
-	) VALUES (
-		NEW.rack_id,NEW.site_code,NEW.room,NEW.sub_room,NEW.rack_row,NEW.rack_name,NEW.rack_style,NEW.rack_type,NEW.description,NEW.rack_height_in_u,CASE WHEN NEW.display_from_bottom = 'Y' THEN true WHEN NEW.display_from_bottom = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.rack_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_id));
+	END IF;
+
+	IF NEW.site_code IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('site_code'));
+		_vq := array_append(_vq, quote_nullable(NEW.site_code));
+	END IF;
+
+	IF NEW.room IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('room'));
+		_vq := array_append(_vq, quote_nullable(NEW.room));
+	END IF;
+
+	IF NEW.sub_room IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('sub_room'));
+		_vq := array_append(_vq, quote_nullable(NEW.sub_room));
+	END IF;
+
+	IF NEW.rack_row IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_row'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_row));
+	END IF;
+
+	IF NEW.rack_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_name));
+	END IF;
+
+	IF NEW.rack_style IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_style'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_style));
+	END IF;
+
+	IF NEW.rack_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.rack_height_in_u IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('rack_height_in_u'));
+		_vq := array_append(_vq, quote_nullable(NEW.rack_height_in_u));
+	END IF;
+
+	IF NEW.display_from_bottom IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('display_from_bottom'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.display_from_bottom = 'Y' THEN true WHEN NEW.display_from_bottom = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.rack (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.rack_id = _nr.rack_id;
+	NEW.site_code = _nr.site_code;
+	NEW.room = _nr.room;
+	NEW.sub_room = _nr.sub_room;
+	NEW.rack_row = _nr.rack_row;
+	NEW.rack_name = _nr.rack_name;
+	NEW.rack_style = _nr.rack_style;
+	NEW.rack_type = _nr.rack_type;
+	NEW.description = _nr.description;
+	NEW.rack_height_in_u = _nr.rack_height_in_u;
+	NEW.display_from_bottom = _nr.display_from_bottom;
 	RETURN NEW;
 END;
 $$
@@ -6782,43 +8416,43 @@ DECLARE
 BEGIN
 
 	IF OLD.rack_id IS DISTINCT FROM NEW.rack_id THEN
-_uq := array_append(_uq, 'rack_id = ' || quote_nullable(NEW.rack_id));
+_uq := array_append(_uq, 'rack_id = NEW.' || quote_ident('rack_id'));
 	END IF;
 
 	IF OLD.site_code IS DISTINCT FROM NEW.site_code THEN
-_uq := array_append(_uq, 'site_code = ' || quote_nullable(NEW.site_code));
+_uq := array_append(_uq, 'site_code = NEW.' || quote_ident('site_code'));
 	END IF;
 
 	IF OLD.room IS DISTINCT FROM NEW.room THEN
-_uq := array_append(_uq, 'room = ' || quote_nullable(NEW.room));
+_uq := array_append(_uq, 'room = NEW.' || quote_ident('room'));
 	END IF;
 
 	IF OLD.sub_room IS DISTINCT FROM NEW.sub_room THEN
-_uq := array_append(_uq, 'sub_room = ' || quote_nullable(NEW.sub_room));
+_uq := array_append(_uq, 'sub_room = NEW.' || quote_ident('sub_room'));
 	END IF;
 
 	IF OLD.rack_row IS DISTINCT FROM NEW.rack_row THEN
-_uq := array_append(_uq, 'rack_row = ' || quote_nullable(NEW.rack_row));
+_uq := array_append(_uq, 'rack_row = NEW.' || quote_ident('rack_row'));
 	END IF;
 
 	IF OLD.rack_name IS DISTINCT FROM NEW.rack_name THEN
-_uq := array_append(_uq, 'rack_name = ' || quote_nullable(NEW.rack_name));
+_uq := array_append(_uq, 'rack_name = NEW.' || quote_ident('rack_name'));
 	END IF;
 
 	IF OLD.rack_style IS DISTINCT FROM NEW.rack_style THEN
-_uq := array_append(_uq, 'rack_style = ' || quote_nullable(NEW.rack_style));
+_uq := array_append(_uq, 'rack_style = NEW.' || quote_ident('rack_style'));
 	END IF;
 
 	IF OLD.rack_type IS DISTINCT FROM NEW.rack_type THEN
-_uq := array_append(_uq, 'rack_type = ' || quote_nullable(NEW.rack_type));
+_uq := array_append(_uq, 'rack_type = NEW.' || quote_ident('rack_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.rack_height_in_u IS DISTINCT FROM NEW.rack_height_in_u THEN
-_uq := array_append(_uq, 'rack_height_in_u = ' || quote_nullable(NEW.rack_height_in_u));
+_uq := array_append(_uq, 'rack_height_in_u = NEW.' || quote_ident('rack_height_in_u'));
 	END IF;
 
 	IF OLD.display_from_bottom IS DISTINCT FROM NEW.display_from_bottom THEN
@@ -6909,15 +8543,102 @@ CREATE TRIGGER _trigger_rack_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.slot%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.slot (
-		slot_id,component_id,slot_name,slot_index,slot_type_id,component_type_slot_template_id,is_enabled,physical_label,mac_address,description,slot_x_offset,slot_y_offset,slot_z_offset,slot_side
-	) VALUES (
-		NEW.slot_id,NEW.component_id,NEW.slot_name,NEW.slot_index,NEW.slot_type_id,NEW.component_type_slot_tmplt_id,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,NEW.physical_label,NEW.mac_address,NEW.description,NEW.slot_x_offset,NEW.slot_y_offset,NEW.slot_z_offset,NEW.slot_side
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.slot_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_id));
+	END IF;
+
+	IF NEW.component_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_id));
+	END IF;
+
+	IF NEW.slot_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_name));
+	END IF;
+
+	IF NEW.slot_index IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_index'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_index));
+	END IF;
+
+	IF NEW.slot_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_type_id));
+	END IF;
+
+	IF NEW.component_type_slot_tmplt_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_type_slot_template_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_type_slot_tmplt_id));
+	END IF;
+
+	IF NEW.is_enabled IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_enabled'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.physical_label IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('physical_label'));
+		_vq := array_append(_vq, quote_nullable(NEW.physical_label));
+	END IF;
+
+	IF NEW.mac_address IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('mac_address'));
+		_vq := array_append(_vq, quote_nullable(NEW.mac_address));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.slot_x_offset IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_x_offset'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_x_offset));
+	END IF;
+
+	IF NEW.slot_y_offset IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_y_offset'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_y_offset));
+	END IF;
+
+	IF NEW.slot_z_offset IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_z_offset'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_z_offset));
+	END IF;
+
+	IF NEW.slot_side IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_side'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_side));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.slot (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.slot_id = _nr.slot_id;
+	NEW.component_id = _nr.component_id;
+	NEW.slot_name = _nr.slot_name;
+	NEW.slot_index = _nr.slot_index;
+	NEW.slot_type_id = _nr.slot_type_id;
+	NEW.component_type_slot_tmplt_id = _nr.component_type_slot_template_id;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.physical_label = _nr.physical_label;
+	NEW.mac_address = _nr.mac_address;
+	NEW.description = _nr.description;
+	NEW.slot_x_offset = _nr.slot_x_offset;
+	NEW.slot_y_offset = _nr.slot_y_offset;
+	NEW.slot_z_offset = _nr.slot_z_offset;
+	NEW.slot_side = _nr.slot_side;
 	RETURN NEW;
 END;
 $$
@@ -6942,27 +8663,27 @@ DECLARE
 BEGIN
 
 	IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
-_uq := array_append(_uq, 'slot_id = ' || quote_nullable(NEW.slot_id));
+_uq := array_append(_uq, 'slot_id = NEW.' || quote_ident('slot_id'));
 	END IF;
 
 	IF OLD.component_id IS DISTINCT FROM NEW.component_id THEN
-_uq := array_append(_uq, 'component_id = ' || quote_nullable(NEW.component_id));
+_uq := array_append(_uq, 'component_id = NEW.' || quote_ident('component_id'));
 	END IF;
 
 	IF OLD.slot_name IS DISTINCT FROM NEW.slot_name THEN
-_uq := array_append(_uq, 'slot_name = ' || quote_nullable(NEW.slot_name));
+_uq := array_append(_uq, 'slot_name = NEW.' || quote_ident('slot_name'));
 	END IF;
 
 	IF OLD.slot_index IS DISTINCT FROM NEW.slot_index THEN
-_uq := array_append(_uq, 'slot_index = ' || quote_nullable(NEW.slot_index));
+_uq := array_append(_uq, 'slot_index = NEW.' || quote_ident('slot_index'));
 	END IF;
 
 	IF OLD.slot_type_id IS DISTINCT FROM NEW.slot_type_id THEN
-_uq := array_append(_uq, 'slot_type_id = ' || quote_nullable(NEW.slot_type_id));
+_uq := array_append(_uq, 'slot_type_id = NEW.' || quote_ident('slot_type_id'));
 	END IF;
 
 	IF OLD.component_type_slot_tmplt_id IS DISTINCT FROM NEW.component_type_slot_tmplt_id THEN
-_uq := array_append(_uq, 'component_type_slot_template_id = ' || quote_nullable(NEW.component_type_slot_tmplt_id));
+_uq := array_append(_uq, 'component_type_slot_template_id = NEW.' || quote_ident('component_type_slot_tmplt_id'));
 	END IF;
 
 	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
@@ -6976,31 +8697,31 @@ END IF;
 	END IF;
 
 	IF OLD.physical_label IS DISTINCT FROM NEW.physical_label THEN
-_uq := array_append(_uq, 'physical_label = ' || quote_nullable(NEW.physical_label));
+_uq := array_append(_uq, 'physical_label = NEW.' || quote_ident('physical_label'));
 	END IF;
 
 	IF OLD.mac_address IS DISTINCT FROM NEW.mac_address THEN
-_uq := array_append(_uq, 'mac_address = ' || quote_nullable(NEW.mac_address));
+_uq := array_append(_uq, 'mac_address = NEW.' || quote_ident('mac_address'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.slot_x_offset IS DISTINCT FROM NEW.slot_x_offset THEN
-_uq := array_append(_uq, 'slot_x_offset = ' || quote_nullable(NEW.slot_x_offset));
+_uq := array_append(_uq, 'slot_x_offset = NEW.' || quote_ident('slot_x_offset'));
 	END IF;
 
 	IF OLD.slot_y_offset IS DISTINCT FROM NEW.slot_y_offset THEN
-_uq := array_append(_uq, 'slot_y_offset = ' || quote_nullable(NEW.slot_y_offset));
+_uq := array_append(_uq, 'slot_y_offset = NEW.' || quote_ident('slot_y_offset'));
 	END IF;
 
 	IF OLD.slot_z_offset IS DISTINCT FROM NEW.slot_z_offset THEN
-_uq := array_append(_uq, 'slot_z_offset = ' || quote_nullable(NEW.slot_z_offset));
+_uq := array_append(_uq, 'slot_z_offset = NEW.' || quote_ident('slot_z_offset'));
 	END IF;
 
 	IF OLD.slot_side IS DISTINCT FROM NEW.slot_side THEN
-_uq := array_append(_uq, 'slot_side = ' || quote_nullable(NEW.slot_side));
+_uq := array_append(_uq, 'slot_side = NEW.' || quote_ident('slot_side'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -7087,15 +8808,54 @@ CREATE TRIGGER _trigger_slot_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.slot_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.slot_type (
-		slot_type_id,slot_type,slot_function,slot_physical_interface_type,description,remote_slot_permitted
-	) VALUES (
-		NEW.slot_type_id,NEW.slot_type,NEW.slot_function,NEW.slot_physical_interface_type,NEW.description,CASE WHEN NEW.remote_slot_permitted = 'Y' THEN true WHEN NEW.remote_slot_permitted = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.slot_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_type_id));
+	END IF;
+
+	IF NEW.slot_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_type));
+	END IF;
+
+	IF NEW.slot_function IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_function'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_function));
+	END IF;
+
+	IF NEW.slot_physical_interface_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_physical_interface_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_physical_interface_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.remote_slot_permitted IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('remote_slot_permitted'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.remote_slot_permitted = 'Y' THEN true WHEN NEW.remote_slot_permitted = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.slot_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.slot_type_id = _nr.slot_type_id;
+	NEW.slot_type = _nr.slot_type;
+	NEW.slot_function = _nr.slot_function;
+	NEW.slot_physical_interface_type = _nr.slot_physical_interface_type;
+	NEW.description = _nr.description;
+	NEW.remote_slot_permitted = _nr.remote_slot_permitted;
 	RETURN NEW;
 END;
 $$
@@ -7120,23 +8880,23 @@ DECLARE
 BEGIN
 
 	IF OLD.slot_type_id IS DISTINCT FROM NEW.slot_type_id THEN
-_uq := array_append(_uq, 'slot_type_id = ' || quote_nullable(NEW.slot_type_id));
+_uq := array_append(_uq, 'slot_type_id = NEW.' || quote_ident('slot_type_id'));
 	END IF;
 
 	IF OLD.slot_type IS DISTINCT FROM NEW.slot_type THEN
-_uq := array_append(_uq, 'slot_type = ' || quote_nullable(NEW.slot_type));
+_uq := array_append(_uq, 'slot_type = NEW.' || quote_ident('slot_type'));
 	END IF;
 
 	IF OLD.slot_function IS DISTINCT FROM NEW.slot_function THEN
-_uq := array_append(_uq, 'slot_function = ' || quote_nullable(NEW.slot_function));
+_uq := array_append(_uq, 'slot_function = NEW.' || quote_ident('slot_function'));
 	END IF;
 
 	IF OLD.slot_physical_interface_type IS DISTINCT FROM NEW.slot_physical_interface_type THEN
-_uq := array_append(_uq, 'slot_physical_interface_type = ' || quote_nullable(NEW.slot_physical_interface_type));
+_uq := array_append(_uq, 'slot_physical_interface_type = NEW.' || quote_ident('slot_physical_interface_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.remote_slot_permitted IS DISTINCT FROM NEW.remote_slot_permitted THEN
@@ -7217,15 +8977,54 @@ CREATE TRIGGER _trigger_slot_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.sudo_acct_col_device_collectio_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.sudo_account_collection_device_collection%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.sudo_account_collection_device_collection (
-		sudo_alias_name,device_collection_id,account_collection_id,run_as_account_collection_id,requires_password,can_exec_child
-	) VALUES (
-		NEW.sudo_alias_name,NEW.device_collection_id,NEW.account_collection_id,NEW.run_as_account_collection_id,CASE WHEN NEW.requires_password = 'Y' THEN true WHEN NEW.requires_password = 'N' THEN false ELSE NULL END,CASE WHEN NEW.can_exec_child = 'Y' THEN true WHEN NEW.can_exec_child = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.sudo_alias_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('sudo_alias_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.sudo_alias_name));
+	END IF;
+
+	IF NEW.device_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_collection_id));
+	END IF;
+
+	IF NEW.account_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_collection_id));
+	END IF;
+
+	IF NEW.run_as_account_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('run_as_account_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.run_as_account_collection_id));
+	END IF;
+
+	IF NEW.requires_password IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('requires_password'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.requires_password = 'Y' THEN true WHEN NEW.requires_password = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.can_exec_child IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_exec_child'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_exec_child = 'Y' THEN true WHEN NEW.can_exec_child = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.sudo_account_collection_device_collection (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.sudo_alias_name = _nr.sudo_alias_name;
+	NEW.device_collection_id = _nr.device_collection_id;
+	NEW.account_collection_id = _nr.account_collection_id;
+	NEW.run_as_account_collection_id = _nr.run_as_account_collection_id;
+	NEW.requires_password = _nr.requires_password;
+	NEW.can_exec_child = _nr.can_exec_child;
 	RETURN NEW;
 END;
 $$
@@ -7250,19 +9049,19 @@ DECLARE
 BEGIN
 
 	IF OLD.sudo_alias_name IS DISTINCT FROM NEW.sudo_alias_name THEN
-_uq := array_append(_uq, 'sudo_alias_name = ' || quote_nullable(NEW.sudo_alias_name));
+_uq := array_append(_uq, 'sudo_alias_name = NEW.' || quote_ident('sudo_alias_name'));
 	END IF;
 
 	IF OLD.device_collection_id IS DISTINCT FROM NEW.device_collection_id THEN
-_uq := array_append(_uq, 'device_collection_id = ' || quote_nullable(NEW.device_collection_id));
+_uq := array_append(_uq, 'device_collection_id = NEW.' || quote_ident('device_collection_id'));
 	END IF;
 
 	IF OLD.account_collection_id IS DISTINCT FROM NEW.account_collection_id THEN
-_uq := array_append(_uq, 'account_collection_id = ' || quote_nullable(NEW.account_collection_id));
+_uq := array_append(_uq, 'account_collection_id = NEW.' || quote_ident('account_collection_id'));
 	END IF;
 
 	IF OLD.run_as_account_collection_id IS DISTINCT FROM NEW.run_as_account_collection_id THEN
-_uq := array_append(_uq, 'run_as_account_collection_id = ' || quote_nullable(NEW.run_as_account_collection_id));
+_uq := array_append(_uq, 'run_as_account_collection_id = NEW.' || quote_ident('run_as_account_collection_id'));
 	END IF;
 
 	IF OLD.requires_password IS DISTINCT FROM NEW.requires_password THEN
@@ -7353,15 +9152,120 @@ CREATE TRIGGER _trigger_sudo_acct_col_device_collectio_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.token_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.token%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.token (
-		token_id,token_type,token_status,description,external_id,token_serial,zero_time,time_modulo,time_skew,token_key,encryption_key_id,token_password,expire_time,is_token_locked,token_unlock_time,bad_logins,last_updated
-	) VALUES (
-		NEW.token_id,NEW.token_type,NEW.token_status,NEW.description,NEW.external_id,NEW.token_serial,NEW.zero_time,NEW.time_modulo,NEW.time_skew,NEW.token_key,NEW.encryption_key_id,NEW.token_password,NEW.expire_time,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.last_updated
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.token_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_id));
+	END IF;
+
+	IF NEW.token_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_type));
+	END IF;
+
+	IF NEW.token_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_status));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.external_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('external_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.external_id));
+	END IF;
+
+	IF NEW.token_serial IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_serial'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_serial));
+	END IF;
+
+	IF NEW.zero_time IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('zero_time'));
+		_vq := array_append(_vq, quote_nullable(NEW.zero_time));
+	END IF;
+
+	IF NEW.time_modulo IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('time_modulo'));
+		_vq := array_append(_vq, quote_nullable(NEW.time_modulo));
+	END IF;
+
+	IF NEW.time_skew IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('time_skew'));
+		_vq := array_append(_vq, quote_nullable(NEW.time_skew));
+	END IF;
+
+	IF NEW.token_key IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_key'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_key));
+	END IF;
+
+	IF NEW.encryption_key_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('encryption_key_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.encryption_key_id));
+	END IF;
+
+	IF NEW.token_password IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_password'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_password));
+	END IF;
+
+	IF NEW.expire_time IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('expire_time'));
+		_vq := array_append(_vq, quote_nullable(NEW.expire_time));
+	END IF;
+
+	IF NEW.is_token_locked IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_token_locked'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.token_unlock_time IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_unlock_time'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_unlock_time));
+	END IF;
+
+	IF NEW.bad_logins IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('bad_logins'));
+		_vq := array_append(_vq, quote_nullable(NEW.bad_logins));
+	END IF;
+
+	IF NEW.last_updated IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('last_updated'));
+		_vq := array_append(_vq, quote_nullable(NEW.last_updated));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.token (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.token_id = _nr.token_id;
+	NEW.token_type = _nr.token_type;
+	NEW.token_status = _nr.token_status;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
+	NEW.token_serial = _nr.token_serial;
+	NEW.zero_time = _nr.zero_time;
+	NEW.time_modulo = _nr.time_modulo;
+	NEW.time_skew = _nr.time_skew;
+	NEW.token_key = _nr.token_key;
+	NEW.encryption_key_id = _nr.encryption_key_id;
+	NEW.token_password = _nr.token_password;
+	NEW.expire_time = _nr.expire_time;
+	NEW.is_token_locked = _nr.is_token_locked;
+	NEW.token_unlock_time = _nr.token_unlock_time;
+	NEW.bad_logins = _nr.bad_logins;
+	NEW.last_updated = _nr.last_updated;
 	RETURN NEW;
 END;
 $$
@@ -7386,55 +9290,55 @@ DECLARE
 BEGIN
 
 	IF OLD.token_id IS DISTINCT FROM NEW.token_id THEN
-_uq := array_append(_uq, 'token_id = ' || quote_nullable(NEW.token_id));
+_uq := array_append(_uq, 'token_id = NEW.' || quote_ident('token_id'));
 	END IF;
 
 	IF OLD.token_type IS DISTINCT FROM NEW.token_type THEN
-_uq := array_append(_uq, 'token_type = ' || quote_nullable(NEW.token_type));
+_uq := array_append(_uq, 'token_type = NEW.' || quote_ident('token_type'));
 	END IF;
 
 	IF OLD.token_status IS DISTINCT FROM NEW.token_status THEN
-_uq := array_append(_uq, 'token_status = ' || quote_nullable(NEW.token_status));
+_uq := array_append(_uq, 'token_status = NEW.' || quote_ident('token_status'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.external_id IS DISTINCT FROM NEW.external_id THEN
-_uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
+_uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 	END IF;
 
 	IF OLD.token_serial IS DISTINCT FROM NEW.token_serial THEN
-_uq := array_append(_uq, 'token_serial = ' || quote_nullable(NEW.token_serial));
+_uq := array_append(_uq, 'token_serial = NEW.' || quote_ident('token_serial'));
 	END IF;
 
 	IF OLD.zero_time IS DISTINCT FROM NEW.zero_time THEN
-_uq := array_append(_uq, 'zero_time = ' || quote_nullable(NEW.zero_time));
+_uq := array_append(_uq, 'zero_time = NEW.' || quote_ident('zero_time'));
 	END IF;
 
 	IF OLD.time_modulo IS DISTINCT FROM NEW.time_modulo THEN
-_uq := array_append(_uq, 'time_modulo = ' || quote_nullable(NEW.time_modulo));
+_uq := array_append(_uq, 'time_modulo = NEW.' || quote_ident('time_modulo'));
 	END IF;
 
 	IF OLD.time_skew IS DISTINCT FROM NEW.time_skew THEN
-_uq := array_append(_uq, 'time_skew = ' || quote_nullable(NEW.time_skew));
+_uq := array_append(_uq, 'time_skew = NEW.' || quote_ident('time_skew'));
 	END IF;
 
 	IF OLD.token_key IS DISTINCT FROM NEW.token_key THEN
-_uq := array_append(_uq, 'token_key = ' || quote_nullable(NEW.token_key));
+_uq := array_append(_uq, 'token_key = NEW.' || quote_ident('token_key'));
 	END IF;
 
 	IF OLD.encryption_key_id IS DISTINCT FROM NEW.encryption_key_id THEN
-_uq := array_append(_uq, 'encryption_key_id = ' || quote_nullable(NEW.encryption_key_id));
+_uq := array_append(_uq, 'encryption_key_id = NEW.' || quote_ident('encryption_key_id'));
 	END IF;
 
 	IF OLD.token_password IS DISTINCT FROM NEW.token_password THEN
-_uq := array_append(_uq, 'token_password = ' || quote_nullable(NEW.token_password));
+_uq := array_append(_uq, 'token_password = NEW.' || quote_ident('token_password'));
 	END IF;
 
 	IF OLD.expire_time IS DISTINCT FROM NEW.expire_time THEN
-_uq := array_append(_uq, 'expire_time = ' || quote_nullable(NEW.expire_time));
+_uq := array_append(_uq, 'expire_time = NEW.' || quote_ident('expire_time'));
 	END IF;
 
 	IF OLD.is_token_locked IS DISTINCT FROM NEW.is_token_locked THEN
@@ -7448,15 +9352,15 @@ END IF;
 	END IF;
 
 	IF OLD.token_unlock_time IS DISTINCT FROM NEW.token_unlock_time THEN
-_uq := array_append(_uq, 'token_unlock_time = ' || quote_nullable(NEW.token_unlock_time));
+_uq := array_append(_uq, 'token_unlock_time = NEW.' || quote_ident('token_unlock_time'));
 	END IF;
 
 	IF OLD.bad_logins IS DISTINCT FROM NEW.bad_logins THEN
-_uq := array_append(_uq, 'bad_logins = ' || quote_nullable(NEW.bad_logins));
+_uq := array_append(_uq, 'bad_logins = NEW.' || quote_ident('bad_logins'));
 	END IF;
 
 	IF OLD.last_updated IS DISTINCT FROM NEW.last_updated THEN
-_uq := array_append(_uq, 'last_updated = ' || quote_nullable(NEW.last_updated));
+_uq := array_append(_uq, 'last_updated = NEW.' || quote_ident('last_updated'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -7549,15 +9453,78 @@ CREATE TRIGGER _trigger_token_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_corp_family_account_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.v_corp_family_account%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.v_corp_family_account (
-		account_id,login,person_id,company_id,account_realm_id,account_status,account_role,account_type,description,is_enabled
-	) VALUES (
-		NEW.account_id,NEW.login,NEW.person_id,NEW.company_id,NEW.account_realm_id,NEW.account_status,NEW.account_role,NEW.account_type,NEW.description,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_id));
+	END IF;
+
+	IF NEW.login IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('login'));
+		_vq := array_append(_vq, quote_nullable(NEW.login));
+	END IF;
+
+	IF NEW.person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_id));
+	END IF;
+
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.account_realm_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_realm_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	IF NEW.account_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_status));
+	END IF;
+
+	IF NEW.account_role IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_role'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_role));
+	END IF;
+
+	IF NEW.account_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.is_enabled IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_enabled'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.v_corp_family_account (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.account_id = _nr.account_id;
+	NEW.login = _nr.login;
+	NEW.person_id = _nr.person_id;
+	NEW.company_id = _nr.company_id;
+	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.account_status = _nr.account_status;
+	NEW.account_role = _nr.account_role;
+	NEW.account_type = _nr.account_type;
+	NEW.description = _nr.description;
+	NEW.is_enabled = _nr.is_enabled;
 	RETURN NEW;
 END;
 $$
@@ -7582,39 +9549,39 @@ DECLARE
 BEGIN
 
 	IF OLD.account_id IS DISTINCT FROM NEW.account_id THEN
-_uq := array_append(_uq, 'account_id = ' || quote_nullable(NEW.account_id));
+_uq := array_append(_uq, 'account_id = NEW.' || quote_ident('account_id'));
 	END IF;
 
 	IF OLD.login IS DISTINCT FROM NEW.login THEN
-_uq := array_append(_uq, 'login = ' || quote_nullable(NEW.login));
+_uq := array_append(_uq, 'login = NEW.' || quote_ident('login'));
 	END IF;
 
 	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
-_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+_uq := array_append(_uq, 'person_id = NEW.' || quote_ident('person_id'));
 	END IF;
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
-_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+_uq := array_append(_uq, 'account_realm_id = NEW.' || quote_ident('account_realm_id'));
 	END IF;
 
 	IF OLD.account_status IS DISTINCT FROM NEW.account_status THEN
-_uq := array_append(_uq, 'account_status = ' || quote_nullable(NEW.account_status));
+_uq := array_append(_uq, 'account_status = NEW.' || quote_ident('account_status'));
 	END IF;
 
 	IF OLD.account_role IS DISTINCT FROM NEW.account_role THEN
-_uq := array_append(_uq, 'account_role = ' || quote_nullable(NEW.account_role));
+_uq := array_append(_uq, 'account_role = NEW.' || quote_ident('account_role'));
 	END IF;
 
 	IF OLD.account_type IS DISTINCT FROM NEW.account_type THEN
-_uq := array_append(_uq, 'account_type = ' || quote_nullable(NEW.account_type));
+_uq := array_append(_uq, 'account_type = NEW.' || quote_ident('account_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
@@ -7703,15 +9670,108 @@ CREATE TRIGGER _trigger_v_corp_family_account_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_domain_nouniverse_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.v_dns_domain_nouniverse%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.v_dns_domain_nouniverse (
-		dns_domain_id,soa_name,soa_class,soa_ttl,soa_serial,soa_refresh,soa_retry,soa_expire,soa_minimum,soa_mname,soa_rname,parent_dns_domain_id,should_generate,last_generated,dns_domain_type
-	) VALUES (
-		NEW.dns_domain_id,NEW.soa_name,NEW.soa_class,NEW.soa_ttl,NEW.soa_serial,NEW.soa_refresh,NEW.soa_retry,NEW.soa_expire,NEW.soa_minimum,NEW.soa_mname,NEW.soa_rname,NEW.parent_dns_domain_id,CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END,NEW.last_generated,NEW.dns_domain_type
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.dns_domain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_id));
+	END IF;
+
+	IF NEW.soa_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_name));
+	END IF;
+
+	IF NEW.soa_class IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_class'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_class));
+	END IF;
+
+	IF NEW.soa_ttl IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_ttl'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_ttl));
+	END IF;
+
+	IF NEW.soa_serial IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_serial'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_serial));
+	END IF;
+
+	IF NEW.soa_refresh IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_refresh'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_refresh));
+	END IF;
+
+	IF NEW.soa_retry IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_retry'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_retry));
+	END IF;
+
+	IF NEW.soa_expire IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_expire'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_expire));
+	END IF;
+
+	IF NEW.soa_minimum IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_minimum'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_minimum));
+	END IF;
+
+	IF NEW.soa_mname IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_mname'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_mname));
+	END IF;
+
+	IF NEW.soa_rname IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('soa_rname'));
+		_vq := array_append(_vq, quote_nullable(NEW.soa_rname));
+	END IF;
+
+	IF NEW.parent_dns_domain_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('parent_dns_domain_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.parent_dns_domain_id));
+	END IF;
+
+	IF NEW.should_generate IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('should_generate'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.should_generate = 'Y' THEN true WHEN NEW.should_generate = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.last_generated IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('last_generated'));
+		_vq := array_append(_vq, quote_nullable(NEW.last_generated));
+	END IF;
+
+	IF NEW.dns_domain_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_type));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.v_dns_domain_nouniverse (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.dns_domain_id = _nr.dns_domain_id;
+	NEW.soa_name = _nr.soa_name;
+	NEW.soa_class = _nr.soa_class;
+	NEW.soa_ttl = _nr.soa_ttl;
+	NEW.soa_serial = _nr.soa_serial;
+	NEW.soa_refresh = _nr.soa_refresh;
+	NEW.soa_retry = _nr.soa_retry;
+	NEW.soa_expire = _nr.soa_expire;
+	NEW.soa_minimum = _nr.soa_minimum;
+	NEW.soa_mname = _nr.soa_mname;
+	NEW.soa_rname = _nr.soa_rname;
+	NEW.parent_dns_domain_id = _nr.parent_dns_domain_id;
+	NEW.should_generate = _nr.should_generate;
+	NEW.last_generated = _nr.last_generated;
+	NEW.dns_domain_type = _nr.dns_domain_type;
 	RETURN NEW;
 END;
 $$
@@ -7736,51 +9796,51 @@ DECLARE
 BEGIN
 
 	IF OLD.dns_domain_id IS DISTINCT FROM NEW.dns_domain_id THEN
-_uq := array_append(_uq, 'dns_domain_id = ' || quote_nullable(NEW.dns_domain_id));
+_uq := array_append(_uq, 'dns_domain_id = NEW.' || quote_ident('dns_domain_id'));
 	END IF;
 
 	IF OLD.soa_name IS DISTINCT FROM NEW.soa_name THEN
-_uq := array_append(_uq, 'soa_name = ' || quote_nullable(NEW.soa_name));
+_uq := array_append(_uq, 'soa_name = NEW.' || quote_ident('soa_name'));
 	END IF;
 
 	IF OLD.soa_class IS DISTINCT FROM NEW.soa_class THEN
-_uq := array_append(_uq, 'soa_class = ' || quote_nullable(NEW.soa_class));
+_uq := array_append(_uq, 'soa_class = NEW.' || quote_ident('soa_class'));
 	END IF;
 
 	IF OLD.soa_ttl IS DISTINCT FROM NEW.soa_ttl THEN
-_uq := array_append(_uq, 'soa_ttl = ' || quote_nullable(NEW.soa_ttl));
+_uq := array_append(_uq, 'soa_ttl = NEW.' || quote_ident('soa_ttl'));
 	END IF;
 
 	IF OLD.soa_serial IS DISTINCT FROM NEW.soa_serial THEN
-_uq := array_append(_uq, 'soa_serial = ' || quote_nullable(NEW.soa_serial));
+_uq := array_append(_uq, 'soa_serial = NEW.' || quote_ident('soa_serial'));
 	END IF;
 
 	IF OLD.soa_refresh IS DISTINCT FROM NEW.soa_refresh THEN
-_uq := array_append(_uq, 'soa_refresh = ' || quote_nullable(NEW.soa_refresh));
+_uq := array_append(_uq, 'soa_refresh = NEW.' || quote_ident('soa_refresh'));
 	END IF;
 
 	IF OLD.soa_retry IS DISTINCT FROM NEW.soa_retry THEN
-_uq := array_append(_uq, 'soa_retry = ' || quote_nullable(NEW.soa_retry));
+_uq := array_append(_uq, 'soa_retry = NEW.' || quote_ident('soa_retry'));
 	END IF;
 
 	IF OLD.soa_expire IS DISTINCT FROM NEW.soa_expire THEN
-_uq := array_append(_uq, 'soa_expire = ' || quote_nullable(NEW.soa_expire));
+_uq := array_append(_uq, 'soa_expire = NEW.' || quote_ident('soa_expire'));
 	END IF;
 
 	IF OLD.soa_minimum IS DISTINCT FROM NEW.soa_minimum THEN
-_uq := array_append(_uq, 'soa_minimum = ' || quote_nullable(NEW.soa_minimum));
+_uq := array_append(_uq, 'soa_minimum = NEW.' || quote_ident('soa_minimum'));
 	END IF;
 
 	IF OLD.soa_mname IS DISTINCT FROM NEW.soa_mname THEN
-_uq := array_append(_uq, 'soa_mname = ' || quote_nullable(NEW.soa_mname));
+_uq := array_append(_uq, 'soa_mname = NEW.' || quote_ident('soa_mname'));
 	END IF;
 
 	IF OLD.soa_rname IS DISTINCT FROM NEW.soa_rname THEN
-_uq := array_append(_uq, 'soa_rname = ' || quote_nullable(NEW.soa_rname));
+_uq := array_append(_uq, 'soa_rname = NEW.' || quote_ident('soa_rname'));
 	END IF;
 
 	IF OLD.parent_dns_domain_id IS DISTINCT FROM NEW.parent_dns_domain_id THEN
-_uq := array_append(_uq, 'parent_dns_domain_id = ' || quote_nullable(NEW.parent_dns_domain_id));
+_uq := array_append(_uq, 'parent_dns_domain_id = NEW.' || quote_ident('parent_dns_domain_id'));
 	END IF;
 
 	IF OLD.should_generate IS DISTINCT FROM NEW.should_generate THEN
@@ -7794,11 +9854,11 @@ END IF;
 	END IF;
 
 	IF OLD.last_generated IS DISTINCT FROM NEW.last_generated THEN
-_uq := array_append(_uq, 'last_generated = ' || quote_nullable(NEW.last_generated));
+_uq := array_append(_uq, 'last_generated = NEW.' || quote_ident('last_generated'));
 	END IF;
 
 	IF OLD.dns_domain_type IS DISTINCT FROM NEW.dns_domain_type THEN
-_uq := array_append(_uq, 'dns_domain_type = ' || quote_nullable(NEW.dns_domain_type));
+_uq := array_append(_uq, 'dns_domain_type = NEW.' || quote_ident('dns_domain_type'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -7887,15 +9947,120 @@ CREATE TRIGGER _trigger_v_dns_domain_nouniverse_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_hotpants_token_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.v_hotpants_token%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.v_hotpants_token (
-		token_id,token_type,token_status,token_serial,token_key,zero_time,time_modulo,token_password,is_token_locked,token_unlock_time,bad_logins,token_sequence,last_updated,encryption_key_db_value,encryption_key_purpose,encryption_key_purpose_version,encryption_method
-	) VALUES (
-		NEW.token_id,NEW.token_type,NEW.token_status,NEW.token_serial,NEW.token_key,NEW.zero_time,NEW.time_modulo,NEW.token_password,CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END,NEW.token_unlock_time,NEW.bad_logins,NEW.token_sequence,NEW.last_updated,NEW.encryption_key_db_value,NEW.encryption_key_purpose,NEW.encryption_key_purpose_version,NEW.encryption_method
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.token_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_id));
+	END IF;
+
+	IF NEW.token_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_type));
+	END IF;
+
+	IF NEW.token_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_status));
+	END IF;
+
+	IF NEW.token_serial IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_serial'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_serial));
+	END IF;
+
+	IF NEW.token_key IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_key'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_key));
+	END IF;
+
+	IF NEW.zero_time IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('zero_time'));
+		_vq := array_append(_vq, quote_nullable(NEW.zero_time));
+	END IF;
+
+	IF NEW.time_modulo IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('time_modulo'));
+		_vq := array_append(_vq, quote_nullable(NEW.time_modulo));
+	END IF;
+
+	IF NEW.token_password IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_password'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_password));
+	END IF;
+
+	IF NEW.is_token_locked IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_token_locked'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_token_locked = 'Y' THEN true WHEN NEW.is_token_locked = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.token_unlock_time IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_unlock_time'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_unlock_time));
+	END IF;
+
+	IF NEW.bad_logins IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('bad_logins'));
+		_vq := array_append(_vq, quote_nullable(NEW.bad_logins));
+	END IF;
+
+	IF NEW.token_sequence IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_sequence'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_sequence));
+	END IF;
+
+	IF NEW.last_updated IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('last_updated'));
+		_vq := array_append(_vq, quote_nullable(NEW.last_updated));
+	END IF;
+
+	IF NEW.encryption_key_db_value IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('encryption_key_db_value'));
+		_vq := array_append(_vq, quote_nullable(NEW.encryption_key_db_value));
+	END IF;
+
+	IF NEW.encryption_key_purpose IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('encryption_key_purpose'));
+		_vq := array_append(_vq, quote_nullable(NEW.encryption_key_purpose));
+	END IF;
+
+	IF NEW.encryption_key_purpose_version IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('encryption_key_purpose_version'));
+		_vq := array_append(_vq, quote_nullable(NEW.encryption_key_purpose_version));
+	END IF;
+
+	IF NEW.encryption_method IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('encryption_method'));
+		_vq := array_append(_vq, quote_nullable(NEW.encryption_method));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.v_hotpants_token (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.token_id = _nr.token_id;
+	NEW.token_type = _nr.token_type;
+	NEW.token_status = _nr.token_status;
+	NEW.token_serial = _nr.token_serial;
+	NEW.token_key = _nr.token_key;
+	NEW.zero_time = _nr.zero_time;
+	NEW.time_modulo = _nr.time_modulo;
+	NEW.token_password = _nr.token_password;
+	NEW.is_token_locked = _nr.is_token_locked;
+	NEW.token_unlock_time = _nr.token_unlock_time;
+	NEW.bad_logins = _nr.bad_logins;
+	NEW.token_sequence = _nr.token_sequence;
+	NEW.last_updated = _nr.last_updated;
+	NEW.encryption_key_db_value = _nr.encryption_key_db_value;
+	NEW.encryption_key_purpose = _nr.encryption_key_purpose;
+	NEW.encryption_key_purpose_version = _nr.encryption_key_purpose_version;
+	NEW.encryption_method = _nr.encryption_method;
 	RETURN NEW;
 END;
 $$
@@ -7920,35 +10085,35 @@ DECLARE
 BEGIN
 
 	IF OLD.token_id IS DISTINCT FROM NEW.token_id THEN
-_uq := array_append(_uq, 'token_id = ' || quote_nullable(NEW.token_id));
+_uq := array_append(_uq, 'token_id = NEW.' || quote_ident('token_id'));
 	END IF;
 
 	IF OLD.token_type IS DISTINCT FROM NEW.token_type THEN
-_uq := array_append(_uq, 'token_type = ' || quote_nullable(NEW.token_type));
+_uq := array_append(_uq, 'token_type = NEW.' || quote_ident('token_type'));
 	END IF;
 
 	IF OLD.token_status IS DISTINCT FROM NEW.token_status THEN
-_uq := array_append(_uq, 'token_status = ' || quote_nullable(NEW.token_status));
+_uq := array_append(_uq, 'token_status = NEW.' || quote_ident('token_status'));
 	END IF;
 
 	IF OLD.token_serial IS DISTINCT FROM NEW.token_serial THEN
-_uq := array_append(_uq, 'token_serial = ' || quote_nullable(NEW.token_serial));
+_uq := array_append(_uq, 'token_serial = NEW.' || quote_ident('token_serial'));
 	END IF;
 
 	IF OLD.token_key IS DISTINCT FROM NEW.token_key THEN
-_uq := array_append(_uq, 'token_key = ' || quote_nullable(NEW.token_key));
+_uq := array_append(_uq, 'token_key = NEW.' || quote_ident('token_key'));
 	END IF;
 
 	IF OLD.zero_time IS DISTINCT FROM NEW.zero_time THEN
-_uq := array_append(_uq, 'zero_time = ' || quote_nullable(NEW.zero_time));
+_uq := array_append(_uq, 'zero_time = NEW.' || quote_ident('zero_time'));
 	END IF;
 
 	IF OLD.time_modulo IS DISTINCT FROM NEW.time_modulo THEN
-_uq := array_append(_uq, 'time_modulo = ' || quote_nullable(NEW.time_modulo));
+_uq := array_append(_uq, 'time_modulo = NEW.' || quote_ident('time_modulo'));
 	END IF;
 
 	IF OLD.token_password IS DISTINCT FROM NEW.token_password THEN
-_uq := array_append(_uq, 'token_password = ' || quote_nullable(NEW.token_password));
+_uq := array_append(_uq, 'token_password = NEW.' || quote_ident('token_password'));
 	END IF;
 
 	IF OLD.is_token_locked IS DISTINCT FROM NEW.is_token_locked THEN
@@ -7962,35 +10127,35 @@ END IF;
 	END IF;
 
 	IF OLD.token_unlock_time IS DISTINCT FROM NEW.token_unlock_time THEN
-_uq := array_append(_uq, 'token_unlock_time = ' || quote_nullable(NEW.token_unlock_time));
+_uq := array_append(_uq, 'token_unlock_time = NEW.' || quote_ident('token_unlock_time'));
 	END IF;
 
 	IF OLD.bad_logins IS DISTINCT FROM NEW.bad_logins THEN
-_uq := array_append(_uq, 'bad_logins = ' || quote_nullable(NEW.bad_logins));
+_uq := array_append(_uq, 'bad_logins = NEW.' || quote_ident('bad_logins'));
 	END IF;
 
 	IF OLD.token_sequence IS DISTINCT FROM NEW.token_sequence THEN
-_uq := array_append(_uq, 'token_sequence = ' || quote_nullable(NEW.token_sequence));
+_uq := array_append(_uq, 'token_sequence = NEW.' || quote_ident('token_sequence'));
 	END IF;
 
 	IF OLD.last_updated IS DISTINCT FROM NEW.last_updated THEN
-_uq := array_append(_uq, 'last_updated = ' || quote_nullable(NEW.last_updated));
+_uq := array_append(_uq, 'last_updated = NEW.' || quote_ident('last_updated'));
 	END IF;
 
 	IF OLD.encryption_key_db_value IS DISTINCT FROM NEW.encryption_key_db_value THEN
-_uq := array_append(_uq, 'encryption_key_db_value = ' || quote_nullable(NEW.encryption_key_db_value));
+_uq := array_append(_uq, 'encryption_key_db_value = NEW.' || quote_ident('encryption_key_db_value'));
 	END IF;
 
 	IF OLD.encryption_key_purpose IS DISTINCT FROM NEW.encryption_key_purpose THEN
-_uq := array_append(_uq, 'encryption_key_purpose = ' || quote_nullable(NEW.encryption_key_purpose));
+_uq := array_append(_uq, 'encryption_key_purpose = NEW.' || quote_ident('encryption_key_purpose'));
 	END IF;
 
 	IF OLD.encryption_key_purpose_version IS DISTINCT FROM NEW.encryption_key_purpose_version THEN
-_uq := array_append(_uq, 'encryption_key_purpose_version = ' || quote_nullable(NEW.encryption_key_purpose_version));
+_uq := array_append(_uq, 'encryption_key_purpose_version = NEW.' || quote_ident('encryption_key_purpose_version'));
 	END IF;
 
 	IF OLD.encryption_method IS DISTINCT FROM NEW.encryption_method THEN
-_uq := array_append(_uq, 'encryption_method = ' || quote_nullable(NEW.encryption_method));
+_uq := array_append(_uq, 'encryption_method = NEW.' || quote_ident('encryption_method'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -8075,15 +10240,126 @@ CREATE TRIGGER _trigger_v_hotpants_token_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.v_person_company_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.v_person_company%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.v_person_company (
-		company_id,person_id,person_company_status,person_company_relation,is_exempt,is_management,is_full_time,description,employee_id,payroll_id,external_hr_id,position_title,badge_system_id,hire_date,termination_date,manager_person_id,supervisor_person_id,nickname
-	) VALUES (
-		NEW.company_id,NEW.person_id,NEW.person_company_status,NEW.person_company_relation,CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END,NEW.description,NEW.employee_id,NEW.payroll_id,NEW.external_hr_id,NEW.position_title,NEW.badge_system_id,NEW.hire_date,NEW.termination_date,NEW.manager_person_id,NEW.supervisor_person_id,NEW.nickname
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_id));
+	END IF;
+
+	IF NEW.person_company_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_company_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_company_status));
+	END IF;
+
+	IF NEW.person_company_relation IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_company_relation'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_company_relation));
+	END IF;
+
+	IF NEW.is_exempt IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_exempt'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_exempt = 'Y' THEN true WHEN NEW.is_exempt = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_management IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_management'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_management = 'Y' THEN true WHEN NEW.is_management = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_full_time IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_full_time'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_full_time = 'Y' THEN true WHEN NEW.is_full_time = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.employee_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('employee_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.employee_id));
+	END IF;
+
+	IF NEW.payroll_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('payroll_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.payroll_id));
+	END IF;
+
+	IF NEW.external_hr_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('external_hr_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.external_hr_id));
+	END IF;
+
+	IF NEW.position_title IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('position_title'));
+		_vq := array_append(_vq, quote_nullable(NEW.position_title));
+	END IF;
+
+	IF NEW.badge_system_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('badge_system_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.badge_system_id));
+	END IF;
+
+	IF NEW.hire_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('hire_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.hire_date));
+	END IF;
+
+	IF NEW.termination_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('termination_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.termination_date));
+	END IF;
+
+	IF NEW.manager_person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('manager_person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.manager_person_id));
+	END IF;
+
+	IF NEW.supervisor_person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('supervisor_person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.supervisor_person_id));
+	END IF;
+
+	IF NEW.nickname IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('nickname'));
+		_vq := array_append(_vq, quote_nullable(NEW.nickname));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.v_person_company (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.company_id = _nr.company_id;
+	NEW.person_id = _nr.person_id;
+	NEW.person_company_status = _nr.person_company_status;
+	NEW.person_company_relation = _nr.person_company_relation;
+	NEW.is_exempt = _nr.is_exempt;
+	NEW.is_management = _nr.is_management;
+	NEW.is_full_time = _nr.is_full_time;
+	NEW.description = _nr.description;
+	NEW.employee_id = _nr.employee_id;
+	NEW.payroll_id = _nr.payroll_id;
+	NEW.external_hr_id = _nr.external_hr_id;
+	NEW.position_title = _nr.position_title;
+	NEW.badge_system_id = _nr.badge_system_id;
+	NEW.hire_date = _nr.hire_date;
+	NEW.termination_date = _nr.termination_date;
+	NEW.manager_person_id = _nr.manager_person_id;
+	NEW.supervisor_person_id = _nr.supervisor_person_id;
+	NEW.nickname = _nr.nickname;
 	RETURN NEW;
 END;
 $$
@@ -8108,19 +10384,19 @@ DECLARE
 BEGIN
 
 	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
-_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+_uq := array_append(_uq, 'company_id = NEW.' || quote_ident('company_id'));
 	END IF;
 
 	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
-_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+_uq := array_append(_uq, 'person_id = NEW.' || quote_ident('person_id'));
 	END IF;
 
 	IF OLD.person_company_status IS DISTINCT FROM NEW.person_company_status THEN
-_uq := array_append(_uq, 'person_company_status = ' || quote_nullable(NEW.person_company_status));
+_uq := array_append(_uq, 'person_company_status = NEW.' || quote_ident('person_company_status'));
 	END IF;
 
 	IF OLD.person_company_relation IS DISTINCT FROM NEW.person_company_relation THEN
-_uq := array_append(_uq, 'person_company_relation = ' || quote_nullable(NEW.person_company_relation));
+_uq := array_append(_uq, 'person_company_relation = NEW.' || quote_ident('person_company_relation'));
 	END IF;
 
 	IF OLD.is_exempt IS DISTINCT FROM NEW.is_exempt THEN
@@ -8154,47 +10430,47 @@ END IF;
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.employee_id IS DISTINCT FROM NEW.employee_id THEN
-_uq := array_append(_uq, 'employee_id = ' || quote_nullable(NEW.employee_id));
+_uq := array_append(_uq, 'employee_id = NEW.' || quote_ident('employee_id'));
 	END IF;
 
 	IF OLD.payroll_id IS DISTINCT FROM NEW.payroll_id THEN
-_uq := array_append(_uq, 'payroll_id = ' || quote_nullable(NEW.payroll_id));
+_uq := array_append(_uq, 'payroll_id = NEW.' || quote_ident('payroll_id'));
 	END IF;
 
 	IF OLD.external_hr_id IS DISTINCT FROM NEW.external_hr_id THEN
-_uq := array_append(_uq, 'external_hr_id = ' || quote_nullable(NEW.external_hr_id));
+_uq := array_append(_uq, 'external_hr_id = NEW.' || quote_ident('external_hr_id'));
 	END IF;
 
 	IF OLD.position_title IS DISTINCT FROM NEW.position_title THEN
-_uq := array_append(_uq, 'position_title = ' || quote_nullable(NEW.position_title));
+_uq := array_append(_uq, 'position_title = NEW.' || quote_ident('position_title'));
 	END IF;
 
 	IF OLD.badge_system_id IS DISTINCT FROM NEW.badge_system_id THEN
-_uq := array_append(_uq, 'badge_system_id = ' || quote_nullable(NEW.badge_system_id));
+_uq := array_append(_uq, 'badge_system_id = NEW.' || quote_ident('badge_system_id'));
 	END IF;
 
 	IF OLD.hire_date IS DISTINCT FROM NEW.hire_date THEN
-_uq := array_append(_uq, 'hire_date = ' || quote_nullable(NEW.hire_date));
+_uq := array_append(_uq, 'hire_date = NEW.' || quote_ident('hire_date'));
 	END IF;
 
 	IF OLD.termination_date IS DISTINCT FROM NEW.termination_date THEN
-_uq := array_append(_uq, 'termination_date = ' || quote_nullable(NEW.termination_date));
+_uq := array_append(_uq, 'termination_date = NEW.' || quote_ident('termination_date'));
 	END IF;
 
 	IF OLD.manager_person_id IS DISTINCT FROM NEW.manager_person_id THEN
-_uq := array_append(_uq, 'manager_person_id = ' || quote_nullable(NEW.manager_person_id));
+_uq := array_append(_uq, 'manager_person_id = NEW.' || quote_ident('manager_person_id'));
 	END IF;
 
 	IF OLD.supervisor_person_id IS DISTINCT FROM NEW.supervisor_person_id THEN
-_uq := array_append(_uq, 'supervisor_person_id = ' || quote_nullable(NEW.supervisor_person_id));
+_uq := array_append(_uq, 'supervisor_person_id = NEW.' || quote_ident('supervisor_person_id'));
 	END IF;
 
 	IF OLD.nickname IS DISTINCT FROM NEW.nickname THEN
-_uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
+_uq := array_append(_uq, 'nickname = NEW.' || quote_ident('nickname'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -8289,15 +10565,60 @@ CREATE TRIGGER _trigger_v_person_company_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_collection_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_account_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_account_collection_type (
-		account_collection_type,description,is_infrastructure_type,max_num_members,max_num_collections,can_have_hierarchy,account_realm_id
-	) VALUES (
-		NEW.account_collection_type,NEW.description,CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END,NEW.account_realm_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.account_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.is_infrastructure_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_infrastructure_type'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.account_realm_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_realm_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_realm_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_account_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.account_collection_type = _nr.account_collection_type;
+	NEW.description = _nr.description;
+	NEW.is_infrastructure_type = _nr.is_infrastructure_type;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.account_realm_id = _nr.account_realm_id;
 	RETURN NEW;
 END;
 $$
@@ -8322,11 +10643,11 @@ DECLARE
 BEGIN
 
 	IF OLD.account_collection_type IS DISTINCT FROM NEW.account_collection_type THEN
-_uq := array_append(_uq, 'account_collection_type = ' || quote_nullable(NEW.account_collection_type));
+_uq := array_append(_uq, 'account_collection_type = NEW.' || quote_ident('account_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.is_infrastructure_type IS DISTINCT FROM NEW.is_infrastructure_type THEN
@@ -8340,11 +10661,11 @@ END IF;
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -8358,7 +10679,7 @@ END IF;
 	END IF;
 
 	IF OLD.account_realm_id IS DISTINCT FROM NEW.account_realm_id THEN
-_uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_realm_id));
+_uq := array_append(_uq, 'account_realm_id = NEW.' || quote_ident('account_realm_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -8431,15 +10752,36 @@ CREATE TRIGGER _trigger_val_account_collection_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_role_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_account_role%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_account_role (
-		account_role,uid_gid_forced,description
-	) VALUES (
-		NEW.account_role,CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END,NEW.description
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.account_role IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_role'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_role));
+	END IF;
+
+	IF NEW.uid_gid_forced IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('uid_gid_forced'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_account_role (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.account_role = _nr.account_role;
+	NEW.uid_gid_forced = _nr.uid_gid_forced;
+	NEW.description = _nr.description;
 	RETURN NEW;
 END;
 $$
@@ -8464,7 +10806,7 @@ DECLARE
 BEGIN
 
 	IF OLD.account_role IS DISTINCT FROM NEW.account_role THEN
-_uq := array_append(_uq, 'account_role = ' || quote_nullable(NEW.account_role));
+_uq := array_append(_uq, 'account_role = NEW.' || quote_ident('account_role'));
 	END IF;
 
 	IF OLD.uid_gid_forced IS DISTINCT FROM NEW.uid_gid_forced THEN
@@ -8478,7 +10820,7 @@ END IF;
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -8543,15 +10885,42 @@ CREATE TRIGGER _trigger_val_account_role_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_account_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_account_type (
-		account_type,is_person,uid_gid_forced,description
-	) VALUES (
-		NEW.account_type,CASE WHEN NEW.is_person = 'Y' THEN true WHEN NEW.is_person = 'N' THEN false ELSE NULL END,CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END,NEW.description
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.account_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_type));
+	END IF;
+
+	IF NEW.is_person IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_person'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_person = 'Y' THEN true WHEN NEW.is_person = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.uid_gid_forced IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('uid_gid_forced'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.uid_gid_forced = 'Y' THEN true WHEN NEW.uid_gid_forced = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_account_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.account_type = _nr.account_type;
+	NEW.is_person = _nr.is_person;
+	NEW.uid_gid_forced = _nr.uid_gid_forced;
+	NEW.description = _nr.description;
 	RETURN NEW;
 END;
 $$
@@ -8576,7 +10945,7 @@ DECLARE
 BEGIN
 
 	IF OLD.account_type IS DISTINCT FROM NEW.account_type THEN
-_uq := array_append(_uq, 'account_type = ' || quote_nullable(NEW.account_type));
+_uq := array_append(_uq, 'account_type = NEW.' || quote_ident('account_type'));
 	END IF;
 
 	IF OLD.is_person IS DISTINCT FROM NEW.is_person THEN
@@ -8600,7 +10969,7 @@ END IF;
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -8667,15 +11036,54 @@ CREATE TRIGGER _trigger_val_account_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_company_collection_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_company_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_company_collection_type (
-		company_collection_type,description,is_infrastructure_type,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.company_collection_type,NEW.description,CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.company_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.is_infrastructure_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_infrastructure_type'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_infrastructure_type = 'Y' THEN true WHEN NEW.is_infrastructure_type = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_company_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.company_collection_type = _nr.company_collection_type;
+	NEW.description = _nr.description;
+	NEW.is_infrastructure_type = _nr.is_infrastructure_type;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -8700,11 +11108,11 @@ DECLARE
 BEGIN
 
 	IF OLD.company_collection_type IS DISTINCT FROM NEW.company_collection_type THEN
-_uq := array_append(_uq, 'company_collection_type = ' || quote_nullable(NEW.company_collection_type));
+_uq := array_append(_uq, 'company_collection_type = NEW.' || quote_ident('company_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.is_infrastructure_type IS DISTINCT FROM NEW.is_infrastructure_type THEN
@@ -8718,11 +11126,11 @@ END IF;
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -8803,15 +11211,114 @@ CREATE TRIGGER _trigger_val_company_collection_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_component_property%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_component_property (
-		component_property_name,component_property_type,description,is_multivalue,property_data_type,permit_component_type_id,required_component_type_id,permit_component_function,required_component_function,permit_component_id,permit_inter_component_connection_id,permit_slot_type_id,required_slot_type_id,permit_slot_function,required_slot_function,permit_slot_id
-	) VALUES (
-		NEW.component_property_name,NEW.component_property_type,NEW.description,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END,NEW.property_data_type,NEW.permit_component_type_id,NEW.required_component_type_id,NEW.permit_component_function,NEW.required_component_function,NEW.permit_component_id,NEW.permit_intcomp_conn_id,NEW.permit_slot_type_id,NEW.required_slot_type_id,NEW.permit_slot_function,NEW.required_slot_function,NEW.permit_slot_id
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.component_property_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_property_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_property_name));
+	END IF;
+
+	IF NEW.component_property_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_property_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_property_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.is_multivalue IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_multivalue'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.property_data_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_data_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_data_type));
+	END IF;
+
+	IF NEW.permit_component_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_component_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_component_type_id));
+	END IF;
+
+	IF NEW.required_component_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('required_component_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.required_component_type_id));
+	END IF;
+
+	IF NEW.permit_component_function IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_component_function'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_component_function));
+	END IF;
+
+	IF NEW.required_component_function IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('required_component_function'));
+		_vq := array_append(_vq, quote_nullable(NEW.required_component_function));
+	END IF;
+
+	IF NEW.permit_component_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_component_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_component_id));
+	END IF;
+
+	IF NEW.permit_intcomp_conn_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_inter_component_connection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_intcomp_conn_id));
+	END IF;
+
+	IF NEW.permit_slot_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_slot_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_slot_type_id));
+	END IF;
+
+	IF NEW.required_slot_type_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('required_slot_type_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.required_slot_type_id));
+	END IF;
+
+	IF NEW.permit_slot_function IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_slot_function'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_slot_function));
+	END IF;
+
+	IF NEW.required_slot_function IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('required_slot_function'));
+		_vq := array_append(_vq, quote_nullable(NEW.required_slot_function));
+	END IF;
+
+	IF NEW.permit_slot_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_slot_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_slot_id));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_component_property (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.component_property_name = _nr.component_property_name;
+	NEW.component_property_type = _nr.component_property_type;
+	NEW.description = _nr.description;
+	NEW.is_multivalue = _nr.is_multivalue;
+	NEW.property_data_type = _nr.property_data_type;
+	NEW.permit_component_type_id = _nr.permit_component_type_id;
+	NEW.required_component_type_id = _nr.required_component_type_id;
+	NEW.permit_component_function = _nr.permit_component_function;
+	NEW.required_component_function = _nr.required_component_function;
+	NEW.permit_component_id = _nr.permit_component_id;
+	NEW.permit_intcomp_conn_id = _nr.permit_inter_component_connection_id;
+	NEW.permit_slot_type_id = _nr.permit_slot_type_id;
+	NEW.required_slot_type_id = _nr.required_slot_type_id;
+	NEW.permit_slot_function = _nr.permit_slot_function;
+	NEW.required_slot_function = _nr.required_slot_function;
+	NEW.permit_slot_id = _nr.permit_slot_id;
 	RETURN NEW;
 END;
 $$
@@ -8836,15 +11343,15 @@ DECLARE
 BEGIN
 
 	IF OLD.component_property_name IS DISTINCT FROM NEW.component_property_name THEN
-_uq := array_append(_uq, 'component_property_name = ' || quote_nullable(NEW.component_property_name));
+_uq := array_append(_uq, 'component_property_name = NEW.' || quote_ident('component_property_name'));
 	END IF;
 
 	IF OLD.component_property_type IS DISTINCT FROM NEW.component_property_type THEN
-_uq := array_append(_uq, 'component_property_type = ' || quote_nullable(NEW.component_property_type));
+_uq := array_append(_uq, 'component_property_type = NEW.' || quote_ident('component_property_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
@@ -8858,51 +11365,51 @@ END IF;
 	END IF;
 
 	IF OLD.property_data_type IS DISTINCT FROM NEW.property_data_type THEN
-_uq := array_append(_uq, 'property_data_type = ' || quote_nullable(NEW.property_data_type));
+_uq := array_append(_uq, 'property_data_type = NEW.' || quote_ident('property_data_type'));
 	END IF;
 
 	IF OLD.permit_component_type_id IS DISTINCT FROM NEW.permit_component_type_id THEN
-_uq := array_append(_uq, 'permit_component_type_id = ' || quote_nullable(NEW.permit_component_type_id));
+_uq := array_append(_uq, 'permit_component_type_id = NEW.' || quote_ident('permit_component_type_id'));
 	END IF;
 
 	IF OLD.required_component_type_id IS DISTINCT FROM NEW.required_component_type_id THEN
-_uq := array_append(_uq, 'required_component_type_id = ' || quote_nullable(NEW.required_component_type_id));
+_uq := array_append(_uq, 'required_component_type_id = NEW.' || quote_ident('required_component_type_id'));
 	END IF;
 
 	IF OLD.permit_component_function IS DISTINCT FROM NEW.permit_component_function THEN
-_uq := array_append(_uq, 'permit_component_function = ' || quote_nullable(NEW.permit_component_function));
+_uq := array_append(_uq, 'permit_component_function = NEW.' || quote_ident('permit_component_function'));
 	END IF;
 
 	IF OLD.required_component_function IS DISTINCT FROM NEW.required_component_function THEN
-_uq := array_append(_uq, 'required_component_function = ' || quote_nullable(NEW.required_component_function));
+_uq := array_append(_uq, 'required_component_function = NEW.' || quote_ident('required_component_function'));
 	END IF;
 
 	IF OLD.permit_component_id IS DISTINCT FROM NEW.permit_component_id THEN
-_uq := array_append(_uq, 'permit_component_id = ' || quote_nullable(NEW.permit_component_id));
+_uq := array_append(_uq, 'permit_component_id = NEW.' || quote_ident('permit_component_id'));
 	END IF;
 
 	IF OLD.permit_intcomp_conn_id IS DISTINCT FROM NEW.permit_intcomp_conn_id THEN
-_uq := array_append(_uq, 'permit_inter_component_connection_id = ' || quote_nullable(NEW.permit_intcomp_conn_id));
+_uq := array_append(_uq, 'permit_inter_component_connection_id = NEW.' || quote_ident('permit_intcomp_conn_id'));
 	END IF;
 
 	IF OLD.permit_slot_type_id IS DISTINCT FROM NEW.permit_slot_type_id THEN
-_uq := array_append(_uq, 'permit_slot_type_id = ' || quote_nullable(NEW.permit_slot_type_id));
+_uq := array_append(_uq, 'permit_slot_type_id = NEW.' || quote_ident('permit_slot_type_id'));
 	END IF;
 
 	IF OLD.required_slot_type_id IS DISTINCT FROM NEW.required_slot_type_id THEN
-_uq := array_append(_uq, 'required_slot_type_id = ' || quote_nullable(NEW.required_slot_type_id));
+_uq := array_append(_uq, 'required_slot_type_id = NEW.' || quote_ident('required_slot_type_id'));
 	END IF;
 
 	IF OLD.permit_slot_function IS DISTINCT FROM NEW.permit_slot_function THEN
-_uq := array_append(_uq, 'permit_slot_function = ' || quote_nullable(NEW.permit_slot_function));
+_uq := array_append(_uq, 'permit_slot_function = NEW.' || quote_ident('permit_slot_function'));
 	END IF;
 
 	IF OLD.required_slot_function IS DISTINCT FROM NEW.required_slot_function THEN
-_uq := array_append(_uq, 'required_slot_function = ' || quote_nullable(NEW.required_slot_function));
+_uq := array_append(_uq, 'required_slot_function = NEW.' || quote_ident('required_slot_function'));
 	END IF;
 
 	IF OLD.permit_slot_id IS DISTINCT FROM NEW.permit_slot_id THEN
-_uq := array_append(_uq, 'permit_slot_id = ' || quote_nullable(NEW.permit_slot_id));
+_uq := array_append(_uq, 'permit_slot_id = NEW.' || quote_ident('permit_slot_id'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -8993,15 +11500,36 @@ CREATE TRIGGER _trigger_val_component_property_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_component_property_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_component_property_type (
-		component_property_type,description,is_multivalue
-	) VALUES (
-		NEW.component_property_type,NEW.description,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.component_property_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('component_property_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.component_property_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.is_multivalue IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_multivalue'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_component_property_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.component_property_type = _nr.component_property_type;
+	NEW.description = _nr.description;
+	NEW.is_multivalue = _nr.is_multivalue;
 	RETURN NEW;
 END;
 $$
@@ -9026,11 +11554,11 @@ DECLARE
 BEGIN
 
 	IF OLD.component_property_type IS DISTINCT FROM NEW.component_property_type THEN
-_uq := array_append(_uq, 'component_property_type = ' || quote_nullable(NEW.component_property_type));
+_uq := array_append(_uq, 'component_property_type = NEW.' || quote_ident('component_property_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
@@ -9105,15 +11633,48 @@ CREATE TRIGGER _trigger_val_component_property_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_device_collection_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_device_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_device_collection_type (
-		device_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.device_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.device_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_device_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.device_collection_type = _nr.device_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -9138,19 +11699,19 @@ DECLARE
 BEGIN
 
 	IF OLD.device_collection_type IS DISTINCT FROM NEW.device_collection_type THEN
-_uq := array_append(_uq, 'device_collection_type = ' || quote_nullable(NEW.device_collection_type));
+_uq := array_append(_uq, 'device_collection_type = NEW.' || quote_ident('device_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -9229,15 +11790,48 @@ CREATE TRIGGER _trigger_val_device_collection_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_collection_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_dns_domain_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_dns_domain_collection_type (
-		dns_domain_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.dns_domain_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.dns_domain_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_dns_domain_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -9262,19 +11856,19 @@ DECLARE
 BEGIN
 
 	IF OLD.dns_domain_collection_type IS DISTINCT FROM NEW.dns_domain_collection_type THEN
-_uq := array_append(_uq, 'dns_domain_collection_type = ' || quote_nullable(NEW.dns_domain_collection_type));
+_uq := array_append(_uq, 'dns_domain_collection_type = NEW.' || quote_ident('dns_domain_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -9353,15 +11947,36 @@ CREATE TRIGGER _trigger_val_dns_domain_collection_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_dns_domain_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_dns_domain_type (
-		dns_domain_type,can_generate,description
-	) VALUES (
-		NEW.dns_domain_type,CASE WHEN NEW.can_generate = 'Y' THEN true WHEN NEW.can_generate = 'N' THEN false ELSE NULL END,NEW.description
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.dns_domain_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_type));
+	END IF;
+
+	IF NEW.can_generate IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_generate'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_generate = 'Y' THEN true WHEN NEW.can_generate = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_dns_domain_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.dns_domain_type = _nr.dns_domain_type;
+	NEW.can_generate = _nr.can_generate;
+	NEW.description = _nr.description;
 	RETURN NEW;
 END;
 $$
@@ -9386,7 +12001,7 @@ DECLARE
 BEGIN
 
 	IF OLD.dns_domain_type IS DISTINCT FROM NEW.dns_domain_type THEN
-_uq := array_append(_uq, 'dns_domain_type = ' || quote_nullable(NEW.dns_domain_type));
+_uq := array_append(_uq, 'dns_domain_type = NEW.' || quote_ident('dns_domain_type'));
 	END IF;
 
 	IF OLD.can_generate IS DISTINCT FROM NEW.can_generate THEN
@@ -9400,7 +12015,7 @@ END IF;
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -9465,15 +12080,48 @@ CREATE TRIGGER _trigger_val_dns_domain_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer2_network_coll_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_layer2_network_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_layer2_network_collection_type (
-		layer2_network_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.layer2_network_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.layer2_network_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer2_network_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.layer2_network_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_layer2_network_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -9498,19 +12146,19 @@ DECLARE
 BEGIN
 
 	IF OLD.layer2_network_collection_type IS DISTINCT FROM NEW.layer2_network_collection_type THEN
-_uq := array_append(_uq, 'layer2_network_collection_type = ' || quote_nullable(NEW.layer2_network_collection_type));
+_uq := array_append(_uq, 'layer2_network_collection_type = NEW.' || quote_ident('layer2_network_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -9589,15 +12237,48 @@ CREATE TRIGGER _trigger_val_layer2_network_coll_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer3_network_coll_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_layer3_network_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_layer3_network_collection_type (
-		layer3_network_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.layer3_network_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.layer3_network_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer3_network_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.layer3_network_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_layer3_network_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -9622,19 +12303,19 @@ DECLARE
 BEGIN
 
 	IF OLD.layer3_network_collection_type IS DISTINCT FROM NEW.layer3_network_collection_type THEN
-_uq := array_append(_uq, 'layer3_network_collection_type = ' || quote_nullable(NEW.layer3_network_collection_type));
+_uq := array_append(_uq, 'layer3_network_collection_type = NEW.' || quote_ident('layer3_network_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -9713,15 +12394,60 @@ CREATE TRIGGER _trigger_val_layer3_network_coll_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_collection_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_netblock_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_netblock_collection_type (
-		netblock_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy,netblock_is_single_address_restriction,netblock_ip_family_restriction
-	) VALUES (
-		NEW.netblock_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END,NEW.netblock_single_addr_restrict,NEW.netblock_ip_family_restrict
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.netblock_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.netblock_single_addr_restrict IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_is_single_address_restriction'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_single_addr_restrict));
+	END IF;
+
+	IF NEW.netblock_ip_family_restrict IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_ip_family_restriction'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_ip_family_restrict));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_netblock_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.netblock_collection_type = _nr.netblock_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.netblock_single_addr_restrict = _nr.netblock_is_single_address_restriction;
+	NEW.netblock_ip_family_restrict = _nr.netblock_ip_family_restriction;
 	RETURN NEW;
 END;
 $$
@@ -9746,19 +12472,19 @@ DECLARE
 BEGIN
 
 	IF OLD.netblock_collection_type IS DISTINCT FROM NEW.netblock_collection_type THEN
-_uq := array_append(_uq, 'netblock_collection_type = ' || quote_nullable(NEW.netblock_collection_type));
+_uq := array_append(_uq, 'netblock_collection_type = NEW.' || quote_ident('netblock_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -9772,11 +12498,11 @@ END IF;
 	END IF;
 
 	IF OLD.netblock_single_addr_restrict IS DISTINCT FROM NEW.netblock_single_addr_restrict THEN
-_uq := array_append(_uq, 'netblock_is_single_address_restriction = ' || quote_nullable(NEW.netblock_single_addr_restrict));
+_uq := array_append(_uq, 'netblock_is_single_address_restriction = NEW.' || quote_ident('netblock_single_addr_restrict'));
 	END IF;
 
 	IF OLD.netblock_ip_family_restrict IS DISTINCT FROM NEW.netblock_ip_family_restrict THEN
-_uq := array_append(_uq, 'netblock_ip_family_restriction = ' || quote_nullable(NEW.netblock_ip_family_restrict));
+_uq := array_append(_uq, 'netblock_ip_family_restriction = NEW.' || quote_ident('netblock_ip_family_restrict'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -9849,15 +12575,42 @@ CREATE TRIGGER _trigger_val_netblock_collection_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_netblock_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_netblock_type (
-		netblock_type,description,db_forced_hierarchy,is_validated_hierarchy
-	) VALUES (
-		NEW.netblock_type,NEW.description,CASE WHEN NEW.db_forced_hierarchy = 'Y' THEN true WHEN NEW.db_forced_hierarchy = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_validated_hierarchy = 'Y' THEN true WHEN NEW.is_validated_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.netblock_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.db_forced_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('db_forced_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.db_forced_hierarchy = 'Y' THEN true WHEN NEW.db_forced_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_validated_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_validated_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_validated_hierarchy = 'Y' THEN true WHEN NEW.is_validated_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_netblock_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.netblock_type = _nr.netblock_type;
+	NEW.description = _nr.description;
+	NEW.db_forced_hierarchy = _nr.db_forced_hierarchy;
+	NEW.is_validated_hierarchy = _nr.is_validated_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -9882,11 +12635,11 @@ DECLARE
 BEGIN
 
 	IF OLD.netblock_type IS DISTINCT FROM NEW.netblock_type THEN
-_uq := array_append(_uq, 'netblock_type = ' || quote_nullable(NEW.netblock_type));
+_uq := array_append(_uq, 'netblock_type = NEW.' || quote_ident('netblock_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.db_forced_hierarchy IS DISTINCT FROM NEW.db_forced_hierarchy THEN
@@ -9973,15 +12726,60 @@ CREATE TRIGGER _trigger_val_netblock_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_network_range_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_network_range_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_network_range_type (
-		network_range_type,description,dns_domain_required,default_dns_prefix,netblock_type,can_overlap,require_cidr_boundary
-	) VALUES (
-		NEW.network_range_type,NEW.description,NEW.dns_domain_required,NEW.default_dns_prefix,NEW.netblock_type,CASE WHEN NEW.can_overlap = 'Y' THEN true WHEN NEW.can_overlap = 'N' THEN false ELSE NULL END,CASE WHEN NEW.require_cidr_boundary = 'Y' THEN true WHEN NEW.require_cidr_boundary = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.network_range_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('network_range_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_range_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.dns_domain_required IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_required'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_required));
+	END IF;
+
+	IF NEW.default_dns_prefix IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('default_dns_prefix'));
+		_vq := array_append(_vq, quote_nullable(NEW.default_dns_prefix));
+	END IF;
+
+	IF NEW.netblock_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_type));
+	END IF;
+
+	IF NEW.can_overlap IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_overlap'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_overlap = 'Y' THEN true WHEN NEW.can_overlap = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.require_cidr_boundary IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('require_cidr_boundary'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.require_cidr_boundary = 'Y' THEN true WHEN NEW.require_cidr_boundary = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_network_range_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.network_range_type = _nr.network_range_type;
+	NEW.description = _nr.description;
+	NEW.dns_domain_required = _nr.dns_domain_required;
+	NEW.default_dns_prefix = _nr.default_dns_prefix;
+	NEW.netblock_type = _nr.netblock_type;
+	NEW.can_overlap = _nr.can_overlap;
+	NEW.require_cidr_boundary = _nr.require_cidr_boundary;
 	RETURN NEW;
 END;
 $$
@@ -10006,23 +12804,23 @@ DECLARE
 BEGIN
 
 	IF OLD.network_range_type IS DISTINCT FROM NEW.network_range_type THEN
-_uq := array_append(_uq, 'network_range_type = ' || quote_nullable(NEW.network_range_type));
+_uq := array_append(_uq, 'network_range_type = NEW.' || quote_ident('network_range_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.dns_domain_required IS DISTINCT FROM NEW.dns_domain_required THEN
-_uq := array_append(_uq, 'dns_domain_required = ' || quote_nullable(NEW.dns_domain_required));
+_uq := array_append(_uq, 'dns_domain_required = NEW.' || quote_ident('dns_domain_required'));
 	END IF;
 
 	IF OLD.default_dns_prefix IS DISTINCT FROM NEW.default_dns_prefix THEN
-_uq := array_append(_uq, 'default_dns_prefix = ' || quote_nullable(NEW.default_dns_prefix));
+_uq := array_append(_uq, 'default_dns_prefix = NEW.' || quote_ident('default_dns_prefix'));
 	END IF;
 
 	IF OLD.netblock_type IS DISTINCT FROM NEW.netblock_type THEN
-_uq := array_append(_uq, 'netblock_type = ' || quote_nullable(NEW.netblock_type));
+_uq := array_append(_uq, 'netblock_type = NEW.' || quote_ident('netblock_type'));
 	END IF;
 
 	IF OLD.can_overlap IS DISTINCT FROM NEW.can_overlap THEN
@@ -10115,15 +12913,30 @@ CREATE TRIGGER _trigger_val_network_range_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_image_usage_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_person_image_usage%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_person_image_usage (
-		person_image_usage,is_multivalue
-	) VALUES (
-		NEW.person_image_usage,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.person_image_usage IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_image_usage'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_image_usage));
+	END IF;
+
+	IF NEW.is_multivalue IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_multivalue'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_person_image_usage (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.person_image_usage = _nr.person_image_usage;
+	NEW.is_multivalue = _nr.is_multivalue;
 	RETURN NEW;
 END;
 $$
@@ -10148,7 +12961,7 @@ DECLARE
 BEGIN
 
 	IF OLD.person_image_usage IS DISTINCT FROM NEW.person_image_usage THEN
-_uq := array_append(_uq, 'person_image_usage = ' || quote_nullable(NEW.person_image_usage));
+_uq := array_append(_uq, 'person_image_usage = NEW.' || quote_ident('person_image_usage'));
 	END IF;
 
 	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
@@ -10221,15 +13034,54 @@ CREATE TRIGGER _trigger_val_person_image_usage_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_status_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_person_status%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_person_status (
-		person_status,description,is_enabled,propagate_from_person,is_forced,is_db_enforced
-	) VALUES (
-		NEW.person_status,NEW.description,CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END,CASE WHEN NEW.propagate_from_person = 'Y' THEN true WHEN NEW.propagate_from_person = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_forced = 'Y' THEN true WHEN NEW.is_forced = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_db_enforced = 'Y' THEN true WHEN NEW.is_db_enforced = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.person_status IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_status'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_status));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.is_enabled IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_enabled'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.propagate_from_person IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('propagate_from_person'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.propagate_from_person = 'Y' THEN true WHEN NEW.propagate_from_person = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_forced IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_forced'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_forced = 'Y' THEN true WHEN NEW.is_forced = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_db_enforced IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_db_enforced'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_db_enforced = 'Y' THEN true WHEN NEW.is_db_enforced = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_person_status (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.person_status = _nr.person_status;
+	NEW.description = _nr.description;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.propagate_from_person = _nr.propagate_from_person;
+	NEW.is_forced = _nr.is_forced;
+	NEW.is_db_enforced = _nr.is_db_enforced;
 	RETURN NEW;
 END;
 $$
@@ -10254,11 +13106,11 @@ DECLARE
 BEGIN
 
 	IF OLD.person_status IS DISTINCT FROM NEW.person_status THEN
-_uq := array_append(_uq, 'person_status = ' || quote_nullable(NEW.person_status));
+_uq := array_append(_uq, 'person_status = NEW.' || quote_ident('person_status'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.is_enabled IS DISTINCT FROM NEW.is_enabled THEN
@@ -10369,15 +13221,246 @@ CREATE TRIGGER _trigger_val_person_status_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_property%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_property (
-		property_name,property_type,description,account_collection_type,company_collection_type,device_collection_type,dns_domain_collection_type,layer2_network_collection_type,layer3_network_collection_type,netblock_collection_type,network_range_type,property_name_collection_type,service_environment_collection_type,is_multivalue,property_value_account_collection_type_restriction,property_value_device_collection_type_restriction,property_value_netblock_collection_type_restriction,property_data_type,property_value_json_schema,permit_account_collection_id,permit_account_id,permit_account_realm_id,permit_company_id,permit_company_collection_id,permit_device_collection_id,permit_dns_domain_collection_id,permit_layer2_network_collection_id,permit_layer3_network_collection_id,permit_netblock_collection_id,permit_network_range_id,permit_operating_system_id,permit_operating_system_snapshot_id,permit_person_id,permit_property_name_collection_id,permit_service_environment_collection,permit_site_code,permit_x509_signed_certificate_id,permit_property_rank
-	) VALUES (
-		NEW.property_name,NEW.property_type,NEW.description,NEW.account_collection_type,NEW.company_collection_type,NEW.device_collection_type,NEW.dns_domain_collection_type,NEW.layer2_network_collection_type,NEW.layer3_network_collection_type,NEW.netblock_collection_type,NEW.network_range_type,NEW.property_collection_type,NEW.service_env_collection_type,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END,NEW.prop_val_acct_coll_type_rstrct,NEW.prop_val_dev_coll_type_rstrct,NEW.prop_val_nblk_coll_type_rstrct,NEW.property_data_type,NEW.property_value_json_schema,NEW.permit_account_collection_id,NEW.permit_account_id,NEW.permit_account_realm_id,NEW.permit_company_id,NEW.permit_company_collection_id,NEW.permit_device_collection_id,NEW.permit_dns_domain_coll_id,NEW.permit_layer2_network_coll_id,NEW.permit_layer3_network_coll_id,NEW.permit_netblock_collection_id,NEW.permit_network_range_id,NEW.permit_operating_system_id,NEW.permit_os_snapshot_id,NEW.permit_person_id,NEW.permit_property_collection_id,NEW.permit_service_env_collection,NEW.permit_site_code,NEW.permit_x509_signed_cert_id,NEW.permit_property_rank
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.property_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_name));
+	END IF;
+
+	IF NEW.property_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.account_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('account_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.account_collection_type));
+	END IF;
+
+	IF NEW.company_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_collection_type));
+	END IF;
+
+	IF NEW.device_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('device_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.device_collection_type));
+	END IF;
+
+	IF NEW.dns_domain_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('dns_domain_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.dns_domain_collection_type));
+	END IF;
+
+	IF NEW.layer2_network_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer2_network_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.layer2_network_collection_type));
+	END IF;
+
+	IF NEW.layer3_network_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('layer3_network_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.layer3_network_collection_type));
+	END IF;
+
+	IF NEW.netblock_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('netblock_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.netblock_collection_type));
+	END IF;
+
+	IF NEW.network_range_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('network_range_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.network_range_type));
+	END IF;
+
+	IF NEW.property_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_name_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_collection_type));
+	END IF;
+
+	IF NEW.service_env_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('service_environment_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.service_env_collection_type));
+	END IF;
+
+	IF NEW.is_multivalue IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_multivalue'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.prop_val_acct_coll_type_rstrct IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_account_collection_type_restriction'));
+		_vq := array_append(_vq, quote_nullable(NEW.prop_val_acct_coll_type_rstrct));
+	END IF;
+
+	IF NEW.prop_val_dev_coll_type_rstrct IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_device_collection_type_restriction'));
+		_vq := array_append(_vq, quote_nullable(NEW.prop_val_dev_coll_type_rstrct));
+	END IF;
+
+	IF NEW.prop_val_nblk_coll_type_rstrct IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_netblock_collection_type_restriction'));
+		_vq := array_append(_vq, quote_nullable(NEW.prop_val_nblk_coll_type_rstrct));
+	END IF;
+
+	IF NEW.property_data_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_data_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_data_type));
+	END IF;
+
+	IF NEW.property_value_json_schema IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_json_schema'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value_json_schema));
+	END IF;
+
+	IF NEW.permit_account_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_account_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_account_collection_id));
+	END IF;
+
+	IF NEW.permit_account_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_account_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_account_id));
+	END IF;
+
+	IF NEW.permit_account_realm_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_account_realm_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_account_realm_id));
+	END IF;
+
+	IF NEW.permit_company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_company_id));
+	END IF;
+
+	IF NEW.permit_company_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_company_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_company_collection_id));
+	END IF;
+
+	IF NEW.permit_device_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_device_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_device_collection_id));
+	END IF;
+
+	IF NEW.permit_dns_domain_coll_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_dns_domain_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_dns_domain_coll_id));
+	END IF;
+
+	IF NEW.permit_layer2_network_coll_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_layer2_network_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_layer2_network_coll_id));
+	END IF;
+
+	IF NEW.permit_layer3_network_coll_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_layer3_network_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_layer3_network_coll_id));
+	END IF;
+
+	IF NEW.permit_netblock_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_netblock_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_netblock_collection_id));
+	END IF;
+
+	IF NEW.permit_network_range_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_network_range_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_network_range_id));
+	END IF;
+
+	IF NEW.permit_operating_system_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_operating_system_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_operating_system_id));
+	END IF;
+
+	IF NEW.permit_os_snapshot_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_operating_system_snapshot_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_os_snapshot_id));
+	END IF;
+
+	IF NEW.permit_person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_person_id));
+	END IF;
+
+	IF NEW.permit_property_collection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_property_name_collection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_property_collection_id));
+	END IF;
+
+	IF NEW.permit_service_env_collection IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_service_environment_collection'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_service_env_collection));
+	END IF;
+
+	IF NEW.permit_site_code IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_site_code'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_site_code));
+	END IF;
+
+	IF NEW.permit_x509_signed_cert_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_x509_signed_certificate_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_x509_signed_cert_id));
+	END IF;
+
+	IF NEW.permit_property_rank IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('permit_property_rank'));
+		_vq := array_append(_vq, quote_nullable(NEW.permit_property_rank));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_property (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.property_name = _nr.property_name;
+	NEW.property_type = _nr.property_type;
+	NEW.description = _nr.description;
+	NEW.account_collection_type = _nr.account_collection_type;
+	NEW.company_collection_type = _nr.company_collection_type;
+	NEW.device_collection_type = _nr.device_collection_type;
+	NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
+	NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
+	NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
+	NEW.netblock_collection_type = _nr.netblock_collection_type;
+	NEW.network_range_type = _nr.network_range_type;
+	NEW.property_collection_type = _nr.property_name_collection_type;
+	NEW.service_env_collection_type = _nr.service_environment_collection_type;
+	NEW.is_multivalue = _nr.is_multivalue;
+	NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+	NEW.prop_val_dev_coll_type_rstrct = _nr.property_value_device_collection_type_restriction;
+	NEW.prop_val_nblk_coll_type_rstrct = _nr.property_value_netblock_collection_type_restriction;
+	NEW.property_data_type = _nr.property_data_type;
+	NEW.property_value_json_schema = _nr.property_value_json_schema;
+	NEW.permit_account_collection_id = _nr.permit_account_collection_id;
+	NEW.permit_account_id = _nr.permit_account_id;
+	NEW.permit_account_realm_id = _nr.permit_account_realm_id;
+	NEW.permit_company_id = _nr.permit_company_id;
+	NEW.permit_company_collection_id = _nr.permit_company_collection_id;
+	NEW.permit_device_collection_id = _nr.permit_device_collection_id;
+	NEW.permit_dns_domain_coll_id = _nr.permit_dns_domain_collection_id;
+	NEW.permit_layer2_network_coll_id = _nr.permit_layer2_network_collection_id;
+	NEW.permit_layer3_network_coll_id = _nr.permit_layer3_network_collection_id;
+	NEW.permit_netblock_collection_id = _nr.permit_netblock_collection_id;
+	NEW.permit_network_range_id = _nr.permit_network_range_id;
+	NEW.permit_operating_system_id = _nr.permit_operating_system_id;
+	NEW.permit_os_snapshot_id = _nr.permit_operating_system_snapshot_id;
+	NEW.permit_person_id = _nr.permit_person_id;
+	NEW.permit_property_collection_id = _nr.permit_property_name_collection_id;
+	NEW.permit_service_env_collection = _nr.permit_service_environment_collection;
+	NEW.permit_site_code = _nr.permit_site_code;
+	NEW.permit_x509_signed_cert_id = _nr.permit_x509_signed_certificate_id;
+	NEW.permit_property_rank = _nr.permit_property_rank;
 	RETURN NEW;
 END;
 $$
@@ -10402,55 +13485,55 @@ DECLARE
 BEGIN
 
 	IF OLD.property_name IS DISTINCT FROM NEW.property_name THEN
-_uq := array_append(_uq, 'property_name = ' || quote_nullable(NEW.property_name));
+_uq := array_append(_uq, 'property_name = NEW.' || quote_ident('property_name'));
 	END IF;
 
 	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
-_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+_uq := array_append(_uq, 'property_type = NEW.' || quote_ident('property_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.account_collection_type IS DISTINCT FROM NEW.account_collection_type THEN
-_uq := array_append(_uq, 'account_collection_type = ' || quote_nullable(NEW.account_collection_type));
+_uq := array_append(_uq, 'account_collection_type = NEW.' || quote_ident('account_collection_type'));
 	END IF;
 
 	IF OLD.company_collection_type IS DISTINCT FROM NEW.company_collection_type THEN
-_uq := array_append(_uq, 'company_collection_type = ' || quote_nullable(NEW.company_collection_type));
+_uq := array_append(_uq, 'company_collection_type = NEW.' || quote_ident('company_collection_type'));
 	END IF;
 
 	IF OLD.device_collection_type IS DISTINCT FROM NEW.device_collection_type THEN
-_uq := array_append(_uq, 'device_collection_type = ' || quote_nullable(NEW.device_collection_type));
+_uq := array_append(_uq, 'device_collection_type = NEW.' || quote_ident('device_collection_type'));
 	END IF;
 
 	IF OLD.dns_domain_collection_type IS DISTINCT FROM NEW.dns_domain_collection_type THEN
-_uq := array_append(_uq, 'dns_domain_collection_type = ' || quote_nullable(NEW.dns_domain_collection_type));
+_uq := array_append(_uq, 'dns_domain_collection_type = NEW.' || quote_ident('dns_domain_collection_type'));
 	END IF;
 
 	IF OLD.layer2_network_collection_type IS DISTINCT FROM NEW.layer2_network_collection_type THEN
-_uq := array_append(_uq, 'layer2_network_collection_type = ' || quote_nullable(NEW.layer2_network_collection_type));
+_uq := array_append(_uq, 'layer2_network_collection_type = NEW.' || quote_ident('layer2_network_collection_type'));
 	END IF;
 
 	IF OLD.layer3_network_collection_type IS DISTINCT FROM NEW.layer3_network_collection_type THEN
-_uq := array_append(_uq, 'layer3_network_collection_type = ' || quote_nullable(NEW.layer3_network_collection_type));
+_uq := array_append(_uq, 'layer3_network_collection_type = NEW.' || quote_ident('layer3_network_collection_type'));
 	END IF;
 
 	IF OLD.netblock_collection_type IS DISTINCT FROM NEW.netblock_collection_type THEN
-_uq := array_append(_uq, 'netblock_collection_type = ' || quote_nullable(NEW.netblock_collection_type));
+_uq := array_append(_uq, 'netblock_collection_type = NEW.' || quote_ident('netblock_collection_type'));
 	END IF;
 
 	IF OLD.network_range_type IS DISTINCT FROM NEW.network_range_type THEN
-_uq := array_append(_uq, 'network_range_type = ' || quote_nullable(NEW.network_range_type));
+_uq := array_append(_uq, 'network_range_type = NEW.' || quote_ident('network_range_type'));
 	END IF;
 
 	IF OLD.property_collection_type IS DISTINCT FROM NEW.property_collection_type THEN
-_uq := array_append(_uq, 'property_name_collection_type = ' || quote_nullable(NEW.property_collection_type));
+_uq := array_append(_uq, 'property_name_collection_type = NEW.' || quote_ident('property_collection_type'));
 	END IF;
 
 	IF OLD.service_env_collection_type IS DISTINCT FROM NEW.service_env_collection_type THEN
-_uq := array_append(_uq, 'service_environment_collection_type = ' || quote_nullable(NEW.service_env_collection_type));
+_uq := array_append(_uq, 'service_environment_collection_type = NEW.' || quote_ident('service_env_collection_type'));
 	END IF;
 
 	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
@@ -10464,99 +13547,99 @@ END IF;
 	END IF;
 
 	IF OLD.prop_val_acct_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_acct_coll_type_rstrct THEN
-_uq := array_append(_uq, 'property_value_account_collection_type_restriction = ' || quote_nullable(NEW.prop_val_acct_coll_type_rstrct));
+_uq := array_append(_uq, 'property_value_account_collection_type_restriction = NEW.' || quote_ident('prop_val_acct_coll_type_rstrct'));
 	END IF;
 
 	IF OLD.prop_val_dev_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_dev_coll_type_rstrct THEN
-_uq := array_append(_uq, 'property_value_device_collection_type_restriction = ' || quote_nullable(NEW.prop_val_dev_coll_type_rstrct));
+_uq := array_append(_uq, 'property_value_device_collection_type_restriction = NEW.' || quote_ident('prop_val_dev_coll_type_rstrct'));
 	END IF;
 
 	IF OLD.prop_val_nblk_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_nblk_coll_type_rstrct THEN
-_uq := array_append(_uq, 'property_value_netblock_collection_type_restriction = ' || quote_nullable(NEW.prop_val_nblk_coll_type_rstrct));
+_uq := array_append(_uq, 'property_value_netblock_collection_type_restriction = NEW.' || quote_ident('prop_val_nblk_coll_type_rstrct'));
 	END IF;
 
 	IF OLD.property_data_type IS DISTINCT FROM NEW.property_data_type THEN
-_uq := array_append(_uq, 'property_data_type = ' || quote_nullable(NEW.property_data_type));
+_uq := array_append(_uq, 'property_data_type = NEW.' || quote_ident('property_data_type'));
 	END IF;
 
 	IF OLD.property_value_json_schema IS DISTINCT FROM NEW.property_value_json_schema THEN
-_uq := array_append(_uq, 'property_value_json_schema = ' || quote_nullable(NEW.property_value_json_schema));
+_uq := array_append(_uq, 'property_value_json_schema = NEW.' || quote_ident('property_value_json_schema'));
 	END IF;
 
 	IF OLD.permit_account_collection_id IS DISTINCT FROM NEW.permit_account_collection_id THEN
-_uq := array_append(_uq, 'permit_account_collection_id = ' || quote_nullable(NEW.permit_account_collection_id));
+_uq := array_append(_uq, 'permit_account_collection_id = NEW.' || quote_ident('permit_account_collection_id'));
 	END IF;
 
 	IF OLD.permit_account_id IS DISTINCT FROM NEW.permit_account_id THEN
-_uq := array_append(_uq, 'permit_account_id = ' || quote_nullable(NEW.permit_account_id));
+_uq := array_append(_uq, 'permit_account_id = NEW.' || quote_ident('permit_account_id'));
 	END IF;
 
 	IF OLD.permit_account_realm_id IS DISTINCT FROM NEW.permit_account_realm_id THEN
-_uq := array_append(_uq, 'permit_account_realm_id = ' || quote_nullable(NEW.permit_account_realm_id));
+_uq := array_append(_uq, 'permit_account_realm_id = NEW.' || quote_ident('permit_account_realm_id'));
 	END IF;
 
 	IF OLD.permit_company_id IS DISTINCT FROM NEW.permit_company_id THEN
-_uq := array_append(_uq, 'permit_company_id = ' || quote_nullable(NEW.permit_company_id));
+_uq := array_append(_uq, 'permit_company_id = NEW.' || quote_ident('permit_company_id'));
 	END IF;
 
 	IF OLD.permit_company_collection_id IS DISTINCT FROM NEW.permit_company_collection_id THEN
-_uq := array_append(_uq, 'permit_company_collection_id = ' || quote_nullable(NEW.permit_company_collection_id));
+_uq := array_append(_uq, 'permit_company_collection_id = NEW.' || quote_ident('permit_company_collection_id'));
 	END IF;
 
 	IF OLD.permit_device_collection_id IS DISTINCT FROM NEW.permit_device_collection_id THEN
-_uq := array_append(_uq, 'permit_device_collection_id = ' || quote_nullable(NEW.permit_device_collection_id));
+_uq := array_append(_uq, 'permit_device_collection_id = NEW.' || quote_ident('permit_device_collection_id'));
 	END IF;
 
 	IF OLD.permit_dns_domain_coll_id IS DISTINCT FROM NEW.permit_dns_domain_coll_id THEN
-_uq := array_append(_uq, 'permit_dns_domain_collection_id = ' || quote_nullable(NEW.permit_dns_domain_coll_id));
+_uq := array_append(_uq, 'permit_dns_domain_collection_id = NEW.' || quote_ident('permit_dns_domain_coll_id'));
 	END IF;
 
 	IF OLD.permit_layer2_network_coll_id IS DISTINCT FROM NEW.permit_layer2_network_coll_id THEN
-_uq := array_append(_uq, 'permit_layer2_network_collection_id = ' || quote_nullable(NEW.permit_layer2_network_coll_id));
+_uq := array_append(_uq, 'permit_layer2_network_collection_id = NEW.' || quote_ident('permit_layer2_network_coll_id'));
 	END IF;
 
 	IF OLD.permit_layer3_network_coll_id IS DISTINCT FROM NEW.permit_layer3_network_coll_id THEN
-_uq := array_append(_uq, 'permit_layer3_network_collection_id = ' || quote_nullable(NEW.permit_layer3_network_coll_id));
+_uq := array_append(_uq, 'permit_layer3_network_collection_id = NEW.' || quote_ident('permit_layer3_network_coll_id'));
 	END IF;
 
 	IF OLD.permit_netblock_collection_id IS DISTINCT FROM NEW.permit_netblock_collection_id THEN
-_uq := array_append(_uq, 'permit_netblock_collection_id = ' || quote_nullable(NEW.permit_netblock_collection_id));
+_uq := array_append(_uq, 'permit_netblock_collection_id = NEW.' || quote_ident('permit_netblock_collection_id'));
 	END IF;
 
 	IF OLD.permit_network_range_id IS DISTINCT FROM NEW.permit_network_range_id THEN
-_uq := array_append(_uq, 'permit_network_range_id = ' || quote_nullable(NEW.permit_network_range_id));
+_uq := array_append(_uq, 'permit_network_range_id = NEW.' || quote_ident('permit_network_range_id'));
 	END IF;
 
 	IF OLD.permit_operating_system_id IS DISTINCT FROM NEW.permit_operating_system_id THEN
-_uq := array_append(_uq, 'permit_operating_system_id = ' || quote_nullable(NEW.permit_operating_system_id));
+_uq := array_append(_uq, 'permit_operating_system_id = NEW.' || quote_ident('permit_operating_system_id'));
 	END IF;
 
 	IF OLD.permit_os_snapshot_id IS DISTINCT FROM NEW.permit_os_snapshot_id THEN
-_uq := array_append(_uq, 'permit_operating_system_snapshot_id = ' || quote_nullable(NEW.permit_os_snapshot_id));
+_uq := array_append(_uq, 'permit_operating_system_snapshot_id = NEW.' || quote_ident('permit_os_snapshot_id'));
 	END IF;
 
 	IF OLD.permit_person_id IS DISTINCT FROM NEW.permit_person_id THEN
-_uq := array_append(_uq, 'permit_person_id = ' || quote_nullable(NEW.permit_person_id));
+_uq := array_append(_uq, 'permit_person_id = NEW.' || quote_ident('permit_person_id'));
 	END IF;
 
 	IF OLD.permit_property_collection_id IS DISTINCT FROM NEW.permit_property_collection_id THEN
-_uq := array_append(_uq, 'permit_property_name_collection_id = ' || quote_nullable(NEW.permit_property_collection_id));
+_uq := array_append(_uq, 'permit_property_name_collection_id = NEW.' || quote_ident('permit_property_collection_id'));
 	END IF;
 
 	IF OLD.permit_service_env_collection IS DISTINCT FROM NEW.permit_service_env_collection THEN
-_uq := array_append(_uq, 'permit_service_environment_collection = ' || quote_nullable(NEW.permit_service_env_collection));
+_uq := array_append(_uq, 'permit_service_environment_collection = NEW.' || quote_ident('permit_service_env_collection'));
 	END IF;
 
 	IF OLD.permit_site_code IS DISTINCT FROM NEW.permit_site_code THEN
-_uq := array_append(_uq, 'permit_site_code = ' || quote_nullable(NEW.permit_site_code));
+_uq := array_append(_uq, 'permit_site_code = NEW.' || quote_ident('permit_site_code'));
 	END IF;
 
 	IF OLD.permit_x509_signed_cert_id IS DISTINCT FROM NEW.permit_x509_signed_cert_id THEN
-_uq := array_append(_uq, 'permit_x509_signed_certificate_id = ' || quote_nullable(NEW.permit_x509_signed_cert_id));
+_uq := array_append(_uq, 'permit_x509_signed_certificate_id = NEW.' || quote_ident('permit_x509_signed_cert_id'));
 	END IF;
 
 	IF OLD.permit_property_rank IS DISTINCT FROM NEW.permit_property_rank THEN
-_uq := array_append(_uq, 'permit_property_rank = ' || quote_nullable(NEW.permit_property_rank));
+_uq := array_append(_uq, 'permit_property_rank = NEW.' || quote_ident('permit_property_rank'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -10691,15 +13774,48 @@ CREATE TRIGGER _trigger_val_property_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_collection_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_property_name_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_property_name_collection_type (
-		property_name_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.property_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.property_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_name_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_property_name_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.property_collection_type = _nr.property_name_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -10724,19 +13840,19 @@ DECLARE
 BEGIN
 
 	IF OLD.property_collection_type IS DISTINCT FROM NEW.property_collection_type THEN
-_uq := array_append(_uq, 'property_name_collection_type = ' || quote_nullable(NEW.property_collection_type));
+_uq := array_append(_uq, 'property_name_collection_type = NEW.' || quote_ident('property_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -10815,15 +13931,42 @@ CREATE TRIGGER _trigger_val_property_collection_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_property_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_property_type (
-		property_type,description,property_value_account_collection_type_restriction,is_multivalue
-	) VALUES (
-		NEW.property_type,NEW.description,NEW.prop_val_acct_coll_type_rstrct,CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.property_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.prop_val_acct_coll_type_rstrct IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('property_value_account_collection_type_restriction'));
+		_vq := array_append(_vq, quote_nullable(NEW.prop_val_acct_coll_type_rstrct));
+	END IF;
+
+	IF NEW.is_multivalue IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_multivalue'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_multivalue = 'Y' THEN true WHEN NEW.is_multivalue = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_property_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.property_type = _nr.property_type;
+	NEW.description = _nr.description;
+	NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+	NEW.is_multivalue = _nr.is_multivalue;
 	RETURN NEW;
 END;
 $$
@@ -10848,15 +13991,15 @@ DECLARE
 BEGIN
 
 	IF OLD.property_type IS DISTINCT FROM NEW.property_type THEN
-_uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type));
+_uq := array_append(_uq, 'property_type = NEW.' || quote_ident('property_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.prop_val_acct_coll_type_rstrct IS DISTINCT FROM NEW.prop_val_acct_coll_type_rstrct THEN
-_uq := array_append(_uq, 'property_value_account_collection_type_restriction = ' || quote_nullable(NEW.prop_val_acct_coll_type_rstrct));
+_uq := array_append(_uq, 'property_value_account_collection_type_restriction = NEW.' || quote_ident('prop_val_acct_coll_type_rstrct'));
 	END IF;
 
 	IF OLD.is_multivalue IS DISTINCT FROM NEW.is_multivalue THEN
@@ -10933,15 +14076,48 @@ CREATE TRIGGER _trigger_val_property_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_service_env_coll_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_service_environment_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_service_environment_collection_type (
-		service_environment_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.service_env_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.service_env_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('service_environment_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.service_env_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_service_environment_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.service_env_collection_type = _nr.service_environment_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -10966,19 +14142,19 @@ DECLARE
 BEGIN
 
 	IF OLD.service_env_collection_type IS DISTINCT FROM NEW.service_env_collection_type THEN
-_uq := array_append(_uq, 'service_environment_collection_type = ' || quote_nullable(NEW.service_env_collection_type));
+_uq := array_append(_uq, 'service_environment_collection_type = NEW.' || quote_ident('service_env_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -11057,15 +14233,36 @@ CREATE TRIGGER _trigger_val_service_env_coll_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_slot_function_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_slot_function%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_slot_function (
-		slot_function,description,can_have_mac_address
-	) VALUES (
-		NEW.slot_function,NEW.description,CASE WHEN NEW.can_have_mac_address = 'Y' THEN true WHEN NEW.can_have_mac_address = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.slot_function IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot_function'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot_function));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.can_have_mac_address IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_mac_address'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_mac_address = 'Y' THEN true WHEN NEW.can_have_mac_address = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_slot_function (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.slot_function = _nr.slot_function;
+	NEW.description = _nr.description;
+	NEW.can_have_mac_address = _nr.can_have_mac_address;
 	RETURN NEW;
 END;
 $$
@@ -11090,11 +14287,11 @@ DECLARE
 BEGIN
 
 	IF OLD.slot_function IS DISTINCT FROM NEW.slot_function THEN
-_uq := array_append(_uq, 'slot_function = ' || quote_nullable(NEW.slot_function));
+_uq := array_append(_uq, 'slot_function = NEW.' || quote_ident('slot_function'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.can_have_mac_address IS DISTINCT FROM NEW.can_have_mac_address THEN
@@ -11169,15 +14366,48 @@ CREATE TRIGGER _trigger_val_slot_function_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_token_collection_type_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_token_collection_type%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_token_collection_type (
-		token_collection_type,description,max_num_members,max_num_collections,can_have_hierarchy
-	) VALUES (
-		NEW.token_collection_type,NEW.description,NEW.max_num_members,NEW.max_num_collections,CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.token_collection_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('token_collection_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.token_collection_type));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.max_num_members IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_members'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_members));
+	END IF;
+
+	IF NEW.max_num_collections IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('max_num_collections'));
+		_vq := array_append(_vq, quote_nullable(NEW.max_num_collections));
+	END IF;
+
+	IF NEW.can_have_hierarchy IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('can_have_hierarchy'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.can_have_hierarchy = 'Y' THEN true WHEN NEW.can_have_hierarchy = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_token_collection_type (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.token_collection_type = _nr.token_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
 	RETURN NEW;
 END;
 $$
@@ -11202,19 +14432,19 @@ DECLARE
 BEGIN
 
 	IF OLD.token_collection_type IS DISTINCT FROM NEW.token_collection_type THEN
-_uq := array_append(_uq, 'token_collection_type = ' || quote_nullable(NEW.token_collection_type));
+_uq := array_append(_uq, 'token_collection_type = NEW.' || quote_ident('token_collection_type'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.max_num_members IS DISTINCT FROM NEW.max_num_members THEN
-_uq := array_append(_uq, 'max_num_members = ' || quote_nullable(NEW.max_num_members));
+_uq := array_append(_uq, 'max_num_members = NEW.' || quote_ident('max_num_members'));
 	END IF;
 
 	IF OLD.max_num_collections IS DISTINCT FROM NEW.max_num_collections THEN
-_uq := array_append(_uq, 'max_num_collections = ' || quote_nullable(NEW.max_num_collections));
+_uq := array_append(_uq, 'max_num_collections = NEW.' || quote_ident('max_num_collections'));
 	END IF;
 
 	IF OLD.can_have_hierarchy IS DISTINCT FROM NEW.can_have_hierarchy THEN
@@ -11293,15 +14523,36 @@ CREATE TRIGGER _trigger_val_token_collection_type_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.val_x509_key_usage_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.val_x509_key_usage%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.val_x509_key_usage (
-		x509_key_usage,description,is_extended
-	) VALUES (
-		NEW.x509_key_usg,NEW.description,CASE WHEN NEW.is_extended = 'Y' THEN true WHEN NEW.is_extended = 'N' THEN false ELSE NULL END
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.x509_key_usg IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_key_usage'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_key_usg));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.is_extended IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_extended'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_extended = 'Y' THEN true WHEN NEW.is_extended = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.val_x509_key_usage (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.x509_key_usg = _nr.x509_key_usage;
+	NEW.description = _nr.description;
+	NEW.is_extended = _nr.is_extended;
 	RETURN NEW;
 END;
 $$
@@ -11326,11 +14577,11 @@ DECLARE
 BEGIN
 
 	IF OLD.x509_key_usg IS DISTINCT FROM NEW.x509_key_usg THEN
-_uq := array_append(_uq, 'x509_key_usage = ' || quote_nullable(NEW.x509_key_usg));
+_uq := array_append(_uq, 'x509_key_usage = NEW.' || quote_ident('x509_key_usg'));
 	END IF;
 
 	IF OLD.description IS DISTINCT FROM NEW.description THEN
-_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+_uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 	END IF;
 
 	IF OLD.is_extended IS DISTINCT FROM NEW.is_extended THEN
@@ -11405,15 +14656,132 @@ CREATE TRIGGER _trigger_val_x509_key_usage_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_certificate_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.x509_certificate%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.x509_certificate (
-		x509_cert_id,friendly_name,is_active,is_certificate_authority,signing_cert_id,x509_ca_cert_serial_number,public_key,private_key,certificate_sign_req,subject,subject_key_identifier,valid_from,valid_to,x509_revocation_date,x509_revocation_reason,passphrase,encryption_key_id,ocsp_uri,crl_uri
-	) VALUES (
-		NEW.x509_cert_id,NEW.friendly_name,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END,NEW.signing_cert_id,NEW.x509_ca_cert_serial_number,NEW.public_key,NEW.private_key,NEW.certificate_sign_req,NEW.subject,NEW.subject_key_identifier,NEW.valid_from,NEW.valid_to,NEW.x509_revocation_date,NEW.x509_revocation_reason,NEW.passphrase,NEW.encryption_key_id,NEW.ocsp_uri,NEW.crl_uri
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.x509_cert_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_cert_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_cert_id));
+	END IF;
+
+	IF NEW.friendly_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('friendly_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.friendly_name));
+	END IF;
+
+	IF NEW.is_active IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_active'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_certificate_authority IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_certificate_authority'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.signing_cert_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('signing_cert_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.signing_cert_id));
+	END IF;
+
+	IF NEW.x509_ca_cert_serial_number IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_ca_cert_serial_number'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_ca_cert_serial_number));
+	END IF;
+
+	IF NEW.public_key IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('public_key'));
+		_vq := array_append(_vq, quote_nullable(NEW.public_key));
+	END IF;
+
+	IF NEW.private_key IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('private_key'));
+		_vq := array_append(_vq, quote_nullable(NEW.private_key));
+	END IF;
+
+	IF NEW.certificate_sign_req IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('certificate_sign_req'));
+		_vq := array_append(_vq, quote_nullable(NEW.certificate_sign_req));
+	END IF;
+
+	IF NEW.subject IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('subject'));
+		_vq := array_append(_vq, quote_nullable(NEW.subject));
+	END IF;
+
+	IF NEW.subject_key_identifier IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('subject_key_identifier'));
+		_vq := array_append(_vq, quote_nullable(NEW.subject_key_identifier));
+	END IF;
+
+	IF NEW.valid_from IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('valid_from'));
+		_vq := array_append(_vq, quote_nullable(NEW.valid_from));
+	END IF;
+
+	IF NEW.valid_to IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('valid_to'));
+		_vq := array_append(_vq, quote_nullable(NEW.valid_to));
+	END IF;
+
+	IF NEW.x509_revocation_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_revocation_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_revocation_date));
+	END IF;
+
+	IF NEW.x509_revocation_reason IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_revocation_reason'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_revocation_reason));
+	END IF;
+
+	IF NEW.passphrase IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('passphrase'));
+		_vq := array_append(_vq, quote_nullable(NEW.passphrase));
+	END IF;
+
+	IF NEW.encryption_key_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('encryption_key_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.encryption_key_id));
+	END IF;
+
+	IF NEW.ocsp_uri IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ocsp_uri'));
+		_vq := array_append(_vq, quote_nullable(NEW.ocsp_uri));
+	END IF;
+
+	IF NEW.crl_uri IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('crl_uri'));
+		_vq := array_append(_vq, quote_nullable(NEW.crl_uri));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.x509_certificate (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.x509_cert_id = _nr.x509_cert_id;
+	NEW.friendly_name = _nr.friendly_name;
+	NEW.is_active = _nr.is_active;
+	NEW.is_certificate_authority = _nr.is_certificate_authority;
+	NEW.signing_cert_id = _nr.signing_cert_id;
+	NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+	NEW.public_key = _nr.public_key;
+	NEW.private_key = _nr.private_key;
+	NEW.certificate_sign_req = _nr.certificate_sign_req;
+	NEW.subject = _nr.subject;
+	NEW.subject_key_identifier = _nr.subject_key_identifier;
+	NEW.valid_from = _nr.valid_from;
+	NEW.valid_to = _nr.valid_to;
+	NEW.x509_revocation_date = _nr.x509_revocation_date;
+	NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+	NEW.passphrase = _nr.passphrase;
+	NEW.encryption_key_id = _nr.encryption_key_id;
+	NEW.ocsp_uri = _nr.ocsp_uri;
+	NEW.crl_uri = _nr.crl_uri;
 	RETURN NEW;
 END;
 $$
@@ -11438,11 +14806,11 @@ DECLARE
 BEGIN
 
 	IF OLD.x509_cert_id IS DISTINCT FROM NEW.x509_cert_id THEN
-_uq := array_append(_uq, 'x509_cert_id = ' || quote_nullable(NEW.x509_cert_id));
+_uq := array_append(_uq, 'x509_cert_id = NEW.' || quote_ident('x509_cert_id'));
 	END IF;
 
 	IF OLD.friendly_name IS DISTINCT FROM NEW.friendly_name THEN
-_uq := array_append(_uq, 'friendly_name = ' || quote_nullable(NEW.friendly_name));
+_uq := array_append(_uq, 'friendly_name = NEW.' || quote_ident('friendly_name'));
 	END IF;
 
 	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
@@ -11466,63 +14834,63 @@ END IF;
 	END IF;
 
 	IF OLD.signing_cert_id IS DISTINCT FROM NEW.signing_cert_id THEN
-_uq := array_append(_uq, 'signing_cert_id = ' || quote_nullable(NEW.signing_cert_id));
+_uq := array_append(_uq, 'signing_cert_id = NEW.' || quote_ident('signing_cert_id'));
 	END IF;
 
 	IF OLD.x509_ca_cert_serial_number IS DISTINCT FROM NEW.x509_ca_cert_serial_number THEN
-_uq := array_append(_uq, 'x509_ca_cert_serial_number = ' || quote_nullable(NEW.x509_ca_cert_serial_number));
+_uq := array_append(_uq, 'x509_ca_cert_serial_number = NEW.' || quote_ident('x509_ca_cert_serial_number'));
 	END IF;
 
 	IF OLD.public_key IS DISTINCT FROM NEW.public_key THEN
-_uq := array_append(_uq, 'public_key = ' || quote_nullable(NEW.public_key));
+_uq := array_append(_uq, 'public_key = NEW.' || quote_ident('public_key'));
 	END IF;
 
 	IF OLD.private_key IS DISTINCT FROM NEW.private_key THEN
-_uq := array_append(_uq, 'private_key = ' || quote_nullable(NEW.private_key));
+_uq := array_append(_uq, 'private_key = NEW.' || quote_ident('private_key'));
 	END IF;
 
 	IF OLD.certificate_sign_req IS DISTINCT FROM NEW.certificate_sign_req THEN
-_uq := array_append(_uq, 'certificate_sign_req = ' || quote_nullable(NEW.certificate_sign_req));
+_uq := array_append(_uq, 'certificate_sign_req = NEW.' || quote_ident('certificate_sign_req'));
 	END IF;
 
 	IF OLD.subject IS DISTINCT FROM NEW.subject THEN
-_uq := array_append(_uq, 'subject = ' || quote_nullable(NEW.subject));
+_uq := array_append(_uq, 'subject = NEW.' || quote_ident('subject'));
 	END IF;
 
 	IF OLD.subject_key_identifier IS DISTINCT FROM NEW.subject_key_identifier THEN
-_uq := array_append(_uq, 'subject_key_identifier = ' || quote_nullable(NEW.subject_key_identifier));
+_uq := array_append(_uq, 'subject_key_identifier = NEW.' || quote_ident('subject_key_identifier'));
 	END IF;
 
 	IF OLD.valid_from IS DISTINCT FROM NEW.valid_from THEN
-_uq := array_append(_uq, 'valid_from = ' || quote_nullable(NEW.valid_from));
+_uq := array_append(_uq, 'valid_from = NEW.' || quote_ident('valid_from'));
 	END IF;
 
 	IF OLD.valid_to IS DISTINCT FROM NEW.valid_to THEN
-_uq := array_append(_uq, 'valid_to = ' || quote_nullable(NEW.valid_to));
+_uq := array_append(_uq, 'valid_to = NEW.' || quote_ident('valid_to'));
 	END IF;
 
 	IF OLD.x509_revocation_date IS DISTINCT FROM NEW.x509_revocation_date THEN
-_uq := array_append(_uq, 'x509_revocation_date = ' || quote_nullable(NEW.x509_revocation_date));
+_uq := array_append(_uq, 'x509_revocation_date = NEW.' || quote_ident('x509_revocation_date'));
 	END IF;
 
 	IF OLD.x509_revocation_reason IS DISTINCT FROM NEW.x509_revocation_reason THEN
-_uq := array_append(_uq, 'x509_revocation_reason = ' || quote_nullable(NEW.x509_revocation_reason));
+_uq := array_append(_uq, 'x509_revocation_reason = NEW.' || quote_ident('x509_revocation_reason'));
 	END IF;
 
 	IF OLD.passphrase IS DISTINCT FROM NEW.passphrase THEN
-_uq := array_append(_uq, 'passphrase = ' || quote_nullable(NEW.passphrase));
+_uq := array_append(_uq, 'passphrase = NEW.' || quote_ident('passphrase'));
 	END IF;
 
 	IF OLD.encryption_key_id IS DISTINCT FROM NEW.encryption_key_id THEN
-_uq := array_append(_uq, 'encryption_key_id = ' || quote_nullable(NEW.encryption_key_id));
+_uq := array_append(_uq, 'encryption_key_id = NEW.' || quote_ident('encryption_key_id'));
 	END IF;
 
 	IF OLD.ocsp_uri IS DISTINCT FROM NEW.ocsp_uri THEN
-_uq := array_append(_uq, 'ocsp_uri = ' || quote_nullable(NEW.ocsp_uri));
+_uq := array_append(_uq, 'ocsp_uri = NEW.' || quote_ident('ocsp_uri'));
 	END IF;
 
 	IF OLD.crl_uri IS DISTINCT FROM NEW.crl_uri THEN
-_uq := array_append(_uq, 'crl_uri = ' || quote_nullable(NEW.crl_uri));
+_uq := array_append(_uq, 'crl_uri = NEW.' || quote_ident('crl_uri'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN
@@ -11619,15 +14987,126 @@ CREATE TRIGGER _trigger_x509_certificate_del
 CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_signed_certificate_ins()
 RETURNS TRIGGER AS
 $$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.x509_signed_certificate%rowtype;
 BEGIN
 
-	INSERT INTO jazzhands.x509_signed_certificate (
-		x509_signed_certificate_id,x509_certificate_type,subject,friendly_name,subject_key_identifier,is_active,is_certificate_authority,signing_cert_id,x509_ca_cert_serial_number,public_key,private_key_id,certificate_signing_request_id,valid_from,valid_to,x509_revocation_date,x509_revocation_reason,ocsp_uri,crl_uri
-	) VALUES (
-		NEW.x509_signed_certificate_id,NEW.x509_certificate_type,NEW.subject,NEW.friendly_name,NEW.subject_key_identifier,CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END,CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END,NEW.signing_cert_id,NEW.x509_ca_cert_serial_number,NEW.public_key,NEW.private_key_id,NEW.certificate_signing_request_id,NEW.valid_from,NEW.valid_to,NEW.x509_revocation_date,NEW.x509_revocation_reason,NEW.ocsp_uri,NEW.crl_uri
-	);
-	-- XXX note if the insert trigger changes anything then it is not
-	-- returned properly..  ugh
+	IF NEW.x509_signed_certificate_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_signed_certificate_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_signed_certificate_id));
+	END IF;
+
+	IF NEW.x509_certificate_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_certificate_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_certificate_type));
+	END IF;
+
+	IF NEW.subject IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('subject'));
+		_vq := array_append(_vq, quote_nullable(NEW.subject));
+	END IF;
+
+	IF NEW.friendly_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('friendly_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.friendly_name));
+	END IF;
+
+	IF NEW.subject_key_identifier IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('subject_key_identifier'));
+		_vq := array_append(_vq, quote_nullable(NEW.subject_key_identifier));
+	END IF;
+
+	IF NEW.is_active IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_active'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_active = 'Y' THEN true WHEN NEW.is_active = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.is_certificate_authority IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('is_certificate_authority'));
+		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_certificate_authority = 'Y' THEN true WHEN NEW.is_certificate_authority = 'N' THEN false ELSE NULL END));
+	END IF;
+
+	IF NEW.signing_cert_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('signing_cert_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.signing_cert_id));
+	END IF;
+
+	IF NEW.x509_ca_cert_serial_number IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_ca_cert_serial_number'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_ca_cert_serial_number));
+	END IF;
+
+	IF NEW.public_key IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('public_key'));
+		_vq := array_append(_vq, quote_nullable(NEW.public_key));
+	END IF;
+
+	IF NEW.private_key_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('private_key_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.private_key_id));
+	END IF;
+
+	IF NEW.certificate_signing_request_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('certificate_signing_request_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.certificate_signing_request_id));
+	END IF;
+
+	IF NEW.valid_from IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('valid_from'));
+		_vq := array_append(_vq, quote_nullable(NEW.valid_from));
+	END IF;
+
+	IF NEW.valid_to IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('valid_to'));
+		_vq := array_append(_vq, quote_nullable(NEW.valid_to));
+	END IF;
+
+	IF NEW.x509_revocation_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_revocation_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_revocation_date));
+	END IF;
+
+	IF NEW.x509_revocation_reason IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('x509_revocation_reason'));
+		_vq := array_append(_vq, quote_nullable(NEW.x509_revocation_reason));
+	END IF;
+
+	IF NEW.ocsp_uri IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('ocsp_uri'));
+		_vq := array_append(_vq, quote_nullable(NEW.ocsp_uri));
+	END IF;
+
+	IF NEW.crl_uri IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('crl_uri'));
+		_vq := array_append(_vq, quote_nullable(NEW.crl_uri));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.x509_signed_certificate (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+	NEW.x509_certificate_type = _nr.x509_certificate_type;
+	NEW.subject = _nr.subject;
+	NEW.friendly_name = _nr.friendly_name;
+	NEW.subject_key_identifier = _nr.subject_key_identifier;
+	NEW.is_active = _nr.is_active;
+	NEW.is_certificate_authority = _nr.is_certificate_authority;
+	NEW.signing_cert_id = _nr.signing_cert_id;
+	NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+	NEW.public_key = _nr.public_key;
+	NEW.private_key_id = _nr.private_key_id;
+	NEW.certificate_signing_request_id = _nr.certificate_signing_request_id;
+	NEW.valid_from = _nr.valid_from;
+	NEW.valid_to = _nr.valid_to;
+	NEW.x509_revocation_date = _nr.x509_revocation_date;
+	NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+	NEW.ocsp_uri = _nr.ocsp_uri;
+	NEW.crl_uri = _nr.crl_uri;
 	RETURN NEW;
 END;
 $$
@@ -11652,23 +15131,23 @@ DECLARE
 BEGIN
 
 	IF OLD.x509_signed_certificate_id IS DISTINCT FROM NEW.x509_signed_certificate_id THEN
-_uq := array_append(_uq, 'x509_signed_certificate_id = ' || quote_nullable(NEW.x509_signed_certificate_id));
+_uq := array_append(_uq, 'x509_signed_certificate_id = NEW.' || quote_ident('x509_signed_certificate_id'));
 	END IF;
 
 	IF OLD.x509_certificate_type IS DISTINCT FROM NEW.x509_certificate_type THEN
-_uq := array_append(_uq, 'x509_certificate_type = ' || quote_nullable(NEW.x509_certificate_type));
+_uq := array_append(_uq, 'x509_certificate_type = NEW.' || quote_ident('x509_certificate_type'));
 	END IF;
 
 	IF OLD.subject IS DISTINCT FROM NEW.subject THEN
-_uq := array_append(_uq, 'subject = ' || quote_nullable(NEW.subject));
+_uq := array_append(_uq, 'subject = NEW.' || quote_ident('subject'));
 	END IF;
 
 	IF OLD.friendly_name IS DISTINCT FROM NEW.friendly_name THEN
-_uq := array_append(_uq, 'friendly_name = ' || quote_nullable(NEW.friendly_name));
+_uq := array_append(_uq, 'friendly_name = NEW.' || quote_ident('friendly_name'));
 	END IF;
 
 	IF OLD.subject_key_identifier IS DISTINCT FROM NEW.subject_key_identifier THEN
-_uq := array_append(_uq, 'subject_key_identifier = ' || quote_nullable(NEW.subject_key_identifier));
+_uq := array_append(_uq, 'subject_key_identifier = NEW.' || quote_ident('subject_key_identifier'));
 	END IF;
 
 	IF OLD.is_active IS DISTINCT FROM NEW.is_active THEN
@@ -11692,47 +15171,47 @@ END IF;
 	END IF;
 
 	IF OLD.signing_cert_id IS DISTINCT FROM NEW.signing_cert_id THEN
-_uq := array_append(_uq, 'signing_cert_id = ' || quote_nullable(NEW.signing_cert_id));
+_uq := array_append(_uq, 'signing_cert_id = NEW.' || quote_ident('signing_cert_id'));
 	END IF;
 
 	IF OLD.x509_ca_cert_serial_number IS DISTINCT FROM NEW.x509_ca_cert_serial_number THEN
-_uq := array_append(_uq, 'x509_ca_cert_serial_number = ' || quote_nullable(NEW.x509_ca_cert_serial_number));
+_uq := array_append(_uq, 'x509_ca_cert_serial_number = NEW.' || quote_ident('x509_ca_cert_serial_number'));
 	END IF;
 
 	IF OLD.public_key IS DISTINCT FROM NEW.public_key THEN
-_uq := array_append(_uq, 'public_key = ' || quote_nullable(NEW.public_key));
+_uq := array_append(_uq, 'public_key = NEW.' || quote_ident('public_key'));
 	END IF;
 
 	IF OLD.private_key_id IS DISTINCT FROM NEW.private_key_id THEN
-_uq := array_append(_uq, 'private_key_id = ' || quote_nullable(NEW.private_key_id));
+_uq := array_append(_uq, 'private_key_id = NEW.' || quote_ident('private_key_id'));
 	END IF;
 
 	IF OLD.certificate_signing_request_id IS DISTINCT FROM NEW.certificate_signing_request_id THEN
-_uq := array_append(_uq, 'certificate_signing_request_id = ' || quote_nullable(NEW.certificate_signing_request_id));
+_uq := array_append(_uq, 'certificate_signing_request_id = NEW.' || quote_ident('certificate_signing_request_id'));
 	END IF;
 
 	IF OLD.valid_from IS DISTINCT FROM NEW.valid_from THEN
-_uq := array_append(_uq, 'valid_from = ' || quote_nullable(NEW.valid_from));
+_uq := array_append(_uq, 'valid_from = NEW.' || quote_ident('valid_from'));
 	END IF;
 
 	IF OLD.valid_to IS DISTINCT FROM NEW.valid_to THEN
-_uq := array_append(_uq, 'valid_to = ' || quote_nullable(NEW.valid_to));
+_uq := array_append(_uq, 'valid_to = NEW.' || quote_ident('valid_to'));
 	END IF;
 
 	IF OLD.x509_revocation_date IS DISTINCT FROM NEW.x509_revocation_date THEN
-_uq := array_append(_uq, 'x509_revocation_date = ' || quote_nullable(NEW.x509_revocation_date));
+_uq := array_append(_uq, 'x509_revocation_date = NEW.' || quote_ident('x509_revocation_date'));
 	END IF;
 
 	IF OLD.x509_revocation_reason IS DISTINCT FROM NEW.x509_revocation_reason THEN
-_uq := array_append(_uq, 'x509_revocation_reason = ' || quote_nullable(NEW.x509_revocation_reason));
+_uq := array_append(_uq, 'x509_revocation_reason = NEW.' || quote_ident('x509_revocation_reason'));
 	END IF;
 
 	IF OLD.ocsp_uri IS DISTINCT FROM NEW.ocsp_uri THEN
-_uq := array_append(_uq, 'ocsp_uri = ' || quote_nullable(NEW.ocsp_uri));
+_uq := array_append(_uq, 'ocsp_uri = NEW.' || quote_ident('ocsp_uri'));
 	END IF;
 
 	IF OLD.crl_uri IS DISTINCT FROM NEW.crl_uri THEN
-_uq := array_append(_uq, 'crl_uri = ' || quote_nullable(NEW.crl_uri));
+_uq := array_append(_uq, 'crl_uri = NEW.' || quote_ident('crl_uri'));
 	END IF;
 
 	IF _uq IS NOT NULL THEN

@@ -111,6 +111,45 @@ begin;
 -- \ir tests/pgsql/v_corp_family_account_trigger.sql
 
 rollback;
--- RAISE EXCEPTION 'need to put transactions back in testing';
+
+-- now run all the tests from the last version against jazhands_legacy
+begin;
+
+set search_path=jazzhands_legacy;
+\ir init/initialize_jazzhands_example.sql
+\ir tests/pgsql/jhlegacy/insert_records.sql
+\ir tests/pgsql/jhlegacy/insert_devices.sql
+\ir tests/pgsql/jhlegacy/test_netblock_collection.sql
+\ir tests/pgsql/jhlegacy/location_regression_test.sql
+\ir tests/pgsql/jhlegacy/netblock_regression_test.sql
+\ir tests/pgsql/jhlegacy/dns_record_regression_test.sql
+\ir tests/pgsql/jhlegacy/ip_universe_validation_regression.sql
+\ir tests/pgsql/jhlegacy/netblock_defaults_regression.sql
+\ir tests/pgsql/jhlegacy/layer3_interface_regression_test.sql
+\ir tests/pgsql/jhlegacy/property_regression_test.sql
+\ir tests/pgsql/jhlegacy/device_ticket_regression.sql
+\ir tests/pgsql/jhlegacy/device_power_regression.sql
+\ir tests/pgsql/jhlegacy/account_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/company_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/device_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/dns_domain_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/dns_domain_name_tests-RETIRE.sql
+\ir tests/pgsql/jhlegacy/layer2_network_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/layer3_network_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/netblock_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/property_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/svcenv_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/token_coll_hier_regression.sql
+\ir tests/pgsql/jhlegacy/account_coll_realm_regression.sql
+\ir tests/pgsql/jhlegacy/network_range_tests.sql
+\ir tests/pgsql/jhlegacy/x509_tests.sql
+\ir tests/pgsql/jhlegacy/v_person_company_regression.sql
+
+\ir tests/pgsql/account_enabled_test.sql
+-- \ir tests/pgsql/v_corp_family_account_trigger.sql
+
+
+set search_path=jazzhands;
+rollback;
 
 select timeofday(), now();
