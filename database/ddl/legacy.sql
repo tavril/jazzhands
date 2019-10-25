@@ -7630,7 +7630,7 @@ END IF;
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_corp_family_account SET ' ||
 			array_to_string(_uq, ', ') ||
-			1 = 0
+			' WHERE  NEW.account_id = $1 RETURNING *'  USING OLD.account_id
 			INTO _nr;
 		NEW.account_id = _nr.account_id;
 		NEW.login = _nr.login;
@@ -7668,7 +7668,7 @@ DECLARE
 	_or	jazzhands.v_corp_family_account%rowtype;
 BEGIN
 	DELETE FROM jazzhands.v_corp_family_account
-	WHERE 1 = 0
+	WHERE  account_id = OLD.account_id  RETURNING *
 	INTO _or;
 	OLD.account_id = _or.account_id;
 	OLD.login = _or.login;
@@ -7804,7 +7804,7 @@ _uq := array_append(_uq, 'dns_domain_type = ' || quote_nullable(NEW.dns_domain_t
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_dns_domain_nouniverse SET ' ||
 			array_to_string(_uq, ', ') ||
-			1 = 0
+			' WHERE  NEW.dns_domain_id = $1 RETURNING *'  USING OLD.dns_domain_id
 			INTO _nr;
 		NEW.dns_domain_id = _nr.dns_domain_id;
 		NEW.soa_name = _nr.soa_name;
@@ -7847,7 +7847,7 @@ DECLARE
 	_or	jazzhands.v_dns_domain_nouniverse%rowtype;
 BEGIN
 	DELETE FROM jazzhands.v_dns_domain_nouniverse
-	WHERE 1 = 0
+	WHERE  dns_domain_id = OLD.dns_domain_id  RETURNING *
 	INTO _or;
 	OLD.dns_domain_id = _or.dns_domain_id;
 	OLD.soa_name = _or.soa_name;
@@ -7996,7 +7996,7 @@ _uq := array_append(_uq, 'encryption_method = ' || quote_nullable(NEW.encryption
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_hotpants_token SET ' ||
 			array_to_string(_uq, ', ') ||
-			1 = 0
+			' WHERE  NEW.token_id = $1 RETURNING *'  USING OLD.token_id
 			INTO _nr;
 		NEW.token_id = _nr.token_id;
 		NEW.token_type = _nr.token_type;
@@ -8037,7 +8037,7 @@ DECLARE
 	_or	jazzhands.v_hotpants_token%rowtype;
 BEGIN
 	DELETE FROM jazzhands.v_hotpants_token
-	WHERE 1 = 0
+	WHERE  token_id = OLD.token_id  RETURNING *
 	INTO _or;
 	OLD.token_id = _or.token_id;
 	OLD.token_type = _or.token_type;
@@ -8200,7 +8200,7 @@ _uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.v_person_company SET ' ||
 			array_to_string(_uq, ', ') ||
-			1 = 0
+			' WHERE  NEW.person_id = $1 AND  NEW.company_id = $2 RETURNING *'  USING OLD.person_id, OLD.company_id
 			INTO _nr;
 		NEW.company_id = _nr.company_id;
 		NEW.person_id = _nr.person_id;
@@ -8246,7 +8246,7 @@ DECLARE
 	_or	jazzhands.v_person_company%rowtype;
 BEGIN
 	DELETE FROM jazzhands.v_person_company
-	WHERE 1 = 0
+	WHERE  person_id = OLD.person_id  AND  company_id = OLD.company_id  RETURNING *
 	INTO _or;
 	OLD.company_id = _or.company_id;
 	OLD.person_id = _or.person_id;
@@ -11528,7 +11528,7 @@ _uq := array_append(_uq, 'crl_uri = ' || quote_nullable(NEW.crl_uri));
 	IF _uq IS NOT NULL THEN
 		EXECUTE 'UPDATE jazzhands.x509_certificate SET ' ||
 			array_to_string(_uq, ', ') ||
-			1 = 0
+			' WHERE  NEW.x509_cert_id = $1 RETURNING *'  USING OLD.x509_cert_id
 			INTO _nr;
 		NEW.x509_cert_id = _nr.x509_cert_id;
 		NEW.friendly_name = _nr.friendly_name;
@@ -11575,7 +11575,7 @@ DECLARE
 	_or	jazzhands.x509_certificate%rowtype;
 BEGIN
 	DELETE FROM jazzhands.x509_certificate
-	WHERE 1 = 0
+	WHERE  x509_cert_id = OLD.x509_cert_id  RETURNING *
 	INTO _or;
 	OLD.x509_cert_id = _or.x509_cert_id;
 	OLD.friendly_name = _or.friendly_name;
