@@ -3316,6 +3316,43 @@ CREATE TRIGGER _trigger_account_upd
 	EXECUTE PROCEDURE jazzhands_legacy.account_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.account_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.account%rowtype;
+BEGIN
+	DELETE FROM jazzhands.account
+	WHERE  account_id = OLD.account_id  RETURNING *
+	INTO _or;
+	OLD.account_id = _or.account_id;
+	OLD.login = _or.login;
+	OLD.person_id = _or.person_id;
+	OLD.company_id = _or.company_id;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.account_realm_id = _or.account_realm_id;
+	OLD.account_status = _or.account_status;
+	OLD.account_role = _or.account_role;
+	OLD.account_type = _or.account_type;
+	OLD.description = _or.description;
+	OLD.external_id = _or.external_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_account_del
+	ON jazzhands_legacy.account;
+CREATE TRIGGER _trigger_account_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.account
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.account_del();
+
 
 -- Triggers for account_auth_log
 
@@ -3416,6 +3453,37 @@ CREATE TRIGGER _trigger_account_auth_log_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.account_auth_log_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.account_auth_log_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.account_auth_log%rowtype;
+BEGIN
+	DELETE FROM jazzhands.account_auth_log
+	WHERE  account_id = OLD.account_id  AND  account_auth_ts = OLD.account_auth_ts  AND  auth_resource = OLD.auth_resource  AND  account_auth_seq = OLD.account_auth_seq  RETURNING *
+	INTO _or;
+	OLD.account_id = _or.account_id;
+	OLD.account_auth_ts = _or.account_auth_ts;
+	OLD.auth_resource = _or.auth_resource;
+	OLD.account_auth_seq = _or.account_auth_seq;
+	OLD.was_auth_success = _or.was_auth_success;
+	OLD.auth_resource_instance = _or.auth_resource_instance;
+	OLD.auth_origin = _or.auth_origin;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_ins_user = _or.data_ins_user;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_account_auth_log_del
+	ON jazzhands_legacy.account_auth_log;
+CREATE TRIGGER _trigger_account_auth_log_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.account_auth_log
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.account_auth_log_del();
 
 
 -- Triggers for approval_instance_item
@@ -3539,6 +3607,43 @@ CREATE TRIGGER _trigger_approval_instance_item_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_item_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_item_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.approval_instance_item%rowtype;
+BEGIN
+	DELETE FROM jazzhands.approval_instance_item
+	WHERE  approval_instance_item_id = OLD.approval_instance_item_id  RETURNING *
+	INTO _or;
+	OLD.approval_instance_item_id = _or.approval_instance_item_id;
+	OLD.approval_instance_link_id = _or.approval_instance_link_id;
+	OLD.approval_instance_step_id = _or.approval_instance_step_id;
+	OLD.next_approval_instance_item_id = _or.next_approval_instance_item_id;
+	OLD.approved_category = _or.approved_category;
+	OLD.approved_label = _or.approved_label;
+	OLD.approved_lhs = _or.approved_lhs;
+	OLD.approved_rhs = _or.approved_rhs;
+	OLD.is_approved = _or.is_approved;
+	OLD.approved_account_id = _or.approved_account_id;
+	OLD.approval_note = _or.approval_note;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_instance_item_del
+	ON jazzhands_legacy.approval_instance_item;
+CREATE TRIGGER _trigger_approval_instance_item_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.approval_instance_item
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_item_del();
 
 
 -- Triggers for approval_instance_step
@@ -3667,6 +3772,44 @@ CREATE TRIGGER _trigger_approval_instance_step_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_step_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_instance_step_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.approval_instance_step%rowtype;
+BEGIN
+	DELETE FROM jazzhands.approval_instance_step
+	WHERE  approval_instance_step_id = OLD.approval_instance_step_id  RETURNING *
+	INTO _or;
+	OLD.approval_instance_step_id = _or.approval_instance_step_id;
+	OLD.approval_instance_id = _or.approval_instance_id;
+	OLD.approval_process_chain_id = _or.approval_process_chain_id;
+	OLD.approval_instance_step_name = _or.approval_instance_step_name;
+	OLD.approval_instance_step_due = _or.approval_instance_step_due;
+	OLD.approval_type = _or.approval_type;
+	OLD.description = _or.description;
+	OLD.approval_instance_step_start = _or.approval_instance_step_start;
+	OLD.approval_instance_step_end = _or.approval_instance_step_end;
+	OLD.approver_account_id = _or.approver_account_id;
+	OLD.external_reference_name = _or.external_reference_name;
+	OLD.is_completed = _or.is_completed;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_instance_step_del
+	ON jazzhands_legacy.approval_instance_step;
+CREATE TRIGGER _trigger_approval_instance_step_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.approval_instance_step
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_instance_step_del();
 
 
 -- Triggers for approval_process_chain
@@ -3811,6 +3954,47 @@ CREATE TRIGGER _trigger_approval_process_chain_upd
 	EXECUTE PROCEDURE jazzhands_legacy.approval_process_chain_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.approval_process_chain_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.approval_process_chain%rowtype;
+BEGIN
+	DELETE FROM jazzhands.approval_process_chain
+	WHERE  approval_process_chain_id = OLD.approval_process_chain_id  RETURNING *
+	INTO _or;
+	OLD.approval_process_chain_id = _or.approval_process_chain_id;
+	OLD.approval_process_chain_name = _or.approval_process_chain_name;
+	OLD.approval_chain_response_period = _or.approval_chain_response_period;
+	OLD.description = _or.description;
+	OLD.message = _or.message;
+	OLD.email_message = _or.email_message;
+	OLD.email_subject_prefix = _or.email_subject_prefix;
+	OLD.email_subject_suffix = _or.email_subject_suffix;
+	OLD.max_escalation_level = _or.max_escalation_level;
+	OLD.escalation_delay = _or.escalation_delay;
+	OLD.escalation_reminder_gap = _or.escalation_reminder_gap;
+	OLD.approving_entity = _or.approving_entity;
+	OLD.refresh_all_data = _or.refresh_all_data;
+	OLD.accept_app_process_chain_id = _or.accept_app_process_chain_id;
+	OLD.reject_app_process_chain_id = _or.reject_app_process_chain_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_approval_process_chain_del
+	ON jazzhands_legacy.approval_process_chain;
+CREATE TRIGGER _trigger_approval_process_chain_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.approval_process_chain
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.approval_process_chain_del();
+
 
 -- Triggers for circuit
 
@@ -3928,6 +4112,42 @@ CREATE TRIGGER _trigger_circuit_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.circuit_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.circuit_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.circuit%rowtype;
+BEGIN
+	DELETE FROM jazzhands.circuit
+	WHERE  circuit_id = OLD.circuit_id  RETURNING *
+	INTO _or;
+	OLD.circuit_id = _or.circuit_id;
+	OLD.vendor_company_id = _or.vendor_company_id;
+	OLD.vendor_circuit_id_str = _or.vendor_circuit_id_str;
+	OLD.aloc_lec_company_id = _or.aloc_lec_company_id;
+	OLD.aloc_lec_circuit_id_str = _or.aloc_lec_circuit_id_str;
+	OLD.aloc_parent_circuit_id = _or.aloc_parent_circuit_id;
+	OLD.zloc_lec_company_id = _or.zloc_lec_company_id;
+	OLD.zloc_lec_circuit_id_str = _or.zloc_lec_circuit_id_str;
+	OLD.zloc_parent_circuit_id = _or.zloc_parent_circuit_id;
+	OLD.is_locally_managed = _or.is_locally_managed;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_circuit_del
+	ON jazzhands_legacy.circuit;
+CREATE TRIGGER _trigger_circuit_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.circuit
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.circuit_del();
 
 
 -- Triggers for component_type
@@ -4070,6 +4290,43 @@ CREATE TRIGGER _trigger_component_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.component_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.component_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.component_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.component_type
+	WHERE  component_type_id = OLD.component_type_id  RETURNING *
+	INTO _or;
+	OLD.component_type_id = _or.component_type_id;
+	OLD.company_id = _or.company_id;
+	OLD.model = _or.model;
+	OLD.slot_type_id = _or.slot_type_id;
+	OLD.description = _or.description;
+	OLD.part_number = _or.part_number;
+	OLD.is_removable = _or.is_removable;
+	OLD.asset_permitted = _or.asset_permitted;
+	OLD.is_rack_mountable = _or.is_rack_mountable;
+	OLD.is_virtual_component = _or.is_virtual_component;
+	OLD.size_units = _or.size_units;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_component_type_del
+	ON jazzhands_legacy.component_type;
+CREATE TRIGGER _trigger_component_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.component_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.component_type_del();
+
 
 -- Triggers for department
 
@@ -4177,6 +4434,40 @@ CREATE TRIGGER _trigger_department_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.department_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.department_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.department%rowtype;
+BEGIN
+	DELETE FROM jazzhands.department
+	WHERE  account_collection_id = OLD.account_collection_id  RETURNING *
+	INTO _or;
+	OLD.account_collection_id = _or.account_collection_id;
+	OLD.company_id = _or.company_id;
+	OLD.manager_account_id = _or.manager_account_id;
+	OLD.is_active = _or.is_active;
+	OLD.dept_code = _or.dept_code;
+	OLD.cost_center_name = _or.cost_center_name;
+	OLD.cost_center_number = _or.cost_center_number;
+	OLD.default_badge_type_id = _or.default_badge_type_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_department_del
+	ON jazzhands_legacy.department;
+CREATE TRIGGER _trigger_department_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.department
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.department_del();
 
 
 -- Triggers for device
@@ -4348,6 +4639,51 @@ CREATE TRIGGER _trigger_device_upd
 	EXECUTE PROCEDURE jazzhands_legacy.device_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.device_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.device%rowtype;
+BEGIN
+	DELETE FROM jazzhands.device
+	WHERE  device_id = OLD.device_id  RETURNING *
+	INTO _or;
+	OLD.device_id = _or.device_id;
+	OLD.component_id = _or.component_id;
+	OLD.device_type_id = _or.device_type_id;
+	OLD.device_name = _or.device_name;
+	OLD.site_code = _or.site_code;
+	OLD.identifying_dns_record_id = _or.identifying_dns_record_id;
+	OLD.host_id = _or.host_id;
+	OLD.physical_label = _or.physical_label;
+	OLD.rack_location_id = _or.rack_location_id;
+	OLD.chassis_location_id = _or.chassis_location_id;
+	OLD.parent_device_id = _or.parent_device_id;
+	OLD.description = _or.description;
+	OLD.external_id = _or.external_id;
+	OLD.device_status = _or.device_status;
+	OLD.operating_system_id = _or.operating_system_id;
+	OLD.service_environment_id = _or.service_environment_id;
+	OLD.is_locally_managed = _or.is_locally_managed;
+	OLD.is_virtual_device = _or.is_virtual_device;
+	OLD.date_in_service = _or.date_in_service;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_device_del
+	ON jazzhands_legacy.device;
+CREATE TRIGGER _trigger_device_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.device
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.device_del();
+
 
 -- Triggers for device_type
 
@@ -4514,6 +4850,48 @@ CREATE TRIGGER _trigger_device_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.device_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.device_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.device_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.device_type
+	WHERE  device_type_id = OLD.device_type_id  RETURNING *
+	INTO _or;
+	OLD.device_type_id = _or.device_type_id;
+	OLD.component_type_id = _or.component_type_id;
+	OLD.device_type_name = _or.device_type_name;
+	OLD.template_device_id = _or.template_device_id;
+	OLD.idealized_device_id = _or.idealized_device_id;
+	OLD.description = _or.description;
+	OLD.company_id = _or.company_id;
+	OLD.model = _or.model;
+	OLD.device_type_depth_in_cm = _or.device_type_depth_in_cm;
+	OLD.processor_architecture = _or.processor_architecture;
+	OLD.config_fetch_type = _or.config_fetch_type;
+	OLD.rack_units = _or.rack_units;
+	OLD.has_802_3_interface = _or.has_802_3_interface;
+	OLD.has_802_11_interface = _or.has_802_11_interface;
+	OLD.snmp_capable = _or.snmp_capable;
+	OLD.is_chassis = _or.is_chassis;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_device_type_del
+	ON jazzhands_legacy.device_type;
+CREATE TRIGGER _trigger_device_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.device_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.device_type_del();
+
 
 -- Triggers for dns_domain_ip_universe
 
@@ -4646,6 +5024,45 @@ CREATE TRIGGER _trigger_dns_domain_ip_universe_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.dns_domain_ip_universe_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_domain_ip_universe_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.dns_domain_ip_universe%rowtype;
+BEGIN
+	DELETE FROM jazzhands.dns_domain_ip_universe
+	WHERE  dns_domain_id = OLD.dns_domain_id  AND  ip_universe_id = OLD.ip_universe_id  RETURNING *
+	INTO _or;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.soa_class = _or.soa_class;
+	OLD.soa_ttl = _or.soa_ttl;
+	OLD.soa_serial = _or.soa_serial;
+	OLD.soa_refresh = _or.soa_refresh;
+	OLD.soa_retry = _or.soa_retry;
+	OLD.soa_expire = _or.soa_expire;
+	OLD.soa_minimum = _or.soa_minimum;
+	OLD.soa_mname = _or.soa_mname;
+	OLD.soa_rname = _or.soa_rname;
+	OLD.should_generate = _or.should_generate;
+	OLD.last_generated = _or.last_generated;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_dns_domain_ip_universe_del
+	ON jazzhands_legacy.dns_domain_ip_universe;
+CREATE TRIGGER _trigger_dns_domain_ip_universe_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.dns_domain_ip_universe
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.dns_domain_ip_universe_del();
 
 
 -- Triggers for dns_record
@@ -4811,6 +5228,50 @@ CREATE TRIGGER _trigger_dns_record_upd
 	EXECUTE PROCEDURE jazzhands_legacy.dns_record_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.dns_record_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.dns_record%rowtype;
+BEGIN
+	DELETE FROM jazzhands.dns_record
+	WHERE  dns_record_id = OLD.dns_record_id  RETURNING *
+	INTO _or;
+	OLD.dns_record_id = _or.dns_record_id;
+	OLD.dns_name = _or.dns_name;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.dns_ttl = _or.dns_ttl;
+	OLD.dns_class = _or.dns_class;
+	OLD.dns_type = _or.dns_type;
+	OLD.dns_value = _or.dns_value;
+	OLD.dns_priority = _or.dns_priority;
+	OLD.dns_srv_service = _or.dns_srv_service;
+	OLD.dns_srv_protocol = _or.dns_srv_protocol;
+	OLD.dns_srv_weight = _or.dns_srv_weight;
+	OLD.dns_srv_port = _or.dns_srv_port;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.reference_dns_record_id = _or.reference_dns_record_id;
+	OLD.dns_value_record_id = _or.dns_value_record_id;
+	OLD.should_generate_ptr = _or.should_generate_ptr;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_dns_record_del
+	ON jazzhands_legacy.dns_record;
+CREATE TRIGGER _trigger_dns_record_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.dns_record
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.dns_record_del();
+
 
 -- Triggers for ip_universe
 
@@ -4904,6 +5365,37 @@ CREATE TRIGGER _trigger_ip_universe_upd
 	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.ip_universe%rowtype;
+BEGIN
+	DELETE FROM jazzhands.ip_universe
+	WHERE  ip_universe_id = OLD.ip_universe_id  RETURNING *
+	INTO _or;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.ip_universe_name = _or.ip_universe_name;
+	OLD.ip_namespace = _or.ip_namespace;
+	OLD.should_generate_dns = _or.should_generate_dns;
+	OLD.description = _or.description;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_ip_universe_del
+	ON jazzhands_legacy.ip_universe;
+CREATE TRIGGER _trigger_ip_universe_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.ip_universe
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_del();
+
 
 -- Triggers for ip_universe_visibility
 
@@ -4986,6 +5478,35 @@ CREATE TRIGGER _trigger_ip_universe_visibility_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_visibility_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.ip_universe_visibility_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.ip_universe_visibility%rowtype;
+BEGIN
+	DELETE FROM jazzhands.ip_universe_visibility
+	WHERE  ip_universe_id = OLD.ip_universe_id  AND  visible_ip_universe_id = OLD.visible_ip_universe_id  RETURNING *
+	INTO _or;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.visible_ip_universe_id = _or.visible_ip_universe_id;
+	OLD.propagate_dns = _or.propagate_dns;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_ip_universe_visibility_del
+	ON jazzhands_legacy.ip_universe_visibility;
+CREATE TRIGGER _trigger_ip_universe_visibility_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.ip_universe_visibility
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.ip_universe_visibility_del();
 
 
 -- Triggers for netblock
@@ -5110,6 +5631,42 @@ CREATE TRIGGER _trigger_netblock_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.netblock_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.netblock_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.netblock%rowtype;
+BEGIN
+	DELETE FROM jazzhands.netblock
+	WHERE  netblock_id = OLD.netblock_id  RETURNING *
+	INTO _or;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ip_address = _or.ip_address;
+	OLD.netblock_type = _or.netblock_type;
+	OLD.is_single_address = _or.is_single_address;
+	OLD.can_subnet = _or.can_subnet;
+	OLD.parent_netblock_id = _or.parent_netblock_id;
+	OLD.netblock_status = _or.netblock_status;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.description = _or.description;
+	OLD.external_id = _or.external_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_netblock_del
+	ON jazzhands_legacy.netblock;
+CREATE TRIGGER _trigger_netblock_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.netblock
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.netblock_del();
 
 
 -- Triggers for network_interface
@@ -5257,6 +5814,45 @@ CREATE TRIGGER _trigger_network_interface_upd
 	EXECUTE PROCEDURE jazzhands_legacy.network_interface_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.network_interface_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.layer3_interface%rowtype;
+BEGIN
+	DELETE FROM jazzhands.layer3_interface
+	WHERE  layer3_interface_id = OLD.network_interface_id  RETURNING *
+	INTO _or;
+	OLD.network_interface_id = _or.layer3_interface_id;
+	OLD.device_id = _or.device_id;
+	OLD.network_interface_name = _or.layer3_interface_name;
+	OLD.description = _or.description;
+	OLD.parent_network_interface_id = _or.parent_layer3_interface_id;
+	OLD.parent_relation_type = _or.parent_relation_type;
+	OLD.slot_id = _or.slot_id;
+	OLD.logical_port_id = _or.logical_port_id;
+	OLD.network_interface_type = _or.layer3_interface_type;
+	OLD.is_interface_up = _or.is_interface_up;
+	OLD.mac_addr = _or.mac_addr;
+	OLD.should_monitor = _or.should_monitor;
+	OLD.should_manage = _or.should_manage;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_network_interface_del
+	ON jazzhands_legacy.network_interface;
+CREATE TRIGGER _trigger_network_interface_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.network_interface
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.network_interface_del();
+
 
 -- Triggers for network_service
 
@@ -5370,6 +5966,41 @@ CREATE TRIGGER _trigger_network_service_upd
 	EXECUTE PROCEDURE jazzhands_legacy.network_service_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.network_service_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.network_service%rowtype;
+BEGIN
+	DELETE FROM jazzhands.network_service
+	WHERE  network_service_id = OLD.network_service_id  RETURNING *
+	INTO _or;
+	OLD.network_service_id = _or.network_service_id;
+	OLD.name = _or.name;
+	OLD.description = _or.description;
+	OLD.network_service_type = _or.network_service_type;
+	OLD.is_monitored = _or.is_monitored;
+	OLD.device_id = _or.device_id;
+	OLD.network_interface_id = _or.network_interface_id;
+	OLD.dns_record_id = _or.dns_record_id;
+	OLD.service_environment_id = _or.service_environment_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_network_service_del
+	ON jazzhands_legacy.network_service;
+CREATE TRIGGER _trigger_network_service_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.network_service
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.network_service_del();
+
 
 -- Triggers for person_auth_question
 
@@ -5457,6 +6088,36 @@ CREATE TRIGGER _trigger_person_auth_question_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.person_auth_question_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_auth_question_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.person_auth_question%rowtype;
+BEGIN
+	DELETE FROM jazzhands.person_auth_question
+	WHERE  auth_question_id = OLD.auth_question_id  AND  person_id = OLD.person_id  RETURNING *
+	INTO _or;
+	OLD.auth_question_id = _or.auth_question_id;
+	OLD.person_id = _or.person_id;
+	OLD.user_answer = _or.user_answer;
+	OLD.is_active = _or.is_active;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_auth_question_del
+	ON jazzhands_legacy.person_auth_question;
+CREATE TRIGGER _trigger_person_auth_question_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.person_auth_question
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_auth_question_del();
 
 
 -- Triggers for person_company
@@ -5603,6 +6264,45 @@ CREATE TRIGGER _trigger_person_company_upd
 	EXECUTE PROCEDURE jazzhands_legacy.person_company_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_company_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.person_company%rowtype;
+BEGIN
+	DELETE FROM jazzhands.person_company
+	WHERE  company_id = OLD.company_id  AND  person_id = OLD.person_id  RETURNING *
+	INTO _or;
+	OLD.company_id = _or.company_id;
+	OLD.person_id = _or.person_id;
+	OLD.person_company_status = _or.person_company_status;
+	OLD.person_company_relation = _or.person_company_relation;
+	OLD.is_exempt = _or.is_exempt;
+	OLD.is_management = _or.is_management;
+	OLD.is_full_time = _or.is_full_time;
+	OLD.description = _or.description;
+	OLD.position_title = _or.position_title;
+	OLD.hire_date = _or.hire_date;
+	OLD.termination_date = _or.termination_date;
+	OLD.manager_person_id = _or.manager_person_id;
+	OLD.nickname = _or.nickname;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_company_del
+	ON jazzhands_legacy.person_company;
+CREATE TRIGGER _trigger_person_company_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.person_company
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_company_del();
+
 
 -- Triggers for private_key
 
@@ -5705,6 +6405,39 @@ CREATE TRIGGER _trigger_private_key_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.private_key_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.private_key_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.private_key%rowtype;
+BEGIN
+	DELETE FROM jazzhands.private_key
+	WHERE  private_key_id = OLD.private_key_id  RETURNING *
+	INTO _or;
+	OLD.private_key_id = _or.private_key_id;
+	OLD.private_key_encryption_type = _or.private_key_encryption_type;
+	OLD.is_active = _or.is_active;
+	OLD.subject_key_identifier = _or.subject_key_identifier;
+	OLD.private_key = _or.private_key;
+	OLD.passphrase = _or.passphrase;
+	OLD.encryption_key_id = _or.encryption_key_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_private_key_del
+	ON jazzhands_legacy.private_key;
+CREATE TRIGGER _trigger_private_key_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.private_key
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.private_key_del();
 
 
 -- Triggers for property
@@ -5949,6 +6682,67 @@ CREATE TRIGGER _trigger_property_upd
 	EXECUTE PROCEDURE jazzhands_legacy.property_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.property_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.property%rowtype;
+BEGIN
+	DELETE FROM jazzhands.property
+	WHERE  property_id = OLD.property_id  RETURNING *
+	INTO _or;
+	OLD.property_id = _or.property_id;
+	OLD.account_collection_id = _or.account_collection_id;
+	OLD.account_id = _or.account_id;
+	OLD.account_realm_id = _or.account_realm_id;
+	OLD.company_collection_id = _or.company_collection_id;
+	OLD.company_id = _or.company_id;
+	OLD.device_collection_id = _or.device_collection_id;
+	OLD.dns_domain_collection_id = _or.dns_domain_collection_id;
+	OLD.layer2_network_collection_id = _or.layer2_network_collection_id;
+	OLD.layer3_network_collection_id = _or.layer3_network_collection_id;
+	OLD.netblock_collection_id = _or.netblock_collection_id;
+	OLD.network_range_id = _or.network_range_id;
+	OLD.operating_system_id = _or.operating_system_id;
+	OLD.operating_system_snapshot_id = _or.operating_system_snapshot_id;
+	OLD.person_id = _or.person_id;
+	OLD.property_collection_id = _or.property_name_collection_id;
+	OLD.service_env_collection_id = _or.service_environment_collection_id;
+	OLD.site_code = _or.site_code;
+	OLD.x509_signed_certificate_id = _or.x509_signed_certificate_id;
+	OLD.property_name = _or.property_name;
+	OLD.property_type = _or.property_type;
+	OLD.property_value = _or.property_value;
+	OLD.property_value_timestamp = _or.property_value_timestamp;
+	OLD.property_value_account_coll_id = _or.property_value_account_collection_id;
+	OLD.property_value_device_coll_id = _or.property_value_device_collection_id;
+	OLD.property_value_json = _or.property_value_json;
+	OLD.property_value_nblk_coll_id = _or.property_value_netblock_collection_id;
+	OLD.property_value_password_type = _or.property_value_password_type;
+	OLD.property_value_person_id = _or.property_value_person_id;
+	OLD.property_value_sw_package_id = _or.property_value_sw_package_id;
+	OLD.property_value_token_col_id = _or.property_value_token_collection_id;
+	OLD.property_rank = _or.property_rank;
+	OLD.start_date = _or.start_date;
+	OLD.finish_date = _or.finish_date;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_property_del
+	ON jazzhands_legacy.property;
+CREATE TRIGGER _trigger_property_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.property_del();
+
 
 -- Triggers for rack
 
@@ -6071,6 +6865,43 @@ CREATE TRIGGER _trigger_rack_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.rack_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.rack_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.rack%rowtype;
+BEGIN
+	DELETE FROM jazzhands.rack
+	WHERE  rack_id = OLD.rack_id  RETURNING *
+	INTO _or;
+	OLD.rack_id = _or.rack_id;
+	OLD.site_code = _or.site_code;
+	OLD.room = _or.room;
+	OLD.sub_room = _or.sub_room;
+	OLD.rack_row = _or.rack_row;
+	OLD.rack_name = _or.rack_name;
+	OLD.rack_style = _or.rack_style;
+	OLD.rack_type = _or.rack_type;
+	OLD.description = _or.description;
+	OLD.rack_height_in_u = _or.rack_height_in_u;
+	OLD.display_from_bottom = _or.display_from_bottom;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_rack_del
+	ON jazzhands_legacy.rack;
+CREATE TRIGGER _trigger_rack_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.rack
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.rack_del();
 
 
 -- Triggers for slot
@@ -6210,6 +7041,46 @@ CREATE TRIGGER _trigger_slot_upd
 	EXECUTE PROCEDURE jazzhands_legacy.slot_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.slot%rowtype;
+BEGIN
+	DELETE FROM jazzhands.slot
+	WHERE  slot_id = OLD.slot_id  RETURNING *
+	INTO _or;
+	OLD.slot_id = _or.slot_id;
+	OLD.component_id = _or.component_id;
+	OLD.slot_name = _or.slot_name;
+	OLD.slot_index = _or.slot_index;
+	OLD.slot_type_id = _or.slot_type_id;
+	OLD.component_type_slot_tmplt_id = _or.component_type_slot_template_id;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.physical_label = _or.physical_label;
+	OLD.mac_address = _or.mac_address;
+	OLD.description = _or.description;
+	OLD.slot_x_offset = _or.slot_x_offset;
+	OLD.slot_y_offset = _or.slot_y_offset;
+	OLD.slot_z_offset = _or.slot_z_offset;
+	OLD.slot_side = _or.slot_side;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_slot_del
+	ON jazzhands_legacy.slot;
+CREATE TRIGGER _trigger_slot_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.slot
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.slot_del();
+
 
 -- Triggers for slot_type
 
@@ -6307,6 +7178,38 @@ CREATE TRIGGER _trigger_slot_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.slot_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.slot_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.slot_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.slot_type
+	WHERE  slot_type_id = OLD.slot_type_id  RETURNING *
+	INTO _or;
+	OLD.slot_type_id = _or.slot_type_id;
+	OLD.slot_type = _or.slot_type;
+	OLD.slot_function = _or.slot_function;
+	OLD.slot_physical_interface_type = _or.slot_physical_interface_type;
+	OLD.description = _or.description;
+	OLD.remote_slot_permitted = _or.remote_slot_permitted;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_slot_type_del
+	ON jazzhands_legacy.slot_type;
+CREATE TRIGGER _trigger_slot_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.slot_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.slot_type_del();
 
 
 -- Triggers for sudo_acct_col_device_collectio
@@ -6411,6 +7314,38 @@ CREATE TRIGGER _trigger_sudo_acct_col_device_collectio_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.sudo_acct_col_device_collectio_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.sudo_acct_col_device_collectio_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.sudo_account_collection_device_collection%rowtype;
+BEGIN
+	DELETE FROM jazzhands.sudo_account_collection_device_collection
+	WHERE  sudo_alias_name = OLD.sudo_alias_name  AND  device_collection_id = OLD.device_collection_id  AND  account_collection_id = OLD.account_collection_id  RETURNING *
+	INTO _or;
+	OLD.sudo_alias_name = _or.sudo_alias_name;
+	OLD.device_collection_id = _or.device_collection_id;
+	OLD.account_collection_id = _or.account_collection_id;
+	OLD.run_as_account_collection_id = _or.run_as_account_collection_id;
+	OLD.requires_password = _or.requires_password;
+	OLD.can_exec_child = _or.can_exec_child;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_sudo_acct_col_device_collectio_del
+	ON jazzhands_legacy.sudo_acct_col_device_collectio;
+CREATE TRIGGER _trigger_sudo_acct_col_device_collectio_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.sudo_acct_col_device_collectio
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.sudo_acct_col_device_collectio_del();
 
 
 -- Triggers for token
@@ -6565,6 +7500,49 @@ CREATE TRIGGER _trigger_token_upd
 	EXECUTE PROCEDURE jazzhands_legacy.token_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.token_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.token%rowtype;
+BEGIN
+	DELETE FROM jazzhands.token
+	WHERE  token_id = OLD.token_id  RETURNING *
+	INTO _or;
+	OLD.token_id = _or.token_id;
+	OLD.token_type = _or.token_type;
+	OLD.token_status = _or.token_status;
+	OLD.description = _or.description;
+	OLD.external_id = _or.external_id;
+	OLD.token_serial = _or.token_serial;
+	OLD.zero_time = _or.zero_time;
+	OLD.time_modulo = _or.time_modulo;
+	OLD.time_skew = _or.time_skew;
+	OLD.token_key = _or.token_key;
+	OLD.encryption_key_id = _or.encryption_key_id;
+	OLD.token_password = _or.token_password;
+	OLD.expire_time = _or.expire_time;
+	OLD.is_token_locked = _or.is_token_locked;
+	OLD.token_unlock_time = _or.token_unlock_time;
+	OLD.bad_logins = _or.bad_logins;
+	OLD.last_updated = _or.last_updated;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_token_del
+	ON jazzhands_legacy.token;
+CREATE TRIGGER _trigger_token_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.token_del();
+
 
 -- Triggers for v_approval_instance_step_expanded
 
@@ -6663,6 +7641,35 @@ CREATE TRIGGER _trigger_v_approval_instance_step_expanded_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_approval_instance_step_expanded_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_approval_instance_step_expanded_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_approval_instance_step_expanded%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_approval_instance_step_expanded
+	WHERE 1 = 0
+	INTO _or;
+	OLD.first_approval_instance_item_id = _or.first_approval_instance_item_id;
+	OLD.root_step_id = _or.root_step_id;
+	OLD.approval_instance_item_id = _or.approval_instance_item_id;
+	OLD.approval_instance_step_id = _or.approval_instance_step_id;
+	OLD.tier = _or.tier;
+	OLD.level = _or.level;
+	OLD.is_approved = _or.is_approved;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_approval_instance_step_expanded_del
+	ON jazzhands_legacy.v_approval_instance_step_expanded;
+CREATE TRIGGER _trigger_v_approval_instance_step_expanded_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_approval_instance_step_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_approval_instance_step_expanded_del();
 
 
 -- Triggers for v_corp_family_account
@@ -6781,6 +7788,42 @@ CREATE TRIGGER _trigger_v_corp_family_account_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_corp_family_account_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_corp_family_account_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_corp_family_account%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_corp_family_account
+	WHERE 1 = 0
+	INTO _or;
+	OLD.account_id = _or.account_id;
+	OLD.login = _or.login;
+	OLD.person_id = _or.person_id;
+	OLD.company_id = _or.company_id;
+	OLD.account_realm_id = _or.account_realm_id;
+	OLD.account_status = _or.account_status;
+	OLD.account_role = _or.account_role;
+	OLD.account_type = _or.account_type;
+	OLD.description = _or.description;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_corp_family_account_del
+	ON jazzhands_legacy.v_corp_family_account;
+CREATE TRIGGER _trigger_v_corp_family_account_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_corp_family_account
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_corp_family_account_del();
 
 
 -- Triggers for v_dev_col_user_prop_expanded
@@ -6915,6 +7958,42 @@ CREATE TRIGGER _trigger_v_dev_col_user_prop_expanded_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_dev_col_user_prop_expanded_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dev_col_user_prop_expanded_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_device_collection_account_property_expanded%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_device_collection_account_property_expanded
+	WHERE 1 = 0
+	INTO _or;
+	OLD.property_id = _or.property_id;
+	OLD.device_collection_id = _or.device_collection_id;
+	OLD.account_id = _or.account_id;
+	OLD.login = _or.login;
+	OLD.account_status = _or.account_status;
+	OLD.account_realm_id = _or.account_realm_id;
+	OLD.account_realm_name = _or.account_realm_name;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.property_type = _or.property_type;
+	OLD.property_name = _or.property_name;
+	OLD.property_rank = _or.property_rank;
+	OLD.property_value = _or.property_value;
+	OLD.is_multivalue = _or.is_multivalue;
+	OLD.is_boolean = _or.is_boolean;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dev_col_user_prop_expanded_del
+	ON jazzhands_legacy.v_dev_col_user_prop_expanded;
+CREATE TRIGGER _trigger_v_dev_col_user_prop_expanded_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dev_col_user_prop_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dev_col_user_prop_expanded_del();
 
 
 -- Triggers for v_dns
@@ -7086,6 +8165,48 @@ CREATE TRIGGER _trigger_v_dns_upd
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_dns%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_dns
+	WHERE 1 = 0
+	INTO _or;
+	OLD.dns_record_id = _or.dns_record_id;
+	OLD.network_range_id = _or.network_range_id;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.dns_name = _or.dns_name;
+	OLD.dns_ttl = _or.dns_ttl;
+	OLD.dns_class = _or.dns_class;
+	OLD.dns_type = _or.dns_type;
+	OLD.dns_value = _or.dns_value;
+	OLD.dns_priority = _or.dns_priority;
+	OLD.ip = _or.ip;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.ref_record_id = _or.ref_record_id;
+	OLD.dns_srv_service = _or.dns_srv_service;
+	OLD.dns_srv_protocol = _or.dns_srv_protocol;
+	OLD.dns_srv_weight = _or.dns_srv_weight;
+	OLD.dns_srv_port = _or.dns_srv_port;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.should_generate_ptr = _or.should_generate_ptr;
+	OLD.dns_value_record_id = _or.dns_value_record_id;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_del
+	ON jazzhands_legacy.v_dns;
+CREATE TRIGGER _trigger_v_dns_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_del();
+
 
 -- Triggers for v_dns_changes_pending
 
@@ -7184,6 +8305,35 @@ CREATE TRIGGER _trigger_v_dns_changes_pending_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_changes_pending_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_changes_pending_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_dns_changes_pending%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_dns_changes_pending
+	WHERE 1 = 0
+	INTO _or;
+	OLD.dns_change_record_id = _or.dns_change_record_id;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.should_generate = _or.should_generate;
+	OLD.last_generated = _or.last_generated;
+	OLD.soa_name = _or.soa_name;
+	OLD.ip_address = _or.ip_address;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_changes_pending_del
+	ON jazzhands_legacy.v_dns_changes_pending;
+CREATE TRIGGER _trigger_v_dns_changes_pending_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_changes_pending
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_changes_pending_del();
 
 
 -- Triggers for v_dns_domain_nouniverse
@@ -7327,6 +8477,47 @@ CREATE TRIGGER _trigger_v_dns_domain_nouniverse_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_domain_nouniverse_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_domain_nouniverse_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_dns_domain_nouniverse%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_dns_domain_nouniverse
+	WHERE 1 = 0
+	INTO _or;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.soa_name = _or.soa_name;
+	OLD.soa_class = _or.soa_class;
+	OLD.soa_ttl = _or.soa_ttl;
+	OLD.soa_serial = _or.soa_serial;
+	OLD.soa_refresh = _or.soa_refresh;
+	OLD.soa_retry = _or.soa_retry;
+	OLD.soa_expire = _or.soa_expire;
+	OLD.soa_minimum = _or.soa_minimum;
+	OLD.soa_mname = _or.soa_mname;
+	OLD.soa_rname = _or.soa_rname;
+	OLD.parent_dns_domain_id = _or.parent_dns_domain_id;
+	OLD.should_generate = _or.should_generate;
+	OLD.last_generated = _or.last_generated;
+	OLD.dns_domain_type = _or.dns_domain_type;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_domain_nouniverse_del
+	ON jazzhands_legacy.v_dns_domain_nouniverse;
+CREATE TRIGGER _trigger_v_dns_domain_nouniverse_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_domain_nouniverse
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_domain_nouniverse_del();
 
 
 -- Triggers for v_dns_fwd
@@ -7498,6 +8689,48 @@ CREATE TRIGGER _trigger_v_dns_fwd_upd
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_fwd_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_fwd_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_dns_fwd%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_dns_fwd
+	WHERE 1 = 0
+	INTO _or;
+	OLD.dns_record_id = _or.dns_record_id;
+	OLD.network_range_id = _or.network_range_id;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.dns_name = _or.dns_name;
+	OLD.dns_ttl = _or.dns_ttl;
+	OLD.dns_class = _or.dns_class;
+	OLD.dns_type = _or.dns_type;
+	OLD.dns_value = _or.dns_value;
+	OLD.dns_priority = _or.dns_priority;
+	OLD.ip = _or.ip;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.ref_record_id = _or.ref_record_id;
+	OLD.dns_srv_service = _or.dns_srv_service;
+	OLD.dns_srv_protocol = _or.dns_srv_protocol;
+	OLD.dns_srv_weight = _or.dns_srv_weight;
+	OLD.dns_srv_port = _or.dns_srv_port;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.should_generate_ptr = _or.should_generate_ptr;
+	OLD.dns_value_record_id = _or.dns_value_record_id;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_fwd_del
+	ON jazzhands_legacy.v_dns_fwd;
+CREATE TRIGGER _trigger_v_dns_fwd_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_fwd
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_fwd_del();
+
 
 -- Triggers for v_dns_rvs
 
@@ -7667,6 +8900,48 @@ CREATE TRIGGER _trigger_v_dns_rvs_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_rvs_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_rvs_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_dns_rvs%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_dns_rvs
+	WHERE 1 = 0
+	INTO _or;
+	OLD.dns_record_id = _or.dns_record_id;
+	OLD.network_range_id = _or.network_range_id;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.dns_name = _or.dns_name;
+	OLD.dns_ttl = _or.dns_ttl;
+	OLD.dns_class = _or.dns_class;
+	OLD.dns_type = _or.dns_type;
+	OLD.dns_value = _or.dns_value;
+	OLD.dns_priority = _or.dns_priority;
+	OLD.ip = _or.ip;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.rdns_record_id = _or.rdns_record_id;
+	OLD.dns_srv_service = _or.dns_srv_service;
+	OLD.dns_srv_protocol = _or.dns_srv_protocol;
+	OLD.dns_srv_weight = _or.dns_srv_weight;
+	OLD.dns_srv_srv_port = _or.dns_srv_srv_port;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.should_generate_ptr = _or.should_generate_ptr;
+	OLD.dns_value_record_id = _or.dns_value_record_id;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_rvs_del
+	ON jazzhands_legacy.v_dns_rvs;
+CREATE TRIGGER _trigger_v_dns_rvs_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_rvs
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_rvs_del();
 
 
 -- Triggers for v_dns_sorted
@@ -7843,6 +9118,49 @@ CREATE TRIGGER _trigger_v_dns_sorted_upd
 	EXECUTE PROCEDURE jazzhands_legacy.v_dns_sorted_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_dns_sorted_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_dns_sorted%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_dns_sorted
+	WHERE 1 = 0
+	INTO _or;
+	OLD.dns_record_id = _or.dns_record_id;
+	OLD.network_range_id = _or.network_range_id;
+	OLD.dns_value_record_id = _or.dns_value_record_id;
+	OLD.dns_name = _or.dns_name;
+	OLD.dns_ttl = _or.dns_ttl;
+	OLD.dns_class = _or.dns_class;
+	OLD.dns_type = _or.dns_type;
+	OLD.dns_value = _or.dns_value;
+	OLD.dns_priority = _or.dns_priority;
+	OLD.ip = _or.ip;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ref_record_id = _or.ref_record_id;
+	OLD.dns_srv_service = _or.dns_srv_service;
+	OLD.dns_srv_protocol = _or.dns_srv_protocol;
+	OLD.dns_srv_weight = _or.dns_srv_weight;
+	OLD.dns_srv_port = _or.dns_srv_port;
+	OLD.should_generate_ptr = _or.should_generate_ptr;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.dns_domain_id = _or.dns_domain_id;
+	OLD.anchor_record_id = _or.anchor_record_id;
+	OLD.anchor_rank = _or.anchor_rank;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_dns_sorted_del
+	ON jazzhands_legacy.v_dns_sorted;
+CREATE TRIGGER _trigger_v_dns_sorted_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_dns_sorted
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_dns_sorted_del();
+
 
 -- Triggers for v_hotpants_token
 
@@ -7992,6 +9310,45 @@ CREATE TRIGGER _trigger_v_hotpants_token_upd
 	EXECUTE PROCEDURE jazzhands_legacy.v_hotpants_token_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_hotpants_token_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_hotpants_token%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_hotpants_token
+	WHERE 1 = 0
+	INTO _or;
+	OLD.token_id = _or.token_id;
+	OLD.token_type = _or.token_type;
+	OLD.token_status = _or.token_status;
+	OLD.token_serial = _or.token_serial;
+	OLD.token_key = _or.token_key;
+	OLD.zero_time = _or.zero_time;
+	OLD.time_modulo = _or.time_modulo;
+	OLD.token_password = _or.token_password;
+	OLD.is_token_locked = _or.is_token_locked;
+	OLD.token_unlock_time = _or.token_unlock_time;
+	OLD.bad_logins = _or.bad_logins;
+	OLD.token_sequence = _or.token_sequence;
+	OLD.last_updated = _or.last_updated;
+	OLD.encryption_key_db_value = _or.encryption_key_db_value;
+	OLD.encryption_key_purpose = _or.encryption_key_purpose;
+	OLD.encryption_key_purpose_version = _or.encryption_key_purpose_version;
+	OLD.encryption_method = _or.encryption_method;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_hotpants_token_del
+	ON jazzhands_legacy.v_hotpants_token;
+CREATE TRIGGER _trigger_v_hotpants_token_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_hotpants_token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_hotpants_token_del();
+
 
 -- Triggers for v_netblock_hier
 
@@ -8120,6 +9477,41 @@ CREATE TRIGGER _trigger_v_netblock_hier_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_netblock_hier%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_netblock_hier
+	WHERE 1 = 0
+	INTO _or;
+	OLD.netblock_level = _or.netblock_level;
+	OLD.root_netblock_id = _or.root_netblock_id;
+	OLD.ip = _or.ip;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ip_address = _or.ip_address;
+	OLD.netblock_status = _or.netblock_status;
+	OLD.is_single_address = _or.is_single_address;
+	OLD.description = _or.description;
+	OLD.parent_netblock_id = _or.parent_netblock_id;
+	OLD.site_code = _or.site_code;
+	OLD.text_path = _or.text_path;
+	OLD.array_path = _or.array_path;
+	OLD.array_ip_path = _or.array_ip_path;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_netblock_hier_del
+	ON jazzhands_legacy.v_netblock_hier;
+CREATE TRIGGER _trigger_v_netblock_hier_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_netblock_hier
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_del();
 
 
 -- Triggers for v_netblock_hier_expanded
@@ -8264,6 +9656,46 @@ CREATE TRIGGER _trigger_v_netblock_hier_expanded_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_expanded_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_netblock_hier_expanded_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_netblock_hier_expanded%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_netblock_hier_expanded
+	WHERE 1 = 0
+	INTO _or;
+	OLD.netblock_level = _or.netblock_level;
+	OLD.root_netblock_id = _or.root_netblock_id;
+	OLD.site_code = _or.site_code;
+	OLD.path = _or.path;
+	OLD.netblock_id = _or.netblock_id;
+	OLD.ip_address = _or.ip_address;
+	OLD.netblock_type = _or.netblock_type;
+	OLD.is_single_address = _or.is_single_address;
+	OLD.can_subnet = _or.can_subnet;
+	OLD.parent_netblock_id = _or.parent_netblock_id;
+	OLD.netblock_status = _or.netblock_status;
+	OLD.ip_universe_id = _or.ip_universe_id;
+	OLD.description = _or.description;
+	OLD.external_id = _or.external_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_netblock_hier_expanded_del
+	ON jazzhands_legacy.v_netblock_hier_expanded;
+CREATE TRIGGER _trigger_v_netblock_hier_expanded_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_netblock_hier_expanded
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_netblock_hier_expanded_del();
 
 
 -- Triggers for v_person_company
@@ -8434,6 +9866,50 @@ CREATE TRIGGER _trigger_v_person_company_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.v_person_company_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_person_company_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_person_company%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_person_company
+	WHERE 1 = 0
+	INTO _or;
+	OLD.company_id = _or.company_id;
+	OLD.person_id = _or.person_id;
+	OLD.person_company_status = _or.person_company_status;
+	OLD.person_company_relation = _or.person_company_relation;
+	OLD.is_exempt = _or.is_exempt;
+	OLD.is_management = _or.is_management;
+	OLD.is_full_time = _or.is_full_time;
+	OLD.description = _or.description;
+	OLD.employee_id = _or.employee_id;
+	OLD.payroll_id = _or.payroll_id;
+	OLD.external_hr_id = _or.external_hr_id;
+	OLD.position_title = _or.position_title;
+	OLD.badge_system_id = _or.badge_system_id;
+	OLD.hire_date = _or.hire_date;
+	OLD.termination_date = _or.termination_date;
+	OLD.manager_person_id = _or.manager_person_id;
+	OLD.supervisor_person_id = _or.supervisor_person_id;
+	OLD.nickname = _or.nickname;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_person_company_del
+	ON jazzhands_legacy.v_person_company;
+CREATE TRIGGER _trigger_v_person_company_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_person_company
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_person_company_del();
 
 
 -- Triggers for v_property
@@ -8678,6 +10154,67 @@ CREATE TRIGGER _trigger_v_property_upd
 	EXECUTE PROCEDURE jazzhands_legacy.v_property_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_property_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_property%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_property
+	WHERE 1 = 0
+	INTO _or;
+	OLD.property_id = _or.property_id;
+	OLD.account_collection_id = _or.account_collection_id;
+	OLD.account_id = _or.account_id;
+	OLD.account_realm_id = _or.account_realm_id;
+	OLD.company_collection_id = _or.company_collection_id;
+	OLD.company_id = _or.company_id;
+	OLD.device_collection_id = _or.device_collection_id;
+	OLD.dns_domain_collection_id = _or.dns_domain_collection_id;
+	OLD.layer2_network_collection_id = _or.layer2_network_collection_id;
+	OLD.layer3_network_collection_id = _or.layer3_network_collection_id;
+	OLD.netblock_collection_id = _or.netblock_collection_id;
+	OLD.network_range_id = _or.network_range_id;
+	OLD.operating_system_id = _or.operating_system_id;
+	OLD.operating_system_snapshot_id = _or.operating_system_snapshot_id;
+	OLD.person_id = _or.person_id;
+	OLD.property_collection_id = _or.property_name_collection_id;
+	OLD.service_env_collection_id = _or.service_environment_collection_id;
+	OLD.site_code = _or.site_code;
+	OLD.x509_signed_certificate_id = _or.x509_signed_certificate_id;
+	OLD.property_name = _or.property_name;
+	OLD.property_type = _or.property_type;
+	OLD.property_value = _or.property_value;
+	OLD.property_value_timestamp = _or.property_value_timestamp;
+	OLD.property_value_account_coll_id = _or.property_value_account_collection_id;
+	OLD.property_value_device_coll_id = _or.property_value_device_collection_id;
+	OLD.property_value_json = _or.property_value_json;
+	OLD.property_value_nblk_coll_id = _or.property_value_netblock_collection_id;
+	OLD.property_value_password_type = _or.property_value_password_type;
+	OLD.property_value_person_id = _or.property_value_person_id;
+	OLD.property_value_sw_package_id = _or.property_value_sw_package_id;
+	OLD.property_value_token_col_id = _or.property_value_token_collection_id;
+	OLD.property_rank = _or.property_rank;
+	OLD.start_date = _or.start_date;
+	OLD.finish_date = _or.finish_date;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_property_del
+	ON jazzhands_legacy.v_property;
+CREATE TRIGGER _trigger_v_property_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_property_del();
+
 
 -- Triggers for v_token
 
@@ -8827,6 +10364,45 @@ CREATE TRIGGER _trigger_v_token_upd
 	EXECUTE PROCEDURE jazzhands_legacy.v_token_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.v_token_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.v_token%rowtype;
+BEGIN
+	DELETE FROM jazzhands.v_token
+	WHERE 1 = 0
+	INTO _or;
+	OLD.token_id = _or.token_id;
+	OLD.token_type = _or.token_type;
+	OLD.token_status = _or.token_status;
+	OLD.token_serial = _or.token_serial;
+	OLD.token_sequence = _or.token_sequence;
+	OLD.account_id = _or.account_id;
+	OLD.token_password = _or.token_password;
+	OLD.zero_time = _or.zero_time;
+	OLD.time_modulo = _or.time_modulo;
+	OLD.time_skew = _or.time_skew;
+	OLD.is_token_locked = _or.is_token_locked;
+	OLD.token_unlock_time = _or.token_unlock_time;
+	OLD.bad_logins = _or.bad_logins;
+	OLD.issued_date = _or.issued_date;
+	OLD.token_last_updated = _or.token_last_updated;
+	OLD.token_sequence_last_updated = _or.token_sequence_last_updated;
+	OLD.lock_status_last_updated = _or.lock_status_last_updated;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_v_token_del
+	ON jazzhands_legacy.v_token;
+CREATE TRIGGER _trigger_v_token_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.v_token
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.v_token_del();
+
 
 -- Triggers for val_account_collection_type
 
@@ -8936,6 +10512,39 @@ CREATE TRIGGER _trigger_val_account_collection_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_account_collection_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_collection_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_account_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_account_collection_type
+	WHERE  account_collection_type = OLD.account_collection_type  RETURNING *
+	INTO _or;
+	OLD.account_collection_type = _or.account_collection_type;
+	OLD.description = _or.description;
+	OLD.is_infrastructure_type = _or.is_infrastructure_type;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.account_realm_id = _or.account_realm_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_collection_type_del
+	ON jazzhands_legacy.val_account_collection_type;
+CREATE TRIGGER _trigger_val_account_collection_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_account_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_collection_type_del();
+
 
 -- Triggers for val_account_role
 
@@ -9018,6 +10627,35 @@ CREATE TRIGGER _trigger_val_account_role_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_account_role_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_role_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_account_role%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_account_role
+	WHERE  account_role = OLD.account_role  RETURNING *
+	INTO _or;
+	OLD.account_role = _or.account_role;
+	OLD.uid_gid_forced = _or.uid_gid_forced;
+	OLD.description = _or.description;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_role_del
+	ON jazzhands_legacy.val_account_role;
+CREATE TRIGGER _trigger_val_account_role_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_account_role
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_role_del();
 
 
 -- Triggers for val_account_type
@@ -9112,6 +10750,36 @@ CREATE TRIGGER _trigger_val_account_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_account_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_account_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_account_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_account_type
+	WHERE  account_type = OLD.account_type  RETURNING *
+	INTO _or;
+	OLD.account_type = _or.account_type;
+	OLD.is_person = _or.is_person;
+	OLD.uid_gid_forced = _or.uid_gid_forced;
+	OLD.description = _or.description;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_account_type_del
+	ON jazzhands_legacy.val_account_type;
+CREATE TRIGGER _trigger_val_account_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_account_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_account_type_del();
 
 
 -- Triggers for val_company_collection_type
@@ -9216,6 +10884,38 @@ CREATE TRIGGER _trigger_val_company_collection_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_company_collection_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_company_collection_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_company_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_company_collection_type
+	WHERE  company_collection_type = OLD.company_collection_type  RETURNING *
+	INTO _or;
+	OLD.company_collection_type = _or.company_collection_type;
+	OLD.description = _or.description;
+	OLD.is_infrastructure_type = _or.is_infrastructure_type;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_company_collection_type_del
+	ON jazzhands_legacy.val_company_collection_type;
+CREATE TRIGGER _trigger_val_company_collection_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_company_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_company_collection_type_del();
 
 
 -- Triggers for val_component_property
@@ -9365,6 +11065,48 @@ CREATE TRIGGER _trigger_val_component_property_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_component_property%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_component_property
+	WHERE  component_property_name = OLD.component_property_name  AND  component_property_type = OLD.component_property_type  RETURNING *
+	INTO _or;
+	OLD.component_property_name = _or.component_property_name;
+	OLD.component_property_type = _or.component_property_type;
+	OLD.description = _or.description;
+	OLD.is_multivalue = _or.is_multivalue;
+	OLD.property_data_type = _or.property_data_type;
+	OLD.permit_component_type_id = _or.permit_component_type_id;
+	OLD.required_component_type_id = _or.required_component_type_id;
+	OLD.permit_component_function = _or.permit_component_function;
+	OLD.required_component_function = _or.required_component_function;
+	OLD.permit_component_id = _or.permit_component_id;
+	OLD.permit_intcomp_conn_id = _or.permit_inter_component_connection_id;
+	OLD.permit_slot_type_id = _or.permit_slot_type_id;
+	OLD.required_slot_type_id = _or.required_slot_type_id;
+	OLD.permit_slot_function = _or.permit_slot_function;
+	OLD.required_slot_function = _or.required_slot_function;
+	OLD.permit_slot_id = _or.permit_slot_id;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_component_property_del
+	ON jazzhands_legacy.val_component_property;
+CREATE TRIGGER _trigger_val_component_property_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_component_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_del();
+
 
 -- Triggers for val_component_property_type
 
@@ -9447,6 +11189,35 @@ CREATE TRIGGER _trigger_val_component_property_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_component_property_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_component_property_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_component_property_type
+	WHERE  component_property_type = OLD.component_property_type  RETURNING *
+	INTO _or;
+	OLD.component_property_type = _or.component_property_type;
+	OLD.description = _or.description;
+	OLD.is_multivalue = _or.is_multivalue;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_component_property_type_del
+	ON jazzhands_legacy.val_component_property_type;
+CREATE TRIGGER _trigger_val_component_property_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_component_property_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_component_property_type_del();
 
 
 -- Triggers for val_device_collection_type
@@ -9541,6 +11312,37 @@ CREATE TRIGGER _trigger_val_device_collection_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_device_collection_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_device_collection_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_device_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_device_collection_type
+	WHERE  device_collection_type = OLD.device_collection_type  RETURNING *
+	INTO _or;
+	OLD.device_collection_type = _or.device_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_device_collection_type_del
+	ON jazzhands_legacy.val_device_collection_type;
+CREATE TRIGGER _trigger_val_device_collection_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_device_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_device_collection_type_del();
+
 
 -- Triggers for val_dns_domain_collection_type
 
@@ -9634,6 +11436,37 @@ CREATE TRIGGER _trigger_val_dns_domain_collection_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_collection_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_collection_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_dns_domain_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_dns_domain_collection_type
+	WHERE  dns_domain_collection_type = OLD.dns_domain_collection_type  RETURNING *
+	INTO _or;
+	OLD.dns_domain_collection_type = _or.dns_domain_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_dns_domain_collection_type_del
+	ON jazzhands_legacy.val_dns_domain_collection_type;
+CREATE TRIGGER _trigger_val_dns_domain_collection_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_dns_domain_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_collection_type_del();
+
 
 -- Triggers for val_dns_domain_type
 
@@ -9716,6 +11549,35 @@ CREATE TRIGGER _trigger_val_dns_domain_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_dns_domain_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_dns_domain_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_dns_domain_type
+	WHERE  dns_domain_type = OLD.dns_domain_type  RETURNING *
+	INTO _or;
+	OLD.dns_domain_type = _or.dns_domain_type;
+	OLD.can_generate = _or.can_generate;
+	OLD.description = _or.description;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_dns_domain_type_del
+	ON jazzhands_legacy.val_dns_domain_type;
+CREATE TRIGGER _trigger_val_dns_domain_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_dns_domain_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_dns_domain_type_del();
 
 
 -- Triggers for val_layer2_network_coll_type
@@ -9810,6 +11672,37 @@ CREATE TRIGGER _trigger_val_layer2_network_coll_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_layer2_network_coll_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer2_network_coll_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_layer2_network_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_layer2_network_collection_type
+	WHERE  layer2_network_collection_type = OLD.layer2_network_collection_type  RETURNING *
+	INTO _or;
+	OLD.layer2_network_collection_type = _or.layer2_network_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_layer2_network_coll_type_del
+	ON jazzhands_legacy.val_layer2_network_coll_type;
+CREATE TRIGGER _trigger_val_layer2_network_coll_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_layer2_network_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_layer2_network_coll_type_del();
+
 
 -- Triggers for val_layer3_network_coll_type
 
@@ -9902,6 +11795,37 @@ CREATE TRIGGER _trigger_val_layer3_network_coll_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_layer3_network_coll_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_layer3_network_coll_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_layer3_network_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_layer3_network_collection_type
+	WHERE  layer3_network_collection_type = OLD.layer3_network_collection_type  RETURNING *
+	INTO _or;
+	OLD.layer3_network_collection_type = _or.layer3_network_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_layer3_network_coll_type_del
+	ON jazzhands_legacy.val_layer3_network_coll_type;
+CREATE TRIGGER _trigger_val_layer3_network_coll_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_layer3_network_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_layer3_network_coll_type_del();
 
 
 -- Triggers for val_netblock_collection_type
@@ -10006,6 +11930,39 @@ CREATE TRIGGER _trigger_val_netblock_collection_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_collection_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_collection_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_netblock_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_netblock_collection_type
+	WHERE  netblock_collection_type = OLD.netblock_collection_type  RETURNING *
+	INTO _or;
+	OLD.netblock_collection_type = _or.netblock_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.netblock_single_addr_restrict = _or.netblock_is_single_address_restriction;
+	OLD.netblock_ip_family_restrict = _or.netblock_ip_family_restriction;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_netblock_collection_type_del
+	ON jazzhands_legacy.val_netblock_collection_type;
+CREATE TRIGGER _trigger_val_netblock_collection_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_netblock_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_collection_type_del();
+
 
 -- Triggers for val_netblock_type
 
@@ -10099,6 +12056,36 @@ CREATE TRIGGER _trigger_val_netblock_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_netblock_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_netblock_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_netblock_type
+	WHERE  netblock_type = OLD.netblock_type  RETURNING *
+	INTO _or;
+	OLD.netblock_type = _or.netblock_type;
+	OLD.description = _or.description;
+	OLD.db_forced_hierarchy = _or.db_forced_hierarchy;
+	OLD.is_validated_hierarchy = _or.is_validated_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_netblock_type_del
+	ON jazzhands_legacy.val_netblock_type;
+CREATE TRIGGER _trigger_val_netblock_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_netblock_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_netblock_type_del();
 
 
 -- Triggers for val_network_range_type
@@ -10209,6 +12196,39 @@ CREATE TRIGGER _trigger_val_network_range_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_network_range_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_network_range_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_network_range_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_network_range_type
+	WHERE  network_range_type = OLD.network_range_type  RETURNING *
+	INTO _or;
+	OLD.network_range_type = _or.network_range_type;
+	OLD.description = _or.description;
+	OLD.dns_domain_required = _or.dns_domain_required;
+	OLD.default_dns_prefix = _or.default_dns_prefix;
+	OLD.netblock_type = _or.netblock_type;
+	OLD.can_overlap = _or.can_overlap;
+	OLD.require_cidr_boundary = _or.require_cidr_boundary;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_network_range_type_del
+	ON jazzhands_legacy.val_network_range_type;
+CREATE TRIGGER _trigger_val_network_range_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_network_range_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_network_range_type_del();
+
 
 -- Triggers for val_person_image_usage
 
@@ -10286,6 +12306,34 @@ CREATE TRIGGER _trigger_val_person_image_usage_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_person_image_usage_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_image_usage_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_person_image_usage%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_person_image_usage
+	WHERE  person_image_usage = OLD.person_image_usage  RETURNING *
+	INTO _or;
+	OLD.person_image_usage = _or.person_image_usage;
+	OLD.is_multivalue = _or.is_multivalue;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_person_image_usage_del
+	ON jazzhands_legacy.val_person_image_usage;
+CREATE TRIGGER _trigger_val_person_image_usage_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_person_image_usage
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_person_image_usage_del();
 
 
 -- Triggers for val_person_status
@@ -10402,6 +12450,38 @@ CREATE TRIGGER _trigger_val_person_status_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_person_status_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_person_status_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_person_status%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_person_status
+	WHERE  person_status = OLD.person_status  RETURNING *
+	INTO _or;
+	OLD.person_status = _or.person_status;
+	OLD.description = _or.description;
+	OLD.is_enabled = _or.is_enabled;
+	OLD.propagate_from_person = _or.propagate_from_person;
+	OLD.is_forced = _or.is_forced;
+	OLD.is_db_enforced = _or.is_db_enforced;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_person_status_del
+	ON jazzhands_legacy.val_person_status;
+CREATE TRIGGER _trigger_val_person_status_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_person_status
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_person_status_del();
 
 
 -- Triggers for val_property
@@ -10661,6 +12741,70 @@ CREATE TRIGGER _trigger_val_property_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_property_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_property%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_property
+	WHERE  property_name = OLD.property_name  AND  property_type = OLD.property_type  RETURNING *
+	INTO _or;
+	OLD.property_name = _or.property_name;
+	OLD.property_type = _or.property_type;
+	OLD.description = _or.description;
+	OLD.account_collection_type = _or.account_collection_type;
+	OLD.company_collection_type = _or.company_collection_type;
+	OLD.device_collection_type = _or.device_collection_type;
+	OLD.dns_domain_collection_type = _or.dns_domain_collection_type;
+	OLD.layer2_network_collection_type = _or.layer2_network_collection_type;
+	OLD.layer3_network_collection_type = _or.layer3_network_collection_type;
+	OLD.netblock_collection_type = _or.netblock_collection_type;
+	OLD.network_range_type = _or.network_range_type;
+	OLD.property_collection_type = _or.property_name_collection_type;
+	OLD.service_env_collection_type = _or.service_environment_collection_type;
+	OLD.is_multivalue = _or.is_multivalue;
+	OLD.prop_val_acct_coll_type_rstrct = _or.property_value_account_collection_type_restriction;
+	OLD.prop_val_dev_coll_type_rstrct = _or.property_value_device_collection_type_restriction;
+	OLD.prop_val_nblk_coll_type_rstrct = _or.property_value_netblock_collection_type_restriction;
+	OLD.property_data_type = _or.property_data_type;
+	OLD.property_value_json_schema = _or.property_value_json_schema;
+	OLD.permit_account_collection_id = _or.permit_account_collection_id;
+	OLD.permit_account_id = _or.permit_account_id;
+	OLD.permit_account_realm_id = _or.permit_account_realm_id;
+	OLD.permit_company_id = _or.permit_company_id;
+	OLD.permit_company_collection_id = _or.permit_company_collection_id;
+	OLD.permit_device_collection_id = _or.permit_device_collection_id;
+	OLD.permit_dns_domain_coll_id = _or.permit_dns_domain_collection_id;
+	OLD.permit_layer2_network_coll_id = _or.permit_layer2_network_collection_id;
+	OLD.permit_layer3_network_coll_id = _or.permit_layer3_network_collection_id;
+	OLD.permit_netblock_collection_id = _or.permit_netblock_collection_id;
+	OLD.permit_network_range_id = _or.permit_network_range_id;
+	OLD.permit_operating_system_id = _or.permit_operating_system_id;
+	OLD.permit_os_snapshot_id = _or.permit_operating_system_snapshot_id;
+	OLD.permit_person_id = _or.permit_person_id;
+	OLD.permit_property_collection_id = _or.permit_property_name_collection_id;
+	OLD.permit_service_env_collection = _or.permit_service_environment_collection;
+	OLD.permit_site_code = _or.permit_site_code;
+	OLD.permit_x509_signed_cert_id = _or.permit_x509_signed_certificate_id;
+	OLD.permit_property_rank = _or.permit_property_rank;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_del
+	ON jazzhands_legacy.val_property;
+CREATE TRIGGER _trigger_val_property_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_property
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_del();
+
 
 -- Triggers for val_property_collection_type
 
@@ -10754,6 +12898,37 @@ CREATE TRIGGER _trigger_val_property_collection_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_property_collection_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_collection_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_property_name_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_property_name_collection_type
+	WHERE  property_name_collection_type = OLD.property_collection_type  RETURNING *
+	INTO _or;
+	OLD.property_collection_type = _or.property_name_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_collection_type_del
+	ON jazzhands_legacy.val_property_collection_type;
+CREATE TRIGGER _trigger_val_property_collection_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_property_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_collection_type_del();
+
 
 -- Triggers for val_property_type
 
@@ -10841,6 +13016,36 @@ CREATE TRIGGER _trigger_val_property_type_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_property_type_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_property_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_property_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_property_type
+	WHERE  property_type = OLD.property_type  RETURNING *
+	INTO _or;
+	OLD.property_type = _or.property_type;
+	OLD.description = _or.description;
+	OLD.prop_val_acct_coll_type_rstrct = _or.property_value_account_collection_type_restriction;
+	OLD.is_multivalue = _or.is_multivalue;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_property_type_del
+	ON jazzhands_legacy.val_property_type;
+CREATE TRIGGER _trigger_val_property_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_property_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_property_type_del();
 
 
 -- Triggers for val_service_env_coll_type
@@ -10935,6 +13140,37 @@ CREATE TRIGGER _trigger_val_service_env_coll_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_service_env_coll_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_service_env_coll_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_service_environment_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_service_environment_collection_type
+	WHERE  service_environment_collection_type = OLD.service_env_collection_type  RETURNING *
+	INTO _or;
+	OLD.service_env_collection_type = _or.service_environment_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_service_env_coll_type_del
+	ON jazzhands_legacy.val_service_env_coll_type;
+CREATE TRIGGER _trigger_val_service_env_coll_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_service_env_coll_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_service_env_coll_type_del();
+
 
 -- Triggers for val_slot_function
 
@@ -11017,6 +13253,35 @@ CREATE TRIGGER _trigger_val_slot_function_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_slot_function_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_slot_function_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_slot_function%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_slot_function
+	WHERE  slot_function = OLD.slot_function  RETURNING *
+	INTO _or;
+	OLD.slot_function = _or.slot_function;
+	OLD.description = _or.description;
+	OLD.can_have_mac_address = _or.can_have_mac_address;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_slot_function_del
+	ON jazzhands_legacy.val_slot_function;
+CREATE TRIGGER _trigger_val_slot_function_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_slot_function
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_slot_function_del();
 
 
 -- Triggers for val_token_collection_type
@@ -11111,6 +13376,37 @@ CREATE TRIGGER _trigger_val_token_collection_type_upd
 	EXECUTE PROCEDURE jazzhands_legacy.val_token_collection_type_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_token_collection_type_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_token_collection_type%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_token_collection_type
+	WHERE  token_collection_type = OLD.token_collection_type  RETURNING *
+	INTO _or;
+	OLD.token_collection_type = _or.token_collection_type;
+	OLD.description = _or.description;
+	OLD.max_num_members = _or.max_num_members;
+	OLD.max_num_collections = _or.max_num_collections;
+	OLD.can_have_hierarchy = _or.can_have_hierarchy;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_token_collection_type_del
+	ON jazzhands_legacy.val_token_collection_type;
+CREATE TRIGGER _trigger_val_token_collection_type_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_token_collection_type
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_token_collection_type_del();
+
 
 -- Triggers for val_x509_key_usage
 
@@ -11193,6 +13489,35 @@ CREATE TRIGGER _trigger_val_x509_key_usage_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.val_x509_key_usage_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.val_x509_key_usage_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.val_x509_key_usage%rowtype;
+BEGIN
+	DELETE FROM jazzhands.val_x509_key_usage
+	WHERE  x509_key_usage = OLD.x509_key_usg  RETURNING *
+	INTO _or;
+	OLD.x509_key_usg = _or.x509_key_usage;
+	OLD.description = _or.description;
+	OLD.is_extended = _or.is_extended;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_val_x509_key_usage_del
+	ON jazzhands_legacy.val_x509_key_usage;
+CREATE TRIGGER _trigger_val_x509_key_usage_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.val_x509_key_usage
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.val_x509_key_usage_del();
 
 
 -- Triggers for x509_certificate
@@ -11363,6 +13688,51 @@ CREATE TRIGGER _trigger_x509_certificate_upd
 	EXECUTE PROCEDURE jazzhands_legacy.x509_certificate_upd();
 
 
+CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_certificate_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.x509_certificate%rowtype;
+BEGIN
+	DELETE FROM jazzhands.x509_certificate
+	WHERE 1 = 0
+	INTO _or;
+	OLD.x509_cert_id = _or.x509_cert_id;
+	OLD.friendly_name = _or.friendly_name;
+	OLD.is_active = _or.is_active;
+	OLD.is_certificate_authority = _or.is_certificate_authority;
+	OLD.signing_cert_id = _or.signing_cert_id;
+	OLD.x509_ca_cert_serial_number = _or.x509_ca_cert_serial_number;
+	OLD.public_key = _or.public_key;
+	OLD.private_key = _or.private_key;
+	OLD.certificate_sign_req = _or.certificate_sign_req;
+	OLD.subject = _or.subject;
+	OLD.subject_key_identifier = _or.subject_key_identifier;
+	OLD.valid_from = _or.valid_from;
+	OLD.valid_to = _or.valid_to;
+	OLD.x509_revocation_date = _or.x509_revocation_date;
+	OLD.x509_revocation_reason = _or.x509_revocation_reason;
+	OLD.passphrase = _or.passphrase;
+	OLD.encryption_key_id = _or.encryption_key_id;
+	OLD.ocsp_uri = _or.ocsp_uri;
+	OLD.crl_uri = _or.crl_uri;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_x509_certificate_del
+	ON jazzhands_legacy.x509_certificate;
+CREATE TRIGGER _trigger_x509_certificate_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.x509_certificate
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.x509_certificate_del();
+
 
 -- Triggers for x509_signed_certificate
 
@@ -11526,6 +13896,50 @@ CREATE TRIGGER _trigger_x509_signed_certificate_upd
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.x509_signed_certificate_upd();
 
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.x509_signed_certificate_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.x509_signed_certificate%rowtype;
+BEGIN
+	DELETE FROM jazzhands.x509_signed_certificate
+	WHERE  x509_signed_certificate_id = OLD.x509_signed_certificate_id  RETURNING *
+	INTO _or;
+	OLD.x509_signed_certificate_id = _or.x509_signed_certificate_id;
+	OLD.x509_certificate_type = _or.x509_certificate_type;
+	OLD.subject = _or.subject;
+	OLD.friendly_name = _or.friendly_name;
+	OLD.subject_key_identifier = _or.subject_key_identifier;
+	OLD.is_active = _or.is_active;
+	OLD.is_certificate_authority = _or.is_certificate_authority;
+	OLD.signing_cert_id = _or.signing_cert_id;
+	OLD.x509_ca_cert_serial_number = _or.x509_ca_cert_serial_number;
+	OLD.public_key = _or.public_key;
+	OLD.private_key_id = _or.private_key_id;
+	OLD.certificate_signing_request_id = _or.certificate_signing_request_id;
+	OLD.valid_from = _or.valid_from;
+	OLD.valid_to = _or.valid_to;
+	OLD.x509_revocation_date = _or.x509_revocation_date;
+	OLD.x509_revocation_reason = _or.x509_revocation_reason;
+	OLD.ocsp_uri = _or.ocsp_uri;
+	OLD.crl_uri = _or.crl_uri;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_x509_signed_certificate_del
+	ON jazzhands_legacy.x509_signed_certificate;
+CREATE TRIGGER _trigger_x509_signed_certificate_del
+	INSTEAD OF UPDATE ON jazzhands_legacy.x509_signed_certificate
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.x509_signed_certificate_del();
 
 
 
