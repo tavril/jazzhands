@@ -25,9 +25,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.account;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.account_assignd_cert AS
 SELECT account_id,x509_cert_id,x509_key_usg,key_usage_reason_for_assign,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_assigned_certificate;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.account_auth_log AS
@@ -47,13 +51,19 @@ SELECT
 	data_ins_user
 FROM jazzhands.account_auth_log;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.account_coll_type_relation AS
 SELECT account_collection_relation,account_collection_type,max_num_members,max_num_collections,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_collection_type_relation;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.account_collection AS
 SELECT account_collection_id,account_collection_name,account_collection_type,external_id,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_collection;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.account_collection_account AS
 SELECT account_collection_id,account_id,account_collection_relation,account_id_rank,start_date,finish_date,data_ins_user,data_ins_date,data_upd_user,data_upd_date
@@ -63,33 +73,49 @@ CREATE OR REPLACE VIEW jazzhands_legacy.account_collection_hier AS
 SELECT account_collection_id,child_account_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_collection_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.account_password AS
 SELECT account_id,account_realm_id,password_type,password,change_time,expire_time,unlock_time,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_password;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.account_realm AS
 SELECT account_realm_id,account_realm_name,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_realm;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.account_realm_acct_coll_type AS
 SELECT account_realm_id,account_collection_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_realm_account_collection_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.account_realm_company AS
 SELECT account_realm_id,company_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_realm_company;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.account_realm_password_type AS
 SELECT password_type,account_realm_id,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_realm_password_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.account_ssh_key AS
 SELECT account_id,ssh_key_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_ssh_key;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.account_token AS
 SELECT account_token_id,account_id,token_id,issued_date,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.account_token;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.account_unix_info AS
@@ -105,9 +131,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.account_unix_info;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.appaal AS
 SELECT appaal_id,appaal_name,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.appaal;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.appaal_instance AS
@@ -124,13 +154,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.appaal_instance;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.appaal_instance_device_coll AS
 SELECT device_collection_id,appaal_instance_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.appaal_instance_device_collection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.appaal_instance_property AS
 SELECT appaal_instance_id,app_key,appaal_group_name,appaal_group_rank,app_value,encryption_key_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.appaal_instance_property;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance AS
 SELECT approval_instance_id,approval_process_id,approval_instance_name,description,approval_start,approval_end,data_ins_user,data_ins_date,data_upd_user,data_upd_date
@@ -160,9 +196,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.approval_instance_item;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_link AS
 SELECT approval_instance_link_id,acct_collection_acct_seq_id,person_company_seq_id,property_seq_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.approval_instance_link;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_step AS
@@ -189,9 +229,14 @@ SELECT
 	data_upd_date
 FROM jazzhands.approval_instance_step;
 
+ALTER TABLE jazzhands_legacy.approval_instance_step ALTER approval_instance_step_start SET DEFAULT now();
+ALTER TABLE jazzhands_legacy.approval_instance_step ALTER is_completed SET DEFAULT 'N'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_step_notify AS
 SELECT approv_instance_step_notify_id,approval_instance_step_id,approval_notify_type,account_id,approval_notify_whence,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.approval_instance_step_notify;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_process AS
@@ -213,6 +258,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.approval_process;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_process_chain AS
@@ -242,25 +289,38 @@ SELECT
 	data_upd_date
 FROM jazzhands.approval_process_chain;
 
+ALTER TABLE jazzhands_legacy.approval_process_chain ALTER approval_chain_response_period SET DEFAULT '1 week'::character varying;
+ALTER TABLE jazzhands_legacy.approval_process_chain ALTER refresh_all_data SET DEFAULT 'N'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.asset AS
 SELECT asset_id,component_id,description,contract_id,serial_number,part_number,asset_tag,ownership_status,lease_expiration_date,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.asset;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.badge AS
 SELECT card_number,badge_type_id,badge_status,date_assigned,date_reclaimed,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.badge;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.badge_type AS
 SELECT badge_type_id,badge_type_name,description,badge_color,badge_template_name,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.badge_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.certificate_signing_request AS
 SELECT certificate_signing_request_id,friendly_name,subject,certificate_signing_request,private_key_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.certificate_signing_request;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.chassis_location AS
 SELECT chassis_location_id,chassis_device_type_id,device_type_module_name,chassis_device_id,module_device_type_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.chassis_location;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.circuit AS
@@ -285,33 +345,49 @@ SELECT
 	data_upd_date
 FROM jazzhands.circuit;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.company AS
 SELECT company_id,company_name,company_short_name,parent_company_id,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.company;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.company_collection AS
 SELECT company_collection_id,company_collection_name,company_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.company_collection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.company_collection_company AS
 SELECT company_collection_id,company_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.company_collection_company;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.company_collection_hier AS
 SELECT company_collection_id,child_company_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.company_collection_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.company_type AS
 SELECT company_id,company_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.company_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.component AS
 SELECT component_id,component_type_id,component_name,rack_location_id,parent_slot_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.component;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.component_property AS
 SELECT component_property_id,component_function,component_type_id,component_id,inter_component_connection_id,slot_function,slot_type_id,slot_id,component_property_name,component_property_type,property_value,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.component_property;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.component_type AS
@@ -349,9 +425,16 @@ SELECT
 	data_upd_date
 FROM jazzhands.component_type;
 
+ALTER TABLE jazzhands_legacy.component_type ALTER is_removable SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.component_type ALTER asset_permitted SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.component_type ALTER is_rack_mountable SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.component_type ALTER is_virtual_component SET DEFAULT 'N'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.component_type_component_func AS
 SELECT component_function,component_type_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.component_type_component_function;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.component_type_slot_tmplt AS
 SELECT component_type_slot_tmplt_id,component_type_id,slot_type_id,slot_name_template,child_slot_name_template,child_slot_offset,slot_index,physical_label,slot_x_offset,slot_y_offset,slot_z_offset,slot_side,data_ins_user,data_ins_date,data_upd_user,data_upd_date
@@ -361,9 +444,13 @@ CREATE OR REPLACE VIEW jazzhands_legacy.contract AS
 SELECT contract_id,company_id,contract_name,vendor_contract_name,description,contract_termination_date,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.contract;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.contract_type AS
 SELECT contract_id,contract_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.contract_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.department AS
@@ -425,9 +512,14 @@ SELECT
 	data_upd_date
 FROM jazzhands.device;
 
+ALTER TABLE jazzhands_legacy.device ALTER is_locally_managed SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.device ALTER is_virtual_device SET DEFAULT 'N'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection AS
 SELECT device_collection_id,device_collection_name,device_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_collection;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection_assignd_cert AS
@@ -449,25 +541,37 @@ SELECT
 	data_upd_date
 FROM jazzhands.device_collection_assigned_certificate;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection_device AS
 SELECT device_id,device_collection_id,device_id_rank,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_collection_device;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection_hier AS
 SELECT device_collection_id,child_device_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_collection_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection_ssh_key AS
 SELECT ssh_key_id,device_collection_id,account_collection_id,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_collection_ssh_key;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_encapsulation_domain AS
 SELECT device_id,encapsulation_type,encapsulation_domain,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_encapsulation_domain;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_layer2_network AS
 SELECT device_id,layer2_network_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_layer2_network;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.device_management_controller AS
@@ -482,25 +586,37 @@ SELECT
 	data_upd_date
 FROM jazzhands.device_management_controller;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_note AS
 SELECT note_id,device_id,note_text,note_date,note_user,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_note;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_power_connection AS
 SELECT device_power_connection_id,inter_component_connection_id,rpc_device_id,rpc_power_interface_port,power_interface_port,device_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_power_connection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_power_interface AS
 SELECT device_id,power_interface_port,power_plug_style,voltage,max_amperage,provides_power,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_power_interface;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_ssh_key AS
 SELECT device_id,ssh_key_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_ssh_key;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_ticket AS
 SELECT device_id,ticketing_system_id,ticket_number,device_ticket_notes,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_ticket;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.device_type AS
@@ -543,6 +659,11 @@ SELECT
 	data_upd_date
 FROM jazzhands.device_type;
 
+ALTER TABLE jazzhands_legacy.device_type ALTER has_802_3_interface SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.device_type ALTER has_802_11_interface SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.device_type ALTER snmp_capable SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.device_type ALTER is_chassis SET DEFAULT 'N'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.device_type_module AS
 SELECT device_type_id,device_type_module_name,description,device_type_x_offset,device_type_y_offset,device_type_z_offset,device_type_side,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_type_module;
@@ -551,25 +672,37 @@ CREATE OR REPLACE VIEW jazzhands_legacy.device_type_module_device_type AS
 SELECT module_device_type_id,device_type_id,device_type_module_name,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_type_module_device_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_change_record AS
 SELECT dns_change_record_id,dns_domain_id,ip_universe_id,ip_address,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.dns_change_record;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain AS
 SELECT dns_domain_id,soa_name,dns_domain_name,dns_domain_type,parent_dns_domain_id,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.dns_domain;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain_collection AS
 SELECT dns_domain_collection_id,dns_domain_collection_name,dns_domain_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.dns_domain_collection;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain_collection_dns_dom AS
 SELECT dns_domain_collection_id,dns_domain_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.dns_domain_collection_dns_domain;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain_collection_hier AS
 SELECT dns_domain_collection_id,child_dns_domain_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.dns_domain_collection_hier;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain_ip_universe AS
@@ -596,6 +729,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.dns_domain_ip_universe;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_record AS
@@ -632,25 +767,39 @@ SELECT
 	data_upd_date
 FROM jazzhands.dns_record;
 
+ALTER TABLE jazzhands_legacy.dns_record ALTER dns_class SET DEFAULT 'IN'::character varying;
+ALTER TABLE jazzhands_legacy.dns_record ALTER should_generate_ptr SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.dns_record ALTER is_enabled SET DEFAULT 'Y'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_record_relation AS
 SELECT dns_record_id,related_dns_record_id,dns_record_relation_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.dns_record_relation;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.encapsulation_domain AS
 SELECT encapsulation_domain,encapsulation_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.encapsulation_domain;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.encapsulation_range AS
 SELECT encapsulation_range_id,parent_encapsulation_range_id,site_code,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.encapsulation_range;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.encryption_key AS
 SELECT encryption_key_id,encryption_key_db_value,encryption_key_purpose,encryption_key_purpose_version,encryption_method,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.encryption_key;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.inter_component_connection AS
 SELECT inter_component_connection_id,slot1_id,slot2_id,circuit_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.inter_component_connection;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.ip_universe AS
@@ -669,6 +818,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.ip_universe;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.ip_universe_visibility AS
@@ -690,6 +841,8 @@ CREATE OR REPLACE VIEW jazzhands_legacy.kerberos_realm AS
 SELECT krb_realm_id,realm_name,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.kerberos_realm;
 
+
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.klogin AS
 SELECT
@@ -705,37 +858,55 @@ SELECT
 	data_upd_date
 FROM jazzhands.klogin;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.klogin_mclass AS
 SELECT klogin_id,device_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.klogin_mclass;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.l2_network_coll_l2_network AS
 SELECT layer2_network_collection_id,layer2_network_id,layer2_network_id_rank,start_date,finish_date,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer2_network_collection_layer2_network;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.l3_network_coll_l3_network AS
 SELECT layer3_network_collection_id,layer3_network_id,layer3_network_id_rank,start_date,finish_date,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer3_network_collection_layer3_network;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.layer1_connection AS
 SELECT layer1_connection_id,physical_port1_id,physical_port2_id,circuit_id,baud,data_bits,stop_bits,parity,flow_control,tcpsrv_device_id,is_tcpsrv_enabled,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer1_connection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.layer2_connection AS
 SELECT layer2_connection_id,logical_port1_id,logical_port2_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer2_connection;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.layer2_connection_l2_network AS
 SELECT layer2_connection_id,layer2_network_id,encapsulation_mode,encapsulation_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer2_connection_layer2_network;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.layer2_network AS
 SELECT layer2_network_id,encapsulation_name,encapsulation_domain,encapsulation_type,encapsulation_tag,description,external_id,encapsulation_range_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer2_network;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.layer2_network_collection AS
 SELECT layer2_network_collection_id,layer2_network_collection_name,layer2_network_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer2_network_collection;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.layer2_network_collection_hier AS
@@ -748,13 +919,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.layer2_network_collection_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.layer3_network AS
 SELECT layer3_network_id,netblock_id,layer2_network_id,default_gateway_netblock_id,rendezvous_netblock_id,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer3_network;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.layer3_network_collection AS
 SELECT layer3_network_collection_id,layer3_network_collection_name,layer3_network_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.layer3_network_collection;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.layer3_network_collection_hier AS
@@ -767,13 +944,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.layer3_network_collection_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.logical_port AS
 SELECT logical_port_id,logical_port_name,logical_port_type,device_id,mlag_peering_id,parent_logical_port_id,mac_address,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.logical_port;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.logical_port_slot AS
 SELECT logical_port_id,slot_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.logical_port_slot;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.logical_volume AS
 SELECT logical_volume_id,logical_volume_name,logical_volume_type,volume_group_id,device_id,logical_volume_size_in_bytes,logical_volume_offset_in_bytes,filesystem_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
@@ -783,13 +966,19 @@ CREATE OR REPLACE VIEW jazzhands_legacy.logical_volume_property AS
 SELECT logical_volume_property_id,logical_volume_id,logical_volume_type,logical_volume_purpose,filesystem_type,logical_volume_property_name,logical_volume_property_value,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.logical_volume_property;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.logical_volume_purpose AS
 SELECT logical_volume_purpose,logical_volume_id,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.logical_volume_purpose;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.mlag_peering AS
 SELECT mlag_peering_id,device1_id,device2_id,domain_id,system_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.mlag_peering;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.netblock AS
@@ -833,13 +1022,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.netblock_collection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.netblock_collection_hier AS
 SELECT netblock_collection_id,child_netblock_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.netblock_collection_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.netblock_collection_netblock AS
 SELECT netblock_collection_id,netblock_id,netblock_id_rank,start_date,finish_date,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.netblock_collection_netblock;
+
+
 
 -- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface AS
@@ -876,6 +1071,10 @@ SELECT
 	data_upd_date
 FROM jazzhands.layer3_interface;
 
+ALTER TABLE jazzhands_legacy.network_interface ALTER is_interface_up SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.network_interface ALTER should_monitor SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.network_interface ALTER should_manage SET DEFAULT 'Y'::bpchar;
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface_netblock AS
 SELECT
@@ -888,6 +1087,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.layer3_interface_netblock;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface_purpose AS
@@ -902,9 +1103,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.layer3_interface_purpose;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.network_range AS
 SELECT network_range_id,network_range_type,description,parent_netblock_id,start_netblock_id,stop_netblock_id,dns_prefix,dns_domain_id,lease_time,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.network_range;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.network_service AS
@@ -928,6 +1133,8 @@ SELECT
 	data_upd_date
 FROM jazzhands.network_service;
 
+
+
 -- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.operating_system AS
 SELECT
@@ -945,9 +1152,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.operating_system;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.operating_system_snapshot AS
 SELECT operating_system_snapshot_id,operating_system_snapshot_name,operating_system_snapshot_type,operating_system_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.operating_system_snapshot;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person AS
@@ -973,9 +1184,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.person;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.person_account_realm_company AS
 SELECT person_id,company_id,account_realm_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_account_realm_company;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person_auth_question AS
@@ -993,6 +1208,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.person_auth_question;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person_company AS
@@ -1028,6 +1245,10 @@ SELECT
 	data_upd_date
 FROM jazzhands.person_company;
 
+ALTER TABLE jazzhands_legacy.person_company ALTER is_exempt SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.person_company ALTER is_management SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.person_company ALTER is_full_time SET DEFAULT 'Y'::bpchar;
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.person_company_attr AS
 SELECT
@@ -1045,9 +1266,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.person_company_attribute;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.person_company_badge AS
 SELECT company_id,person_id,badge_id,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_company_badge;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.person_contact AS
@@ -1072,29 +1297,43 @@ SELECT
 	data_upd_date
 FROM jazzhands.person_contact;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.person_image AS
 SELECT person_image_id,person_id,person_image_order,image_type,image_blob,image_checksum,image_label,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_image;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.person_image_usage AS
 SELECT person_image_id,person_image_usage,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_image_usage;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.person_location AS
 SELECT person_location_id,person_id,person_location_type,site_code,physical_address_id,building,floor,section,seat_number,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_location;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.person_note AS
 SELECT note_id,person_id,note_text,note_date,note_user,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_note;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.person_parking_pass AS
 SELECT person_parking_pass_id,person_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_parking_pass;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.person_vehicle AS
 SELECT person_vehicle_id,person_id,vehicle_make,vehicle_model,vehicle_year,vehicle_color,vehicle_license_plate,vehicle_license_state,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.person_vehicle;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.physical_address AS
 SELECT physical_address_id,physical_address_type,company_id,site_rank,description,display_label,address_agent,address_housename,address_street,address_building,address_pobox,address_neighborhood,address_city,address_subregion,address_region,postal_code,iso_country_code,address_freeform,data_ins_user,data_ins_date,data_upd_user,data_upd_date
@@ -1115,13 +1354,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.physical_connection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.physical_port AS
 SELECT physical_port_id,device_id,port_name,port_type,description,port_plug_style,port_medium,port_protocol,port_speed,physical_label,port_purpose,logical_port_id,tcp_port,is_hardwired,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.physical_port;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.physicalish_volume AS
 SELECT physicalish_volume_id,physicalish_volume_name,physicalish_volume_type,device_id,logical_volume_id,component_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.physicalish_volume;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.private_key AS
@@ -1204,6 +1449,8 @@ SELECT
 	data_upd_date
 FROM jazzhands.property_name_collection;
 
+
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.property_collection_hier AS
 SELECT
@@ -1214,6 +1461,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.property_name_collection_hier;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.property_collection_property AS
@@ -1228,9 +1477,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.property_name_collection_property_name;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.pseudo_klogin AS
 SELECT pseudo_klogin_id,principal,dest_account_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.pseudo_klogin;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.rack AS
@@ -1256,6 +1509,8 @@ SELECT
 	data_upd_date
 FROM jazzhands.rack;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.rack_location AS
 SELECT rack_location_id,rack_id,rack_u_offset_of_device_top,rack_side,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.rack_location;
@@ -1263,6 +1518,8 @@ FROM jazzhands.rack_location;
 CREATE OR REPLACE VIEW jazzhands_legacy.service_environment AS
 SELECT service_environment_id,service_environment_name,production_state,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.service_environment;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.service_environment_coll_hier AS
@@ -1275,6 +1532,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.service_environment_collection_hier;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.service_environment_collection AS
@@ -1290,9 +1549,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.service_environment_collection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.shared_netblock AS
 SELECT shared_netblock_id,shared_netblock_protocol,netblock_id,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.shared_netblock;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.shared_netblock_network_int AS
@@ -1306,13 +1569,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.shared_netblock_layer3_interface;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.site AS
 SELECT site_code,colo_company_id,physical_address_id,site_status,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.site;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.site_netblock AS
 SELECT site_code,netblock_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.site_netblock;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.slot AS
@@ -1364,13 +1633,19 @@ CREATE OR REPLACE VIEW jazzhands_legacy.slot_type_prmt_comp_slot_type AS
 SELECT slot_type_id,component_slot_type_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.slot_type_permitted_component_slot_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.slot_type_prmt_rem_slot_type AS
 SELECT slot_type_id,remote_slot_type_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.slot_type_permitted_remote_slot_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.ssh_key AS
 SELECT ssh_key_id,ssh_key_type,ssh_public_key,ssh_private_key,encryption_key_id,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.ssh_key;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.static_route AS
@@ -1385,6 +1660,8 @@ SELECT
 	data_upd_date
 FROM jazzhands.static_route;
 
+
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.static_route_template AS
 SELECT
@@ -1398,6 +1675,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.static_route_template;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.sudo_acct_col_device_collectio AS
@@ -1422,9 +1701,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.sudo_account_collection_device_collection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.sudo_alias AS
 SELECT sudo_alias_name,sudo_alias_value,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.sudo_alias;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.svc_environment_coll_svc_env AS
@@ -1438,13 +1721,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.service_environment_collection_service_environment;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.sw_package AS
 SELECT sw_package_id,sw_package_name,sw_package_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.sw_package;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.ticketing_system AS
 SELECT ticketing_system_id,ticketing_system_name,ticketing_system_url,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.ticketing_system;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.token AS
@@ -1480,57 +1769,85 @@ CREATE OR REPLACE VIEW jazzhands_legacy.token_collection AS
 SELECT token_collection_id,token_collection_name,token_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.token_collection;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.token_collection_hier AS
 SELECT token_collection_id,child_token_collection_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.token_collection_hier;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.token_collection_token AS
 SELECT token_collection_id,token_id,token_id_rank,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.token_collection_token;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.token_sequence AS
 SELECT token_id,token_sequence,last_updated
 FROM jazzhands.token_sequence;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.unix_group AS
 SELECT account_collection_id,unix_gid,group_password,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.unix_group;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_account_collection_account AS
 SELECT account_collection_id,account_id,account_collection_relation,account_id_rank,start_date,finish_date,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.v_account_collection_account;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_account_collection_expanded AS
 SELECT level,root_account_collection_id,account_collection_id
 FROM jazzhands.v_account_collection_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_account_collection_hier_from_ancestor AS
 SELECT root_account_collection_id,account_collection_id,path,cycle
 FROM jazzhands.v_account_collection_hier_from_ancestor;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_account_manager_hier AS
 SELECT level,account_id,person_id,company_id,login,human_readable,account_realm_id,manager_account_id,manager_login,manager_person_id,manager_company_id,manager_human_readable,array_path
 FROM jazzhands.v_account_manager_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_account_manager_map AS
 SELECT login,account_id,person_id,company_id,account_realm_id,first_name,last_name,middle_name,manager_person_id,employee_id,human_readable,manager_account_id,manager_login,manager_human_readable,manager_last_name,manager_middle_name,manger_first_name,manager_employee_id,manager_company_id
 FROM jazzhands.v_account_manager_map;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_account_name AS
 SELECT account_id,first_name,last_name,display_name
 FROM jazzhands.v_account_name;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_acct_coll_acct_expanded AS
 SELECT account_collection_id,account_id
 FROM jazzhands.v_account_collection_account_expanded;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_acct_coll_acct_expanded_detail AS
 SELECT account_collection_id,root_account_collection_id,account_id,acct_coll_level,dept_level,assign_method,text_path,array_path
 FROM jazzhands.v_account_collection_account_expanded_detail;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_acct_coll_expanded AS
 SELECT level,account_collection_id,root_account_collection_id,text_path,array_path,rvs_array_path
 FROM jazzhands.v_account_collection_expanded;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_acct_coll_expanded_detail AS
@@ -1543,6 +1860,8 @@ SELECT
 	text_path,
 	array_path
 FROM jazzhands.v_account_collection_expanded_detail;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_acct_coll_prop_expanded AS
@@ -1563,13 +1882,19 @@ SELECT
 	assignment_rank AS assign_rank
 FROM jazzhands.v_account_collection_property_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_application_role AS
 SELECT role_level,role_id,parent_role_id,root_role_id,root_role_name,role_name,role_path,role_is_leaf,array_path,cycle
 FROM jazzhands.v_application_role;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_application_role_member AS
 SELECT device_id,role_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.v_application_role_member;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_approval_instance_step_expanded AS
@@ -1587,13 +1912,19 @@ SELECT
 	END AS is_approved
 FROM jazzhands.v_approval_instance_step_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_company_hier AS
 SELECT root_company_id,company_id
 FROM jazzhands.v_company_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_component_hier AS
 SELECT component_id,child_component_id,component_path,level
 FROM jazzhands.v_component_hier;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_corp_family_account AS
@@ -1618,17 +1949,25 @@ SELECT
 	data_upd_date
 FROM jazzhands.v_corp_family_account;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_department_company_expanded AS
 SELECT company_id,account_collection_id
 FROM jazzhands.v_department_company_expanded;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dev_col_device_root AS
 SELECT device_id,root_id,root_name,root_type,leaf_id,leaf_name,leaf_type
 FROM jazzhands.v_dev_col_device_root;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dev_col_root AS
 SELECT root_id,root_name,root_type,leaf_id,leaf_name,leaf_type
 FROM jazzhands.v_device_collection_root;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dev_col_user_prop_expanded AS
@@ -1653,65 +1992,97 @@ SELECT
 	is_boolean
 FROM jazzhands.v_device_collection_account_property_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_col_account_cart AS
 SELECT device_collection_id,account_id,setting
 FROM jazzhands.v_device_collection_account_cart;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_col_account_col_cart AS
 SELECT device_collection_id,account_collection_id,setting
 FROM jazzhands.v_device_collection_account_collection_cart;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_col_acct_col_expanded AS
 SELECT device_collection_id,account_collection_id,account_id
 FROM jazzhands.v_device_collection_account_collection_expanded;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_col_acct_col_unixgroup AS
 SELECT device_collection_id,account_collection_id
 FROM jazzhands.v_device_collection_account_collection_unix_group;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_col_acct_col_unixlogin AS
 SELECT device_collection_id,account_collection_id,account_id
 FROM jazzhands.v_device_collection_account_collection_unix_login;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_coll_device_expanded AS
 SELECT device_collection_id,device_id
 FROM jazzhands.v_device_collection_device_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_coll_hier_detail AS
 SELECT device_collection_id,parent_device_collection_id,device_collection_level
 FROM jazzhands.v_device_collection_hier_detail;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_collection_account_ssh_key AS
 SELECT device_collection_id,account_id,ssh_public_key
 FROM jazzhands.v_device_collection_account_ssh_key;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_collection_hier_from_ancestor AS
 SELECT root_device_collection_id,device_collection_id,path,cycle
 FROM jazzhands.v_device_collection_hier_from_ancestor;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_component_summary AS
 SELECT device_id,cpu_model,cpu_count,core_count,memory_count,total_memory,disk_count,total_disk
 FROM jazzhands.v_device_component_summary;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_components AS
 SELECT device_id,component_id,component_path,level
 FROM jazzhands.v_device_components;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_components_expanded AS
 SELECT device_id,component_id,slot_id,vendor,model,serial_number,functions,slot_name,memory_size,memory_speed,disk_size,media_type
 FROM jazzhands.v_device_components_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_components_json AS
 SELECT device_id,components
 FROM jazzhands.v_device_components_json;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_slot_connections AS
 SELECT inter_component_connection_id,device_id,slot_id,slot_name,slot_index,mac_address,slot_type_id,slot_type,slot_function,remote_device_id,remote_slot_id,remote_slot_name,remote_slot_index,remote_mac_address,remote_slot_type_id,remote_slot_type,remote_slot_function
 FROM jazzhands.v_device_slot_connections;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_device_slots AS
 SELECT device_id,device_component_id,component_id,slot_id
 FROM jazzhands.v_device_slots;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns AS
@@ -1746,6 +2117,8 @@ SELECT
 	dns_value_record_id
 FROM jazzhands.v_dns;
 
+
+
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_changes_pending AS
 SELECT
@@ -1761,6 +2134,8 @@ SELECT
 	soa_name,
 	ip_address
 FROM jazzhands.v_dns_changes_pending;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_domain_nouniverse AS
@@ -1789,6 +2164,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.v_dns_domain_nouniverse;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_fwd AS
@@ -1823,6 +2200,8 @@ SELECT
 	dns_value_record_id
 FROM jazzhands.v_dns_fwd;
 
+
+
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_rvs AS
 SELECT
@@ -1855,6 +2234,8 @@ SELECT
 	END AS should_generate_ptr,
 	dns_value_record_id
 FROM jazzhands.v_dns_rvs;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_sorted AS
@@ -1890,21 +2271,31 @@ SELECT
 	anchor_rank
 FROM jazzhands.v_dns_sorted;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_account_attribute AS
 SELECT property_id,account_id,device_collection_id,login,property_name,property_type,property_value,property_rank,is_boolean
 FROM jazzhands.v_hotpants_account_attribute;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_client AS
 SELECT device_id,device_name,ip_address,radius_secret
 FROM jazzhands.v_hotpants_client;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_dc_attribute AS
 SELECT property_id,device_collection_id,property_name,property_type,property_rank,property_value
 FROM jazzhands.v_hotpants_device_collection_attribute;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_device_collection AS
 SELECT device_id,device_name,device_collection_id,device_collection_name,device_collection_type,ip_address
 FROM jazzhands.v_hotpants_device_collection;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_token AS
@@ -1932,9 +2323,13 @@ SELECT
 	encryption_method
 FROM jazzhands.v_hotpants_token;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_l1_all_physical_ports AS
 SELECT layer1_connection_id,physical_port_id,device_id,port_name,port_type,port_purpose,other_physical_port_id,other_device_id,other_port_name,other_port_purpose,baud,data_bits,stop_bits,parity,flow_control
 FROM jazzhands.v_l1_all_physical_ports;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_l2_network_coll_expanded AS
@@ -1947,6 +2342,8 @@ SELECT
 	rvs_array_path
 FROM jazzhands.v_layer2_network_collection_expanded;
 
+
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_l3_network_coll_expanded AS
 SELECT
@@ -1958,25 +2355,37 @@ SELECT
 	rvs_array_path
 FROM jazzhands.v_layer3_network_collection_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_layerx_network_expanded AS
 SELECT layer3_network_id,layer3_network_description,netblock_id,ip_address,netblock_type,ip_universe_id,default_gateway_netblock_id,default_gateway_ip_address,default_gateway_netblock_type,default_gateway_ip_universe_id,layer2_network_id,encapsulation_name,encapsulation_domain,encapsulation_type,encapsulation_tag,layer2_network_description
 FROM jazzhands.v_layerx_network_expanded;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_lv_hier AS
 SELECT physicalish_volume_id,volume_group_id,logical_volume_id,child_pv_id,child_vg_id,child_lv_id,pv_path,vg_path,lv_path
 FROM jazzhands.v_lv_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_nblk_coll_netblock_expanded AS
 SELECT netblock_collection_id,netblock_id
 FROM jazzhands.v_netblock_collection_netblock_expanded;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_coll_expanded AS
 SELECT level,netblock_collection_id,root_netblock_collection_id,text_path,array_path,rvs_array_path
 FROM jazzhands.v_netblock_collection_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_collection_hier_from_ancestor AS
 SELECT root_netblock_collection_id,netblock_collection_id,path,cycle
 FROM jazzhands.v_netblock_collection_hier_from_ancestor;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_hier AS
@@ -1999,6 +2408,8 @@ SELECT
 	array_path,
 	array_ip_path
 FROM jazzhands.v_netblock_hier;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_hier_expanded AS
@@ -2031,9 +2442,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.v_netblock_hier_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_network_range_expanded AS
 SELECT network_range_id,network_range_type,description,parent_netblock_id,ip_address,netblock_type,ip_universe_id,start_netblock_id,start_ip_address,start_netblock_type,start_ip_universe_id,stop_netblock_id,stop_ip_address,stop_netblock_type,stop_ip_universe_id,dns_prefix,dns_domain_id,soa_name
 FROM jazzhands.v_network_range_expanded;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person AS
@@ -2060,6 +2475,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.v_person;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person_company AS
@@ -2100,17 +2517,27 @@ SELECT
 	data_upd_date
 FROM jazzhands.v_person_company;
 
+ALTER TABLE jazzhands_legacy.v_person_company ALTER is_exempt SET DEFAULT 'Y'::text;
+ALTER TABLE jazzhands_legacy.v_person_company ALTER is_management SET DEFAULT 'N'::text;
+ALTER TABLE jazzhands_legacy.v_person_company ALTER is_full_time SET DEFAULT 'Y'::text;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person_company_expanded AS
 SELECT company_id,person_id
 FROM jazzhands.v_person_company_expanded;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person_company_hier AS
 SELECT level,person_id,subordinate_person_id,intermediate_person_id,person_company_relation,array_path,rvs_array_path,cycle
 FROM jazzhands.v_person_company_hier;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_physical_connection AS
 SELECT level,inter_component_connection_id,layer1_connection_id,physical_connection_id,inter_dev_conn_slot1_id,inter_dev_conn_slot2_id,layer1_physical_port1_id,layer1_physical_port2_id,slot1_id,slot2_id,physical_port1_id,physical_port2_id
 FROM jazzhands.v_physical_connection;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_property AS
@@ -2160,13 +2587,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.v_property;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_site_netblock_expanded AS
 SELECT site_code,netblock_id
 FROM jazzhands.v_site_netblock_expanded;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_site_netblock_expanded_assigned AS
 SELECT site_code,netblock_id
 FROM jazzhands.v_site_netblock_expanded_assigned;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_token AS
@@ -2194,29 +2627,43 @@ SELECT
 	lock_status_last_updated
 FROM jazzhands.v_token;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_unix_account_overrides AS
 SELECT device_collection_id,account_id,setting
 FROM jazzhands.v_unix_account_overrides;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_unix_group_mappings AS
 SELECT device_collection_id,account_collection_id,group_name,unix_gid,group_password,setting,mclass_setting,members
 FROM jazzhands.v_unix_group_mappings;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_unix_group_overrides AS
 SELECT device_collection_id,account_collection_id,setting
 FROM jazzhands.v_unix_group_overrides;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.v_unix_mclass_settings AS
 SELECT device_collection_id,mclass_setting
 FROM jazzhands.v_unix_mclass_settings;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.v_unix_passwd_mappings AS
 SELECT device_collection_id,account_id,login,crypt,unix_uid,unix_group_name,gecos,home,shell,ssh_public_key,setting,mclass_setting,extra_groups
 FROM jazzhands.v_unix_passwd_mappings;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_collection_relatio AS
 SELECT account_collection_relation,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_account_collection_relation;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_collection_type AS
@@ -2242,6 +2689,9 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_account_collection_type;
 
+ALTER TABLE jazzhands_legacy.val_account_collection_type ALTER is_infrastructure_type SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.val_account_collection_type ALTER can_have_hierarchy SET DEFAULT 'Y'::bpchar;
+
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_role AS
 SELECT
@@ -2257,6 +2707,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.val_account_role;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_type AS
@@ -2279,57 +2731,85 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_account_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_app_key AS
 SELECT appaal_group_name,app_key,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_app_key;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_app_key_values AS
 SELECT appaal_group_name,app_key,app_value,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_app_key_values;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_appaal_group_name AS
 SELECT appaal_group_name,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_appaal_group_name;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_approval_chain_resp_prd AS
 SELECT approval_chain_response_period,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_approval_chain_response_period;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_approval_expiration_action AS
 SELECT approval_expiration_action,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_approval_expiration_action;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_approval_notifty_type AS
 SELECT approval_notify_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_approval_notifty_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_approval_process_type AS
 SELECT approval_process_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_approval_process_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_approval_type AS
 SELECT approval_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_approval_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_attestation_frequency AS
 SELECT attestation_frequency,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_attestation_frequency;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_auth_question AS
 SELECT auth_question_id,question_text,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_auth_question;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_auth_resource AS
 SELECT auth_resource,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_auth_resource;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_badge_status AS
 SELECT badge_status,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_badge_status;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_cable_type AS
 SELECT cable_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_cable_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_company_collection_type AS
@@ -2354,6 +2834,9 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_company_collection_type;
 
+ALTER TABLE jazzhands_legacy.val_company_collection_type ALTER is_infrastructure_type SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.val_company_collection_type ALTER can_have_hierarchy SET DEFAULT 'Y'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_company_type AS
 SELECT company_type,description,company_type_purpose,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_company_type;
@@ -2362,9 +2845,13 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_company_type_purpose AS
 SELECT company_type_purpose,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_company_type_purpose;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_function AS
 SELECT component_function,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_component_function;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property AS
@@ -2395,6 +2882,14 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_component_property;
 
+ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_component_type_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_component_function SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_component_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_intcomp_conn_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_slot_type_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_slot_function SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_slot_id SET DEFAULT 'PROHIBITED'::bpchar;
+
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property_type AS
 SELECT
@@ -2415,13 +2910,19 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property_value AS
 SELECT component_property_name,component_property_type,valid_property_value,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_component_property_value;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_contract_type AS
 SELECT contract_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_contract_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_country_code AS
 SELECT iso_country_code,dial_country_code,primary_iso_currency_code,country_name,display_priority,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_country_code;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_device_collection_type AS
@@ -2445,17 +2946,25 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_device_mgmt_ctrl_type AS
 SELECT device_mgmt_control_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_device_management_controller_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_device_status AS
 SELECT device_status,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_device_status;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_diet AS
 SELECT diet,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_diet;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_class AS
 SELECT dns_class,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_dns_class;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_domain_collection_type AS
@@ -2495,45 +3004,67 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_record_relation_type AS
 SELECT dns_record_relation_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_dns_record_relation_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_srv_service AS
 SELECT dns_srv_service,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_dns_srv_service;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_type AS
 SELECT dns_type,description,id_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_dns_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_encapsulation_mode AS
 SELECT encapsulation_mode,encapsulation_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_encapsulation_mode;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_encapsulation_type AS
 SELECT encapsulation_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_encapsulation_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_encryption_key_purpose AS
 SELECT encryption_key_purpose,encryption_key_purpose_version,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_encryption_key_purpose;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_encryption_method AS
 SELECT encryption_method,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_encryption_method;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_filesystem_type AS
 SELECT filesystem_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_filesystem_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_image_type AS
 SELECT image_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_image_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_ip_namespace AS
 SELECT ip_namespace,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_ip_namespace;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_iso_currency_code AS
 SELECT iso_currency_code,description,currency_symbol,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_iso_currency_code;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_key_usg_reason_for_assgn AS
@@ -2545,6 +3076,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.val_key_usage_reason_for_assignment;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_layer2_network_coll_type AS
@@ -2586,17 +3119,25 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_logical_port_type AS
 SELECT logical_port_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_logical_port_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_logical_volume_property AS
 SELECT logical_volume_property_name,filesystem_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_logical_volume_property;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_logical_volume_purpose AS
 SELECT logical_volume_purpose,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_logical_volume_purpose;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_logical_volume_type AS
 SELECT logical_volume_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_logical_volume_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_collection_type AS
@@ -2618,9 +3159,14 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_netblock_collection_type;
 
+ALTER TABLE jazzhands_legacy.val_netblock_collection_type ALTER can_have_hierarchy SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.val_netblock_collection_type ALTER netblock_single_addr_restrict SET DEFAULT 'ANY'::character varying;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_status AS
 SELECT netblock_status,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_netblock_status;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_type AS
@@ -2643,13 +3189,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_netblock_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_interface_purpose AS
 SELECT network_interface_purpose,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_network_interface_purpose;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_interface_type AS
 SELECT network_interface_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_network_interface_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_range_type AS
@@ -2675,29 +3227,45 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_network_range_type;
 
+ALTER TABLE jazzhands_legacy.val_network_range_type ALTER dns_domain_required SET DEFAULT 'REQUIRED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_network_range_type ALTER can_overlap SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.val_network_range_type ALTER require_cidr_boundary SET DEFAULT 'N'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_service_type AS
 SELECT network_service_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_network_service_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_operating_system_family AS
 SELECT operating_system_family,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_operating_system_family;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_os_snapshot_type AS
 SELECT operating_system_snapshot_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_operating_system_snapshot_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_ownership_status AS
 SELECT ownership_status,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_ownership_status;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_package_relation_type AS
 SELECT package_relation_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_package_relation_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_password_type AS
 SELECT password_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_password_type;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_company_attr_dtype AS
@@ -2709,6 +3277,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.val_person_company_attribute_data_type;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_company_attr_name AS
@@ -2722,6 +3292,8 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_person_company_attribute_name;
 
+
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_company_attr_value AS
 SELECT
@@ -2734,21 +3306,31 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_person_company_attribute_value;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_company_relation AS
 SELECT person_company_relation,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_company_relation;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_contact_loc_type AS
 SELECT person_contact_location_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_contact_location_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_contact_technology AS
 SELECT person_contact_technology,person_contact_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_contact_technology;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_contact_type AS
 SELECT person_contact_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_contact_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_image_usage AS
@@ -2765,9 +3347,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_person_image_usage;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_location_type AS
 SELECT person_location_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_person_location_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_status AS
@@ -2800,21 +3386,32 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_person_status;
 
+ALTER TABLE jazzhands_legacy.val_person_status ALTER is_forced SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.val_person_status ALTER is_db_enforced SET DEFAULT 'N'::bpchar;
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_physical_address_type AS
 SELECT physical_address_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_physical_address_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_physicalish_volume_type AS
 SELECT physicalish_volume_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_physicalish_volume_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_processor_architecture AS
 SELECT processor_architecture,kernel_bits,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_processor_architecture;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_production_state AS
 SELECT production_state,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_production_state;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property AS
@@ -2867,6 +3464,27 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_property;
 
+ALTER TABLE jazzhands_legacy.val_property ALTER is_multivalue SET DEFAULT 'N'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_account_collection_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_account_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_account_realm_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_company_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_company_collection_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_device_collection_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_dns_domain_coll_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_layer2_network_coll_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_layer3_network_coll_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_netblock_collection_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_network_range_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_operating_system_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_os_snapshot_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_person_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_property_collection_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_service_env_collection SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_site_code SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_x509_signed_cert_id SET DEFAULT 'PROHIBITED'::bpchar;
+ALTER TABLE jazzhands_legacy.val_property ALTER permit_property_rank SET DEFAULT 'PROHIBITED'::bpchar;
+
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property_collection_type AS
 SELECT
@@ -2889,6 +3507,8 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_property_data_type AS
 SELECT property_data_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_property_data_type;
 
+
+
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property_type AS
 SELECT
@@ -2910,17 +3530,25 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_property_value AS
 SELECT property_name,property_type,valid_property_value,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_property_value;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_pvt_key_encryption_type AS
 SELECT private_key_encryption_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_private_key_encryption_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_rack_type AS
 SELECT rack_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_rack_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_raid_type AS
 SELECT raid_type,description,primary_raid_level,secondary_raid_level,raid_level_qualifier,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_raid_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_service_env_coll_type AS
@@ -2944,6 +3572,8 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_shared_netblock_protocol AS
 SELECT shared_netblock_protocol,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_shared_netblock_protocol;
 
+
+
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_slot_function AS
 SELECT
@@ -2964,13 +3594,19 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_slot_physical_interface AS
 SELECT slot_physical_interface_type,slot_function,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_slot_physical_interface;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_ssh_key_type AS
 SELECT ssh_key_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_ssh_key_type;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_sw_package_type AS
 SELECT sw_package_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_sw_package_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_token_collection_type AS
@@ -2994,21 +3630,31 @@ CREATE OR REPLACE VIEW jazzhands_legacy.val_token_status AS
 SELECT token_status,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_token_status;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_token_type AS
 SELECT token_type,description,token_digit_count,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_token_type;
+
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.val_volume_group_purpose AS
 SELECT volume_group_purpose,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_volume_group_purpose;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_volume_group_relation AS
 SELECT volume_group_relation,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_volume_group_relation;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_volume_group_type AS
 SELECT volume_group_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_volume_group_type;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_certificate_file_fmt AS
@@ -3021,9 +3667,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_x509_certificate_file_format;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_certificate_type AS
 SELECT x509_certificate_type,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_x509_certificate_type;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_key_usage AS
@@ -3041,6 +3691,8 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_x509_key_usage;
 
+
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_key_usage_category AS
 SELECT
@@ -3052,13 +3704,19 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_x509_key_usage_category;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_revocation_reason AS
 SELECT x509_revocation_reason,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.val_x509_revocation_reason;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.volume_group AS
 SELECT volume_group_id,device_id,component_id,volume_group_name,volume_group_type,volume_group_size_in_bytes,raid_type,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.volume_group;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.volume_group_physicalish_vol AS
@@ -3075,9 +3733,13 @@ SELECT
 	data_upd_date
 FROM jazzhands.volume_group_physicalish_vol;
 
+
+
 CREATE OR REPLACE VIEW jazzhands_legacy.volume_group_purpose AS
 SELECT volume_group_id,volume_group_purpose,description,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.volume_group_purpose;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_certificate AS
@@ -3115,6 +3777,9 @@ SELECT
 	data_upd_date
 FROM jazzhands.x509_certificate;
 
+ALTER TABLE jazzhands_legacy.x509_certificate ALTER is_active SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.x509_certificate ALTER is_certificate_authority SET DEFAULT 'N'::bpchar;
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_key_usage_attribute AS
 SELECT
@@ -3126,6 +3791,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.x509_key_usage_attribute;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_key_usage_categorization AS
@@ -3139,6 +3806,8 @@ SELECT
 	data_upd_date
 FROM jazzhands.x509_key_usage_categorization;
 
+
+
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_key_usage_default AS
 SELECT
@@ -3150,6 +3819,8 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.x509_key_usage_default;
+
+
 
 -- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_signed_certificate AS
@@ -3185,6 +3856,10 @@ SELECT
 	data_upd_user,
 	data_upd_date
 FROM jazzhands.x509_signed_certificate;
+
+ALTER TABLE jazzhands_legacy.x509_signed_certificate ALTER x509_certificate_type SET DEFAULT 'default'::character varying;
+ALTER TABLE jazzhands_legacy.x509_signed_certificate ALTER is_active SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.x509_signed_certificate ALTER is_certificate_authority SET DEFAULT 'N'::bpchar;
 
 
 
@@ -3355,22 +4030,22 @@ _uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_id = $1 RETURNING *'  USING OLD.account_id
 			INTO _nr;
-		NEW.account_id = _nr.account_id;
-		NEW.login = _nr.login;
-		NEW.person_id = _nr.person_id;
-		NEW.company_id = _nr.company_id;
-		NEW.is_enabled = _nr.is_enabled;
-		NEW.account_realm_id = _nr.account_realm_id;
-		NEW.account_status = _nr.account_status;
-		NEW.account_role = _nr.account_role;
-		NEW.account_type = _nr.account_type;
-		NEW.description = _nr.description;
-		NEW.external_id = _nr.external_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.account_id = _nr.account_id;
+	NEW.login = _nr.login;
+	NEW.person_id = _nr.person_id;
+	NEW.company_id = _nr.company_id;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.account_status = _nr.account_status;
+	NEW.account_role = _nr.account_role;
+	NEW.account_type = _nr.account_type;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -3544,16 +4219,16 @@ _uq := array_append(_uq, 'auth_origin = NEW.' || quote_ident('auth_origin'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_id = $1 AND  account_auth_ts = $2 AND  auth_resource = $3 AND  account_auth_seq = $4 RETURNING *'  USING OLD.account_id, OLD.account_auth_ts, OLD.auth_resource, OLD.account_auth_seq
 			INTO _nr;
-		NEW.account_id = _nr.account_id;
-		NEW.account_auth_ts = _nr.account_auth_ts;
-		NEW.auth_resource = _nr.auth_resource;
-		NEW.account_auth_seq = _nr.account_auth_seq;
-		NEW.was_auth_success = _nr.was_auth_success;
-		NEW.auth_resource_instance = _nr.auth_resource_instance;
-		NEW.auth_origin = _nr.auth_origin;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_ins_user = _nr.data_ins_user;
 	END IF;
+	NEW.account_id = _nr.account_id;
+	NEW.account_auth_ts = _nr.account_auth_ts;
+	NEW.auth_resource = _nr.auth_resource;
+	NEW.account_auth_seq = _nr.account_auth_seq;
+	NEW.was_auth_success = _nr.was_auth_success;
+	NEW.auth_resource_instance = _nr.auth_resource_instance;
+	NEW.auth_origin = _nr.auth_origin;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_ins_user = _nr.data_ins_user;
 	RETURN NEW;
 END;
 $$
@@ -3761,22 +4436,22 @@ _uq := array_append(_uq, 'approval_note = NEW.' || quote_ident('approval_note'))
 			array_to_string(_uq, ', ') ||
 			' WHERE  approval_instance_item_id = $1 RETURNING *'  USING OLD.approval_instance_item_id
 			INTO _nr;
-		NEW.approval_instance_item_id = _nr.approval_instance_item_id;
-		NEW.approval_instance_link_id = _nr.approval_instance_link_id;
-		NEW.approval_instance_step_id = _nr.approval_instance_step_id;
-		NEW.next_approval_instance_item_id = _nr.next_approval_instance_item_id;
-		NEW.approved_category = _nr.approved_category;
-		NEW.approved_label = _nr.approved_label;
-		NEW.approved_lhs = _nr.approved_lhs;
-		NEW.approved_rhs = _nr.approved_rhs;
-		NEW.is_approved = _nr.is_approved;
-		NEW.approved_account_id = _nr.approved_account_id;
-		NEW.approval_note = _nr.approval_note;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.approval_instance_item_id = _nr.approval_instance_item_id;
+	NEW.approval_instance_link_id = _nr.approval_instance_link_id;
+	NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+	NEW.next_approval_instance_item_id = _nr.next_approval_instance_item_id;
+	NEW.approved_category = _nr.approved_category;
+	NEW.approved_label = _nr.approved_label;
+	NEW.approved_lhs = _nr.approved_lhs;
+	NEW.approved_rhs = _nr.approved_rhs;
+	NEW.is_approved = _nr.is_approved;
+	NEW.approved_account_id = _nr.approved_account_id;
+	NEW.approval_note = _nr.approval_note;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4000,23 +4675,23 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  approval_instance_step_id = $1 RETURNING *'  USING OLD.approval_instance_step_id
 			INTO _nr;
-		NEW.approval_instance_step_id = _nr.approval_instance_step_id;
-		NEW.approval_instance_id = _nr.approval_instance_id;
-		NEW.approval_process_chain_id = _nr.approval_process_chain_id;
-		NEW.approval_instance_step_name = _nr.approval_instance_step_name;
-		NEW.approval_instance_step_due = _nr.approval_instance_step_due;
-		NEW.approval_type = _nr.approval_type;
-		NEW.description = _nr.description;
-		NEW.approval_instance_step_start = _nr.approval_instance_step_start;
-		NEW.approval_instance_step_end = _nr.approval_instance_step_end;
-		NEW.approver_account_id = _nr.approver_account_id;
-		NEW.external_reference_name = _nr.external_reference_name;
-		NEW.is_completed = _nr.is_completed;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+	NEW.approval_instance_id = _nr.approval_instance_id;
+	NEW.approval_process_chain_id = _nr.approval_process_chain_id;
+	NEW.approval_instance_step_name = _nr.approval_instance_step_name;
+	NEW.approval_instance_step_due = _nr.approval_instance_step_due;
+	NEW.approval_type = _nr.approval_type;
+	NEW.description = _nr.description;
+	NEW.approval_instance_step_start = _nr.approval_instance_step_start;
+	NEW.approval_instance_step_end = _nr.approval_instance_step_end;
+	NEW.approver_account_id = _nr.approver_account_id;
+	NEW.external_reference_name = _nr.external_reference_name;
+	NEW.is_completed = _nr.is_completed;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4271,26 +4946,26 @@ _uq := array_append(_uq, 'reject_app_process_chain_id = NEW.' || quote_ident('re
 			array_to_string(_uq, ', ') ||
 			' WHERE  approval_process_chain_id = $1 RETURNING *'  USING OLD.approval_process_chain_id
 			INTO _nr;
-		NEW.approval_process_chain_id = _nr.approval_process_chain_id;
-		NEW.approval_process_chain_name = _nr.approval_process_chain_name;
-		NEW.approval_chain_response_period = _nr.approval_chain_response_period;
-		NEW.description = _nr.description;
-		NEW.message = _nr.message;
-		NEW.email_message = _nr.email_message;
-		NEW.email_subject_prefix = _nr.email_subject_prefix;
-		NEW.email_subject_suffix = _nr.email_subject_suffix;
-		NEW.max_escalation_level = _nr.max_escalation_level;
-		NEW.escalation_delay = _nr.escalation_delay;
-		NEW.escalation_reminder_gap = _nr.escalation_reminder_gap;
-		NEW.approving_entity = _nr.approving_entity;
-		NEW.refresh_all_data = _nr.refresh_all_data;
-		NEW.accept_app_process_chain_id = _nr.accept_app_process_chain_id;
-		NEW.reject_app_process_chain_id = _nr.reject_app_process_chain_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.approval_process_chain_id = _nr.approval_process_chain_id;
+	NEW.approval_process_chain_name = _nr.approval_process_chain_name;
+	NEW.approval_chain_response_period = _nr.approval_chain_response_period;
+	NEW.description = _nr.description;
+	NEW.message = _nr.message;
+	NEW.email_message = _nr.email_message;
+	NEW.email_subject_prefix = _nr.email_subject_prefix;
+	NEW.email_subject_suffix = _nr.email_subject_suffix;
+	NEW.max_escalation_level = _nr.max_escalation_level;
+	NEW.escalation_delay = _nr.escalation_delay;
+	NEW.escalation_reminder_gap = _nr.escalation_reminder_gap;
+	NEW.approving_entity = _nr.approving_entity;
+	NEW.refresh_all_data = _nr.refresh_all_data;
+	NEW.accept_app_process_chain_id = _nr.accept_app_process_chain_id;
+	NEW.reject_app_process_chain_id = _nr.reject_app_process_chain_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4498,21 +5173,21 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  circuit_id = $1 RETURNING *'  USING OLD.circuit_id
 			INTO _nr;
-		NEW.circuit_id = _nr.circuit_id;
-		NEW.vendor_company_id = _nr.vendor_company_id;
-		NEW.vendor_circuit_id_str = _nr.vendor_circuit_id_str;
-		NEW.aloc_lec_company_id = _nr.aloc_lec_company_id;
-		NEW.aloc_lec_circuit_id_str = _nr.aloc_lec_circuit_id_str;
-		NEW.aloc_parent_circuit_id = _nr.aloc_parent_circuit_id;
-		NEW.zloc_lec_company_id = _nr.zloc_lec_company_id;
-		NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
-		NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
-		NEW.is_locally_managed = _nr.is_locally_managed;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.circuit_id = _nr.circuit_id;
+	NEW.vendor_company_id = _nr.vendor_company_id;
+	NEW.vendor_circuit_id_str = _nr.vendor_circuit_id_str;
+	NEW.aloc_lec_company_id = _nr.aloc_lec_company_id;
+	NEW.aloc_lec_circuit_id_str = _nr.aloc_lec_circuit_id_str;
+	NEW.aloc_parent_circuit_id = _nr.aloc_parent_circuit_id;
+	NEW.zloc_lec_company_id = _nr.zloc_lec_company_id;
+	NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
+	NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
+	NEW.is_locally_managed = _nr.is_locally_managed;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4743,22 +5418,22 @@ _uq := array_append(_uq, 'size_units = NEW.' || quote_ident('size_units'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  component_type_id = $1 RETURNING *'  USING OLD.component_type_id
 			INTO _nr;
-		NEW.component_type_id = _nr.component_type_id;
-		NEW.company_id = _nr.company_id;
-		NEW.model = _nr.model;
-		NEW.slot_type_id = _nr.slot_type_id;
-		NEW.description = _nr.description;
-		NEW.part_number = _nr.part_number;
-		NEW.is_removable = _nr.is_removable;
-		NEW.asset_permitted = _nr.asset_permitted;
-		NEW.is_rack_mountable = _nr.is_rack_mountable;
-		NEW.is_virtual_component = _nr.is_virtual_component;
-		NEW.size_units = _nr.size_units;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.component_type_id = _nr.component_type_id;
+	NEW.company_id = _nr.company_id;
+	NEW.model = _nr.model;
+	NEW.slot_type_id = _nr.slot_type_id;
+	NEW.description = _nr.description;
+	NEW.part_number = _nr.part_number;
+	NEW.is_removable = _nr.is_removable;
+	NEW.asset_permitted = _nr.asset_permitted;
+	NEW.is_rack_mountable = _nr.is_rack_mountable;
+	NEW.is_virtual_component = _nr.is_virtual_component;
+	NEW.size_units = _nr.size_units;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4942,19 +5617,19 @@ _uq := array_append(_uq, 'default_badge_type_id = NEW.' || quote_ident('default_
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_collection_id = $1 RETURNING *'  USING OLD.account_collection_id
 			INTO _nr;
-		NEW.account_collection_id = _nr.account_collection_id;
-		NEW.company_id = _nr.company_id;
-		NEW.manager_account_id = _nr.manager_account_id;
-		NEW.is_active = _nr.is_active;
-		NEW.dept_code = _nr.dept_code;
-		NEW.cost_center_name = _nr.cost_center_name;
-		NEW.cost_center_number = _nr.cost_center_number;
-		NEW.default_badge_type_id = _nr.default_badge_type_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.account_collection_id = _nr.account_collection_id;
+	NEW.company_id = _nr.company_id;
+	NEW.manager_account_id = _nr.manager_account_id;
+	NEW.is_active = _nr.is_active;
+	NEW.dept_code = _nr.dept_code;
+	NEW.cost_center_name = _nr.cost_center_name;
+	NEW.cost_center_number = _nr.cost_center_number;
+	NEW.default_badge_type_id = _nr.default_badge_type_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -5014,7 +5689,7 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.device%rowtype;
 BEGIN
-	-- XXX dropped columns: auto_mgmt_protocolis_monitoredshould_fetch_config
+	-- XXX dropped columns:  auto_mgmt_protocol is_monitored should_fetch_config
 
 	IF NEW.device_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('device_id'));
@@ -5158,7 +5833,7 @@ DECLARE
 	_nr	jazzhands.device%rowtype;
 	_uq	text[];
 BEGIN
-	-- XXX dropped columns: auto_mgmt_protocolis_monitoredshould_fetch_config
+	-- XXX dropped columns:  auto_mgmt_protocol is_monitored should_fetch_config
 
 	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
 _uq := array_append(_uq, 'device_id = NEW.' || quote_ident('device_id'));
@@ -5253,30 +5928,30 @@ _uq := array_append(_uq, 'date_in_service = NEW.' || quote_ident('date_in_servic
 			array_to_string(_uq, ', ') ||
 			' WHERE  device_id = $1 RETURNING *'  USING OLD.device_id
 			INTO _nr;
-		NEW.device_id = _nr.device_id;
-		NEW.component_id = _nr.component_id;
-		NEW.device_type_id = _nr.device_type_id;
-		NEW.device_name = _nr.device_name;
-		NEW.site_code = _nr.site_code;
-		NEW.identifying_dns_record_id = _nr.identifying_dns_record_id;
-		NEW.host_id = _nr.host_id;
-		NEW.physical_label = _nr.physical_label;
-		NEW.rack_location_id = _nr.rack_location_id;
-		NEW.chassis_location_id = _nr.chassis_location_id;
-		NEW.parent_device_id = _nr.parent_device_id;
-		NEW.description = _nr.description;
-		NEW.external_id = _nr.external_id;
-		NEW.device_status = _nr.device_status;
-		NEW.operating_system_id = _nr.operating_system_id;
-		NEW.service_environment_id = _nr.service_environment_id;
-		NEW.is_locally_managed = _nr.is_locally_managed;
-		NEW.is_virtual_device = _nr.is_virtual_device;
-		NEW.date_in_service = _nr.date_in_service;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.device_id = _nr.device_id;
+	NEW.component_id = _nr.component_id;
+	NEW.device_type_id = _nr.device_type_id;
+	NEW.device_name = _nr.device_name;
+	NEW.site_code = _nr.site_code;
+	NEW.identifying_dns_record_id = _nr.identifying_dns_record_id;
+	NEW.host_id = _nr.host_id;
+	NEW.physical_label = _nr.physical_label;
+	NEW.rack_location_id = _nr.rack_location_id;
+	NEW.chassis_location_id = _nr.chassis_location_id;
+	NEW.parent_device_id = _nr.parent_device_id;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
+	NEW.device_status = _nr.device_status;
+	NEW.operating_system_id = _nr.operating_system_id;
+	NEW.service_environment_id = _nr.service_environment_id;
+	NEW.is_locally_managed = _nr.is_locally_managed;
+	NEW.is_virtual_device = _nr.is_virtual_device;
+	NEW.date_in_service = _nr.date_in_service;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -5566,27 +6241,27 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  device_type_id = $1 RETURNING *'  USING OLD.device_type_id
 			INTO _nr;
-		NEW.device_type_id = _nr.device_type_id;
-		NEW.component_type_id = _nr.component_type_id;
-		NEW.device_type_name = _nr.device_type_name;
-		NEW.template_device_id = _nr.template_device_id;
-		NEW.idealized_device_id = _nr.idealized_device_id;
-		NEW.description = _nr.description;
-		NEW.company_id = _nr.company_id;
-		NEW.model = _nr.model;
-		NEW.device_type_depth_in_cm = _nr.device_type_depth_in_cm;
-		NEW.processor_architecture = _nr.processor_architecture;
-		NEW.config_fetch_type = _nr.config_fetch_type;
-		NEW.rack_units = _nr.rack_units;
-		NEW.has_802_3_interface = _nr.has_802_3_interface;
-		NEW.has_802_11_interface = _nr.has_802_11_interface;
-		NEW.snmp_capable = _nr.snmp_capable;
-		NEW.is_chassis = _nr.is_chassis;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.device_type_id = _nr.device_type_id;
+	NEW.component_type_id = _nr.component_type_id;
+	NEW.device_type_name = _nr.device_type_name;
+	NEW.template_device_id = _nr.template_device_id;
+	NEW.idealized_device_id = _nr.idealized_device_id;
+	NEW.description = _nr.description;
+	NEW.company_id = _nr.company_id;
+	NEW.model = _nr.model;
+	NEW.device_type_depth_in_cm = _nr.device_type_depth_in_cm;
+	NEW.processor_architecture = _nr.processor_architecture;
+	NEW.config_fetch_type = _nr.config_fetch_type;
+	NEW.rack_units = _nr.rack_units;
+	NEW.has_802_3_interface = _nr.has_802_3_interface;
+	NEW.has_802_11_interface = _nr.has_802_11_interface;
+	NEW.snmp_capable = _nr.snmp_capable;
+	NEW.is_chassis = _nr.is_chassis;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -5825,24 +6500,24 @@ _uq := array_append(_uq, 'last_generated = NEW.' || quote_ident('last_generated'
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_id = $1 AND  ip_universe_id = $2 RETURNING *'  USING OLD.dns_domain_id, OLD.ip_universe_id
 			INTO _nr;
-		NEW.dns_domain_id = _nr.dns_domain_id;
-		NEW.ip_universe_id = _nr.ip_universe_id;
-		NEW.soa_class = _nr.soa_class;
-		NEW.soa_ttl = _nr.soa_ttl;
-		NEW.soa_serial = _nr.soa_serial;
-		NEW.soa_refresh = _nr.soa_refresh;
-		NEW.soa_retry = _nr.soa_retry;
-		NEW.soa_expire = _nr.soa_expire;
-		NEW.soa_minimum = _nr.soa_minimum;
-		NEW.soa_mname = _nr.soa_mname;
-		NEW.soa_rname = _nr.soa_rname;
-		NEW.should_generate = _nr.should_generate;
-		NEW.last_generated = _nr.last_generated;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.dns_domain_id = _nr.dns_domain_id;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.soa_class = _nr.soa_class;
+	NEW.soa_ttl = _nr.soa_ttl;
+	NEW.soa_serial = _nr.soa_serial;
+	NEW.soa_refresh = _nr.soa_refresh;
+	NEW.soa_retry = _nr.soa_retry;
+	NEW.soa_expire = _nr.soa_expire;
+	NEW.soa_minimum = _nr.soa_minimum;
+	NEW.soa_mname = _nr.soa_mname;
+	NEW.soa_rname = _nr.soa_rname;
+	NEW.should_generate = _nr.should_generate;
+	NEW.last_generated = _nr.last_generated;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6134,29 +6809,29 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_record_id = $1 RETURNING *'  USING OLD.dns_record_id
 			INTO _nr;
-		NEW.dns_record_id = _nr.dns_record_id;
-		NEW.dns_name = _nr.dns_name;
-		NEW.dns_domain_id = _nr.dns_domain_id;
-		NEW.dns_ttl = _nr.dns_ttl;
-		NEW.dns_class = _nr.dns_class;
-		NEW.dns_type = _nr.dns_type;
-		NEW.dns_value = _nr.dns_value;
-		NEW.dns_priority = _nr.dns_priority;
-		NEW.dns_srv_service = _nr.dns_srv_service;
-		NEW.dns_srv_protocol = _nr.dns_srv_protocol;
-		NEW.dns_srv_weight = _nr.dns_srv_weight;
-		NEW.dns_srv_port = _nr.dns_srv_port;
-		NEW.netblock_id = _nr.netblock_id;
-		NEW.ip_universe_id = _nr.ip_universe_id;
-		NEW.reference_dns_record_id = _nr.reference_dns_record_id;
-		NEW.dns_value_record_id = _nr.dns_value_record_id;
-		NEW.should_generate_ptr = _nr.should_generate_ptr;
-		NEW.is_enabled = _nr.is_enabled;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.dns_record_id = _nr.dns_record_id;
+	NEW.dns_name = _nr.dns_name;
+	NEW.dns_domain_id = _nr.dns_domain_id;
+	NEW.dns_ttl = _nr.dns_ttl;
+	NEW.dns_class = _nr.dns_class;
+	NEW.dns_type = _nr.dns_type;
+	NEW.dns_value = _nr.dns_value;
+	NEW.dns_priority = _nr.dns_priority;
+	NEW.dns_srv_service = _nr.dns_srv_service;
+	NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+	NEW.dns_srv_weight = _nr.dns_srv_weight;
+	NEW.dns_srv_port = _nr.dns_srv_port;
+	NEW.netblock_id = _nr.netblock_id;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.reference_dns_record_id = _nr.reference_dns_record_id;
+	NEW.dns_value_record_id = _nr.dns_value_record_id;
+	NEW.should_generate_ptr = _nr.should_generate_ptr;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6317,16 +6992,16 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  ip_universe_id = $1 RETURNING *'  USING OLD.ip_universe_id
 			INTO _nr;
-		NEW.ip_universe_id = _nr.ip_universe_id;
-		NEW.ip_universe_name = _nr.ip_universe_name;
-		NEW.ip_namespace = _nr.ip_namespace;
-		NEW.should_generate_dns = _nr.should_generate_dns;
-		NEW.description = _nr.description;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.ip_universe_name = _nr.ip_universe_name;
+	NEW.ip_namespace = _nr.ip_namespace;
+	NEW.should_generate_dns = _nr.should_generate_dns;
+	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6454,14 +7129,14 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  ip_universe_id = $1 AND  visible_ip_universe_id = $2 RETURNING *'  USING OLD.ip_universe_id, OLD.visible_ip_universe_id
 			INTO _nr;
-		NEW.ip_universe_id = _nr.ip_universe_id;
-		NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
-		NEW.propagate_dns = _nr.propagate_dns;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
+	NEW.propagate_dns = _nr.propagate_dns;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6663,21 +7338,21 @@ _uq := array_append(_uq, 'external_id = NEW.' || quote_ident('external_id'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  netblock_id = $1 RETURNING *'  USING OLD.netblock_id
 			INTO _nr;
-		NEW.netblock_id = _nr.netblock_id;
-		NEW.ip_address = _nr.ip_address;
-		NEW.netblock_type = _nr.netblock_type;
-		NEW.is_single_address = _nr.is_single_address;
-		NEW.can_subnet = _nr.can_subnet;
-		NEW.parent_netblock_id = _nr.parent_netblock_id;
-		NEW.netblock_status = _nr.netblock_status;
-		NEW.ip_universe_id = _nr.ip_universe_id;
-		NEW.description = _nr.description;
-		NEW.external_id = _nr.external_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.netblock_id = _nr.netblock_id;
+	NEW.ip_address = _nr.ip_address;
+	NEW.netblock_type = _nr.netblock_type;
+	NEW.is_single_address = _nr.is_single_address;
+	NEW.can_subnet = _nr.can_subnet;
+	NEW.parent_netblock_id = _nr.parent_netblock_id;
+	NEW.netblock_status = _nr.netblock_status;
+	NEW.ip_universe_id = _nr.ip_universe_id;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6739,7 +7414,7 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.layer3_interface%rowtype;
 BEGIN
-	-- XXX dropped columns: physical_port_id
+	-- XXX dropped columns:  physical_port_id
 
 	IF NEW.network_interface_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('layer3_interface_id'));
@@ -6847,7 +7522,7 @@ DECLARE
 	_nr	jazzhands.layer3_interface%rowtype;
 	_uq	text[];
 BEGIN
-	-- XXX dropped columns: physical_port_id
+	-- XXX dropped columns:  physical_port_id
 
 	IF OLD.network_interface_id IS DISTINCT FROM NEW.network_interface_id THEN
 _uq := array_append(_uq, 'layer3_interface_id = NEW.' || quote_ident('network_interface_id'));
@@ -6924,24 +7599,24 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  layer3_interface_id = $1 RETURNING *'  USING OLD.network_interface_id
 			INTO _nr;
-		NEW.network_interface_id = _nr.layer3_interface_id;
-		NEW.device_id = _nr.device_id;
-		NEW.network_interface_name = _nr.layer3_interface_name;
-		NEW.description = _nr.description;
-		NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
-		NEW.parent_relation_type = _nr.parent_relation_type;
-		NEW.slot_id = _nr.slot_id;
-		NEW.logical_port_id = _nr.logical_port_id;
-		NEW.network_interface_type = _nr.layer3_interface_type;
-		NEW.is_interface_up = _nr.is_interface_up;
-		NEW.mac_addr = _nr.mac_addr;
-		NEW.should_monitor = _nr.should_monitor;
-		NEW.should_manage = _nr.should_manage;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.network_interface_id = _nr.layer3_interface_id;
+	NEW.device_id = _nr.device_id;
+	NEW.network_interface_name = _nr.layer3_interface_name;
+	NEW.description = _nr.description;
+	NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
+	NEW.parent_relation_type = _nr.parent_relation_type;
+	NEW.slot_id = _nr.slot_id;
+	NEW.logical_port_id = _nr.logical_port_id;
+	NEW.network_interface_type = _nr.layer3_interface_type;
+	NEW.is_interface_up = _nr.is_interface_up;
+	NEW.mac_addr = _nr.mac_addr;
+	NEW.should_monitor = _nr.should_monitor;
+	NEW.should_manage = _nr.should_manage;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7137,20 +7812,20 @@ _uq := array_append(_uq, 'service_environment_id = NEW.' || quote_ident('service
 			array_to_string(_uq, ', ') ||
 			' WHERE  network_service_id = $1 RETURNING *'  USING OLD.network_service_id
 			INTO _nr;
-		NEW.network_service_id = _nr.network_service_id;
-		NEW.name = _nr.name;
-		NEW.description = _nr.description;
-		NEW.network_service_type = _nr.network_service_type;
-		NEW.is_monitored = _nr.is_monitored;
-		NEW.device_id = _nr.device_id;
-		NEW.network_interface_id = _nr.network_interface_id;
-		NEW.dns_record_id = _nr.dns_record_id;
-		NEW.service_environment_id = _nr.service_environment_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.network_service_id = _nr.network_service_id;
+	NEW.name = _nr.name;
+	NEW.description = _nr.description;
+	NEW.network_service_type = _nr.network_service_type;
+	NEW.is_monitored = _nr.is_monitored;
+	NEW.device_id = _nr.device_id;
+	NEW.network_interface_id = _nr.network_interface_id;
+	NEW.dns_record_id = _nr.dns_record_id;
+	NEW.service_environment_id = _nr.service_environment_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7292,15 +7967,15 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  auth_question_id = $1 AND  person_id = $2 RETURNING *'  USING OLD.auth_question_id, OLD.person_id
 			INTO _nr;
-		NEW.auth_question_id = _nr.auth_question_id;
-		NEW.person_id = _nr.person_id;
-		NEW.user_answer = _nr.user_answer;
-		NEW.is_active = _nr.is_active;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.auth_question_id = _nr.auth_question_id;
+	NEW.person_id = _nr.person_id;
+	NEW.user_answer = _nr.user_answer;
+	NEW.is_active = _nr.is_active;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7539,24 +8214,24 @@ _uq := array_append(_uq, 'nickname = NEW.' || quote_ident('nickname'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  company_id = $1 AND  person_id = $2 RETURNING *'  USING OLD.company_id, OLD.person_id
 			INTO _nr;
-		NEW.company_id = _nr.company_id;
-		NEW.person_id = _nr.person_id;
-		NEW.person_company_status = _nr.person_company_status;
-		NEW.person_company_relation = _nr.person_company_relation;
-		NEW.is_exempt = _nr.is_exempt;
-		NEW.is_management = _nr.is_management;
-		NEW.is_full_time = _nr.is_full_time;
-		NEW.description = _nr.description;
-		NEW.position_title = _nr.position_title;
-		NEW.hire_date = _nr.hire_date;
-		NEW.termination_date = _nr.termination_date;
-		NEW.manager_person_id = _nr.manager_person_id;
-		NEW.nickname = _nr.nickname;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.company_id = _nr.company_id;
+	NEW.person_id = _nr.person_id;
+	NEW.person_company_status = _nr.person_company_status;
+	NEW.person_company_relation = _nr.person_company_relation;
+	NEW.is_exempt = _nr.is_exempt;
+	NEW.is_management = _nr.is_management;
+	NEW.is_full_time = _nr.is_full_time;
+	NEW.description = _nr.description;
+	NEW.position_title = _nr.position_title;
+	NEW.hire_date = _nr.hire_date;
+	NEW.termination_date = _nr.termination_date;
+	NEW.manager_person_id = _nr.manager_person_id;
+	NEW.nickname = _nr.nickname;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7732,18 +8407,18 @@ _uq := array_append(_uq, 'encryption_key_id = NEW.' || quote_ident('encryption_k
 			array_to_string(_uq, ', ') ||
 			' WHERE  private_key_id = $1 RETURNING *'  USING OLD.private_key_id
 			INTO _nr;
-		NEW.private_key_id = _nr.private_key_id;
-		NEW.private_key_encryption_type = _nr.private_key_encryption_type;
-		NEW.is_active = _nr.is_active;
-		NEW.subject_key_identifier = _nr.subject_key_identifier;
-		NEW.private_key = _nr.private_key;
-		NEW.passphrase = _nr.passphrase;
-		NEW.encryption_key_id = _nr.encryption_key_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.private_key_id = _nr.private_key_id;
+	NEW.private_key_encryption_type = _nr.private_key_encryption_type;
+	NEW.is_active = _nr.is_active;
+	NEW.subject_key_identifier = _nr.subject_key_identifier;
+	NEW.private_key = _nr.private_key;
+	NEW.passphrase = _nr.passphrase;
+	NEW.encryption_key_id = _nr.encryption_key_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8193,46 +8868,46 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_id = $1 RETURNING *'  USING OLD.property_id
 			INTO _nr;
-		NEW.property_id = _nr.property_id;
-		NEW.account_collection_id = _nr.account_collection_id;
-		NEW.account_id = _nr.account_id;
-		NEW.account_realm_id = _nr.account_realm_id;
-		NEW.company_collection_id = _nr.company_collection_id;
-		NEW.company_id = _nr.company_id;
-		NEW.device_collection_id = _nr.device_collection_id;
-		NEW.dns_domain_collection_id = _nr.dns_domain_collection_id;
-		NEW.layer2_network_collection_id = _nr.layer2_network_collection_id;
-		NEW.layer3_network_collection_id = _nr.layer3_network_collection_id;
-		NEW.netblock_collection_id = _nr.netblock_collection_id;
-		NEW.network_range_id = _nr.network_range_id;
-		NEW.operating_system_id = _nr.operating_system_id;
-		NEW.operating_system_snapshot_id = _nr.operating_system_snapshot_id;
-		NEW.person_id = _nr.person_id;
-		NEW.property_collection_id = _nr.property_name_collection_id;
-		NEW.service_env_collection_id = _nr.service_environment_collection_id;
-		NEW.site_code = _nr.site_code;
-		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
-		NEW.property_name = _nr.property_name;
-		NEW.property_type = _nr.property_type;
-		NEW.property_value = _nr.property_value;
-		NEW.property_value_timestamp = _nr.property_value_timestamp;
-		NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
-		NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
-		NEW.property_value_json = _nr.property_value_json;
-		NEW.property_value_nblk_coll_id = _nr.property_value_netblock_collection_id;
-		NEW.property_value_password_type = _nr.property_value_password_type;
-		NEW.property_value_person_id = _nr.property_value_person_id;
-		NEW.property_value_sw_package_id = _nr.property_value_sw_package_id;
-		NEW.property_value_token_col_id = _nr.property_value_token_collection_id;
-		NEW.property_rank = _nr.property_rank;
-		NEW.start_date = _nr.start_date;
-		NEW.finish_date = _nr.finish_date;
-		NEW.is_enabled = _nr.is_enabled;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.property_id = _nr.property_id;
+	NEW.account_collection_id = _nr.account_collection_id;
+	NEW.account_id = _nr.account_id;
+	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.company_collection_id = _nr.company_collection_id;
+	NEW.company_id = _nr.company_id;
+	NEW.device_collection_id = _nr.device_collection_id;
+	NEW.dns_domain_collection_id = _nr.dns_domain_collection_id;
+	NEW.layer2_network_collection_id = _nr.layer2_network_collection_id;
+	NEW.layer3_network_collection_id = _nr.layer3_network_collection_id;
+	NEW.netblock_collection_id = _nr.netblock_collection_id;
+	NEW.network_range_id = _nr.network_range_id;
+	NEW.operating_system_id = _nr.operating_system_id;
+	NEW.operating_system_snapshot_id = _nr.operating_system_snapshot_id;
+	NEW.person_id = _nr.person_id;
+	NEW.property_collection_id = _nr.property_name_collection_id;
+	NEW.service_env_collection_id = _nr.service_environment_collection_id;
+	NEW.site_code = _nr.site_code;
+	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+	NEW.property_name = _nr.property_name;
+	NEW.property_type = _nr.property_type;
+	NEW.property_value = _nr.property_value;
+	NEW.property_value_timestamp = _nr.property_value_timestamp;
+	NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
+	NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
+	NEW.property_value_json = _nr.property_value_json;
+	NEW.property_value_nblk_coll_id = _nr.property_value_netblock_collection_id;
+	NEW.property_value_password_type = _nr.property_value_password_type;
+	NEW.property_value_person_id = _nr.property_value_person_id;
+	NEW.property_value_sw_package_id = _nr.property_value_sw_package_id;
+	NEW.property_value_token_col_id = _nr.property_value_token_collection_id;
+	NEW.property_rank = _nr.property_rank;
+	NEW.start_date = _nr.start_date;
+	NEW.finish_date = _nr.finish_date;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8470,22 +9145,22 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  rack_id = $1 RETURNING *'  USING OLD.rack_id
 			INTO _nr;
-		NEW.rack_id = _nr.rack_id;
-		NEW.site_code = _nr.site_code;
-		NEW.room = _nr.room;
-		NEW.sub_room = _nr.sub_room;
-		NEW.rack_row = _nr.rack_row;
-		NEW.rack_name = _nr.rack_name;
-		NEW.rack_style = _nr.rack_style;
-		NEW.rack_type = _nr.rack_type;
-		NEW.description = _nr.description;
-		NEW.rack_height_in_u = _nr.rack_height_in_u;
-		NEW.display_from_bottom = _nr.display_from_bottom;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.rack_id = _nr.rack_id;
+	NEW.site_code = _nr.site_code;
+	NEW.room = _nr.room;
+	NEW.sub_room = _nr.sub_room;
+	NEW.rack_row = _nr.rack_row;
+	NEW.rack_name = _nr.rack_name;
+	NEW.rack_style = _nr.rack_style;
+	NEW.rack_type = _nr.rack_type;
+	NEW.description = _nr.description;
+	NEW.rack_height_in_u = _nr.rack_height_in_u;
+	NEW.display_from_bottom = _nr.display_from_bottom;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8729,25 +9404,25 @@ _uq := array_append(_uq, 'slot_side = NEW.' || quote_ident('slot_side'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  slot_id = $1 RETURNING *'  USING OLD.slot_id
 			INTO _nr;
-		NEW.slot_id = _nr.slot_id;
-		NEW.component_id = _nr.component_id;
-		NEW.slot_name = _nr.slot_name;
-		NEW.slot_index = _nr.slot_index;
-		NEW.slot_type_id = _nr.slot_type_id;
-		NEW.component_type_slot_tmplt_id = _nr.component_type_slot_template_id;
-		NEW.is_enabled = _nr.is_enabled;
-		NEW.physical_label = _nr.physical_label;
-		NEW.mac_address = _nr.mac_address;
-		NEW.description = _nr.description;
-		NEW.slot_x_offset = _nr.slot_x_offset;
-		NEW.slot_y_offset = _nr.slot_y_offset;
-		NEW.slot_z_offset = _nr.slot_z_offset;
-		NEW.slot_side = _nr.slot_side;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.slot_id = _nr.slot_id;
+	NEW.component_id = _nr.component_id;
+	NEW.slot_name = _nr.slot_name;
+	NEW.slot_index = _nr.slot_index;
+	NEW.slot_type_id = _nr.slot_type_id;
+	NEW.component_type_slot_tmplt_id = _nr.component_type_slot_template_id;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.physical_label = _nr.physical_label;
+	NEW.mac_address = _nr.mac_address;
+	NEW.description = _nr.description;
+	NEW.slot_x_offset = _nr.slot_x_offset;
+	NEW.slot_y_offset = _nr.slot_y_offset;
+	NEW.slot_z_offset = _nr.slot_z_offset;
+	NEW.slot_side = _nr.slot_side;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8914,17 +9589,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  slot_type_id = $1 RETURNING *'  USING OLD.slot_type_id
 			INTO _nr;
-		NEW.slot_type_id = _nr.slot_type_id;
-		NEW.slot_type = _nr.slot_type;
-		NEW.slot_function = _nr.slot_function;
-		NEW.slot_physical_interface_type = _nr.slot_physical_interface_type;
-		NEW.description = _nr.description;
-		NEW.remote_slot_permitted = _nr.remote_slot_permitted;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.slot_type_id = _nr.slot_type_id;
+	NEW.slot_type = _nr.slot_type;
+	NEW.slot_function = _nr.slot_function;
+	NEW.slot_physical_interface_type = _nr.slot_physical_interface_type;
+	NEW.description = _nr.description;
+	NEW.remote_slot_permitted = _nr.remote_slot_permitted;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9089,17 +9764,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  sudo_alias_name = $1 AND  device_collection_id = $2 AND  account_collection_id = $3 RETURNING *'  USING OLD.sudo_alias_name, OLD.device_collection_id, OLD.account_collection_id
 			INTO _nr;
-		NEW.sudo_alias_name = _nr.sudo_alias_name;
-		NEW.device_collection_id = _nr.device_collection_id;
-		NEW.account_collection_id = _nr.account_collection_id;
-		NEW.run_as_account_collection_id = _nr.run_as_account_collection_id;
-		NEW.requires_password = _nr.requires_password;
-		NEW.can_exec_child = _nr.can_exec_child;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.sudo_alias_name = _nr.sudo_alias_name;
+	NEW.device_collection_id = _nr.device_collection_id;
+	NEW.account_collection_id = _nr.account_collection_id;
+	NEW.run_as_account_collection_id = _nr.run_as_account_collection_id;
+	NEW.requires_password = _nr.requires_password;
+	NEW.can_exec_child = _nr.can_exec_child;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9368,28 +10043,28 @@ _uq := array_append(_uq, 'last_updated = NEW.' || quote_ident('last_updated'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  token_id = $1 RETURNING *'  USING OLD.token_id
 			INTO _nr;
-		NEW.token_id = _nr.token_id;
-		NEW.token_type = _nr.token_type;
-		NEW.token_status = _nr.token_status;
-		NEW.description = _nr.description;
-		NEW.external_id = _nr.external_id;
-		NEW.token_serial = _nr.token_serial;
-		NEW.zero_time = _nr.zero_time;
-		NEW.time_modulo = _nr.time_modulo;
-		NEW.time_skew = _nr.time_skew;
-		NEW.token_key = _nr.token_key;
-		NEW.encryption_key_id = _nr.encryption_key_id;
-		NEW.token_password = _nr.token_password;
-		NEW.expire_time = _nr.expire_time;
-		NEW.is_token_locked = _nr.is_token_locked;
-		NEW.token_unlock_time = _nr.token_unlock_time;
-		NEW.bad_logins = _nr.bad_logins;
-		NEW.last_updated = _nr.last_updated;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.token_id = _nr.token_id;
+	NEW.token_type = _nr.token_type;
+	NEW.token_status = _nr.token_status;
+	NEW.description = _nr.description;
+	NEW.external_id = _nr.external_id;
+	NEW.token_serial = _nr.token_serial;
+	NEW.zero_time = _nr.zero_time;
+	NEW.time_modulo = _nr.time_modulo;
+	NEW.time_skew = _nr.time_skew;
+	NEW.token_key = _nr.token_key;
+	NEW.encryption_key_id = _nr.encryption_key_id;
+	NEW.token_password = _nr.token_password;
+	NEW.expire_time = _nr.expire_time;
+	NEW.is_token_locked = _nr.is_token_locked;
+	NEW.token_unlock_time = _nr.token_unlock_time;
+	NEW.bad_logins = _nr.bad_logins;
+	NEW.last_updated = _nr.last_updated;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9599,21 +10274,21 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_id = $1 RETURNING *'  USING OLD.account_id
 			INTO _nr;
-		NEW.account_id = _nr.account_id;
-		NEW.login = _nr.login;
-		NEW.person_id = _nr.person_id;
-		NEW.company_id = _nr.company_id;
-		NEW.account_realm_id = _nr.account_realm_id;
-		NEW.account_status = _nr.account_status;
-		NEW.account_role = _nr.account_role;
-		NEW.account_type = _nr.account_type;
-		NEW.description = _nr.description;
-		NEW.is_enabled = _nr.is_enabled;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.account_id = _nr.account_id;
+	NEW.login = _nr.login;
+	NEW.person_id = _nr.person_id;
+	NEW.company_id = _nr.company_id;
+	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.account_status = _nr.account_status;
+	NEW.account_role = _nr.account_role;
+	NEW.account_type = _nr.account_type;
+	NEW.description = _nr.description;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9866,26 +10541,26 @@ _uq := array_append(_uq, 'dns_domain_type = NEW.' || quote_ident('dns_domain_typ
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_id = $1 RETURNING *'  USING OLD.dns_domain_id
 			INTO _nr;
-		NEW.dns_domain_id = _nr.dns_domain_id;
-		NEW.soa_name = _nr.soa_name;
-		NEW.soa_class = _nr.soa_class;
-		NEW.soa_ttl = _nr.soa_ttl;
-		NEW.soa_serial = _nr.soa_serial;
-		NEW.soa_refresh = _nr.soa_refresh;
-		NEW.soa_retry = _nr.soa_retry;
-		NEW.soa_expire = _nr.soa_expire;
-		NEW.soa_minimum = _nr.soa_minimum;
-		NEW.soa_mname = _nr.soa_mname;
-		NEW.soa_rname = _nr.soa_rname;
-		NEW.parent_dns_domain_id = _nr.parent_dns_domain_id;
-		NEW.should_generate = _nr.should_generate;
-		NEW.last_generated = _nr.last_generated;
-		NEW.dns_domain_type = _nr.dns_domain_type;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.dns_domain_id = _nr.dns_domain_id;
+	NEW.soa_name = _nr.soa_name;
+	NEW.soa_class = _nr.soa_class;
+	NEW.soa_ttl = _nr.soa_ttl;
+	NEW.soa_serial = _nr.soa_serial;
+	NEW.soa_refresh = _nr.soa_refresh;
+	NEW.soa_retry = _nr.soa_retry;
+	NEW.soa_expire = _nr.soa_expire;
+	NEW.soa_minimum = _nr.soa_minimum;
+	NEW.soa_mname = _nr.soa_mname;
+	NEW.soa_rname = _nr.soa_rname;
+	NEW.parent_dns_domain_id = _nr.parent_dns_domain_id;
+	NEW.should_generate = _nr.should_generate;
+	NEW.last_generated = _nr.last_generated;
+	NEW.dns_domain_type = _nr.dns_domain_type;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -10163,24 +10838,24 @@ _uq := array_append(_uq, 'encryption_method = NEW.' || quote_ident('encryption_m
 			array_to_string(_uq, ', ') ||
 			' WHERE  token_id = $1 RETURNING *'  USING OLD.token_id
 			INTO _nr;
-		NEW.token_id = _nr.token_id;
-		NEW.token_type = _nr.token_type;
-		NEW.token_status = _nr.token_status;
-		NEW.token_serial = _nr.token_serial;
-		NEW.token_key = _nr.token_key;
-		NEW.zero_time = _nr.zero_time;
-		NEW.time_modulo = _nr.time_modulo;
-		NEW.token_password = _nr.token_password;
-		NEW.is_token_locked = _nr.is_token_locked;
-		NEW.token_unlock_time = _nr.token_unlock_time;
-		NEW.bad_logins = _nr.bad_logins;
-		NEW.token_sequence = _nr.token_sequence;
-		NEW.last_updated = _nr.last_updated;
-		NEW.encryption_key_db_value = _nr.encryption_key_db_value;
-		NEW.encryption_key_purpose = _nr.encryption_key_purpose;
-		NEW.encryption_key_purpose_version = _nr.encryption_key_purpose_version;
-		NEW.encryption_method = _nr.encryption_method;
 	END IF;
+	NEW.token_id = _nr.token_id;
+	NEW.token_type = _nr.token_type;
+	NEW.token_status = _nr.token_status;
+	NEW.token_serial = _nr.token_serial;
+	NEW.token_key = _nr.token_key;
+	NEW.zero_time = _nr.zero_time;
+	NEW.time_modulo = _nr.time_modulo;
+	NEW.token_password = _nr.token_password;
+	NEW.is_token_locked = _nr.is_token_locked;
+	NEW.token_unlock_time = _nr.token_unlock_time;
+	NEW.bad_logins = _nr.bad_logins;
+	NEW.token_sequence = _nr.token_sequence;
+	NEW.last_updated = _nr.last_updated;
+	NEW.encryption_key_db_value = _nr.encryption_key_db_value;
+	NEW.encryption_key_purpose = _nr.encryption_key_purpose;
+	NEW.encryption_key_purpose_version = _nr.encryption_key_purpose_version;
+	NEW.encryption_method = _nr.encryption_method;
 	RETURN NEW;
 END;
 $$
@@ -10478,29 +11153,29 @@ _uq := array_append(_uq, 'nickname = NEW.' || quote_ident('nickname'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  person_id = $1 AND  company_id = $2 RETURNING *'  USING OLD.person_id, OLD.company_id
 			INTO _nr;
-		NEW.company_id = _nr.company_id;
-		NEW.person_id = _nr.person_id;
-		NEW.person_company_status = _nr.person_company_status;
-		NEW.person_company_relation = _nr.person_company_relation;
-		NEW.is_exempt = _nr.is_exempt;
-		NEW.is_management = _nr.is_management;
-		NEW.is_full_time = _nr.is_full_time;
-		NEW.description = _nr.description;
-		NEW.employee_id = _nr.employee_id;
-		NEW.payroll_id = _nr.payroll_id;
-		NEW.external_hr_id = _nr.external_hr_id;
-		NEW.position_title = _nr.position_title;
-		NEW.badge_system_id = _nr.badge_system_id;
-		NEW.hire_date = _nr.hire_date;
-		NEW.termination_date = _nr.termination_date;
-		NEW.manager_person_id = _nr.manager_person_id;
-		NEW.supervisor_person_id = _nr.supervisor_person_id;
-		NEW.nickname = _nr.nickname;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.company_id = _nr.company_id;
+	NEW.person_id = _nr.person_id;
+	NEW.person_company_status = _nr.person_company_status;
+	NEW.person_company_relation = _nr.person_company_relation;
+	NEW.is_exempt = _nr.is_exempt;
+	NEW.is_management = _nr.is_management;
+	NEW.is_full_time = _nr.is_full_time;
+	NEW.description = _nr.description;
+	NEW.employee_id = _nr.employee_id;
+	NEW.payroll_id = _nr.payroll_id;
+	NEW.external_hr_id = _nr.external_hr_id;
+	NEW.position_title = _nr.position_title;
+	NEW.badge_system_id = _nr.badge_system_id;
+	NEW.hire_date = _nr.hire_date;
+	NEW.termination_date = _nr.termination_date;
+	NEW.manager_person_id = _nr.manager_person_id;
+	NEW.supervisor_person_id = _nr.supervisor_person_id;
+	NEW.nickname = _nr.nickname;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -10687,18 +11362,18 @@ _uq := array_append(_uq, 'account_realm_id = NEW.' || quote_ident('account_realm
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_collection_type = $1 RETURNING *'  USING OLD.account_collection_type
 			INTO _nr;
-		NEW.account_collection_type = _nr.account_collection_type;
-		NEW.description = _nr.description;
-		NEW.is_infrastructure_type = _nr.is_infrastructure_type;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.account_realm_id = _nr.account_realm_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.account_collection_type = _nr.account_collection_type;
+	NEW.description = _nr.description;
+	NEW.is_infrastructure_type = _nr.is_infrastructure_type;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -10828,14 +11503,14 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_role = $1 RETURNING *'  USING OLD.account_role
 			INTO _nr;
-		NEW.account_role = _nr.account_role;
-		NEW.uid_gid_forced = _nr.uid_gid_forced;
-		NEW.description = _nr.description;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.account_role = _nr.account_role;
+	NEW.uid_gid_forced = _nr.uid_gid_forced;
+	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -10977,15 +11652,15 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_type = $1 RETURNING *'  USING OLD.account_type
 			INTO _nr;
-		NEW.account_type = _nr.account_type;
-		NEW.is_person = _nr.is_person;
-		NEW.uid_gid_forced = _nr.uid_gid_forced;
-		NEW.description = _nr.description;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.account_type = _nr.account_type;
+	NEW.is_person = _nr.is_person;
+	NEW.uid_gid_forced = _nr.uid_gid_forced;
+	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11148,17 +11823,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  company_collection_type = $1 RETURNING *'  USING OLD.company_collection_type
 			INTO _nr;
-		NEW.company_collection_type = _nr.company_collection_type;
-		NEW.description = _nr.description;
-		NEW.is_infrastructure_type = _nr.is_infrastructure_type;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.company_collection_type = _nr.company_collection_type;
+	NEW.description = _nr.description;
+	NEW.is_infrastructure_type = _nr.is_infrastructure_type;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11417,27 +12092,27 @@ _uq := array_append(_uq, 'permit_slot_id = NEW.' || quote_ident('permit_slot_id'
 			array_to_string(_uq, ', ') ||
 			' WHERE  component_property_name = $1 AND  component_property_type = $2 RETURNING *'  USING OLD.component_property_name, OLD.component_property_type
 			INTO _nr;
-		NEW.component_property_name = _nr.component_property_name;
-		NEW.component_property_type = _nr.component_property_type;
-		NEW.description = _nr.description;
-		NEW.is_multivalue = _nr.is_multivalue;
-		NEW.property_data_type = _nr.property_data_type;
-		NEW.permit_component_type_id = _nr.permit_component_type_id;
-		NEW.required_component_type_id = _nr.required_component_type_id;
-		NEW.permit_component_function = _nr.permit_component_function;
-		NEW.required_component_function = _nr.required_component_function;
-		NEW.permit_component_id = _nr.permit_component_id;
-		NEW.permit_intcomp_conn_id = _nr.permit_inter_component_connection_id;
-		NEW.permit_slot_type_id = _nr.permit_slot_type_id;
-		NEW.required_slot_type_id = _nr.required_slot_type_id;
-		NEW.permit_slot_function = _nr.permit_slot_function;
-		NEW.required_slot_function = _nr.required_slot_function;
-		NEW.permit_slot_id = _nr.permit_slot_id;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.component_property_name = _nr.component_property_name;
+	NEW.component_property_type = _nr.component_property_type;
+	NEW.description = _nr.description;
+	NEW.is_multivalue = _nr.is_multivalue;
+	NEW.property_data_type = _nr.property_data_type;
+	NEW.permit_component_type_id = _nr.permit_component_type_id;
+	NEW.required_component_type_id = _nr.required_component_type_id;
+	NEW.permit_component_function = _nr.permit_component_function;
+	NEW.required_component_function = _nr.required_component_function;
+	NEW.permit_component_id = _nr.permit_component_id;
+	NEW.permit_intcomp_conn_id = _nr.permit_inter_component_connection_id;
+	NEW.permit_slot_type_id = _nr.permit_slot_type_id;
+	NEW.required_slot_type_id = _nr.required_slot_type_id;
+	NEW.permit_slot_function = _nr.permit_slot_function;
+	NEW.required_slot_function = _nr.required_slot_function;
+	NEW.permit_slot_id = _nr.permit_slot_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11576,14 +12251,14 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  component_property_type = $1 RETURNING *'  USING OLD.component_property_type
 			INTO _nr;
-		NEW.component_property_type = _nr.component_property_type;
-		NEW.description = _nr.description;
-		NEW.is_multivalue = _nr.is_multivalue;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.component_property_type = _nr.component_property_type;
+	NEW.description = _nr.description;
+	NEW.is_multivalue = _nr.is_multivalue;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11729,16 +12404,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  device_collection_type = $1 RETURNING *'  USING OLD.device_collection_type
 			INTO _nr;
-		NEW.device_collection_type = _nr.device_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.device_collection_type = _nr.device_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11886,16 +12561,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_collection_type = $1 RETURNING *'  USING OLD.dns_domain_collection_type
 			INTO _nr;
-		NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12023,14 +12698,14 @@ _uq := array_append(_uq, 'description = NEW.' || quote_ident('description'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_type = $1 RETURNING *'  USING OLD.dns_domain_type
 			INTO _nr;
-		NEW.dns_domain_type = _nr.dns_domain_type;
-		NEW.can_generate = _nr.can_generate;
-		NEW.description = _nr.description;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.dns_domain_type = _nr.dns_domain_type;
+	NEW.can_generate = _nr.can_generate;
+	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12176,16 +12851,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  layer2_network_collection_type = $1 RETURNING *'  USING OLD.layer2_network_collection_type
 			INTO _nr;
-		NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12333,16 +13008,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  layer3_network_collection_type = $1 RETURNING *'  USING OLD.layer3_network_collection_type
 			INTO _nr;
-		NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12510,18 +13185,18 @@ _uq := array_append(_uq, 'netblock_ip_family_restriction = NEW.' || quote_ident(
 			array_to_string(_uq, ', ') ||
 			' WHERE  netblock_collection_type = $1 RETURNING *'  USING OLD.netblock_collection_type
 			INTO _nr;
-		NEW.netblock_collection_type = _nr.netblock_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.netblock_single_addr_restrict = _nr.netblock_is_single_address_restriction;
-		NEW.netblock_ip_family_restrict = _nr.netblock_ip_family_restriction;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.netblock_collection_type = _nr.netblock_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.netblock_single_addr_restrict = _nr.netblock_is_single_address_restriction;
+	NEW.netblock_ip_family_restrict = _nr.netblock_ip_family_restriction;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12667,15 +13342,15 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  netblock_type = $1 RETURNING *'  USING OLD.netblock_type
 			INTO _nr;
-		NEW.netblock_type = _nr.netblock_type;
-		NEW.description = _nr.description;
-		NEW.db_forced_hierarchy = _nr.db_forced_hierarchy;
-		NEW.is_validated_hierarchy = _nr.is_validated_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.netblock_type = _nr.netblock_type;
+	NEW.description = _nr.description;
+	NEW.db_forced_hierarchy = _nr.db_forced_hierarchy;
+	NEW.is_validated_hierarchy = _nr.is_validated_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12848,18 +13523,18 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  network_range_type = $1 RETURNING *'  USING OLD.network_range_type
 			INTO _nr;
-		NEW.network_range_type = _nr.network_range_type;
-		NEW.description = _nr.description;
-		NEW.dns_domain_required = _nr.dns_domain_required;
-		NEW.default_dns_prefix = _nr.default_dns_prefix;
-		NEW.netblock_type = _nr.netblock_type;
-		NEW.can_overlap = _nr.can_overlap;
-		NEW.require_cidr_boundary = _nr.require_cidr_boundary;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.network_range_type = _nr.network_range_type;
+	NEW.description = _nr.description;
+	NEW.dns_domain_required = _nr.dns_domain_required;
+	NEW.default_dns_prefix = _nr.default_dns_prefix;
+	NEW.netblock_type = _nr.netblock_type;
+	NEW.can_overlap = _nr.can_overlap;
+	NEW.require_cidr_boundary = _nr.require_cidr_boundary;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12979,13 +13654,13 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  person_image_usage = $1 RETURNING *'  USING OLD.person_image_usage
 			INTO _nr;
-		NEW.person_image_usage = _nr.person_image_usage;
-		NEW.is_multivalue = _nr.is_multivalue;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.person_image_usage = _nr.person_image_usage;
+	NEW.is_multivalue = _nr.is_multivalue;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13158,17 +13833,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  person_status = $1 RETURNING *'  USING OLD.person_status
 			INTO _nr;
-		NEW.person_status = _nr.person_status;
-		NEW.description = _nr.description;
-		NEW.is_enabled = _nr.is_enabled;
-		NEW.propagate_from_person = _nr.propagate_from_person;
-		NEW.is_forced = _nr.is_forced;
-		NEW.is_db_enforced = _nr.is_db_enforced;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.person_status = _nr.person_status;
+	NEW.description = _nr.description;
+	NEW.is_enabled = _nr.is_enabled;
+	NEW.propagate_from_person = _nr.propagate_from_person;
+	NEW.is_forced = _nr.is_forced;
+	NEW.is_db_enforced = _nr.is_db_enforced;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13647,49 +14322,49 @@ _uq := array_append(_uq, 'permit_property_rank = NEW.' || quote_ident('permit_pr
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_name = $1 AND  property_type = $2 RETURNING *'  USING OLD.property_name, OLD.property_type
 			INTO _nr;
-		NEW.property_name = _nr.property_name;
-		NEW.property_type = _nr.property_type;
-		NEW.description = _nr.description;
-		NEW.account_collection_type = _nr.account_collection_type;
-		NEW.company_collection_type = _nr.company_collection_type;
-		NEW.device_collection_type = _nr.device_collection_type;
-		NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
-		NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
-		NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
-		NEW.netblock_collection_type = _nr.netblock_collection_type;
-		NEW.network_range_type = _nr.network_range_type;
-		NEW.property_collection_type = _nr.property_name_collection_type;
-		NEW.service_env_collection_type = _nr.service_environment_collection_type;
-		NEW.is_multivalue = _nr.is_multivalue;
-		NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
-		NEW.prop_val_dev_coll_type_rstrct = _nr.property_value_device_collection_type_restriction;
-		NEW.prop_val_nblk_coll_type_rstrct = _nr.property_value_netblock_collection_type_restriction;
-		NEW.property_data_type = _nr.property_data_type;
-		NEW.property_value_json_schema = _nr.property_value_json_schema;
-		NEW.permit_account_collection_id = _nr.permit_account_collection_id;
-		NEW.permit_account_id = _nr.permit_account_id;
-		NEW.permit_account_realm_id = _nr.permit_account_realm_id;
-		NEW.permit_company_id = _nr.permit_company_id;
-		NEW.permit_company_collection_id = _nr.permit_company_collection_id;
-		NEW.permit_device_collection_id = _nr.permit_device_collection_id;
-		NEW.permit_dns_domain_coll_id = _nr.permit_dns_domain_collection_id;
-		NEW.permit_layer2_network_coll_id = _nr.permit_layer2_network_collection_id;
-		NEW.permit_layer3_network_coll_id = _nr.permit_layer3_network_collection_id;
-		NEW.permit_netblock_collection_id = _nr.permit_netblock_collection_id;
-		NEW.permit_network_range_id = _nr.permit_network_range_id;
-		NEW.permit_operating_system_id = _nr.permit_operating_system_id;
-		NEW.permit_os_snapshot_id = _nr.permit_operating_system_snapshot_id;
-		NEW.permit_person_id = _nr.permit_person_id;
-		NEW.permit_property_collection_id = _nr.permit_property_name_collection_id;
-		NEW.permit_service_env_collection = _nr.permit_service_environment_collection;
-		NEW.permit_site_code = _nr.permit_site_code;
-		NEW.permit_x509_signed_cert_id = _nr.permit_x509_signed_certificate_id;
-		NEW.permit_property_rank = _nr.permit_property_rank;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.property_name = _nr.property_name;
+	NEW.property_type = _nr.property_type;
+	NEW.description = _nr.description;
+	NEW.account_collection_type = _nr.account_collection_type;
+	NEW.company_collection_type = _nr.company_collection_type;
+	NEW.device_collection_type = _nr.device_collection_type;
+	NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
+	NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
+	NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
+	NEW.netblock_collection_type = _nr.netblock_collection_type;
+	NEW.network_range_type = _nr.network_range_type;
+	NEW.property_collection_type = _nr.property_name_collection_type;
+	NEW.service_env_collection_type = _nr.service_environment_collection_type;
+	NEW.is_multivalue = _nr.is_multivalue;
+	NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+	NEW.prop_val_dev_coll_type_rstrct = _nr.property_value_device_collection_type_restriction;
+	NEW.prop_val_nblk_coll_type_rstrct = _nr.property_value_netblock_collection_type_restriction;
+	NEW.property_data_type = _nr.property_data_type;
+	NEW.property_value_json_schema = _nr.property_value_json_schema;
+	NEW.permit_account_collection_id = _nr.permit_account_collection_id;
+	NEW.permit_account_id = _nr.permit_account_id;
+	NEW.permit_account_realm_id = _nr.permit_account_realm_id;
+	NEW.permit_company_id = _nr.permit_company_id;
+	NEW.permit_company_collection_id = _nr.permit_company_collection_id;
+	NEW.permit_device_collection_id = _nr.permit_device_collection_id;
+	NEW.permit_dns_domain_coll_id = _nr.permit_dns_domain_collection_id;
+	NEW.permit_layer2_network_coll_id = _nr.permit_layer2_network_collection_id;
+	NEW.permit_layer3_network_coll_id = _nr.permit_layer3_network_collection_id;
+	NEW.permit_netblock_collection_id = _nr.permit_netblock_collection_id;
+	NEW.permit_network_range_id = _nr.permit_network_range_id;
+	NEW.permit_operating_system_id = _nr.permit_operating_system_id;
+	NEW.permit_os_snapshot_id = _nr.permit_operating_system_snapshot_id;
+	NEW.permit_person_id = _nr.permit_person_id;
+	NEW.permit_property_collection_id = _nr.permit_property_name_collection_id;
+	NEW.permit_service_env_collection = _nr.permit_service_environment_collection;
+	NEW.permit_site_code = _nr.permit_site_code;
+	NEW.permit_x509_signed_cert_id = _nr.permit_x509_signed_certificate_id;
+	NEW.permit_property_rank = _nr.permit_property_rank;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13870,16 +14545,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_name_collection_type = $1 RETURNING *'  USING OLD.property_collection_type
 			INTO _nr;
-		NEW.property_collection_type = _nr.property_name_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.property_collection_type = _nr.property_name_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14017,15 +14692,15 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_type = $1 RETURNING *'  USING OLD.property_type
 			INTO _nr;
-		NEW.property_type = _nr.property_type;
-		NEW.description = _nr.description;
-		NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
-		NEW.is_multivalue = _nr.is_multivalue;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.property_type = _nr.property_type;
+	NEW.description = _nr.description;
+	NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+	NEW.is_multivalue = _nr.is_multivalue;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14172,16 +14847,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  service_environment_collection_type = $1 RETURNING *'  USING OLD.service_env_collection_type
 			INTO _nr;
-		NEW.service_env_collection_type = _nr.service_environment_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.service_env_collection_type = _nr.service_environment_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14309,14 +14984,14 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  slot_function = $1 RETURNING *'  USING OLD.slot_function
 			INTO _nr;
-		NEW.slot_function = _nr.slot_function;
-		NEW.description = _nr.description;
-		NEW.can_have_mac_address = _nr.can_have_mac_address;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.slot_function = _nr.slot_function;
+	NEW.description = _nr.description;
+	NEW.can_have_mac_address = _nr.can_have_mac_address;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14462,16 +15137,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  token_collection_type = $1 RETURNING *'  USING OLD.token_collection_type
 			INTO _nr;
-		NEW.token_collection_type = _nr.token_collection_type;
-		NEW.description = _nr.description;
-		NEW.max_num_members = _nr.max_num_members;
-		NEW.max_num_collections = _nr.max_num_collections;
-		NEW.can_have_hierarchy = _nr.can_have_hierarchy;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.token_collection_type = _nr.token_collection_type;
+	NEW.description = _nr.description;
+	NEW.max_num_members = _nr.max_num_members;
+	NEW.max_num_collections = _nr.max_num_collections;
+	NEW.can_have_hierarchy = _nr.can_have_hierarchy;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14599,14 +15274,14 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  x509_key_usage = $1 RETURNING *'  USING OLD.x509_key_usg
 			INTO _nr;
-		NEW.x509_key_usg = _nr.x509_key_usage;
-		NEW.description = _nr.description;
-		NEW.is_extended = _nr.is_extended;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.x509_key_usg = _nr.x509_key_usage;
+	NEW.description = _nr.description;
+	NEW.is_extended = _nr.is_extended;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14898,30 +15573,30 @@ _uq := array_append(_uq, 'crl_uri = NEW.' || quote_ident('crl_uri'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  x509_cert_id = $1 RETURNING *'  USING OLD.x509_cert_id
 			INTO _nr;
-		NEW.x509_cert_id = _nr.x509_cert_id;
-		NEW.friendly_name = _nr.friendly_name;
-		NEW.is_active = _nr.is_active;
-		NEW.is_certificate_authority = _nr.is_certificate_authority;
-		NEW.signing_cert_id = _nr.signing_cert_id;
-		NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
-		NEW.public_key = _nr.public_key;
-		NEW.private_key = _nr.private_key;
-		NEW.certificate_sign_req = _nr.certificate_sign_req;
-		NEW.subject = _nr.subject;
-		NEW.subject_key_identifier = _nr.subject_key_identifier;
-		NEW.valid_from = _nr.valid_from;
-		NEW.valid_to = _nr.valid_to;
-		NEW.x509_revocation_date = _nr.x509_revocation_date;
-		NEW.x509_revocation_reason = _nr.x509_revocation_reason;
-		NEW.passphrase = _nr.passphrase;
-		NEW.encryption_key_id = _nr.encryption_key_id;
-		NEW.ocsp_uri = _nr.ocsp_uri;
-		NEW.crl_uri = _nr.crl_uri;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.x509_cert_id = _nr.x509_cert_id;
+	NEW.friendly_name = _nr.friendly_name;
+	NEW.is_active = _nr.is_active;
+	NEW.is_certificate_authority = _nr.is_certificate_authority;
+	NEW.signing_cert_id = _nr.signing_cert_id;
+	NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+	NEW.public_key = _nr.public_key;
+	NEW.private_key = _nr.private_key;
+	NEW.certificate_sign_req = _nr.certificate_sign_req;
+	NEW.subject = _nr.subject;
+	NEW.subject_key_identifier = _nr.subject_key_identifier;
+	NEW.valid_from = _nr.valid_from;
+	NEW.valid_to = _nr.valid_to;
+	NEW.x509_revocation_date = _nr.x509_revocation_date;
+	NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+	NEW.passphrase = _nr.passphrase;
+	NEW.encryption_key_id = _nr.encryption_key_id;
+	NEW.ocsp_uri = _nr.ocsp_uri;
+	NEW.crl_uri = _nr.crl_uri;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -15219,29 +15894,29 @@ _uq := array_append(_uq, 'crl_uri = NEW.' || quote_ident('crl_uri'));
 			array_to_string(_uq, ', ') ||
 			' WHERE  x509_signed_certificate_id = $1 RETURNING *'  USING OLD.x509_signed_certificate_id
 			INTO _nr;
-		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
-		NEW.x509_certificate_type = _nr.x509_certificate_type;
-		NEW.subject = _nr.subject;
-		NEW.friendly_name = _nr.friendly_name;
-		NEW.subject_key_identifier = _nr.subject_key_identifier;
-		NEW.is_active = _nr.is_active;
-		NEW.is_certificate_authority = _nr.is_certificate_authority;
-		NEW.signing_cert_id = _nr.signing_cert_id;
-		NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
-		NEW.public_key = _nr.public_key;
-		NEW.private_key_id = _nr.private_key_id;
-		NEW.certificate_signing_request_id = _nr.certificate_signing_request_id;
-		NEW.valid_from = _nr.valid_from;
-		NEW.valid_to = _nr.valid_to;
-		NEW.x509_revocation_date = _nr.x509_revocation_date;
-		NEW.x509_revocation_reason = _nr.x509_revocation_reason;
-		NEW.ocsp_uri = _nr.ocsp_uri;
-		NEW.crl_uri = _nr.crl_uri;
-		NEW.data_ins_user = _nr.data_ins_user;
-		NEW.data_ins_date = _nr.data_ins_date;
-		NEW.data_upd_user = _nr.data_upd_user;
-		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
+	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+	NEW.x509_certificate_type = _nr.x509_certificate_type;
+	NEW.subject = _nr.subject;
+	NEW.friendly_name = _nr.friendly_name;
+	NEW.subject_key_identifier = _nr.subject_key_identifier;
+	NEW.is_active = _nr.is_active;
+	NEW.is_certificate_authority = _nr.is_certificate_authority;
+	NEW.signing_cert_id = _nr.signing_cert_id;
+	NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+	NEW.public_key = _nr.public_key;
+	NEW.private_key_id = _nr.private_key_id;
+	NEW.certificate_signing_request_id = _nr.certificate_signing_request_id;
+	NEW.valid_from = _nr.valid_from;
+	NEW.valid_to = _nr.valid_to;
+	NEW.x509_revocation_date = _nr.x509_revocation_date;
+	NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+	NEW.ocsp_uri = _nr.ocsp_uri;
+	NEW.crl_uri = _nr.crl_uri;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$

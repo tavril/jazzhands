@@ -252,7 +252,7 @@ BEGIN
 		_sledloc.chassis_location_id
 	) RETURNING * into _sled;
 
-	RAISE NOTICE 'Attempting to update a rack location to the sled and see if it fails...';
+	RAISE NOTICE 'Attempting to update a rack location to the sled and see if it fails... (% % %)', _sled.device_id, _chassisloc.rack_location_id, _sled.rack_location_id;
 	BEGIN
 		UPDATE device
 		 SET   rack_location_id = _chassisloc.rack_location_id
