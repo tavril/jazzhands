@@ -28,15 +28,15 @@ select now();
 
 \ir ddl/schema/pgsql/create_schema_pgsql.sql
 
-CREATE SCHEMA audit;
-COMMENT ON SCHEMA audit IS 'part of jazzhands project';
+CREATE SCHEMA jazzhands_audit;
+COMMENT ON SCHEMA jazzhands_audit IS 'part of jazzhands project';
 
 
 -- \ir ddl/schema/pgsql/build_audit_tables.sql
 -- \ir ddl/schema/pgsql/build_ins_upd_triggers.sql
 
 SELECT schema_support.rebuild_stamp_triggers('jazzhands');
-SELECT schema_support.build_audit_tables('audit', 'jazzhands');
+SELECT schema_support.build_audit_tables('jazzhands_audit', 'jazzhands');
 
 CREATE SCHEMA jazzhands_cache;
 COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
@@ -120,5 +120,6 @@ COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
 --
 -- temporary comment out. This needs to be reconciled.
 \ir ddl/legacy.sql
+\ir ddl/legacy-audit.sql
 
 select now();
