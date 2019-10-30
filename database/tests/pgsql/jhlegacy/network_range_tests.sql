@@ -21,7 +21,7 @@
 \t on
 SAVEPOINT net_range_test;
 
-\ir ../../ddl/schema/pgsql/create_network_range_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_network_range_triggers.sql
 
 --
 -- Trigger tests

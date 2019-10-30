@@ -22,8 +22,8 @@
 
 SAVEPOINT servie_environment_coll_hier_regression_test;
 
-\ir ../../ddl/schema/pgsql/create_svcenv_coll_hier_triggers.sql
-\ir ../../ddl/schema/pgsql/create_collection_bytype_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_svcenv_coll_hier_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_collection_bytype_triggers.sql
 
 
 -- 

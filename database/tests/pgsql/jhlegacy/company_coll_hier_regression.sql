@@ -21,8 +21,8 @@
 SAVEPOINT company_coll_hier_regression;
 SET jazzhands.permit_company_insert = 'permit';
 
-\ir ../../ddl/schema/pgsql/create_company_coll_hier_triggers.sql
-\ir ../../ddl/schema/pgsql/create_collection_bytype_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_company_coll_hier_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_collection_bytype_triggers.sql
 
 
 

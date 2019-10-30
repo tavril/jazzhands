@@ -21,8 +21,8 @@
 \t on
 
 -- tests this:
-\ir ../../pkg/pgsql/netblock_utils.sql
-\ir ../../ddl/schema/pgsql/create_dns_triggers.sql
+-- \ir ../../pkg/pgsql/netblock_utils.sql
+-- \ir ../../ddl/schema/pgsql/create_dns_triggers.sql
 
 
 SAVEPOINT dns_trigger_test;
@@ -707,8 +707,8 @@ BEGIN
 		RAISE NOTICE '... It can not';
 	END;
 
-	DELETE FROM dns_record WHERE dns_record_id IN
-		(_dnsrec1.dns_record_id, _dnsrec2.dns_record_id);
+	DELETE FROM dns_record WHERE dns_record_id = _dnsrec2.dns_record_id;
+	DELETE FROM dns_record WHERE dns_record_id = _dnsrec1.dns_record_id;
 
 	--
 	-- New style of doing tests to keep all the fluid stuff inside a

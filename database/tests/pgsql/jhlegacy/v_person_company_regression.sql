@@ -24,7 +24,7 @@ SAVEPOINT v_person_company_validation_regression;
 
 SET jazzhands.permit_company_insert = 'permit';
 
-\ir ../../ddl/schema/pgsql/create_v_person_company_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_v_person_company_triggers.sql
 
 --
 -- Trigger tests

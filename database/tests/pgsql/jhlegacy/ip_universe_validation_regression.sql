@@ -22,8 +22,8 @@
 
 SAVEPOINT ip_universe_validation_regression;
 
-\ir ../../ddl/schema/pgsql/create_netblock_triggers.sql
-\ir ../../ddl/schema/pgsql/create_ip_universe_valid_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_netblock_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_ip_universe_valid_triggers.sql
 
 --
 -- Trigger tests
@@ -216,8 +216,8 @@ BEGIN
 			'JHTEST-A1', _dnsdomid, 'IN', 'A', _ip0id, 'Y', _u0
 		) RETURNING dns_record_id INTO _dns;
 
-		SET CONSTRAINTS trigger_check_ip_universe_dns_record DEFERRED;
-		SET CONSTRAINTS trigger_check_ip_universe_netblock DEFERRED;
+		SET CONSTRAINTS jazzhands.trigger_check_ip_universe_dns_record DEFERRED;
+		SET CONSTRAINTS jazzhands.trigger_check_ip_universe_netblock DEFERRED;
 
 		UPDATE dns_record
 		SET ip_universe_id = _u1
@@ -227,8 +227,8 @@ BEGIN
 		SET ip_universe_id = _u1
 		WHERE netblock_id = _ip0id;
 
-		SET CONSTRAINTS trigger_check_ip_universe_dns_record IMMEDIATE;
-		SET CONSTRAINTS trigger_check_ip_universe_netblock IMMEDIATE;
+		SET CONSTRAINTS jazzhands.trigger_check_ip_universe_dns_record IMMEDIATE;
+		SET CONSTRAINTS jazzhands.trigger_check_ip_universe_netblock IMMEDIATE;
 
 		RAISE EXCEPTION 'worked' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN

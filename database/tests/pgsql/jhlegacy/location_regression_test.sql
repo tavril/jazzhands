@@ -262,24 +262,30 @@ BEGIN
 		RAISE NOTICE '... It did.';
 	END;
 
+	SELECT * INTO _r FROM jazzhands.device WHERE rack_location_id = 3;
+	RAISE NOTICE '--> %', to_json(_r);
+
+	RAISE NOTICE 'Cleaning up...';
 	-- test all the states
 	-- run same queries as at the beginning
-        SET CONSTRAINTS fk_chasloc_chass_devid DEFERRED;
-        SET CONSTRAINTS fk_dev_chass_loc_id_mod_enfc DEFERRED;
+        SET CONSTRAINTS jazzhands.fk_chasloc_chass_devid DEFERRED;
+        SET CONSTRAINTS jazzhands.fk_dev_chass_loc_id_mod_enfc DEFERRED;
 	delete from chassis_location where chassis_device_id in (
 		select device_id from device where device_name like 'JHTEST%');
 	delete from device_type_module_device_type where description
 		like 'JHTEST%';
-	delete from device where device_name like 'JHTEST%';
+	delete from device where device_name like 'JHTEST%' and parent_device_id IS NOT NULL;
+	delete from device where device_name like 'JHTEST%' and parent_device_id IS NULL;
 	delete from rack_location where rack_id in
 		(select rack_id from rack where rack_name like 'JHTEST%');
 	delete from device_type_module where description like 'JHTEST%';
 	delete from device_type where model like 'JHTEST%';
 	delete from rack where rack_name like 'JHTEST%';
 	delete from site where site_code like 'JHTEST%';
-        SET CONSTRAINTS fk_chasloc_chass_devid IMMEDIATE;
-        SET CONSTRAINTS fk_dev_chass_loc_id_mod_enfc IMMEDIATE;
+        SET CONSTRAINTS jazzhands.fk_chasloc_chass_devid IMMEDIATE;
+        SET CONSTRAINTS jazzhands.fk_dev_chass_loc_id_mod_enfc IMMEDIATE;
 
+	RAISE NOTICE 'DONE...';
 	RETURN true;
 END;
 $$ LANGUAGE plpgsql;

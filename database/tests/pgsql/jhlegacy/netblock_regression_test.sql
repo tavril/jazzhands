@@ -104,8 +104,8 @@ BEGIN
 	-- Force all queued triggers to fire
 	--
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 	RAISE NOTICE 'Testing netblock triggers';
 
@@ -141,8 +141,8 @@ BEGIN
 			RAISE NOTICE '        ... Failed correctly';
 	END;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 --
 -- Insert some new "root"s
@@ -229,8 +229,8 @@ BEGIN
 	a_netblock_list[2] = v_netblock_id;
 
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 --
 -- Test validation trigger
@@ -326,15 +326,15 @@ BEGIN
 		RETURNING netblock_id INTO v_netblock_id;
 	a_netblock_list[17] = v_netblock_id;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 	RAISE NOTICE 'Hierarchy inserted...';
 
 --
 -- Now test things that should fail validation
 --
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
 	RAISE NOTICE '    Insert a block with a mismatched parent type';
 	BEGIN
 		INSERT INTO netblock
@@ -405,7 +405,7 @@ BEGIN
 
 	RAISE NOTICE '    Insert a self-referential block';
 	BEGIN
-		SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+		SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 		INSERT INTO netblock
 			(ip_address, netblock_type,
 			 is_single_address, can_subnet, parent_netblock_id, netblock_status,
@@ -417,7 +417,7 @@ BEGIN
 		RETURNING netblock_id INTO v_netblock_id;
 		UPDATE netblock SET parent_netblock_id = v_netblock_id WHERE
 			netblock_id = v_netblock_id;
-		SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
+		SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
 		RAISE '       SUCCEEDED -- THIS IS A PROBLEM' USING
 			ERRCODE = 'error_in_assignment';
 	EXCEPTION
@@ -622,7 +622,7 @@ BEGIN
 -- Deletes will be caught by standard foreign key constraints
 --
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 --
 -- Insert some children of the auto-maintained type and validate that
@@ -709,8 +709,8 @@ BEGIN
 			a_netblock_list[0];
 	END IF;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 --
 -- Insert a leaf record that does not have a corresponding container netblock
@@ -726,12 +726,12 @@ BEGIN
 		VALUES
 			('172.31.16.1/24', 'JHTEST-auto', 'Y', 'N', NULL,
 				'Allocated', a_ip_universe[0]);
-		SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-		SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+		SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+		SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 		RAISE '        INSERT ALLOWED - THIS IS A PROBLEM';
 	EXCEPTION
 		WHEN SQLSTATE 'JH105' THEN
-			SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+			SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 			RAISE NOTICE '        insert failed correctly';
 	END;
 
@@ -763,8 +763,8 @@ BEGIN
 			;
 	END IF;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 
 --
@@ -802,8 +802,8 @@ BEGIN
 			a_netblock_list[5];
 	END IF;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 
 	RAISE NOTICE '    Changing netmask of 172.31.0.0/19 back to 172.31.0.0/22 to ensure children change correctly';
@@ -838,8 +838,8 @@ BEGIN
 			a_netblock_list[0];
 	END IF;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 --
 -- Change the IP address on a netblock and ensure all children get rehomed correctly
@@ -877,8 +877,8 @@ BEGIN
 			v_netblock_id;
 	END IF;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 --
 -- Delete a netblock which has a child and ensure that it gets correctly reparented
@@ -900,8 +900,8 @@ BEGIN
 			a_netblock_list[0];
 	END IF;
 
-	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 
 --
 -- Change the netmask on a netblock and ensure that the is_single_address
@@ -934,8 +934,8 @@ BEGIN
 --			masklen(netblock_rec.ip_address);
 --	END IF;
 --
---	SET CONSTRAINTS trigger_validate_netblock_parentage IMMEDIATE;
---	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+--	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage IMMEDIATE;
+--	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 --
 --	RAISE NOTICE '    Readdressing netblock to be too small for its children';
 --
@@ -958,8 +958,8 @@ BEGIN
 -- Create a layer3_network and ensure that it can neither be subnettable or
 -- a single address
 --
-	SET CONSTRAINTS trigger_layer3_network_validate_netblock IMMEDIATE;
-	SET CONSTRAINTS trigger_netblock_validate_layer3_network_netblock IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_layer3_network_validate_netblock IMMEDIATE;
+	SET CONSTRAINTS jazzhands.trigger_netblock_validate_layer3_network_netblock IMMEDIATE;
 
 	RAISE NOTICE '    Inserting a layer3_network with netblock having can_subnet=Y and is_single_address=N';
 	BEGIN
@@ -1056,7 +1056,7 @@ BEGIN
 --
 
 	RAISE NOTICE 'ALL TESTS PASSED';
-	SET CONSTRAINTS trigger_validate_netblock_parentage DEFERRED;
+	SET CONSTRAINTS jazzhands.trigger_validate_netblock_parentage DEFERRED;
 	--
 	-- Clean up
 	--

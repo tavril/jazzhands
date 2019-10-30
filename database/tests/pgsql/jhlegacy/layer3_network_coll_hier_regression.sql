@@ -22,8 +22,8 @@
 
 SAVEPOINT l3_network_coll_hier_regression_test;
 
-\ir ../../ddl/schema/pgsql/create_l3network_coll_hier_triggers.sql
-\ir ../../ddl/schema/pgsql/create_collection_bytype_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_l3network_coll_hier_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_collection_bytype_triggers.sql
 
 
 -- 

@@ -168,6 +168,8 @@ BEGIN
 	DELETE FROM network_interface where network_interface_name like 'JHTEST%';
 	DELETE FROM network_interface where description like 'JHTEST%';
 	DELETE FROM device where device_name like 'JHTEST%';
+	DELETE from netblock where description like 'JHTEST%' AND is_single_address = 'Y';
+	DELETE from netblock where description like 'JHTEST%' AND can_subnet = 'N';
 	DELETE from netblock where description like 'JHTEST%';
 	DELETE from site where site_code like 'JHTEST%';
 	RETURN true;

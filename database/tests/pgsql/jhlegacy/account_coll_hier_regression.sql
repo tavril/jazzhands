@@ -22,13 +22,13 @@
 
 SAVEPOINT acct_coll_regression_tests;
 
-\ir ../../ddl/schema/pgsql/create_account_coll_hier_triggers.sql
-\ir ../../ddl/schema/pgsql/create_account_coll_hook_triggers.sql
-\ir ../../ddl/schema/pgsql/create_account_coll_realm_triggers.sql
-\ir ../../ddl/schema/pgsql/create_account_coll_relation_triggers.sql
-\ir ../../ddl/schema/pgsql/create_acct_coll_report_triggers.sql
-\ir ../../ddl/schema/pgsql/create_auto_account_coll_triggers.sql
-\ir ../../ddl/schema/pgsql/create_v_corp_family_account_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_account_coll_hier_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_account_coll_hook_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_account_coll_realm_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_account_coll_relation_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_acct_coll_report_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_auto_account_coll_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_v_corp_family_account_triggers.sql
 
 -- This needs to be better thought out with account_realm restrictions.
 -- \ir ../../ddl/schema/pgsql/create_collection_bytype_triggers.sql

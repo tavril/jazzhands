@@ -25,9 +25,9 @@
 
 SAVEPOINT netblock_defaults_regression;
 
-\ir ../../pkg/pgsql/netblock_utils.sql
-\ir ../../ddl/schema/pgsql/create_netblock_triggers.sql
-\ir ../../ddl/schema/pgsql/create_ip_universe_valid_triggers.sql
+-- \ir ../../pkg/pgsql/netblock_utils.sql
+-- \ir ../../ddl/schema/pgsql/create_netblock_triggers.sql
+-- \ir ../../ddl/schema/pgsql/create_ip_universe_valid_triggers.sql
 
 --
 -- Trigger tests
