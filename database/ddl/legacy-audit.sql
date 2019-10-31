@@ -561,19 +561,19 @@ SELECT
 	"device_status",
 	"operating_system_id",
 	"service_environment_id",
-	NULL AS auto_mgmt_protocol, -- Need to fill in
+	NULL::character varying(50) AS auto_mgmt_protocol, -- Need to fill in
 	CASE WHEN is_locally_managed IS NULL THEN NULL
 		WHEN is_locally_managed = true THEN 'Y'
 		WHEN is_locally_managed = false THEN 'N'
 		ELSE NULL
 	END AS is_locally_managed,
-	NULL AS is_monitored, -- Need to fill in
+	NULL::character(1) AS is_monitored, -- Need to fill in
 	CASE WHEN is_virtual_device IS NULL THEN NULL
 		WHEN is_virtual_device = true THEN 'Y'
 		WHEN is_virtual_device = false THEN 'N'
 		ELSE NULL
 	END AS is_virtual_device,
-	NULL AS should_fetch_config, -- Need to fill in
+	NULL::character(1) AS should_fetch_config, -- Need to fill in
 	"date_in_service",
 	"data_ins_user",
 	"data_ins_date",
@@ -1176,7 +1176,7 @@ SELECT
 	"description",
 	"parent_layer3_interface_id" AS parent_network_interface_id,
 	"parent_relation_type",
-	NULL AS physical_port_id, -- Need to fill in
+	NULL::integer AS physical_port_id, -- Need to fill in
 	"slot_id",
 	"logical_port_id",
 	"layer3_interface_type" AS network_interface_type,
@@ -1298,7 +1298,7 @@ SELECT
 	"major_version",
 	"version",
 	"operating_system_family",
-	NULL AS processor_architecture, -- Need to fill in
+	NULL::character varying(50) AS processor_architecture, -- Need to fill in
 	"data_ins_user",
 	"data_ins_date",
 	"data_upd_user",
@@ -1532,8 +1532,8 @@ FROM jazzhands_audit.physical_address;
 CREATE OR REPLACE VIEW audit.physical_connection AS
 SELECT
 	"physical_connection_id",
-	NULL AS physical_port1_id, -- Need to fill in
-	NULL AS physical_port2_id, -- Need to fill in
+	NULL::integer AS physical_port1_id, -- Need to fill in
+	NULL::integer AS physical_port2_id, -- Need to fill in
 	"slot1_id",
 	"slot2_id",
 	"cable_type",
