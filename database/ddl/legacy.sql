@@ -8871,6 +8871,7 @@ DECLARE
 	_cq	text[];
 	_vq	text[];
 	_nr	jazzhands.property%rowtype;
+	_dt	TEXT;
 BEGIN
 
 	IF NEW.property_id IS NOT NULL THEN
@@ -8979,8 +8980,18 @@ BEGIN
 	END IF;
 
 	IF NEW.property_value IS NOT NULL THEN
-		_cq := array_append(_cq, quote_ident('property_value'));
-		_vq := array_append(_vq, quote_nullable(NEW.property_value));
+		SELECT property_data_type INTO _dt
+		FROM val_property
+		WHERE property_name = NEW.property_name
+		AND property_type = NEW.property_type;
+
+		IF _dt = 'boolean' THEN
+			_cq := array_append(_cq, quote_ident('property_value_boolean'));
+			_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.property_value = 'Y' THEN true WHEN NEW.property_value = 'N' THEN FALSE ELSE NULL END));
+		ELSE
+			_cq := array_append(_cq, quote_ident('property_value'));
+			_vq := array_append(_vq, quote_nullable(NEW.property_value));
+		END IF;
 	END IF;
 
 	IF NEW.property_value_timestamp IS NOT NULL THEN
@@ -9075,7 +9086,14 @@ BEGIN
 	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
 	NEW.property_name = _nr.property_name;
 	NEW.property_type = _nr.property_type;
-	NEW.property_value = _nr.property_value;
+	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
+		NEW.property_value = CASE
+			WHEN _nr.property_value_boolean = true THEN 'Y'
+			WHEN _nr.property_value_boolean = false THEN 'N'
+			ELSE NULL END;
+	ELSE
+		NEW.property_value = _nr.property_value;
+	END IF;
 	NEW.property_value_timestamp = _nr.property_value_timestamp;
 	NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
 	NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
@@ -9114,6 +9132,7 @@ DECLARE
 	_r	jazzhands_legacy.property%rowtype;
 	_nr	jazzhands.property%rowtype;
 	_uq	text[];
+	_dt	TEXT;
 BEGIN
 
 	IF OLD.property_id IS DISTINCT FROM NEW.property_id THEN
@@ -9201,7 +9220,18 @@ _uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type)
 	END IF;
 
 	IF OLD.property_value IS DISTINCT FROM NEW.property_value THEN
-_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+		SELECT property_data_type INTO _dt
+		FROM val_property
+		WHERE property_name = NEW.property_name
+		AND property_type = NEW.property_type;
+
+		IF _dt = 'boolean' THEN
+			_uq := array_append(_uq, 'property_value = ' || quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+			_uq := array_append(_uq, 'property_value = NULL');
+		ELSE
+			_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+			_uq := array_append(_uq, 'property_value_boolean = NULL');
+		END IF;
 	END IF;
 
 	IF OLD.property_value_timestamp IS DISTINCT FROM NEW.property_value_timestamp THEN
@@ -9289,7 +9319,14 @@ END IF;
 	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
 	NEW.property_name = _nr.property_name;
 	NEW.property_type = _nr.property_type;
-	NEW.property_value = _nr.property_value;
+	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
+		NEW.property_value = CASE
+			WHEN _nr.property_value_boolean = true THEN 'Y'
+			WHEN _nr.property_value_boolean = false THEN 'N'
+			ELSE NULL END;
+	ELSE
+		NEW.property_value = _nr.property_value;
+	END IF;
 	NEW.property_value_timestamp = _nr.property_value_timestamp;
 	NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
 	NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
@@ -9326,10 +9363,17 @@ RETURNS TRIGGER AS
 $$
 DECLARE
 	_or	jazzhands.property%rowtype;
+	_dt	TEXT;
 BEGIN
 	DELETE FROM jazzhands.property
 	WHERE  property_id = OLD.property_id  RETURNING *
 	INTO _or;
+
+	SELECT property_data_type INTO _dt
+	FROM val_property
+	WHERE property_name = OLD.property_name
+	AND property_type = OLD.property_type;
+
 	OLD.property_id = _or.property_id;
 	OLD.account_collection_id = _or.account_collection_id;
 	OLD.account_id = _or.account_id;
@@ -9351,11 +9395,17 @@ BEGIN
 	OLD.x509_signed_certificate_id = _or.x509_signed_certificate_id;
 	OLD.property_name = _or.property_name;
 	OLD.property_type = _or.property_type;
-	OLD.property_value = _or.property_value;
+	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
+		OLD.property_value = CASE
+			WHEN _or.property_value_boolean = true THEN 'Y'
+			WHEN _or.property_value_boolean = false THEN 'N'
+			ELSE NULL END;
+	ELSE
+		OLD.property_value = _or.property_value;
+	END IF;
 	OLD.property_value_timestamp = _or.property_value_timestamp;
 	OLD.property_value_account_coll_id = _or.property_value_account_collection_id;
 	OLD.property_value_device_coll_id = _or.property_value_device_collection_id;
-	OLD.property_value_json = _or.property_value_json;
 	OLD.property_value_nblk_coll_id = _or.property_value_netblock_collection_id;
 	OLD.property_value_password_type = _or.property_value_password_type;
 	OLD.property_value_person_id = _or.property_value_person_id;
