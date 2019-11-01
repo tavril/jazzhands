@@ -3952,6 +3952,10 @@ BEGIN
 	NEW.account_type = _nr.account_type;
 	NEW.description = _nr.description;
 	NEW.external_id = _nr.external_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4157,6 +4161,8 @@ BEGIN
 	NEW.was_auth_success = CASE WHEN _nr.was_auth_success = true THEN 'Y' WHEN _nr.was_auth_success = false THEN 'N' ELSE NULL END;
 	NEW.auth_resource_instance = _nr.auth_resource_instance;
 	NEW.auth_origin = _nr.auth_origin;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_ins_user = _nr.data_ins_user;
 	RETURN NEW;
 END;
 $$
@@ -4358,6 +4364,10 @@ BEGIN
 	NEW.is_approved = CASE WHEN _nr.is_approved = true THEN 'Y' WHEN _nr.is_approved = false THEN 'N' ELSE NULL END;
 	NEW.approved_account_id = _nr.approved_account_id;
 	NEW.approval_note = _nr.approval_note;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4593,6 +4603,10 @@ BEGIN
 	NEW.approver_account_id = _nr.approver_account_id;
 	NEW.external_reference_name = _nr.external_reference_name;
 	NEW.is_completed = CASE WHEN _nr.is_completed = true THEN 'Y' WHEN _nr.is_completed = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -4852,6 +4866,10 @@ BEGIN
 	NEW.refresh_all_data = CASE WHEN _nr.refresh_all_data = true THEN 'Y' WHEN _nr.refresh_all_data = false THEN 'N' ELSE NULL END;
 	NEW.accept_app_process_chain_id = _nr.accept_app_process_chain_id;
 	NEW.reject_app_process_chain_id = _nr.reject_app_process_chain_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -5099,6 +5117,10 @@ BEGIN
 	NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
 	NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
 	NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -5322,6 +5344,10 @@ BEGIN
 	NEW.is_rack_mountable = CASE WHEN _nr.is_rack_mountable = true THEN 'Y' WHEN _nr.is_rack_mountable = false THEN 'N' ELSE NULL END;
 	NEW.is_virtual_component = CASE WHEN _nr.is_virtual_component = true THEN 'Y' WHEN _nr.is_virtual_component = false THEN 'N' ELSE NULL END;
 	NEW.size_units = _nr.size_units;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -5551,6 +5577,10 @@ BEGIN
 	NEW.cost_center_name = _nr.cost_center_name;
 	NEW.cost_center_number = _nr.cost_center_number;
 	NEW.default_badge_type_id = _nr.default_badge_type_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -5811,6 +5841,10 @@ BEGIN
 	NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
 	NEW.is_virtual_device = CASE WHEN _nr.is_virtual_device = true THEN 'Y' WHEN _nr.is_virtual_device = false THEN 'N' ELSE NULL END;
 	NEW.date_in_service = _nr.date_in_service;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6125,6 +6159,10 @@ BEGIN
 	NEW.has_802_11_interface = CASE WHEN _nr.has_802_11_interface = true THEN 'Y' WHEN _nr.has_802_11_interface = false THEN 'N' ELSE NULL END;
 	NEW.snmp_capable = CASE WHEN _nr.snmp_capable = true THEN 'Y' WHEN _nr.snmp_capable = false THEN 'N' ELSE NULL END;
 	NEW.is_chassis = CASE WHEN _nr.is_chassis = true THEN 'Y' WHEN _nr.is_chassis = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6414,6 +6452,10 @@ BEGIN
 	NEW.soa_rname = _nr.soa_rname;
 	NEW.should_generate = CASE WHEN _nr.should_generate = true THEN 'Y' WHEN _nr.should_generate = false THEN 'N' ELSE NULL END;
 	NEW.last_generated = _nr.last_generated;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6697,6 +6739,10 @@ BEGIN
 	NEW.dns_value_record_id = _nr.dns_value_record_id;
 	NEW.should_generate_ptr = CASE WHEN _nr.should_generate_ptr = true THEN 'Y' WHEN _nr.should_generate_ptr = false THEN 'N' ELSE NULL END;
 	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -6938,6 +6984,10 @@ BEGIN
 	NEW.ip_namespace = _nr.ip_namespace;
 	NEW.should_generate_dns = CASE WHEN _nr.should_generate_dns = true THEN 'Y' WHEN _nr.should_generate_dns = false THEN 'N' ELSE NULL END;
 	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7083,6 +7133,10 @@ BEGIN
 	NEW.ip_universe_id = _nr.ip_universe_id;
 	NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
 	NEW.propagate_dns = CASE WHEN _nr.propagate_dns = true THEN 'Y' WHEN _nr.propagate_dns = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7258,6 +7312,10 @@ BEGIN
 	NEW.ip_universe_id = _nr.ip_universe_id;
 	NEW.description = _nr.description;
 	NEW.external_id = _nr.external_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7500,6 +7558,10 @@ BEGIN
 	NEW.mac_addr = _nr.mac_addr;
 	NEW.should_monitor = CASE WHEN _nr.should_monitor = true THEN 'Y' WHEN _nr.should_monitor = false THEN 'N' ELSE NULL END;
 	NEW.should_manage = CASE WHEN _nr.should_manage = true THEN 'Y' WHEN _nr.should_manage = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7742,6 +7804,10 @@ BEGIN
 	NEW.network_interface_id = _nr.network_interface_id;
 	NEW.dns_record_id = _nr.dns_record_id;
 	NEW.service_environment_id = _nr.service_environment_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -7983,6 +8049,10 @@ BEGIN
 	NEW.shirt_size = _nr.shirt_size;
 	NEW.pant_size = _nr.pant_size;
 	NEW.hat_size = _nr.hat_size;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8188,6 +8258,10 @@ BEGIN
 	NEW.person_id = _nr.person_id;
 	NEW.user_answer = _nr.user_answer;
 	NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8387,6 +8461,10 @@ BEGIN
 	NEW.termination_date = _nr.termination_date;
 	NEW.manager_person_id = _nr.manager_person_id;
 	NEW.nickname = _nr.nickname;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8616,6 +8694,10 @@ BEGIN
 	NEW.private_key = _nr.private_key;
 	NEW.passphrase = _nr.passphrase;
 	NEW.encryption_key_id = _nr.encryption_key_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -8965,6 +9047,10 @@ BEGIN
 	NEW.start_date = _nr.start_date;
 	NEW.finish_date = _nr.finish_date;
 	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9338,6 +9424,10 @@ BEGIN
 	NEW.description = _nr.description;
 	NEW.rack_height_in_u = _nr.rack_height_in_u;
 	NEW.display_from_bottom = CASE WHEN _nr.display_from_bottom = true THEN 'Y' WHEN _nr.display_from_bottom = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9585,6 +9675,10 @@ BEGIN
 	NEW.slot_y_offset = _nr.slot_y_offset;
 	NEW.slot_z_offset = _nr.slot_z_offset;
 	NEW.slot_side = _nr.slot_side;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9802,6 +9896,10 @@ BEGIN
 	NEW.slot_physical_interface_type = _nr.slot_physical_interface_type;
 	NEW.description = _nr.description;
 	NEW.remote_slot_permitted = CASE WHEN _nr.remote_slot_permitted = true THEN 'Y' WHEN _nr.remote_slot_permitted = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9971,6 +10069,10 @@ BEGIN
 	NEW.run_as_account_collection_id = _nr.run_as_account_collection_id;
 	NEW.requires_password = CASE WHEN _nr.requires_password = true THEN 'Y' WHEN _nr.requires_password = false THEN 'N' ELSE NULL END;
 	NEW.can_exec_child = CASE WHEN _nr.can_exec_child = true THEN 'Y' WHEN _nr.can_exec_child = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -10212,6 +10314,10 @@ BEGIN
 	NEW.token_unlock_time = _nr.token_unlock_time;
 	NEW.bad_logins = _nr.bad_logins;
 	NEW.last_updated = _nr.last_updated;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -10471,6 +10577,10 @@ BEGIN
 	NEW.account_type = _nr.account_type;
 	NEW.description = _nr.description;
 	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -10718,6 +10828,10 @@ BEGIN
 	NEW.should_generate = CASE WHEN _nr.should_generate = true THEN 'Y' WHEN _nr.should_generate = false THEN 'N' ELSE NULL END;
 	NEW.last_generated = _nr.last_generated;
 	NEW.dns_domain_type = _nr.dns_domain_type;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11565,6 +11679,10 @@ BEGIN
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
 	NEW.account_realm_id = _nr.account_realm_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11728,6 +11846,10 @@ BEGIN
 	NEW.account_role = _nr.account_role;
 	NEW.uid_gid_forced = CASE WHEN _nr.uid_gid_forced = true THEN 'Y' WHEN _nr.uid_gid_forced = false THEN 'N' ELSE NULL END;
 	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -11867,6 +11989,10 @@ BEGIN
 	NEW.is_person = CASE WHEN _nr.is_person = true THEN 'Y' WHEN _nr.is_person = false THEN 'N' ELSE NULL END;
 	NEW.uid_gid_forced = CASE WHEN _nr.uid_gid_forced = true THEN 'Y' WHEN _nr.uid_gid_forced = false THEN 'N' ELSE NULL END;
 	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12030,6 +12156,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12265,6 +12395,10 @@ BEGIN
 	NEW.permit_slot_function = _nr.permit_slot_function;
 	NEW.required_slot_function = _nr.required_slot_function;
 	NEW.permit_slot_id = _nr.permit_slot_id;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12476,6 +12610,10 @@ BEGIN
 	NEW.component_property_type = _nr.component_property_type;
 	NEW.description = _nr.description;
 	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12621,6 +12759,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12778,6 +12920,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -12923,6 +13069,10 @@ BEGIN
 	NEW.dns_domain_type = _nr.dns_domain_type;
 	NEW.can_generate = CASE WHEN _nr.can_generate = true THEN 'Y' WHEN _nr.can_generate = false THEN 'N' ELSE NULL END;
 	NEW.description = _nr.description;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13068,6 +13218,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13225,6 +13379,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13394,6 +13552,10 @@ BEGIN
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
 	NEW.netblock_single_addr_restrict = _nr.netblock_is_single_address_restriction;
 	NEW.netblock_ip_family_restrict = _nr.netblock_ip_family_restriction;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13557,6 +13719,10 @@ BEGIN
 	NEW.description = _nr.description;
 	NEW.db_forced_hierarchy = CASE WHEN _nr.db_forced_hierarchy = true THEN 'Y' WHEN _nr.db_forced_hierarchy = false THEN 'N' ELSE NULL END;
 	NEW.is_validated_hierarchy = CASE WHEN _nr.is_validated_hierarchy = true THEN 'Y' WHEN _nr.is_validated_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13726,6 +13892,10 @@ BEGIN
 	NEW.netblock_type = _nr.netblock_type;
 	NEW.can_overlap = CASE WHEN _nr.can_overlap = true THEN 'Y' WHEN _nr.can_overlap = false THEN 'N' ELSE NULL END;
 	NEW.require_cidr_boundary = CASE WHEN _nr.require_cidr_boundary = true THEN 'Y' WHEN _nr.require_cidr_boundary = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -13883,6 +14053,10 @@ BEGIN
 
 	NEW.person_image_usage = _nr.person_image_usage;
 	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14028,6 +14202,10 @@ BEGIN
 	NEW.propagate_from_person = CASE WHEN _nr.propagate_from_person = true THEN 'Y' WHEN _nr.propagate_from_person = false THEN 'N' ELSE NULL END;
 	NEW.is_forced = CASE WHEN _nr.is_forced = true THEN 'Y' WHEN _nr.is_forced = false THEN 'N' ELSE NULL END;
 	NEW.is_db_enforced = CASE WHEN _nr.is_db_enforced = true THEN 'Y' WHEN _nr.is_db_enforced = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14407,6 +14585,10 @@ BEGIN
 	NEW.permit_site_code = _nr.permit_site_code;
 	NEW.permit_x509_signed_cert_id = _nr.permit_x509_signed_certificate_id;
 	NEW.permit_property_rank = _nr.permit_property_rank;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14762,6 +14944,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -14913,6 +15099,10 @@ BEGIN
 	NEW.description = _nr.description;
 	NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
 	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -15064,6 +15254,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -15209,6 +15403,10 @@ BEGIN
 	NEW.slot_function = _nr.slot_function;
 	NEW.description = _nr.description;
 	NEW.can_have_mac_address = CASE WHEN _nr.can_have_mac_address = true THEN 'Y' WHEN _nr.can_have_mac_address = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -15354,6 +15552,10 @@ BEGIN
 	NEW.max_num_members = _nr.max_num_members;
 	NEW.max_num_collections = _nr.max_num_collections;
 	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -15499,6 +15701,10 @@ BEGIN
 	NEW.x509_key_usg = _nr.x509_key_usage;
 	NEW.description = _nr.description;
 	NEW.is_extended = CASE WHEN _nr.is_extended = true THEN 'Y' WHEN _nr.is_extended = false THEN 'N' ELSE NULL END;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -15728,6 +15934,10 @@ BEGIN
 	NEW.encryption_key_id = _nr.encryption_key_id;
 	NEW.ocsp_uri = _nr.ocsp_uri;
 	NEW.crl_uri = _nr.crl_uri;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -16053,6 +16263,10 @@ BEGIN
 	NEW.x509_revocation_reason = _nr.x509_revocation_reason;
 	NEW.ocsp_uri = _nr.ocsp_uri;
 	NEW.crl_uri = _nr.crl_uri;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
