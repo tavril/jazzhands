@@ -186,8 +186,8 @@ values
 --- deal with system wide default
 
 -- insert test user - kovert
-insert into person (first_name, middle_name, last_name, gender)
-	values ('Todd', 'M', 'Kover', 'male');
+insert into person (first_name, middle_name, last_name)
+	values ('Todd', 'M', 'Kover');
 
 insert into person_company (company_id, person_id, 
 	is_exempt,
@@ -228,10 +228,10 @@ values ('kovert',
 );
 
 -- insert test user - mdr
-insert into person (first_name, middle_name, last_name, gender)
-	values ('Matthew', 'D', 'Ragan', 'male');
+insert into person (first_name, middle_name, last_name)
+	values ('Matthew', 'D', 'Ragan');
 
-insert into person_company (company_id, person_id, 
+insert into person_company (company_id, person_id,
 	is_exempt,
 	person_company_status, person_company_relation
 	) 
