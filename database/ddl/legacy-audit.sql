@@ -562,11 +562,7 @@ SELECT
 	"operating_system_id",
 	"service_environment_id",
 	NULL::character varying(50) AS auto_mgmt_protocol, -- Need to fill in
-	CASE WHEN is_locally_managed IS NULL THEN NULL
-		WHEN is_locally_managed = true THEN 'Y'
-		WHEN is_locally_managed = false THEN 'N'
-		ELSE NULL
-	END AS is_locally_managed,
+	NULL::character varying(1) AS is_locally_managed, -- Need to fill in
 	NULL::character(1) AS is_monitored, -- Need to fill in
 	CASE WHEN is_virtual_device IS NULL THEN NULL
 		WHEN is_virtual_device = true THEN 'Y'

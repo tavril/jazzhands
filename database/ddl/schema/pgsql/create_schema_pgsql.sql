@@ -1546,7 +1546,6 @@ CREATE TABLE device
 	device_status        varchar(50)  NOT NULL ,
 	operating_system_id  integer  NOT NULL ,
 	service_environment_id integer  NOT NULL ,
-	is_locally_managed   boolean  NOT NULL ,
 	is_virtual_device    boolean  NOT NULL ,
 	date_in_service      timestamp with time zone  NULL ,
 	data_ins_user        varchar(255)  NULL ,
@@ -1567,11 +1566,6 @@ ALTER TABLE device
 CREATE INDEX idx_device_type_location ON device
 ( 
 	device_type_id
-);
-
-CREATE INDEX idx_dev_islclymgd ON device
-( 
-	is_locally_managed
 );
 
 CREATE INDEX idx_dev_is_virtual_dev ON device
@@ -8303,10 +8297,6 @@ ALTER TABLE device
 ALTER TABLE device
 	ALTER COLUMN is_virtual_device
 		SET DEFAULT false;
-
-ALTER TABLE device
-	ALTER COLUMN is_locally_managed
-		SET DEFAULT true;
 
 
 ALTER TABLE device

@@ -493,11 +493,8 @@ SELECT
 	operating_system_id,
 	service_environment_id,
 	auto_mgmt_protocolish AS auto_mgmt_protocol,
-	CASE WHEN is_locally_managed IS NULL THEN NULL
-		WHEN is_locally_managed = true THEN 'Y'
-		WHEN is_locally_managed = false THEN 'N'
-		ELSE NULL
-	END AS is_locally_managed,
+	CASE WHEN is_locally_managedish IS NOT NULL THEN 'Y' ELSE 'N' END
+		AS is_locally_managed,
 	CASE WHEN is_monitoredish IS NOT NULL THEN 'Y' ELSE 'N' END
 		AS is_monitored,
 	CASE WHEN is_virtual_device IS NULL THEN NULL
@@ -517,12 +514,13 @@ LEFT JOIN (
 	SELECT device_id,
 	min(device_collection_id) FILTER (WHERE property_name ='IsMonitoredDevice') AS is_monitoredish,
 	min(device_collection_id) FILTER (WHERE property_name ='ShouldConfigFetch') AS should_cfg_fetchish,
+	min(device_collection_id) FILTER (WHERE property_name ='IsLocallyManagedDevice') AS is_locally_managedish,
 	min(property_value) FILTER (WHERE property_name ='AutoMgmtProtocol') AS auto_mgmt_protocolish
 	FROM jazzhands.device_collection_device dcd
 		JOIN jazzhands.property USING (device_collection_id)
 	WHERE property_type = 'JazzHandsLegacySupport'
 	AND property_name IN
-		('IsMonitoredDevice','ShouldConfigFetch','AutoMgmtProtocol')
+		('IsMonitoredDevice','ShouldConfigFetch','AutoMgmtProtocol','IsLocallyManagedDevice')
 	GROUP BY 1
 ) legacy USING (device_id);
 
@@ -5223,7 +5221,7 @@ END IF;
 	NEW.zloc_lec_company_id = _nr.zloc_lec_company_id;
 	NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
 	NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
-	NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
+	-- NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
 	NEW.data_ins_user = _nr.data_ins_user;
 	NEW.data_ins_date = _nr.data_ins_date;
 	NEW.data_upd_user = _nr.data_upd_user;
@@ -5819,11 +5817,6 @@ BEGIN
 		_vq := array_append(_vq, quote_nullable(NEW.service_environment_id));
 	END IF;
 
-	IF NEW.is_locally_managed IS NOT NULL THEN
-		_cq := array_append(_cq, quote_ident('is_locally_managed'));
-		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_locally_managed = 'Y' THEN true WHEN NEW.is_locally_managed = 'N' THEN false ELSE NULL END));
-	END IF;
-
 	IF NEW.is_virtual_device IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('is_virtual_device'));
 		_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.is_virtual_device = 'Y' THEN true WHEN NEW.is_virtual_device = 'N' THEN false ELSE NULL END));
@@ -5856,7 +5849,7 @@ BEGIN
 	NEW.device_status = _nr.device_status;
 	NEW.operating_system_id = _nr.operating_system_id;
 	NEW.service_environment_id = _nr.service_environment_id;
-	NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
+	-- NEW.is_locally_managed = NULL;
 	NEW.is_virtual_device = CASE WHEN _nr.is_virtual_device = true THEN 'Y' WHEN _nr.is_virtual_device = false THEN 'N' ELSE NULL END;
 	NEW.date_in_service = _nr.date_in_service;
 	NEW.data_ins_user = _nr.data_ins_user;
@@ -5951,16 +5944,6 @@ _uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operatin
 _uq := array_append(_uq, 'service_environment_id = ' || quote_nullable(NEW.service_environment_id));
 	END IF;
 
-	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
-IF NEW.is_locally_managed = 'Y' THEN
-	_uq := array_append(_uq, 'is_locally_managed = true');
-ELSIF NEW.is_locally_managed = 'N' THEN
-	_uq := array_append(_uq, 'is_locally_managed = false');
-ELSE
-	_uq := array_append(_uq, 'is_locally_managed = NULL');
-END IF;
-	END IF;
-
 	IF OLD.is_virtual_device IS DISTINCT FROM NEW.is_virtual_device THEN
 IF NEW.is_virtual_device = 'Y' THEN
 	_uq := array_append(_uq, 'is_virtual_device = true');
@@ -5997,7 +5980,6 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 	NEW.device_status = _nr.device_status;
 	NEW.operating_system_id = _nr.operating_system_id;
 	NEW.service_environment_id = _nr.service_environment_id;
-	NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
 	NEW.is_virtual_device = CASE WHEN _nr.is_virtual_device = true THEN 'Y' WHEN _nr.is_virtual_device = false THEN 'N' ELSE NULL END;
 	NEW.date_in_service = _nr.date_in_service;
 	NEW.data_ins_user = _nr.data_ins_user;
@@ -6043,7 +6025,6 @@ BEGIN
 	OLD.device_status = _or.device_status;
 	OLD.operating_system_id = _or.operating_system_id;
 	OLD.service_environment_id = _or.service_environment_id;
-	OLD.is_locally_managed = CASE WHEN _or.is_locally_managed = true THEN 'Y' WHEN _or.is_locally_managed = false THEN 'N' ELSE NULL END;
 	OLD.is_virtual_device = CASE WHEN _or.is_virtual_device = true THEN 'Y' WHEN _or.is_virtual_device = false THEN 'N' ELSE NULL END;
 	OLD.date_in_service = _or.date_in_service;
 	OLD.data_ins_user = _or.data_ins_user;
