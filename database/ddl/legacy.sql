@@ -492,25 +492,39 @@ SELECT
 	device_status,
 	operating_system_id,
 	service_environment_id,
-	NULL::character varying(50) AS auto_mgmt_protocol, -- Need to fill in
+	auto_mgmt_protocolish AS auto_mgmt_protocol,
 	CASE WHEN is_locally_managed IS NULL THEN NULL
 		WHEN is_locally_managed = true THEN 'Y'
 		WHEN is_locally_managed = false THEN 'N'
 		ELSE NULL
 	END AS is_locally_managed,
-	NULL::character(1) AS is_monitored, -- Need to fill in
+	CASE WHEN is_monitoredish IS NOT NULL THEN 'Y' ELSE 'N' END
+		AS is_monitored,
 	CASE WHEN is_virtual_device IS NULL THEN NULL
 		WHEN is_virtual_device = true THEN 'Y'
 		WHEN is_virtual_device = false THEN 'N'
 		ELSE NULL
 	END AS is_virtual_device,
-	NULL::character(1) AS should_fetch_config, -- Need to fill in
+	CASE WHEN should_cfg_fetchish IS NOT NULL THEN 'Y' ELSE 'N' END
+		AS should_fetch_config,
 	date_in_service,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
 	data_upd_date
-FROM jazzhands.device;
+FROM jazzhands.device
+LEFT JOIN (
+	SELECT device_id,
+	min(device_collection_id) FILTER (WHERE property_name ='IsMonitoredDevice') AS is_monitoredish,
+	min(device_collection_id) FILTER (WHERE property_name ='ShouldConfigFetch') AS should_cfg_fetchish,
+	min(property_value) FILTER (WHERE property_name ='AutoMgmtProtocol') AS auto_mgmt_protocolish
+	FROM jazzhands.device_collection_device dcd
+		JOIN jazzhands.property USING (device_collection_id)
+	WHERE property_type = 'JazzHandsLegacySupport'
+	AND property_name IN
+		('IsMonitoredDevice','ShouldConfigFetch','AutoMgmtProtocol')
+	GROUP BY 1
+) legacy USING (device_id);
 
 ALTER TABLE jazzhands_legacy.device ALTER is_locally_managed SET DEFAULT 'Y'::bpchar;
 ALTER TABLE jazzhands_legacy.device ALTER is_virtual_device SET DEFAULT 'N'::bpchar;
@@ -1169,7 +1183,9 @@ SELECT
 	middle_name,
 	last_name,
 	name_suffix,
-	gender,
+	CASE WHEN gender = 'male' THEN 'M'
+		WHEN gender = 'female' THEN 'F'
+		ELSE 'U' END as gender,
 	preferred_first_name,
 	preferred_last_name,
 	nickname,
@@ -2459,7 +2475,9 @@ SELECT
 	middle_name,
 	last_name,
 	name_suffix,
-	gender,
+	CASE WHEN gender = 'male' THEN 'M'
+		WHEN gender = 'female' THEN 'F'
+		ELSE 'U' END as gender,
 	preferred_first_name,
 	preferred_last_name,
 	legal_first_name,
@@ -7985,7 +8003,16 @@ BEGIN
 
 	IF NEW.gender IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('gender'));
-		_vq := array_append(_vq, quote_nullable(NEW.gender));
+		IF NEW.gender = 'M' THEN
+			_vq := array_append(_vq, quote_nullable('male'));
+		ELSIF NEW.gender = 'F' THEN
+			_vq := array_append(_vq, quote_nullable('femaile'));
+		ELSIF NEW.gender = 'U' THEN
+			_vq := array_append(_vq, quote_nullable('unspecified'));
+		ELSE
+			RAISE EXCEPTION 'Invalid gender % in legacy views', NEW.gender
+				USING errcode ='invalid_parameter_value';
+		END IF;
 	END IF;
 
 	IF NEW.preferred_first_name IS NOT NULL THEN
@@ -8040,7 +8067,9 @@ BEGIN
 	NEW.middle_name = _nr.middle_name;
 	NEW.last_name = _nr.last_name;
 	NEW.name_suffix = _nr.name_suffix;
-	NEW.gender = _nr.gender;
+	NEW.gender = CASE WHEN _nr.gender = 'male' THEN 'M'
+		WHEN _nr.gender = 'female' THEN 'F'
+		ELSE 'U' END;
 	NEW.preferred_first_name = _nr.preferred_first_name;
 	NEW.preferred_last_name = _nr.preferred_last_name;
 	NEW.nickname = _nr.nickname;
@@ -8101,7 +8130,16 @@ _uq := array_append(_uq, 'name_suffix = ' || quote_nullable(NEW.name_suffix));
 	END IF;
 
 	IF OLD.gender IS DISTINCT FROM NEW.gender THEN
-_uq := array_append(_uq, 'gender = ' || quote_nullable(NEW.gender));
+		IF NEW.gender = 'M' THEN
+			_uq := array_append(_uq, 'gender = ' || quote_nullable('male'));
+		ELSIF NEW.gender = 'F' THEN
+			_uq := array_append(_uq, 'gender = ' || quote_nullable('female'));
+		ELSIF NEW.gender = 'U' THEN
+			_uq := array_append(_uq, 'gender = ' || quote_nullable('unspecified'));
+		ELSE
+			RAISE EXCEPTION 'Invalid gender % in legacy views', NEW.gender
+				USING errcode ='invalid_parameter_value';
+		END IF;
 	END IF;
 
 	IF OLD.preferred_first_name IS DISTINCT FROM NEW.preferred_first_name THEN
@@ -8148,7 +8186,9 @@ _uq := array_append(_uq, 'hat_size = ' || quote_nullable(NEW.hat_size));
 	NEW.middle_name = _nr.middle_name;
 	NEW.last_name = _nr.last_name;
 	NEW.name_suffix = _nr.name_suffix;
-	NEW.gender = _nr.gender;
+	NEW.gender = CASE WHEN _nr.gender = 'male' THEN 'M'
+		WHEN _nr.gender = 'female' THEN 'F'
+		ELSE 'U' END;
 	NEW.preferred_first_name = _nr.preferred_first_name;
 	NEW.preferred_last_name = _nr.preferred_last_name;
 	NEW.nickname = _nr.nickname;
@@ -8190,7 +8230,9 @@ BEGIN
 	OLD.middle_name = _or.middle_name;
 	OLD.last_name = _or.last_name;
 	OLD.name_suffix = _or.name_suffix;
-	OLD.gender = _or.gender;
+	OLD.gender = CASE WHEN _or.gender = 'male' THEN 'M'
+		WHEN _or.gender = 'female' THEN 'F'
+		ELSE 'U' END;
 	OLD.preferred_first_name = _or.preferred_first_name;
 	OLD.preferred_last_name = _or.preferred_last_name;
 	OLD.nickname = _or.nickname;
