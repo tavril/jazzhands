@@ -11512,6 +11512,10 @@ BEGIN
 	NEW.manager_person_id = _nr.manager_person_id;
 	NEW.supervisor_person_id = _nr.supervisor_person_id;
 	NEW.nickname = _nr.nickname;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
