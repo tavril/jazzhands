@@ -127,7 +127,7 @@ set search_path=jazzhands_legacy;
 \ir tests/pgsql/jhlegacy/ip_universe_validation_regression.sql
 \ir tests/pgsql/jhlegacy/netblock_defaults_regression.sql
 \ir tests/pgsql/jhlegacy/network_interface_regression_test.sql
--- \ir tests/pgsql/jhlegacy/property_regression_test.sql
+--- \ir tests/pgsql/jhlegacy/property_regression_test.sql
 \ir tests/pgsql/jhlegacy/device_ticket_regression.sql
 \ir tests/pgsql/jhlegacy/device_power_regression.sql
 \ir tests/pgsql/jhlegacy/account_coll_hier_regression.sql
@@ -144,7 +144,7 @@ set search_path=jazzhands_legacy;
 \ir tests/pgsql/jhlegacy/account_coll_realm_regression.sql
 \ir tests/pgsql/jhlegacy/network_range_tests.sql
 \ir tests/pgsql/jhlegacy/x509_tests.sql
--- \ir tests/pgsql/jhlegacy/v_person_company_regression.sql
+\ir tests/pgsql/jhlegacy/v_person_company_regression.sql
 \ir tests/pgsql/jhlegacy/account_enabled_test.sql
 
 set search_path=jazzhands;
