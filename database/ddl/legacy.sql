@@ -7876,6 +7876,277 @@ CREATE TRIGGER trigger_network_service_del
 	EXECUTE PROCEDURE jazzhands_legacy.network_service_del();
 
 
+-- Triggers for person
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_ins()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.person%rowtype;
+BEGIN
+
+	IF NEW.person_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('person_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.person_id));
+	END IF;
+
+	IF NEW.description IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('description'));
+		_vq := array_append(_vq, quote_nullable(NEW.description));
+	END IF;
+
+	IF NEW.first_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('first_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.first_name));
+	END IF;
+
+	IF NEW.middle_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('middle_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.middle_name));
+	END IF;
+
+	IF NEW.last_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('last_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.last_name));
+	END IF;
+
+	IF NEW.name_suffix IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('name_suffix'));
+		_vq := array_append(_vq, quote_nullable(NEW.name_suffix));
+	END IF;
+
+	IF NEW.gender IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('gender'));
+		_vq := array_append(_vq, quote_nullable(NEW.gender));
+	END IF;
+
+	IF NEW.preferred_first_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('preferred_first_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.preferred_first_name));
+	END IF;
+
+	IF NEW.preferred_last_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('preferred_last_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.preferred_last_name));
+	END IF;
+
+	IF NEW.nickname IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('nickname'));
+		_vq := array_append(_vq, quote_nullable(NEW.nickname));
+	END IF;
+
+	IF NEW.birth_date IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('birth_date'));
+		_vq := array_append(_vq, quote_nullable(NEW.birth_date));
+	END IF;
+
+	IF NEW.diet IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('diet'));
+		_vq := array_append(_vq, quote_nullable(NEW.diet));
+	END IF;
+
+	IF NEW.shirt_size IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('shirt_size'));
+		_vq := array_append(_vq, quote_nullable(NEW.shirt_size));
+	END IF;
+
+	IF NEW.pant_size IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('pant_size'));
+		_vq := array_append(_vq, quote_nullable(NEW.pant_size));
+	END IF;
+
+	IF NEW.hat_size IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('hat_size'));
+		_vq := array_append(_vq, quote_nullable(NEW.hat_size));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.person (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.person_id = _nr.person_id;
+	NEW.description = _nr.description;
+	NEW.first_name = _nr.first_name;
+	NEW.middle_name = _nr.middle_name;
+	NEW.last_name = _nr.last_name;
+	NEW.name_suffix = _nr.name_suffix;
+	NEW.gender = _nr.gender;
+	NEW.preferred_first_name = _nr.preferred_first_name;
+	NEW.preferred_last_name = _nr.preferred_last_name;
+	NEW.nickname = _nr.nickname;
+	NEW.birth_date = _nr.birth_date;
+	NEW.diet = _nr.diet;
+	NEW.shirt_size = _nr.shirt_size;
+	NEW.pant_size = _nr.pant_size;
+	NEW.hat_size = _nr.hat_size;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_ins
+	ON jazzhands_legacy.person;
+CREATE TRIGGER trigger_person_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.person
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_ins();
+
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.person%rowtype;
+	_nr	jazzhands.person%rowtype;
+	_uq	text[];
+BEGIN
+
+	IF OLD.person_id IS DISTINCT FROM NEW.person_id THEN
+_uq := array_append(_uq, 'person_id = ' || quote_nullable(NEW.person_id));
+	END IF;
+
+	IF OLD.description IS DISTINCT FROM NEW.description THEN
+_uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
+	END IF;
+
+	IF OLD.first_name IS DISTINCT FROM NEW.first_name THEN
+_uq := array_append(_uq, 'first_name = ' || quote_nullable(NEW.first_name));
+	END IF;
+
+	IF OLD.middle_name IS DISTINCT FROM NEW.middle_name THEN
+_uq := array_append(_uq, 'middle_name = ' || quote_nullable(NEW.middle_name));
+	END IF;
+
+	IF OLD.last_name IS DISTINCT FROM NEW.last_name THEN
+_uq := array_append(_uq, 'last_name = ' || quote_nullable(NEW.last_name));
+	END IF;
+
+	IF OLD.name_suffix IS DISTINCT FROM NEW.name_suffix THEN
+_uq := array_append(_uq, 'name_suffix = ' || quote_nullable(NEW.name_suffix));
+	END IF;
+
+	IF OLD.gender IS DISTINCT FROM NEW.gender THEN
+_uq := array_append(_uq, 'gender = ' || quote_nullable(NEW.gender));
+	END IF;
+
+	IF OLD.preferred_first_name IS DISTINCT FROM NEW.preferred_first_name THEN
+_uq := array_append(_uq, 'preferred_first_name = ' || quote_nullable(NEW.preferred_first_name));
+	END IF;
+
+	IF OLD.preferred_last_name IS DISTINCT FROM NEW.preferred_last_name THEN
+_uq := array_append(_uq, 'preferred_last_name = ' || quote_nullable(NEW.preferred_last_name));
+	END IF;
+
+	IF OLD.nickname IS DISTINCT FROM NEW.nickname THEN
+_uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
+	END IF;
+
+	IF OLD.birth_date IS DISTINCT FROM NEW.birth_date THEN
+_uq := array_append(_uq, 'birth_date = ' || quote_nullable(NEW.birth_date));
+	END IF;
+
+	IF OLD.diet IS DISTINCT FROM NEW.diet THEN
+_uq := array_append(_uq, 'diet = ' || quote_nullable(NEW.diet));
+	END IF;
+
+	IF OLD.shirt_size IS DISTINCT FROM NEW.shirt_size THEN
+_uq := array_append(_uq, 'shirt_size = ' || quote_nullable(NEW.shirt_size));
+	END IF;
+
+	IF OLD.pant_size IS DISTINCT FROM NEW.pant_size THEN
+_uq := array_append(_uq, 'pant_size = ' || quote_nullable(NEW.pant_size));
+	END IF;
+
+	IF OLD.hat_size IS DISTINCT FROM NEW.hat_size THEN
+_uq := array_append(_uq, 'hat_size = ' || quote_nullable(NEW.hat_size));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.person SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  person_id = $1 RETURNING *'  USING OLD.person_id
+			INTO _nr;
+	END IF;
+	NEW.person_id = _nr.person_id;
+	NEW.description = _nr.description;
+	NEW.first_name = _nr.first_name;
+	NEW.middle_name = _nr.middle_name;
+	NEW.last_name = _nr.last_name;
+	NEW.name_suffix = _nr.name_suffix;
+	NEW.gender = _nr.gender;
+	NEW.preferred_first_name = _nr.preferred_first_name;
+	NEW.preferred_last_name = _nr.preferred_last_name;
+	NEW.nickname = _nr.nickname;
+	NEW.birth_date = _nr.birth_date;
+	NEW.diet = _nr.diet;
+	NEW.shirt_size = _nr.shirt_size;
+	NEW.pant_size = _nr.pant_size;
+	NEW.hat_size = _nr.hat_size;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_upd
+	ON jazzhands_legacy.person;
+CREATE TRIGGER trigger_person_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.person
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_upd();
+
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.person_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.person%rowtype;
+BEGIN
+	DELETE FROM jazzhands.person
+	WHERE  person_id = OLD.person_id  RETURNING *
+	INTO _or;
+	OLD.person_id = _or.person_id;
+	OLD.description = _or.description;
+	OLD.first_name = _or.first_name;
+	OLD.middle_name = _or.middle_name;
+	OLD.last_name = _or.last_name;
+	OLD.name_suffix = _or.name_suffix;
+	OLD.gender = _or.gender;
+	OLD.preferred_first_name = _or.preferred_first_name;
+	OLD.preferred_last_name = _or.preferred_last_name;
+	OLD.nickname = _or.nickname;
+	OLD.birth_date = _or.birth_date;
+	OLD.diet = _or.diet;
+	OLD.shirt_size = _or.shirt_size;
+	OLD.pant_size = _or.pant_size;
+	OLD.hat_size = _or.hat_size;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_person_del
+	ON jazzhands_legacy.person;
+CREATE TRIGGER trigger_person_del
+	INSTEAD OF DELETE ON jazzhands_legacy.person
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.person_del();
+
+
 -- Triggers for person_auth_question
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.person_auth_question_ins()
