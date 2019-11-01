@@ -1391,7 +1391,7 @@ CREATE INDEX xif_cmptypecf_comp_typ_id ON component_type_component_function
 
 CREATE TABLE component_type_slot_template
 ( 
-	component_type_slot_tmplt_id serial  NOT NULL ,
+	component_type_slot_template_id serial  NOT NULL ,
 	component_type_id    integer  NOT NULL ,
 	slot_type_id         integer  NOT NULL ,
 	slot_name_template   varchar(50)  NOT NULL ,
@@ -1410,7 +1410,7 @@ CREATE TABLE component_type_slot_template
 );
 
 ALTER TABLE component_type_slot_template
-	ADD CONSTRAINT "pk_component_type_slot_tmplt" PRIMARY KEY (component_type_slot_tmplt_id);
+	ADD CONSTRAINT "pk_component_type_slot_tmplt" PRIMARY KEY (component_type_slot_template_id);
 
 CREATE INDEX xif_comp_typ_slt_tmplt_cmptypid ON component_type_slot_template
 ( 
@@ -10046,7 +10046,7 @@ ALTER TABLE slot
 
 
 ALTER TABLE slot
-	ADD CONSTRAINT "fk_slot_cmp_typ_tmp_id" FOREIGN KEY (component_type_slot_template_id) REFERENCES component_type_slot_template(component_type_slot_tmplt_id)
+	ADD CONSTRAINT "fk_slot_cmp_typ_tmp_id" FOREIGN KEY (component_type_slot_template_id) REFERENCES component_type_slot_template(component_type_slot_template_id)
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION;
 

@@ -496,7 +496,7 @@ FROM jazzhands_audit.component_type_component_function;
 
 
 CREATE OR REPLACE VIEW audit.component_type_slot_tmplt AS
-SELECT "component_type_slot_tmplt_id","component_type_id","slot_type_id","slot_name_template","child_slot_name_template","child_slot_offset","slot_index","physical_label","slot_x_offset","slot_y_offset","slot_z_offset","slot_side","data_ins_user","data_ins_date","data_upd_user","data_upd_date","aud#action","aud#timestamp","aud#realtime","aud#txid","aud#user","aud#seq"
+SELECT "component_type_slot_template_id","component_type_id","slot_type_id","slot_name_template","child_slot_name_template","child_slot_offset","slot_index","physical_label","slot_x_offset","slot_y_offset","slot_z_offset","slot_side","data_ins_user","data_ins_date","data_upd_user","data_upd_date","aud#action","aud#timestamp","aud#realtime","aud#txid","aud#user","aud#seq"
 FROM jazzhands_audit.component_type_slot_template;
 
 
