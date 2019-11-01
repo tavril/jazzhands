@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP
 CREATE SCHEMA jazzhands_legacy;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.account AS
 SELECT
 	account_id,
@@ -33,7 +33,7 @@ FROM jazzhands.account_assigned_certificate;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.account_auth_log AS
 SELECT
 	account_id,
@@ -172,7 +172,7 @@ CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance AS
 SELECT approval_instance_id,approval_process_id,approval_instance_name,description,approval_start,approval_end,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.approval_instance;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_item AS
 SELECT
 	approval_instance_item_id,
@@ -204,7 +204,7 @@ FROM jazzhands.approval_instance_link;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_instance_step AS
 SELECT
 	approval_instance_step_id,
@@ -261,7 +261,7 @@ FROM jazzhands.approval_process;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.approval_process_chain AS
 SELECT
 	approval_process_chain_id,
@@ -322,7 +322,7 @@ FROM jazzhands.chassis_location;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.circuit AS
 SELECT
 	circuit_id,
@@ -389,7 +389,7 @@ FROM jazzhands.component_property;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.component_type AS
 SELECT
 	component_type_id,
@@ -452,7 +452,7 @@ FROM jazzhands.contract_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.department AS
 SELECT
 	account_collection_id,
@@ -618,7 +618,7 @@ FROM jazzhands.device_ticket;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.device_type AS
 SELECT
 	device_type_id,
@@ -704,7 +704,7 @@ FROM jazzhands.dns_domain_collection_hier;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_domain_ip_universe AS
 SELECT
 	dns_domain_id,
@@ -732,7 +732,7 @@ FROM jazzhands.dns_domain_ip_universe;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.dns_record AS
 SELECT
 	dns_record_id,
@@ -801,7 +801,7 @@ FROM jazzhands.inter_component_connection;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.ip_universe AS
 SELECT
 	ip_universe_id,
@@ -821,7 +821,7 @@ FROM jazzhands.ip_universe;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.ip_universe_visibility AS
 SELECT
 	ip_universe_id,
@@ -980,7 +980,7 @@ FROM jazzhands.mlag_peering;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.netblock AS
 SELECT
 	netblock_id,
@@ -1111,7 +1111,7 @@ FROM jazzhands.network_range;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.network_service AS
 SELECT
 	network_service_id,
@@ -1192,7 +1192,7 @@ FROM jazzhands.person_account_realm_company;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.person_auth_question AS
 SELECT
 	auth_question_id,
@@ -1211,7 +1211,7 @@ FROM jazzhands.person_auth_question;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.person_company AS
 SELECT
 	company_id,
@@ -1368,7 +1368,7 @@ FROM jazzhands.physicalish_volume;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.private_key AS
 SELECT
 	private_key_id,
@@ -1388,7 +1388,7 @@ SELECT
 	data_upd_date
 FROM jazzhands.private_key;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.property AS
 SELECT
 	property_id,
@@ -1485,7 +1485,7 @@ FROM jazzhands.pseudo_klogin;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.rack AS
 SELECT
 	rack_id,
@@ -1583,7 +1583,7 @@ FROM jazzhands.site_netblock;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.slot AS
 SELECT
 	slot_id,
@@ -1610,7 +1610,7 @@ SELECT
 	data_upd_date
 FROM jazzhands.slot;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.slot_type AS
 SELECT
 	slot_type_id,
@@ -1678,7 +1678,7 @@ FROM jazzhands.static_route_template;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.sudo_acct_col_device_collectio AS
 SELECT
 	sudo_alias_name,
@@ -1735,7 +1735,7 @@ FROM jazzhands.ticketing_system;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.token AS
 SELECT
 	token_id,
@@ -1896,7 +1896,7 @@ FROM jazzhands.v_application_role_member;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_approval_instance_step_expanded AS
 SELECT
 	first_approval_instance_item_id,
@@ -1926,7 +1926,7 @@ FROM jazzhands.v_component_hier;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_corp_family_account AS
 SELECT
 	account_id,
@@ -1969,7 +1969,7 @@ FROM jazzhands.v_device_collection_root;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dev_col_user_prop_expanded AS
 SELECT
 	property_id,
@@ -2084,7 +2084,7 @@ FROM jazzhands.v_device_slots;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns AS
 SELECT
 	dns_record_id,
@@ -2119,7 +2119,7 @@ FROM jazzhands.v_dns;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_changes_pending AS
 SELECT
 	dns_change_record_id,
@@ -2137,7 +2137,7 @@ FROM jazzhands.v_dns_changes_pending;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_domain_nouniverse AS
 SELECT
 	dns_domain_id,
@@ -2167,7 +2167,7 @@ FROM jazzhands.v_dns_domain_nouniverse;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_fwd AS
 SELECT
 	dns_record_id,
@@ -2202,7 +2202,7 @@ FROM jazzhands.v_dns_fwd;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_rvs AS
 SELECT
 	dns_record_id,
@@ -2237,7 +2237,7 @@ FROM jazzhands.v_dns_rvs;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_dns_sorted AS
 SELECT
 	dns_record_id,
@@ -2297,7 +2297,7 @@ FROM jazzhands.v_hotpants_device_collection;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_hotpants_token AS
 SELECT
 	token_id,
@@ -2387,7 +2387,7 @@ FROM jazzhands.v_netblock_collection_hier_from_ancestor;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_hier AS
 SELECT
 	netblock_level,
@@ -2411,7 +2411,7 @@ FROM jazzhands.v_netblock_hier;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_netblock_hier_expanded AS
 SELECT
 	netblock_level,
@@ -2478,7 +2478,7 @@ FROM jazzhands.v_person;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person_company AS
 SELECT
 	company_id,
@@ -2539,7 +2539,7 @@ FROM jazzhands.v_physical_connection;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_property AS
 SELECT
 	property_id,
@@ -2601,7 +2601,7 @@ FROM jazzhands.v_site_netblock_expanded_assigned;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.v_token AS
 SELECT
 	token_id,
@@ -2665,7 +2665,7 @@ FROM jazzhands.val_account_collection_relation;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_collection_type AS
 SELECT
 	account_collection_type,
@@ -2692,7 +2692,7 @@ FROM jazzhands.val_account_collection_type;
 ALTER TABLE jazzhands_legacy.val_account_collection_type ALTER is_infrastructure_type SET DEFAULT 'N'::bpchar;
 ALTER TABLE jazzhands_legacy.val_account_collection_type ALTER can_have_hierarchy SET DEFAULT 'Y'::bpchar;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_role AS
 SELECT
 	account_role,
@@ -2710,7 +2710,7 @@ FROM jazzhands.val_account_role;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_account_type AS
 SELECT
 	account_type,
@@ -2811,7 +2811,7 @@ FROM jazzhands.val_cable_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_company_collection_type AS
 SELECT
 	company_collection_type,
@@ -2853,7 +2853,7 @@ FROM jazzhands.val_component_function;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property AS
 SELECT
 	component_property_name,
@@ -2890,7 +2890,7 @@ ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_slot_type_id SE
 ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_slot_function SET DEFAULT 'PROHIBITED'::bpchar;
 ALTER TABLE jazzhands_legacy.val_component_property ALTER permit_slot_id SET DEFAULT 'PROHIBITED'::bpchar;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_component_property_type AS
 SELECT
 	component_property_type,
@@ -2924,7 +2924,7 @@ FROM jazzhands.val_country_code;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_device_collection_type AS
 SELECT
 	device_collection_type,
@@ -2966,7 +2966,7 @@ FROM jazzhands.val_dns_class;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_domain_collection_type AS
 SELECT
 	dns_domain_collection_type,
@@ -2984,7 +2984,7 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_dns_domain_collection_type;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_dns_domain_type AS
 SELECT
 	dns_domain_type,
@@ -3079,7 +3079,7 @@ FROM jazzhands.val_key_usage_reason_for_assignment;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_layer2_network_coll_type AS
 SELECT
 	layer2_network_collection_type,
@@ -3097,7 +3097,7 @@ SELECT
 	data_upd_date
 FROM jazzhands.val_layer2_network_collection_type;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_layer3_network_coll_type AS
 SELECT
 	layer3_network_collection_type,
@@ -3139,7 +3139,7 @@ FROM jazzhands.val_logical_volume_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_collection_type AS
 SELECT
 	netblock_collection_type,
@@ -3168,7 +3168,7 @@ FROM jazzhands.val_netblock_status;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_netblock_type AS
 SELECT
 	netblock_type,
@@ -3203,7 +3203,7 @@ FROM jazzhands.val_network_interface_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_network_range_type AS
 SELECT
 	network_range_type,
@@ -3332,7 +3332,7 @@ FROM jazzhands.val_person_contact_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_image_usage AS
 SELECT
 	person_image_usage,
@@ -3355,7 +3355,7 @@ FROM jazzhands.val_person_location_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_person_status AS
 SELECT
 	person_status,
@@ -3413,7 +3413,7 @@ FROM jazzhands.val_production_state;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property AS
 SELECT
 	property_name,
@@ -3485,7 +3485,7 @@ ALTER TABLE jazzhands_legacy.val_property ALTER permit_site_code SET DEFAULT 'PR
 ALTER TABLE jazzhands_legacy.val_property ALTER permit_x509_signed_cert_id SET DEFAULT 'PROHIBITED'::bpchar;
 ALTER TABLE jazzhands_legacy.val_property ALTER permit_property_rank SET DEFAULT 'PROHIBITED'::bpchar;
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property_collection_type AS
 SELECT
 	property_name_collection_type AS property_collection_type,
@@ -3509,7 +3509,7 @@ FROM jazzhands.val_property_data_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_property_type AS
 SELECT
 	property_type,
@@ -3550,7 +3550,7 @@ FROM jazzhands.val_raid_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_service_env_coll_type AS
 SELECT
 	service_environment_collection_type AS service_env_collection_type,
@@ -3574,7 +3574,7 @@ FROM jazzhands.val_shared_netblock_protocol;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_slot_function AS
 SELECT
 	slot_function,
@@ -3608,7 +3608,7 @@ FROM jazzhands.val_sw_package_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_token_collection_type AS
 SELECT
 	token_collection_type,
@@ -3675,7 +3675,7 @@ FROM jazzhands.val_x509_certificate_type;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.val_x509_key_usage AS
 SELECT
 	x509_key_usage AS x509_key_usg,
@@ -3741,7 +3741,7 @@ FROM jazzhands.volume_group_purpose;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_certificate AS
 SELECT
 	x509_cert_id,
@@ -3822,7 +3822,7 @@ FROM jazzhands.x509_key_usage_default;
 
 
 
--- XXX - Type change
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.x509_signed_certificate AS
 SELECT
 	x509_signed_certificate_id,
