@@ -436,8 +436,25 @@ FROM jazzhands.component_type_component_function;
 
 
 
+-- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.component_type_slot_tmplt AS
-SELECT component_type_slot_template_id,component_type_id,slot_type_id,slot_name_template,child_slot_name_template,child_slot_offset,slot_index,physical_label,slot_x_offset,slot_y_offset,slot_z_offset,slot_side,data_ins_user,data_ins_date,data_upd_user,data_upd_date
+SELECT
+	component_type_slot_template_id AS component_type_slot_tmplt_id,
+	component_type_id,
+	slot_type_id,
+	slot_name_template,
+	child_slot_name_template,
+	child_slot_offset,
+	slot_index,
+	physical_label,
+	slot_x_offset,
+	slot_y_offset,
+	slot_z_offset,
+	slot_side,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
 FROM jazzhands.component_type_slot_template;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.contract AS
@@ -473,7 +490,6 @@ SELECT
 	data_upd_date
 FROM jazzhands.department;
 
--- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.device AS
 SELECT
 	device_id,
@@ -530,8 +546,6 @@ ALTER TABLE jazzhands_legacy.device ALTER is_virtual_device SET DEFAULT 'N'::bpc
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection AS
 SELECT device_collection_id,device_collection_name,device_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_collection;
-
-
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection_assignd_cert AS
@@ -1057,7 +1071,7 @@ SELECT
 	description,
 	parent_layer3_interface_id AS parent_network_interface_id,
 	parent_relation_type,
-	NULL::integer AS physical_port_id, -- Need to fill in
+	slot_id AS physical_port_id,
 	slot_id,
 	logical_port_id,
 	layer3_interface_type AS network_interface_type,
@@ -1147,7 +1161,6 @@ FROM jazzhands.network_service;
 
 
 
--- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.operating_system AS
 SELECT
 	operating_system_id,
@@ -1172,7 +1185,6 @@ FROM jazzhands.operating_system_snapshot;
 
 
 
--- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person AS
 SELECT
 	person_id,
@@ -1353,12 +1365,11 @@ CREATE OR REPLACE VIEW jazzhands_legacy.physical_address AS
 SELECT physical_address_id,physical_address_type,company_id,site_rank,description,display_label,address_agent,address_housename,address_street,address_building,address_pobox,address_neighborhood,address_city,address_subregion,address_region,postal_code,iso_country_code,address_freeform,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.physical_address;
 
--- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.physical_connection AS
 SELECT
 	physical_connection_id,
-	NULL::integer AS physical_port1_id, -- Need to fill in
-	NULL::integer AS physical_port2_id, -- Need to fill in
+	slot1_id::integer AS physical_port1_id,
+	slot2_id::integer AS physical_port2_id,
 	slot1_id,
 	slot2_id,
 	cable_type,
@@ -2464,7 +2475,6 @@ FROM jazzhands.v_network_range_expanded;
 
 
 
--- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person AS
 SELECT
 	person_id,
@@ -5735,7 +5745,7 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.device%rowtype;
 BEGIN
-	-- XXX dropped columns:  auto_mgmt_protocol is_monitored should_fetch_config
+	-- XXX dropped columns:  auto_mgmt_protocol is_locally_managed is_monitored should_fetch_config
 
 	IF NEW.device_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('device_id'));
@@ -5878,7 +5888,7 @@ DECLARE
 	_nr	jazzhands.device%rowtype;
 	_uq	text[];
 BEGIN
-	-- XXX dropped columns:  auto_mgmt_protocol is_monitored should_fetch_config
+	-- XXX dropped columns:  auto_mgmt_protocol is_locally_managed is_monitored should_fetch_config
 
 	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
 _uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
@@ -7503,6 +7513,15 @@ BEGIN
 		_vq := array_append(_vq, quote_nullable(NEW.parent_relation_type));
 	END IF;
 
+	IF NEW.physical_port_id IS NOT NULL THEN
+		IF NEW.slot_id IS NOT NULL THEN
+			RAISE EXCEPTION 'Only slot_id should be updated.'
+				USING ERRCODE = 'integrity_constraint_violation';
+		END IF;
+		_cq := array_append(_cq, quote_ident('slot_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.physical_port_Id));
+	END IF;
+
 	IF NEW.slot_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('slot_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.slot_id));
@@ -7550,6 +7569,7 @@ BEGIN
 	NEW.description = _nr.description;
 	NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
 	NEW.parent_relation_type = _nr.parent_relation_type;
+	NEW.physical_port_id = _nr.slot_id;
 	NEW.slot_id = _nr.slot_id;
 	NEW.logical_port_id = _nr.logical_port_id;
 	NEW.network_interface_type = _nr.layer3_interface_type;
@@ -7607,6 +7627,14 @@ _uq := array_append(_uq, 'parent_layer3_interface_id = ' || quote_nullable(NEW.p
 
 	IF OLD.parent_relation_type IS DISTINCT FROM NEW.parent_relation_type THEN
 _uq := array_append(_uq, 'parent_relation_type = ' || quote_nullable(NEW.parent_relation_type));
+	END IF;
+
+	IF OLD.physical_port_id IS DISTINCT FROM NEW.physical_port_id THEN
+		IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
+			RAISE EXCEPTION 'Only slot_id should be updated.'
+			USING ERRCODE = 'integrity_constraint_violation';
+		END IF;
+_uq := array_append(_uq, 'slot_id = ' || quote_nullable(NEW.physical_port_id));
 	END IF;
 
 	IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
@@ -7667,6 +7695,7 @@ END IF;
 	NEW.description = _nr.description;
 	NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
 	NEW.parent_relation_type = _nr.parent_relation_type;
+	NEW.physical_port_id = _nr.slot_id;
 	NEW.slot_id = _nr.slot_id;
 	NEW.logical_port_id = _nr.logical_port_id;
 	NEW.network_interface_type = _nr.layer3_interface_type;
@@ -7707,6 +7736,7 @@ BEGIN
 	OLD.description = _or.description;
 	OLD.parent_network_interface_id = _or.parent_layer3_interface_id;
 	OLD.parent_relation_type = _or.parent_relation_type;
+	OLD.physical_port_id = _or.slot_id;
 	OLD.slot_id = _or.slot_id;
 	OLD.logical_port_id = _or.logical_port_id;
 	OLD.network_interface_type = _or.layer3_interface_type;
@@ -7939,6 +7969,187 @@ CREATE TRIGGER trigger_network_service_del
 	INSTEAD OF DELETE ON jazzhands_legacy.network_service
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.network_service_del();
+
+
+-- Triggers for operating_system
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.operating_system_ins()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.operating_system%rowtype;
+BEGIN
+	-- XXX dropped columns:  processor_architecture
+
+	IF NEW.operating_system_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('operating_system_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.operating_system_id));
+	END IF;
+
+	IF NEW.operating_system_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('operating_system_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.operating_system_name));
+	END IF;
+
+	IF NEW.operating_system_short_name IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('operating_system_short_name'));
+		_vq := array_append(_vq, quote_nullable(NEW.operating_system_short_name));
+	END IF;
+
+	IF NEW.company_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('company_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.company_id));
+	END IF;
+
+	IF NEW.major_version IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('major_version'));
+		_vq := array_append(_vq, quote_nullable(NEW.major_version));
+	END IF;
+
+	IF NEW.version IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('version'));
+		_vq := array_append(_vq, quote_nullable(NEW.version));
+	END IF;
+
+	IF NEW.operating_system_family IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('operating_system_family'));
+		_vq := array_append(_vq, quote_nullable(NEW.operating_system_family));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.operating_system (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.operating_system_id = _nr.operating_system_id;
+	NEW.operating_system_name = _nr.operating_system_name;
+	NEW.operating_system_short_name = _nr.operating_system_short_name;
+	NEW.company_id = _nr.company_id;
+	NEW.major_version = _nr.major_version;
+	NEW.version = _nr.version;
+	NEW.operating_system_family = _nr.operating_system_family;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_operating_system_ins
+	ON jazzhands_legacy.operating_system;
+CREATE TRIGGER trigger_operating_system_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.operating_system
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.operating_system_ins();
+
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.operating_system_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.operating_system%rowtype;
+	_nr	jazzhands.operating_system%rowtype;
+	_uq	text[];
+BEGIN
+	-- XXX dropped columns:  processor_architecture
+
+	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
+_uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
+	END IF;
+
+	IF OLD.operating_system_name IS DISTINCT FROM NEW.operating_system_name THEN
+_uq := array_append(_uq, 'operating_system_name = ' || quote_nullable(NEW.operating_system_name));
+	END IF;
+
+	IF OLD.operating_system_short_name IS DISTINCT FROM NEW.operating_system_short_name THEN
+_uq := array_append(_uq, 'operating_system_short_name = ' || quote_nullable(NEW.operating_system_short_name));
+	END IF;
+
+	IF OLD.company_id IS DISTINCT FROM NEW.company_id THEN
+_uq := array_append(_uq, 'company_id = ' || quote_nullable(NEW.company_id));
+	END IF;
+
+	IF OLD.major_version IS DISTINCT FROM NEW.major_version THEN
+_uq := array_append(_uq, 'major_version = ' || quote_nullable(NEW.major_version));
+	END IF;
+
+	IF OLD.version IS DISTINCT FROM NEW.version THEN
+_uq := array_append(_uq, 'version = ' || quote_nullable(NEW.version));
+	END IF;
+
+	IF OLD.operating_system_family IS DISTINCT FROM NEW.operating_system_family THEN
+_uq := array_append(_uq, 'operating_system_family = ' || quote_nullable(NEW.operating_system_family));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.operating_system SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  operating_system_id = $1 RETURNING *'  USING OLD.operating_system_id
+			INTO _nr;
+	END IF;
+	NEW.operating_system_id = _nr.operating_system_id;
+	NEW.operating_system_name = _nr.operating_system_name;
+	NEW.operating_system_short_name = _nr.operating_system_short_name;
+	NEW.company_id = _nr.company_id;
+	NEW.major_version = _nr.major_version;
+	NEW.version = _nr.version;
+	NEW.operating_system_family = _nr.operating_system_family;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_operating_system_upd
+	ON jazzhands_legacy.operating_system;
+CREATE TRIGGER trigger_operating_system_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.operating_system
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.operating_system_upd();
+
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.operating_system_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.operating_system%rowtype;
+BEGIN
+	DELETE FROM jazzhands.operating_system
+	WHERE  operating_system_id = OLD.operating_system_id  RETURNING *
+	INTO _or;
+	OLD.operating_system_id = _or.operating_system_id;
+	OLD.operating_system_name = _or.operating_system_name;
+	OLD.operating_system_short_name = _or.operating_system_short_name;
+	OLD.company_id = _or.company_id;
+	OLD.major_version = _or.major_version;
+	OLD.version = _or.version;
+	OLD.operating_system_family = _or.operating_system_family;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_operating_system_del
+	ON jazzhands_legacy.operating_system;
+CREATE TRIGGER trigger_operating_system_del
+	INSTEAD OF DELETE ON jazzhands_legacy.operating_system
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.operating_system_del();
 
 
 -- Triggers for person
@@ -8656,6 +8867,191 @@ CREATE TRIGGER trigger_person_company_del
 	INSTEAD OF DELETE ON jazzhands_legacy.person_company
 	FOR EACH ROW
 	EXECUTE PROCEDURE jazzhands_legacy.person_company_del();
+
+
+-- Triggers for physical_connection
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.physical_connection_ins()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_cq	text[];
+	_vq	text[];
+	_nr	jazzhands.physical_connection%rowtype;
+BEGIN
+	-- XXX dropped columns:  physical_port1_id physical_port2_id
+
+	IF NEW.physical_connection_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('physical_connection_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.physical_connection_id));
+	END IF;
+
+	IF NEW.physical_port1_id IS NOT NULL THEN
+		IF NEW.slot1_id IS NOT NULL  THEN
+			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
+				USING ERRCODE = 'integrity_constraint_violation';
+		END IF;
+		_cq := array_append(_cq, quote_ident('slot1_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.physical_port1_id));
+	END IF;
+
+	IF NEW.physical_port2_id IS NOT NULL THEN
+		IF NEW.slot2_id IS NOT NULL  THEN
+			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
+				USING ERRCODE = 'integrity_constraint_violation';
+		END IF;
+		_cq := array_append(_cq, quote_ident('slot2_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.physical_port2_id));
+	END IF;
+
+	IF NEW.slot1_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot1_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot1_id));
+	END IF;
+
+	IF NEW.slot2_id IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('slot2_id'));
+		_vq := array_append(_vq, quote_nullable(NEW.slot2_id));
+	END IF;
+
+	IF NEW.cable_type IS NOT NULL THEN
+		_cq := array_append(_cq, quote_ident('cable_type'));
+		_vq := array_append(_vq, quote_nullable(NEW.cable_type));
+	END IF;
+
+	EXECUTE 'INSERT INTO jazzhands.physical_connection (' ||
+		array_to_string(_cq, ', ') ||
+		') VALUES ( ' ||
+		array_to_string(_vq, ', ') ||
+		') RETURNING *' INTO _nr;
+
+	NEW.physical_connection_id = _nr.physical_connection_id;
+	NEW.physical_port1_id = _nr.slot1_id;
+	NEW.physical_port2_id = _nr.slot2_id;
+	NEW.slot1_id = _nr.slot1_id;
+	NEW.slot2_id = _nr.slot2_id;
+	NEW.cable_type = _nr.cable_type;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_physical_connection_ins
+	ON jazzhands_legacy.physical_connection;
+CREATE TRIGGER trigger_physical_connection_ins
+	INSTEAD OF INSERT ON jazzhands_legacy.physical_connection
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.physical_connection_ins();
+
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.physical_connection_upd()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_r	jazzhands_legacy.physical_connection%rowtype;
+	_nr	jazzhands.physical_connection%rowtype;
+	_uq	text[];
+BEGIN
+	-- XXX dropped columns:  physical_port1_id physical_port2_id
+
+	IF OLD.physical_connection_id IS DISTINCT FROM NEW.physical_connection_id THEN
+_uq := array_append(_uq, 'physical_connection_id = ' || quote_nullable(NEW.physical_connection_id));
+	END IF;
+
+	IF OLD.physical_port1_id IS DISTINCT FROM NEW.physical_port1_id THEN
+		IF OLD.slot1_id IS DISTINCT FROM NEW.slot1_id THEN
+			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
+			USING ERRCODE = 'integrity_constraint_violation';
+		END IF;
+_uq := array_append(_uq, 'slot1_id = ' || quote_nullable(NEW.physical_port1_id));
+	END IF;
+
+	IF OLD.physical_port2_id IS DISTINCT FROM NEW.physical_port2_id THEN
+		IF OLD.slot2_id IS DISTINCT FROM NEW.slot2_id THEN
+			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
+			USING ERRCODE = 'integrity_constraint_violation';
+		END IF;
+_uq := array_append(_uq, 'slot2_id = ' || quote_nullable(NEW.physical_port2_id));
+	END IF;
+
+	IF OLD.slot1_id IS DISTINCT FROM NEW.slot1_id THEN
+_uq := array_append(_uq, 'slot1_id = ' || quote_nullable(NEW.slot1_id));
+	END IF;
+
+	IF OLD.slot2_id IS DISTINCT FROM NEW.slot2_id THEN
+_uq := array_append(_uq, 'slot2_id = ' || quote_nullable(NEW.slot2_id));
+	END IF;
+
+	IF OLD.cable_type IS DISTINCT FROM NEW.cable_type THEN
+_uq := array_append(_uq, 'cable_type = ' || quote_nullable(NEW.cable_type));
+	END IF;
+
+	IF _uq IS NOT NULL THEN
+		EXECUTE 'UPDATE jazzhands.physical_connection SET ' ||
+			array_to_string(_uq, ', ') ||
+			' WHERE  physical_connection_id = $1 RETURNING *'  USING OLD.physical_connection_id
+			INTO _nr;
+	END IF;
+	NEW.physical_connection_id = _nr.physical_connection_id;
+	NEW.physical_port1_id = _nr.slot1_id;
+	NEW.physical_port2_id = _nr.slot2_id;
+	NEW.slot1_id = _nr.slot1_id;
+	NEW.slot2_id = _nr.slot2_id;
+	NEW.cable_type = _nr.cable_type;
+	NEW.data_ins_user = _nr.data_ins_user;
+	NEW.data_ins_date = _nr.data_ins_date;
+	NEW.data_upd_user = _nr.data_upd_user;
+	NEW.data_upd_date = _nr.data_upd_date;
+	RETURN NEW;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_physical_connection_upd
+	ON jazzhands_legacy.physical_connection;
+CREATE TRIGGER trigger_physical_connection_upd
+	INSTEAD OF UPDATE ON jazzhands_legacy.physical_connection
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.physical_connection_upd();
+
+
+CREATE OR REPLACE FUNCTION jazzhands_legacy.physical_connection_del()
+RETURNS TRIGGER AS
+$$
+DECLARE
+	_or	jazzhands.physical_connection%rowtype;
+BEGIN
+	DELETE FROM jazzhands.physical_connection
+	WHERE  physical_connection_id = OLD.physical_connection_id  RETURNING *
+	INTO _or;
+	OLD.physical_connection_id = _or.physical_connection_id;
+	OLD.physical_port1_id = _or.slot1_id;
+	OLD.physical_port2_id = _or.slot2_id;
+	OLD.slot1_id = _or.slot1_id;
+	OLD.slot2_id = _or.slot2_id;
+	OLD.cable_type = _or.cable_type;
+	OLD.data_ins_user = _or.data_ins_user;
+	OLD.data_ins_date = _or.data_ins_date;
+	OLD.data_upd_user = _or.data_upd_user;
+	OLD.data_upd_date = _or.data_upd_date;
+	RETURN OLD;
+END;
+$$
+SET search_path=jazzhands
+LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_physical_connection_del
+	ON jazzhands_legacy.physical_connection;
+CREATE TRIGGER trigger_physical_connection_del
+	INSTEAD OF DELETE ON jazzhands_legacy.physical_connection
+	FOR EACH ROW
+	EXECUTE PROCEDURE jazzhands_legacy.physical_connection_del();
 
 
 -- Triggers for private_key
@@ -9387,6 +9783,7 @@ BEGIN
 	OLD.property_value_timestamp = _or.property_value_timestamp;
 	OLD.property_value_account_coll_id = _or.property_value_account_collection_id;
 	OLD.property_value_device_coll_id = _or.property_value_device_collection_id;
+	OLD.property_value_json = _or.property_value_json;
 	OLD.property_value_nblk_coll_id = _or.property_value_netblock_collection_id;
 	OLD.property_value_password_type = _or.property_value_password_type;
 	OLD.property_value_person_id = _or.property_value_person_id;
