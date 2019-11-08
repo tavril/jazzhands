@@ -1,5 +1,22 @@
 \set ON_ERROR_STOP
-CREATE SCHEMA jazzhands_legacy;
+
+DO $$
+DECLARE
+        _tal INTEGER;
+BEGIN
+        select count(*)
+        from pg_catalog.pg_namespace
+        into _tal
+        where nspname = 'jazzhands_legacy';
+        IF _tal = 0 THEN
+                DROP SCHEMA IF EXISTS jazzhands_legacy;
+                CREATE SCHEMA jazzhands_legacy AUTHORIZATION jazzhands;
+                COMMENT ON SCHEMA jazzhands_legacy IS 'part of jazzhands';
+
+        END IF;
+END;
+$$;
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.account AS
@@ -5745,8 +5762,6 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.device%rowtype;
 BEGIN
-	-- XXX dropped columns:  auto_mgmt_protocol is_locally_managed is_monitored should_fetch_config
-
 	IF NEW.device_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('device_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.device_id));
@@ -5843,6 +5858,76 @@ BEGIN
 		array_to_string(_vq, ', ') ||
 		') RETURNING *' INTO _nr;
 
+	--
+	-- Backwards compatability
+	--
+	IF NEW.is_monitored IS NOT DISTINCT FROM 'Y' THEN
+		INSERT INTO device_collection_device (
+			device_collection_id, device_id
+		) SELECT device_collection_id, _nr.device_id
+		FROM device_collection
+			JOIN property USING (device_collection_id)
+		WHERE property_name = 'IsMonitoredDevice'
+		AND property_type = 'JazzHandsLegacySupport'
+		LIMIT 1;
+		NEW.is_monitored = 'Y';
+	ELSE
+		IF NEW.is_monitored != 'N' THEN
+			RAISE EXCEPTION 'is_monitored must be Y or N'
+				USING ERRCODE = 'check_violation';
+		END IF;
+		NEW.is_monitored = 'N';
+	END IF;
+
+	IF NEW.should_fetch_config IS NOT DISTINCT FROM 'Y' THEN
+		INSERT INTO device_collection_device (
+			device_collection_id, device_id
+		) SELECT device_collection_id, _nr.device_id
+		FROM device_collection
+			JOIN property USING (device_collection_id)
+		WHERE property_name = 'ShouldConfigFetch'
+		AND property_type = 'JazzHandsLegacySupport'
+		LIMIT 1;
+		NEW.should_fetch_config = 'Y';
+	ELSE
+		IF NEW.should_fetch_config != 'N' THEN
+			RAISE EXCEPTION 'should_fetch_config must be Y or N'
+				USING ERRCODE = 'check_violation';
+		END IF;
+		NEW.should_fetch_config = 'N';
+	END IF;
+
+	IF NEW.is_locally_managed IS NOT DISTINCT FROM 'Y' THEN
+		INSERT INTO device_collection_device (
+			device_collection_id, device_id
+		) SELECT device_collection_id, _nr.device_id
+		FROM device_collection
+			JOIN property USING (device_collection_id)
+		WHERE property_name = 'IsLocallyManagedDevice'
+		AND property_type = 'JazzHandsLegacySupport'
+		LIMIT 1;
+		NEW.is_locally_managed = 'Y';
+	ELSE
+		IF NEW.is_locally_managed != 'N' THEN
+			RAISE EXCEPTION 'is_locally_managed must be Y or N'
+				USING ERRCODE = 'check_violation';
+		END IF;
+		NEW.is_locally_managed = 'N';
+	END IF;
+
+	IF NEW.auto_mgmt_protocol IS NOT NULL THEN
+		INSERT INTO device_collection_device (
+			device_collection_id, device_id
+		) SELECT device_collection_id, _nr.device_id
+		FROM device_collection
+			JOIN property USING (device_collection_id)
+		WHERE property_name = 'AutoMgmtProtocol'
+		AND property_type = 'JazzHandsLegacySupport'
+		AND property_value = NEW.auto_mgmt_protocol
+		LIMIT 1;
+		-- NEW. is already set.
+	END IF;
+
 	NEW.device_id = _nr.device_id;
 	NEW.component_id = _nr.component_id;
 	NEW.device_type_id = _nr.device_type_id;
@@ -5859,7 +5944,6 @@ BEGIN
 	NEW.device_status = _nr.device_status;
 	NEW.operating_system_id = _nr.operating_system_id;
 	NEW.service_environment_id = _nr.service_environment_id;
-	-- NEW.is_locally_managed = NULL;
 	NEW.is_virtual_device = CASE WHEN _nr.is_virtual_device = true THEN 'Y' WHEN _nr.is_virtual_device = false THEN 'N' ELSE NULL END;
 	NEW.date_in_service = _nr.date_in_service;
 	NEW.data_ins_user = _nr.data_ins_user;
@@ -5884,14 +5968,15 @@ CREATE OR REPLACE FUNCTION jazzhands_legacy.device_upd()
 RETURNS TRIGGER AS
 $$
 DECLARE
-	_r	jazzhands_legacy.device%rowtype;
+	_r	RECORD;
 	_nr	jazzhands.device%rowtype;
 	_uq	text[];
+	_dcids	integer[];
+	_ndcids	integer[];
 BEGIN
-	-- XXX dropped columns:  auto_mgmt_protocol is_locally_managed is_monitored should_fetch_config
-
 	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
-_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
+		RAISE EXCEPTION 'Can not change device_id'
+			USING errcode ='invalid_parameter_value';
 	END IF;
 
 	IF OLD.component_id IS DISTINCT FROM NEW.component_id THEN
@@ -5973,29 +6058,186 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 			array_to_string(_uq, ', ') ||
 			' WHERE  device_id = $1 RETURNING *'  USING OLD.device_id
 			INTO _nr;
+
+		NEW.device_id = _nr.device_id;
+		NEW.component_id = _nr.component_id;
+		NEW.device_type_id = _nr.device_type_id;
+		NEW.device_name = _nr.device_name;
+		NEW.site_code = _nr.site_code;
+		NEW.identifying_dns_record_id = _nr.identifying_dns_record_id;
+		NEW.host_id = _nr.host_id;
+		NEW.physical_label = _nr.physical_label;
+		NEW.rack_location_id = _nr.rack_location_id;
+		NEW.chassis_location_id = _nr.chassis_location_id;
+		NEW.parent_device_id = _nr.parent_device_id;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.device_status = _nr.device_status;
+		NEW.operating_system_id = _nr.operating_system_id;
+		NEW.service_environment_id = _nr.service_environment_id;
+		NEW.is_virtual_device = CASE WHEN _nr.is_virtual_device = true THEN 'Y' WHEN _nr.is_virtual_device = false THEN 'N' ELSE NULL END;
+		NEW.date_in_service = _nr.date_in_service;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
-	NEW.device_id = _nr.device_id;
-	NEW.component_id = _nr.component_id;
-	NEW.device_type_id = _nr.device_type_id;
-	NEW.device_name = _nr.device_name;
-	NEW.site_code = _nr.site_code;
-	NEW.identifying_dns_record_id = _nr.identifying_dns_record_id;
-	NEW.host_id = _nr.host_id;
-	NEW.physical_label = _nr.physical_label;
-	NEW.rack_location_id = _nr.rack_location_id;
-	NEW.chassis_location_id = _nr.chassis_location_id;
-	NEW.parent_device_id = _nr.parent_device_id;
-	NEW.description = _nr.description;
-	NEW.external_id = _nr.external_id;
-	NEW.device_status = _nr.device_status;
-	NEW.operating_system_id = _nr.operating_system_id;
-	NEW.service_environment_id = _nr.service_environment_id;
-	NEW.is_virtual_device = CASE WHEN _nr.is_virtual_device = true THEN 'Y' WHEN _nr.is_virtual_device = false THEN 'N' ELSE NULL END;
-	NEW.date_in_service = _nr.date_in_service;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+
+	--
+	-- backwards compatibility
+	--
+	IF OLD.is_monitored IS DISTINCT FROM NEW.is_monitored THEN
+		IF NEW.is_monitored = 'Y' THEN
+			INSERT INTO device_collection_device (
+				device_collection_id, device_id
+			) SELECT device_collection_id, NEW.device_id
+				FROM device_collection
+				JOIN property USING (device_collection_id)
+			WHERE property_name = 'IsMonitoredDevice'
+			AND property_type = 'JazzHandsLegacySupport'
+			LIMIT 1;
+			NEW.is_monitored = 'Y';
+		ELSIF NEW.is_monitored = 'N' THEN
+			DELETE FROM device_collection_device
+			WHERE device_id = OLD.device_id
+			AND device_collection_id IN
+				( SELECT device_collection_id
+					FROM device_collection
+					JOIN property USING (device_collection_id)
+					WHERE property_name = 'IsMonitoredDevice'
+					AND property_type = 'JazzHandsLegacySupport'
+			);
+			NEW.is_monitored = 'N';
+		ELSE
+			IF NEW.is_monitored IS NULL THEN
+				RAISE EXCEPTION '% is not a valid is_monitored state',
+					NEW.is_monitored
+					USING ERRCODE = 'not_null_violation';
+			ELSE
+				RAISE EXCEPTION '% is not a valid is_monitored state',
+					NEW.is_monitored
+					USING ERRCODE = 'check_violation';
+			END IF;
+		END IF;
+	END IF;
+
+	IF OLD.should_fetch_config IS DISTINCT FROM NEW.should_fetch_config THEN
+		IF NEW.should_fetch_config = 'Y' THEN
+			INSERT INTO device_collection_device (
+				device_collection_id, device_id
+			) SELECT device_collection_id, NEW.device_id
+				FROM device_collection
+				JOIN property USING (device_collection_id)
+			WHERE property_name = 'ShouldConfigFetch'
+			AND property_type = 'JazzHandsLegacySupport'
+			LIMIT 1;
+			NEW.should_fetch_config = 'Y';
+		ELSIF NEW.should_fetch_config = 'N' THEN
+			DELETE FROM device_collection_device
+			WHERE device_id = OLD.device_id
+			AND device_collection_id IN
+				( SELECT device_collection_id
+					FROM device_collection
+					JOIN property USING (device_collection_id)
+					WHERE property_name = 'ShouldConfigFetch'
+					AND property_type = 'JazzHandsLegacySupport'
+			);
+			NEW.should_fetch_config = 'N';
+		ELSE
+			IF NEW.should_fetch_config IS NULL THEN
+				RAISE EXCEPTION '% is not a valid should_fetch_config state',
+					NEW.should_fetch_config
+					USING ERRCODE = 'not_null_violation';
+			ELSE
+				RAISE EXCEPTION '% is not a valid should_fetch_config state',
+					NEW.should_fetch_config
+					USING ERRCODE = 'check_violation';
+			END IF;
+		END IF;
+	END IF;
+
+	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
+		IF NEW.is_locally_managed = 'Y' THEN
+			INSERT INTO device_collection_device (
+				device_collection_id, device_id
+			) SELECT device_collection_id, NEW.device_id
+				FROM device_collection
+				JOIN property USING (device_collection_id)
+			WHERE property_name = 'IsLocallyManagedDevice'
+			AND property_type = 'JazzHandsLegacySupport'
+			LIMIT 1;
+			NEW.is_locally_managed = 'Y';
+		ELSIF NEW.is_locally_managed = 'N' THEN
+			DELETE FROM device_collection_device
+			WHERE device_id = OLD.device_id
+			AND device_collection_id IN
+				( SELECT device_collection_id
+					FROM device_collection
+					JOIN property USING (device_collection_id)
+					WHERE property_name = 'IsLocallyManagedDevice'
+					AND property_type = 'JazzHandsLegacySupport'
+			) RETURNING * INTO _r;
+			RAISE NOTICE '::: %', to_json(_r);
+			NEW.is_locally_managed = 'N';
+		ELSE
+			IF NEW.is_locally_managed IS NULL THEN
+				RAISE EXCEPTION '% is not a valid is_locally_managed state',
+					NEW.is_locally_managed
+					USING ERRCODE = 'not_null_violation';
+			ELSE
+				RAISE EXCEPTION '% is not a valid is_locally_managed state',
+					NEW.is_locally_managed
+					USING ERRCODE = 'check_violation';
+			END IF;
+		END IF;
+	END IF;
+
+	IF OLD.auto_mgmt_protocol IS DISTINCT FROM NEW.auto_mgmt_protocol THEN
+		IF OLD.auto_mgmt_protocol IS NULL THEN
+			INSERT INTO device_collection_device (
+				device_collection_id, device_id
+			) SELECT device_collection_id, NEW.device_id
+				FROM device_collection
+					JOIN property USING (device_collection_id)
+				WHERE property_name = 'AutoMgmtProtocol'
+				AND property_type = 'JazzHandsLegacySupport'
+				AND property_value = NEW.auto_mgmt_protocol
+				ORDER BY device_collection_id, property_id
+				LIMIT 1;
+		ELSIF NEW.auto_mgmt_protocol IS NULL THEN
+			DELETE FROM device_collection_device
+			WHERE device_id = OLD.device_id
+			AND device_collection_id IN
+				( SELECT device_collection_id
+					FROM device_collection
+						JOIN property USING (device_collection_id)
+					WHERE property_name = 'AutoMgmtProtocol'
+					AND property_type = 'JazzHandsLegacySupport'
+				);
+		ELSE
+			UPDATE device_collection_device
+			SET device_collection_id = (
+				( SELECT device_collection_id
+					FROM device_collection
+						JOIN property USING (device_collection_id)
+					WHERE property_name = 'AutoMgmtProtocol'
+					AND property_type = 'JazzHandsLegacySupport'
+					AND property_value = NEW.auto_mgmt_protocol
+					ORDER BY device_collection_id, property_id
+					LIMIT 1
+				)
+			) WHERE device_id = NEW.device_id
+			AND device_collection_id IN
+				( SELECT device_collection_id
+					FROM device_collection
+					JOIN property USING (device_collection_id)
+					WHERE property_name = 'AutoMgmtProtocol'
+					AND property_type = 'JazzHandsLegacySupport'
+					AND property_value = OLD.auto_mgmt_protocol
+				);
+		END IF;
+	END IF;
+
 	RETURN NEW;
 END;
 $$
