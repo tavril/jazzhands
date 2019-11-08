@@ -54,6 +54,9 @@ grant create on database jazzhands_new to jazzhands;
 \ir init/initialize_jazzhands.sql
 \ir init/initialize_component.sql
 
+-- goes away wtih jazzhands_legacy
+\ir init/initialize_legacy.sql
+
 \ir init/initialize_jazzhands_optional.sql
 -- \ir init/insert_blacklist.sql
 -- \ir init/oracle/submit_scheduler.sql
@@ -146,6 +149,8 @@ set search_path=jazzhands_legacy;
 \ir tests/pgsql/jhlegacy/x509_tests.sql
 \ir tests/pgsql/jhlegacy/v_person_company_regression.sql
 \ir tests/pgsql/jhlegacy/account_enabled_test.sql
+
+\ir tests/pgsql/jhlegacy/jazzhands_legacy_device.sql
 
 set search_path=jazzhands;
 rollback;

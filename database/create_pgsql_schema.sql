@@ -102,6 +102,8 @@ COMMENT ON SCHEMA jazzhands_cache IS 'cache tables for jazzhands views';
 \ir ddl/schema/pgsql/create_account_coll_relation_triggers.sql
 \ir ddl/schema/pgsql/create_x509_triggers-RETIRE.sql
 \ir ddl/schema/pgsql/create_ip_universe_valid_triggers.sql
+-- goes with the jazzhands_legacy schema
+\ir ddl/schema/pgsql/create_jazzhands_legacy_triggers-RETIRE.sql
 
 \ir ddl/schema/pgsql/create_site_netblock_triggers.sql
 \ir ddl/schema/pgsql/create_network_range_triggers.sql
