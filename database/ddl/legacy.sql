@@ -557,6 +557,8 @@ LEFT JOIN (
 	GROUP BY 1
 ) legacy USING (device_id);
 
+ALTER TABLE jazzhands_legacy.device ALTER is_locally_managed SET DEFAULT 'Y'::bpchar;
+ALTER TABLE jazzhands_legacy.device ALTER is_virtual_device SET DEFAULT 'N'::bpchar;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection AS
 SELECT device_collection_id,device_collection_name,device_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
@@ -1207,7 +1209,9 @@ SELECT
 	middle_name,
 	last_name,
 	name_suffix,
-	gender,
+	CASE WHEN gender = 'male' THEN 'M'
+		WHEN gender = 'female' THEN 'F'
+		ELSE 'U' END as gender,
 	preferred_first_name,
 	preferred_last_name,
 	nickname,
@@ -2495,7 +2499,9 @@ SELECT
 	middle_name,
 	last_name,
 	name_suffix,
-	gender,
+	CASE WHEN gender = 'male' THEN 'M'
+		WHEN gender = 'female' THEN 'F'
+		ELSE 'U' END as gender,
 	preferred_first_name,
 	preferred_last_name,
 	legal_first_name,
@@ -8439,7 +8445,16 @@ BEGIN
 
 	IF NEW.gender IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('gender'));
-		_vq := array_append(_vq, quote_nullable(NEW.gender));
+		IF NEW.gender = 'M' THEN
+			_vq := array_append(_vq, quote_nullable('male'));
+		ELSIF NEW.gender = 'F' THEN
+			_vq := array_append(_vq, quote_nullable('femaile'));
+		ELSIF NEW.gender = 'U' THEN
+			_vq := array_append(_vq, quote_nullable('unspecified'));
+		ELSE
+			RAISE EXCEPTION 'Invalid gender % in legacy views', NEW.gender
+				USING errcode ='invalid_parameter_value';
+		END IF;
 	END IF;
 
 	IF NEW.preferred_first_name IS NOT NULL THEN
@@ -8494,7 +8509,9 @@ BEGIN
 	NEW.middle_name = _nr.middle_name;
 	NEW.last_name = _nr.last_name;
 	NEW.name_suffix = _nr.name_suffix;
-	NEW.gender = _nr.gender;
+	NEW.gender = CASE WHEN _nr.gender = 'male' THEN 'M'
+		WHEN _nr.gender = 'female' THEN 'F'
+		ELSE 'U' END;
 	NEW.preferred_first_name = _nr.preferred_first_name;
 	NEW.preferred_last_name = _nr.preferred_last_name;
 	NEW.nickname = _nr.nickname;
@@ -8555,7 +8572,16 @@ _uq := array_append(_uq, 'name_suffix = ' || quote_nullable(NEW.name_suffix));
 	END IF;
 
 	IF OLD.gender IS DISTINCT FROM NEW.gender THEN
-_uq := array_append(_uq, 'gender = ' || quote_nullable(NEW.gender));
+		IF NEW.gender = 'M' THEN
+			_uq := array_append(_uq, 'gender = ' || quote_nullable('male'));
+		ELSIF NEW.gender = 'F' THEN
+			_uq := array_append(_uq, 'gender = ' || quote_nullable('female'));
+		ELSIF NEW.gender = 'U' THEN
+			_uq := array_append(_uq, 'gender = ' || quote_nullable('unspecified'));
+		ELSE
+			RAISE EXCEPTION 'Invalid gender % in legacy views', NEW.gender
+				USING errcode ='invalid_parameter_value';
+		END IF;
 	END IF;
 
 	IF OLD.preferred_first_name IS DISTINCT FROM NEW.preferred_first_name THEN
@@ -8602,7 +8628,9 @@ _uq := array_append(_uq, 'hat_size = ' || quote_nullable(NEW.hat_size));
 		NEW.middle_name = _nr.middle_name;
 		NEW.last_name = _nr.last_name;
 		NEW.name_suffix = _nr.name_suffix;
-		NEW.gender = _nr.gender;
+		NEW.gender = CASE WHEN _nr.gender = 'male' THEN 'M'
+			WHEN _nr.gender = 'female' THEN 'F'
+			ELSE 'U' END;
 		NEW.preferred_first_name = _nr.preferred_first_name;
 		NEW.preferred_last_name = _nr.preferred_last_name;
 		NEW.nickname = _nr.nickname;
@@ -8645,7 +8673,9 @@ BEGIN
 	OLD.middle_name = _or.middle_name;
 	OLD.last_name = _or.last_name;
 	OLD.name_suffix = _or.name_suffix;
-	OLD.gender = _or.gender;
+	OLD.gender = CASE WHEN _or.gender = 'male' THEN 'M'
+		WHEN _or.gender = 'female' THEN 'F'
+		ELSE 'U' END;
 	OLD.preferred_first_name = _or.preferred_first_name;
 	OLD.preferred_last_name = _or.preferred_last_name;
 	OLD.nickname = _or.nickname;
@@ -9469,6 +9499,7 @@ DECLARE
 	_cq	text[];
 	_vq	text[];
 	_nr	jazzhands.property%rowtype;
+	_dt	TEXT;
 BEGIN
 
 	IF NEW.property_id IS NOT NULL THEN
@@ -9577,8 +9608,18 @@ BEGIN
 	END IF;
 
 	IF NEW.property_value IS NOT NULL THEN
-		_cq := array_append(_cq, quote_ident('property_value'));
-		_vq := array_append(_vq, quote_nullable(NEW.property_value));
+		SELECT property_data_type INTO _dt
+			FROM val_property
+			WHERE property_name = NEW.property_name
+			AND property_type = NEW.property_type;
+		
+		IF _dt = 'boolean' THEN
+			_cq := array_append(_cq, quote_ident('property_value_boolean'));
+			_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.property_value = 'Y' THEN true WHEN NEW.property_value = 'N' THEN FALSE ELSE NULL END));
+		ELSE
+			_cq := array_append(_cq, quote_ident('property_value'));
+			_vq := array_append(_vq, quote_nullable(NEW.property_value));
+		END IF;
 	END IF;
 
 	IF NEW.property_value_timestamp IS NOT NULL THEN
@@ -9673,7 +9714,14 @@ BEGIN
 	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
 	NEW.property_name = _nr.property_name;
 	NEW.property_type = _nr.property_type;
-	NEW.property_value = _nr.property_value;
+	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
+		NEW.property_value = CASE
+			WHEN _nr.property_value_boolean = true THEN 'Y'
+			WHEN _nr.property_value_boolean = false THEN 'N'
+			ELSE NULL END;
+	ELSE
+		NEW.property_value = _nr.property_value;
+	END IF;
 	NEW.property_value_timestamp = _nr.property_value_timestamp;
 	NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
 	NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
@@ -9712,6 +9760,7 @@ DECLARE
 	_r	jazzhands_legacy.property%rowtype;
 	_nr	jazzhands.property%rowtype;
 	_uq	text[];
+	_dt	TEXT;
 BEGIN
 
 	IF OLD.property_id IS DISTINCT FROM NEW.property_id THEN
@@ -9799,7 +9848,18 @@ _uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type)
 	END IF;
 
 	IF OLD.property_value IS DISTINCT FROM NEW.property_value THEN
-_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+		SELECT property_data_type INTO _dt
+		FROM val_property
+		WHERE property_name = NEW.property_name
+		AND property_type = NEW.property_type;
+
+		IF _dt = 'boolean' THEN
+			_uq := array_append(_uq, 'property_value = ' || quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+			_uq := array_append(_uq, 'property_value = NULL');
+		ELSE
+			_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
+			_uq := array_append(_uq, 'property_value_boolean = NULL');
+		END IF;
 	END IF;
 
 	IF OLD.property_value_timestamp IS DISTINCT FROM NEW.property_value_timestamp THEN
@@ -9887,7 +9947,16 @@ END IF;
 		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
 		NEW.property_name = _nr.property_name;
 		NEW.property_type = _nr.property_type;
-		NEW.property_value = _nr.property_value;
+
+		IF _dt IS NOT DISTINCT FROM 'boolean' THEN
+			NEW.property_value = CASE
+			WHEN _nr.property_value_boolean = true THEN 'Y'
+			WHEN _nr.property_value_boolean = false THEN 'N'
+			ELSE NULL END;
+		ELSE
+			NEW.property_value = _nr.property_value;
+		END IF;
+
 		NEW.property_value_timestamp = _nr.property_value_timestamp;
 		NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
 		NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
@@ -9925,10 +9994,17 @@ RETURNS TRIGGER AS
 $$
 DECLARE
 	_or	jazzhands.property%rowtype;
+	_dt	TEXT;
 BEGIN
 	DELETE FROM jazzhands.property
 	WHERE  property_id = OLD.property_id  RETURNING *
 	INTO _or;
+
+	SELECT property_data_type INTO _dt
+	FROM val_property
+	WHERE property_name = OLD.property_name
+	AND property_type = OLD.property_type;
+
 	OLD.property_id = _or.property_id;
 	OLD.account_collection_id = _or.account_collection_id;
 	OLD.account_id = _or.account_id;
@@ -9950,7 +10026,14 @@ BEGIN
 	OLD.x509_signed_certificate_id = _or.x509_signed_certificate_id;
 	OLD.property_name = _or.property_name;
 	OLD.property_type = _or.property_type;
-	OLD.property_value = _or.property_value;
+	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
+		OLD.property_value = CASE
+			WHEN _or.property_value_boolean = true THEN 'Y'
+			WHEN _or.property_value_boolean = false THEN 'N'
+			ELSE NULL END;
+	ELSE
+		OLD.property_value = _or.property_value;
+	END IF;
 	OLD.property_value_timestamp = _or.property_value_timestamp;
 	OLD.property_value_account_coll_id = _or.property_value_account_collection_id;
 	OLD.property_value_device_coll_id = _or.property_value_device_collection_id;
