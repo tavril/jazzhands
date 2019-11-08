@@ -225,9 +225,12 @@ BEGIN
 	END IF;
 
 	BEGIN
+		RAISE NOTICE 'before _d1: %', to_json(_d1);
 		UPDATE device SET is_monitored = 'N'
 			WHERE device_id = _d1.device_id RETURNING * INTO _d1;
+		RAISE NOTICE 'after  _d1: %', to_json(_d1);
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
+		RAISE NOTICE 'after  _d2: %', to_json(_d2);
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_monitored/N devices do not match - % %', to_json(_d1), to_json(_d2);
 		END IF;

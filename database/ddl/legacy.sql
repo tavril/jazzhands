@@ -9853,7 +9853,7 @@ _uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type)
 		AND property_type = NEW.property_type;
 
 		IF _dt = 'boolean' THEN
-			_uq := array_append(_uq, 'property_value = ' || quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
+			_uq := array_append(_uq, 'property_value_boolean = ' || quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
 			_uq := array_append(_uq, 'property_value = NULL');
 		ELSE
 			_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
