@@ -1079,7 +1079,6 @@ FROM jazzhands.netblock_collection_netblock;
 
 
 
--- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface AS
 SELECT
 	layer3_interface_id AS network_interface_id,
@@ -7723,8 +7722,6 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.layer3_interface%rowtype;
 BEGIN
-	-- XXX dropped columns:  physical_port_id
-
 	IF NEW.network_interface_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('layer3_interface_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.network_interface_id));
@@ -7845,8 +7842,6 @@ DECLARE
 	_nr	jazzhands.layer3_interface%rowtype;
 	_uq	text[];
 BEGIN
-	-- XXX dropped columns:  physical_port_id
-
 	IF OLD.network_interface_id IS DISTINCT FROM NEW.network_interface_id THEN
 _uq := array_append(_uq, 'layer3_interface_id = ' || quote_nullable(NEW.network_interface_id));
 	END IF;
@@ -8223,8 +8218,6 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.operating_system%rowtype;
 BEGIN
-	-- XXX dropped columns:  processor_architecture
-
 	IF NEW.operating_system_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('operating_system_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.operating_system_id));
@@ -8299,8 +8292,6 @@ DECLARE
 	_nr	jazzhands.operating_system%rowtype;
 	_uq	text[];
 BEGIN
-	-- XXX dropped columns:  processor_architecture
-
 	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
 _uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
 	END IF;
@@ -9121,8 +9112,6 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.physical_connection%rowtype;
 BEGIN
-	-- XXX dropped columns:  physical_port1_id physical_port2_id
-
 	IF NEW.physical_connection_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('physical_connection_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.physical_connection_id));
@@ -9199,8 +9188,6 @@ DECLARE
 	_nr	jazzhands.physical_connection%rowtype;
 	_uq	text[];
 BEGIN
-	-- XXX dropped columns:  physical_port1_id physical_port2_id
-
 	IF OLD.physical_connection_id IS DISTINCT FROM NEW.physical_connection_id THEN
 _uq := array_append(_uq, 'physical_connection_id = ' || quote_nullable(NEW.physical_connection_id));
 	END IF;
