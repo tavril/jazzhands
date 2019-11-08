@@ -77,7 +77,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.is_locally_managed != 'Y' THEN
 		RAISE EXCEPTION 'after insert 2 is_locally_managed is not Y: %',
@@ -90,6 +90,9 @@ BEGIN
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_locally_managed/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.is_locally_managed != 'N' THEN
+			RAISE EXCEPTION '... is_locally_managed was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -144,7 +147,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.is_locally_managed != 'N' THEN
 		RAISE EXCEPTION 'after insert 2 is_locally_managed is not N: %',
@@ -152,11 +155,14 @@ BEGIN
 	END IF;
 
 	BEGIN
-		UPDATE device SET is_locally_managed = 'N'
+		UPDATE device SET is_locally_managed = 'Y'
 			WHERE device_id = _d1.device_id RETURNING * INTO _d1;
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_locally_managed/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.is_locally_managed != 'Y' THEN
+			RAISE EXCEPTION '... is_locally_managed was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -211,7 +217,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.is_monitored != 'Y' THEN
 		RAISE EXCEPTION 'after insert 2 is_monitored is not Y: %',
@@ -224,6 +230,9 @@ BEGIN
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_monitored/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.is_monitored != 'N' THEN
+			RAISE EXCEPTION '... is_monitored was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -278,7 +287,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.is_monitored != 'N' THEN
 		RAISE EXCEPTION 'after insert 2 is_monitored is not N: %',
@@ -286,11 +295,14 @@ BEGIN
 	END IF;
 
 	BEGIN
-		UPDATE device SET is_monitored = 'N'
+		UPDATE device SET is_monitored = 'Y'
 			WHERE device_id = _d1.device_id RETURNING * INTO _d1;
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_monitored/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.is_monitored != 'Y' THEN
+			RAISE EXCEPTION '... is_locally_managed was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -347,7 +359,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.should_fetch_config != 'Y' THEN
 		RAISE EXCEPTION 'after insert 2 should_fetch_config is not Y: %',
@@ -360,6 +372,9 @@ BEGIN
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... should_fetch_config/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.should_fetch_config != 'N' THEN
+			RAISE EXCEPTION '... is_locally_managed was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -414,7 +429,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.should_fetch_config != 'N' THEN
 		RAISE EXCEPTION 'after insert 2 should_fetch_config is not N: %',
@@ -422,11 +437,14 @@ BEGIN
 	END IF;
 
 	BEGIN
-		UPDATE device SET should_fetch_config = 'N'
+		UPDATE device SET should_fetch_config = 'Y'
 			WHERE device_id = _d1.device_id RETURNING * INTO _d1;
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... should_fetch_config/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.should_fetch_config != 'Y' THEN
+			RAISE EXCEPTION '... is_locally_managed was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -481,7 +499,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.is_monitored != 'Y' THEN
 		RAISE EXCEPTION 'after insert 2 is_monitored is not Y: %',
@@ -494,6 +512,9 @@ BEGIN
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_monitored/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.should_fetch_config != 'N' THEN
+			RAISE EXCEPTION '... is_locally_managed was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -548,7 +569,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.is_monitored != 'N' THEN
 		RAISE EXCEPTION 'after insert 2 is_monitored is not N: %',
@@ -556,11 +577,14 @@ BEGIN
 	END IF;
 
 	BEGIN
-		UPDATE device SET is_monitored = 'N'
+		UPDATE device SET is_monitored = 'Y'
 			WHERE device_id = _d1.device_id RETURNING * INTO _d1;
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_monitored/N devices do not match - % %', to_json(_d1), to_json(_d2);
+		END IF;
+		IF _d1.is_monitored != 'Y' THEN
+			RAISE EXCEPTION '... is_locally_managed was not changed to N';
 		END IF;
 		RAISE EXCEPTION '%', 'a-ok' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
@@ -615,7 +639,7 @@ BEGIN
 
 	SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
 	IF _d2 != _d1 THEN
-		RAISE EXCEPTION 'afgter insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
+		RAISE EXCEPTION 'after insert 2, devices do not match - % %', to_json(_d1), to_json(_d2);
 	END IF;
 	IF _d2.auto_mgmt_protocol != 'ssh' OR
 		_d2.is_locally_managed != 'Y' OR
