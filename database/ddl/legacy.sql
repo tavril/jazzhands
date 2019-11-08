@@ -1,22 +1,5 @@
 \set ON_ERROR_STOP
-
-DO $$
-DECLARE
-        _tal INTEGER;
-BEGIN
-        select count(*)
-        from pg_catalog.pg_namespace
-        into _tal
-        where nspname = 'jazzhands_legacy';
-        IF _tal = 0 THEN
-                DROP SCHEMA IF EXISTS jazzhands_legacy;
-                CREATE SCHEMA jazzhands_legacy AUTHORIZATION jazzhands;
-                COMMENT ON SCHEMA jazzhands_legacy IS 'part of jazzhands';
-
-        END IF;
-END;
-$$;
-
+CREATE SCHEMA jazzhands_legacy;
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.account AS
@@ -507,6 +490,7 @@ SELECT
 	data_upd_date
 FROM jazzhands.department;
 
+-- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.device AS
 SELECT
 	device_id,
@@ -525,44 +509,27 @@ SELECT
 	device_status,
 	operating_system_id,
 	service_environment_id,
-	auto_mgmt_protocolish AS auto_mgmt_protocol,
-	CASE WHEN is_locally_managedish IS NOT NULL THEN 'Y' ELSE 'N' END
-		AS is_locally_managed,
-	CASE WHEN is_monitoredish IS NOT NULL THEN 'Y' ELSE 'N' END
-		AS is_monitored,
+	NULL::character varying(50) AS auto_mgmt_protocol, -- Need to fill in
+	NULL::character(1) AS is_locally_managed, -- Need to fill in
+	NULL::character(1) AS is_monitored, -- Need to fill in
 	CASE WHEN is_virtual_device IS NULL THEN NULL
 		WHEN is_virtual_device = true THEN 'Y'
 		WHEN is_virtual_device = false THEN 'N'
 		ELSE NULL
 	END AS is_virtual_device,
-	CASE WHEN should_cfg_fetchish IS NOT NULL THEN 'Y' ELSE 'N' END
-		AS should_fetch_config,
+	NULL::character(1) AS should_fetch_config, -- Need to fill in
 	date_in_service,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
 	data_upd_date
-FROM jazzhands.device
-LEFT JOIN (
-	SELECT device_id,
-	min(device_collection_id) FILTER (WHERE property_name ='IsMonitoredDevice') AS is_monitoredish,
-	min(device_collection_id) FILTER (WHERE property_name ='ShouldConfigFetch') AS should_cfg_fetchish,
-	min(device_collection_id) FILTER (WHERE property_name ='IsLocallyManagedDevice') AS is_locally_managedish,
-	min(property_value) FILTER (WHERE property_name ='AutoMgmtProtocol') AS auto_mgmt_protocolish
-	FROM jazzhands.device_collection_device dcd
-		JOIN jazzhands.property USING (device_collection_id)
-	WHERE property_type = 'JazzHandsLegacySupport'
-	AND property_name IN
-		('IsMonitoredDevice','ShouldConfigFetch','AutoMgmtProtocol','IsLocallyManagedDevice')
-	GROUP BY 1
-) legacy USING (device_id);
-
-ALTER TABLE jazzhands_legacy.device ALTER is_locally_managed SET DEFAULT 'Y'::bpchar;
-ALTER TABLE jazzhands_legacy.device ALTER is_virtual_device SET DEFAULT 'N'::bpchar;
+FROM jazzhands.device;
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection AS
 SELECT device_collection_id,device_collection_name,device_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.device_collection;
+
+
 
 -- Simple column rename
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection_assignd_cert AS
@@ -1079,6 +1046,7 @@ FROM jazzhands.netblock_collection_netblock;
 
 
 
+-- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.network_interface AS
 SELECT
 	layer3_interface_id AS network_interface_id,
@@ -1087,7 +1055,7 @@ SELECT
 	description,
 	parent_layer3_interface_id AS parent_network_interface_id,
 	parent_relation_type,
-	slot_id AS physical_port_id,
+	NULL::integer AS physical_port_id, -- Need to fill in
 	slot_id,
 	logical_port_id,
 	layer3_interface_type AS network_interface_type,
@@ -1177,6 +1145,7 @@ FROM jazzhands.network_service;
 
 
 
+-- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.operating_system AS
 SELECT
 	operating_system_id,
@@ -1201,6 +1170,7 @@ FROM jazzhands.operating_system_snapshot;
 
 
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.person AS
 SELECT
 	person_id,
@@ -1209,9 +1179,7 @@ SELECT
 	middle_name,
 	last_name,
 	name_suffix,
-	CASE WHEN gender = 'male' THEN 'M'
-		WHEN gender = 'female' THEN 'F'
-		ELSE 'U' END as gender,
+	gender,
 	preferred_first_name,
 	preferred_last_name,
 	nickname,
@@ -1381,11 +1349,12 @@ CREATE OR REPLACE VIEW jazzhands_legacy.physical_address AS
 SELECT physical_address_id,physical_address_type,company_id,site_rank,description,display_label,address_agent,address_housename,address_street,address_building,address_pobox,address_neighborhood,address_city,address_subregion,address_region,postal_code,iso_country_code,address_freeform,data_ins_user,data_ins_date,data_upd_user,data_upd_date
 FROM jazzhands.physical_address;
 
+-- XXX - Need to fill in by hand!
 CREATE OR REPLACE VIEW jazzhands_legacy.physical_connection AS
 SELECT
 	physical_connection_id,
-	slot1_id::integer AS physical_port1_id,
-	slot2_id::integer AS physical_port2_id,
+	NULL::integer AS physical_port1_id, -- Need to fill in
+	NULL::integer AS physical_port2_id, -- Need to fill in
 	slot1_id,
 	slot2_id,
 	cable_type,
@@ -2491,6 +2460,7 @@ FROM jazzhands.v_network_range_expanded;
 
 
 
+-- XXX - Type change
 CREATE OR REPLACE VIEW jazzhands_legacy.v_person AS
 SELECT
 	person_id,
@@ -2499,9 +2469,7 @@ SELECT
 	middle_name,
 	last_name,
 	name_suffix,
-	CASE WHEN gender = 'male' THEN 'M'
-		WHEN gender = 'female' THEN 'F'
-		ELSE 'U' END as gender,
+	gender,
 	preferred_first_name,
 	preferred_last_name,
 	legal_first_name,
@@ -4076,22 +4044,23 @@ _uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_id = $1 RETURNING *'  USING OLD.account_id
 			INTO _nr;
-	END IF;
+
 	NEW.account_id = _nr.account_id;
-	NEW.login = _nr.login;
-	NEW.person_id = _nr.person_id;
-	NEW.company_id = _nr.company_id;
-	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
-	NEW.account_realm_id = _nr.account_realm_id;
-	NEW.account_status = _nr.account_status;
-	NEW.account_role = _nr.account_role;
-	NEW.account_type = _nr.account_type;
-	NEW.description = _nr.description;
-	NEW.external_id = _nr.external_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.login = _nr.login;
+		NEW.person_id = _nr.person_id;
+		NEW.company_id = _nr.company_id;
+		NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.account_status = _nr.account_status;
+		NEW.account_role = _nr.account_role;
+		NEW.account_type = _nr.account_type;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -4267,16 +4236,17 @@ _uq := array_append(_uq, 'auth_origin = ' || quote_nullable(NEW.auth_origin));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_id = $1 AND  account_auth_ts = $2 AND  auth_resource = $3 AND  account_auth_seq = $4 RETURNING *'  USING OLD.account_id, OLD.account_auth_ts, OLD.auth_resource, OLD.account_auth_seq
 			INTO _nr;
-	END IF;
+
 	NEW.account_id = _nr.account_id;
-	NEW.account_auth_ts = _nr.account_auth_ts;
-	NEW.auth_resource = _nr.auth_resource;
-	NEW.account_auth_seq = _nr.account_auth_seq;
-	NEW.was_auth_success = CASE WHEN _nr.was_auth_success = true THEN 'Y' WHEN _nr.was_auth_success = false THEN 'N' ELSE NULL END;
-	NEW.auth_resource_instance = _nr.auth_resource_instance;
-	NEW.auth_origin = _nr.auth_origin;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_ins_user = _nr.data_ins_user;
+		NEW.account_auth_ts = _nr.account_auth_ts;
+		NEW.auth_resource = _nr.auth_resource;
+		NEW.account_auth_seq = _nr.account_auth_seq;
+		NEW.was_auth_success = CASE WHEN _nr.was_auth_success = true THEN 'Y' WHEN _nr.was_auth_success = false THEN 'N' ELSE NULL END;
+		NEW.auth_resource_instance = _nr.auth_resource_instance;
+		NEW.auth_origin = _nr.auth_origin;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_ins_user = _nr.data_ins_user;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -4488,22 +4458,23 @@ _uq := array_append(_uq, 'approval_note = ' || quote_nullable(NEW.approval_note)
 			array_to_string(_uq, ', ') ||
 			' WHERE  approval_instance_item_id = $1 RETURNING *'  USING OLD.approval_instance_item_id
 			INTO _nr;
-	END IF;
+
 	NEW.approval_instance_item_id = _nr.approval_instance_item_id;
-	NEW.approval_instance_link_id = _nr.approval_instance_link_id;
-	NEW.approval_instance_step_id = _nr.approval_instance_step_id;
-	NEW.next_approval_instance_item_id = _nr.next_approval_instance_item_id;
-	NEW.approved_category = _nr.approved_category;
-	NEW.approved_label = _nr.approved_label;
-	NEW.approved_lhs = _nr.approved_lhs;
-	NEW.approved_rhs = _nr.approved_rhs;
-	NEW.is_approved = CASE WHEN _nr.is_approved = true THEN 'Y' WHEN _nr.is_approved = false THEN 'N' ELSE NULL END;
-	NEW.approved_account_id = _nr.approved_account_id;
-	NEW.approval_note = _nr.approval_note;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.approval_instance_link_id = _nr.approval_instance_link_id;
+		NEW.approval_instance_step_id = _nr.approval_instance_step_id;
+		NEW.next_approval_instance_item_id = _nr.next_approval_instance_item_id;
+		NEW.approved_category = _nr.approved_category;
+		NEW.approved_label = _nr.approved_label;
+		NEW.approved_lhs = _nr.approved_lhs;
+		NEW.approved_rhs = _nr.approved_rhs;
+		NEW.is_approved = CASE WHEN _nr.is_approved = true THEN 'Y' WHEN _nr.is_approved = false THEN 'N' ELSE NULL END;
+		NEW.approved_account_id = _nr.approved_account_id;
+		NEW.approval_note = _nr.approval_note;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -4731,23 +4702,24 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  approval_instance_step_id = $1 RETURNING *'  USING OLD.approval_instance_step_id
 			INTO _nr;
-	END IF;
+
 	NEW.approval_instance_step_id = _nr.approval_instance_step_id;
-	NEW.approval_instance_id = _nr.approval_instance_id;
-	NEW.approval_process_chain_id = _nr.approval_process_chain_id;
-	NEW.approval_instance_step_name = _nr.approval_instance_step_name;
-	NEW.approval_instance_step_due = _nr.approval_instance_step_due;
-	NEW.approval_type = _nr.approval_type;
-	NEW.description = _nr.description;
-	NEW.approval_instance_step_start = _nr.approval_instance_step_start;
-	NEW.approval_instance_step_end = _nr.approval_instance_step_end;
-	NEW.approver_account_id = _nr.approver_account_id;
-	NEW.external_reference_name = _nr.external_reference_name;
-	NEW.is_completed = CASE WHEN _nr.is_completed = true THEN 'Y' WHEN _nr.is_completed = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.approval_instance_id = _nr.approval_instance_id;
+		NEW.approval_process_chain_id = _nr.approval_process_chain_id;
+		NEW.approval_instance_step_name = _nr.approval_instance_step_name;
+		NEW.approval_instance_step_due = _nr.approval_instance_step_due;
+		NEW.approval_type = _nr.approval_type;
+		NEW.description = _nr.description;
+		NEW.approval_instance_step_start = _nr.approval_instance_step_start;
+		NEW.approval_instance_step_end = _nr.approval_instance_step_end;
+		NEW.approver_account_id = _nr.approver_account_id;
+		NEW.external_reference_name = _nr.external_reference_name;
+		NEW.is_completed = CASE WHEN _nr.is_completed = true THEN 'Y' WHEN _nr.is_completed = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -5006,26 +4978,27 @@ _uq := array_append(_uq, 'reject_app_process_chain_id = ' || quote_nullable(NEW.
 			array_to_string(_uq, ', ') ||
 			' WHERE  approval_process_chain_id = $1 RETURNING *'  USING OLD.approval_process_chain_id
 			INTO _nr;
-	END IF;
+
 	NEW.approval_process_chain_id = _nr.approval_process_chain_id;
-	NEW.approval_process_chain_name = _nr.approval_process_chain_name;
-	NEW.approval_chain_response_period = _nr.approval_chain_response_period;
-	NEW.description = _nr.description;
-	NEW.message = _nr.message;
-	NEW.email_message = _nr.email_message;
-	NEW.email_subject_prefix = _nr.email_subject_prefix;
-	NEW.email_subject_suffix = _nr.email_subject_suffix;
-	NEW.max_escalation_level = _nr.max_escalation_level;
-	NEW.escalation_delay = _nr.escalation_delay;
-	NEW.escalation_reminder_gap = _nr.escalation_reminder_gap;
-	NEW.approving_entity = _nr.approving_entity;
-	NEW.refresh_all_data = CASE WHEN _nr.refresh_all_data = true THEN 'Y' WHEN _nr.refresh_all_data = false THEN 'N' ELSE NULL END;
-	NEW.accept_app_process_chain_id = _nr.accept_app_process_chain_id;
-	NEW.reject_app_process_chain_id = _nr.reject_app_process_chain_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.approval_process_chain_name = _nr.approval_process_chain_name;
+		NEW.approval_chain_response_period = _nr.approval_chain_response_period;
+		NEW.description = _nr.description;
+		NEW.message = _nr.message;
+		NEW.email_message = _nr.email_message;
+		NEW.email_subject_prefix = _nr.email_subject_prefix;
+		NEW.email_subject_suffix = _nr.email_subject_suffix;
+		NEW.max_escalation_level = _nr.max_escalation_level;
+		NEW.escalation_delay = _nr.escalation_delay;
+		NEW.escalation_reminder_gap = _nr.escalation_reminder_gap;
+		NEW.approving_entity = _nr.approving_entity;
+		NEW.refresh_all_data = CASE WHEN _nr.refresh_all_data = true THEN 'Y' WHEN _nr.refresh_all_data = false THEN 'N' ELSE NULL END;
+		NEW.accept_app_process_chain_id = _nr.accept_app_process_chain_id;
+		NEW.reject_app_process_chain_id = _nr.reject_app_process_chain_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -5237,21 +5210,22 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  circuit_id = $1 RETURNING *'  USING OLD.circuit_id
 			INTO _nr;
-	END IF;
+
 	NEW.circuit_id = _nr.circuit_id;
-	NEW.vendor_company_id = _nr.vendor_company_id;
-	NEW.vendor_circuit_id_str = _nr.vendor_circuit_id_str;
-	NEW.aloc_lec_company_id = _nr.aloc_lec_company_id;
-	NEW.aloc_lec_circuit_id_str = _nr.aloc_lec_circuit_id_str;
-	NEW.aloc_parent_circuit_id = _nr.aloc_parent_circuit_id;
-	NEW.zloc_lec_company_id = _nr.zloc_lec_company_id;
-	NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
-	NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
-	-- NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.vendor_company_id = _nr.vendor_company_id;
+		NEW.vendor_circuit_id_str = _nr.vendor_circuit_id_str;
+		NEW.aloc_lec_company_id = _nr.aloc_lec_company_id;
+		NEW.aloc_lec_circuit_id_str = _nr.aloc_lec_circuit_id_str;
+		NEW.aloc_parent_circuit_id = _nr.aloc_parent_circuit_id;
+		NEW.zloc_lec_company_id = _nr.zloc_lec_company_id;
+		NEW.zloc_lec_circuit_id_str = _nr.zloc_lec_circuit_id_str;
+		NEW.zloc_parent_circuit_id = _nr.zloc_parent_circuit_id;
+		NEW.is_locally_managed = CASE WHEN _nr.is_locally_managed = true THEN 'Y' WHEN _nr.is_locally_managed = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -5486,22 +5460,23 @@ _uq := array_append(_uq, 'size_units = ' || quote_nullable(NEW.size_units));
 			array_to_string(_uq, ', ') ||
 			' WHERE  component_type_id = $1 RETURNING *'  USING OLD.component_type_id
 			INTO _nr;
-	END IF;
+
 	NEW.component_type_id = _nr.component_type_id;
-	NEW.company_id = _nr.company_id;
-	NEW.model = _nr.model;
-	NEW.slot_type_id = _nr.slot_type_id;
-	NEW.description = _nr.description;
-	NEW.part_number = _nr.part_number;
-	NEW.is_removable = CASE WHEN _nr.is_removable = true THEN 'Y' WHEN _nr.is_removable = false THEN 'N' ELSE NULL END;
-	NEW.asset_permitted = CASE WHEN _nr.asset_permitted = true THEN 'Y' WHEN _nr.asset_permitted = false THEN 'N' ELSE NULL END;
-	NEW.is_rack_mountable = CASE WHEN _nr.is_rack_mountable = true THEN 'Y' WHEN _nr.is_rack_mountable = false THEN 'N' ELSE NULL END;
-	NEW.is_virtual_component = CASE WHEN _nr.is_virtual_component = true THEN 'Y' WHEN _nr.is_virtual_component = false THEN 'N' ELSE NULL END;
-	NEW.size_units = _nr.size_units;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.company_id = _nr.company_id;
+		NEW.model = _nr.model;
+		NEW.slot_type_id = _nr.slot_type_id;
+		NEW.description = _nr.description;
+		NEW.part_number = _nr.part_number;
+		NEW.is_removable = CASE WHEN _nr.is_removable = true THEN 'Y' WHEN _nr.is_removable = false THEN 'N' ELSE NULL END;
+		NEW.asset_permitted = CASE WHEN _nr.asset_permitted = true THEN 'Y' WHEN _nr.asset_permitted = false THEN 'N' ELSE NULL END;
+		NEW.is_rack_mountable = CASE WHEN _nr.is_rack_mountable = true THEN 'Y' WHEN _nr.is_rack_mountable = false THEN 'N' ELSE NULL END;
+		NEW.is_virtual_component = CASE WHEN _nr.is_virtual_component = true THEN 'Y' WHEN _nr.is_virtual_component = false THEN 'N' ELSE NULL END;
+		NEW.size_units = _nr.size_units;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -5689,19 +5664,20 @@ _uq := array_append(_uq, 'default_badge_type_id = ' || quote_nullable(NEW.defaul
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_collection_id = $1 RETURNING *'  USING OLD.account_collection_id
 			INTO _nr;
-	END IF;
+
 	NEW.account_collection_id = _nr.account_collection_id;
-	NEW.company_id = _nr.company_id;
-	NEW.manager_account_id = _nr.manager_account_id;
-	NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
-	NEW.dept_code = _nr.dept_code;
-	NEW.cost_center_name = _nr.cost_center_name;
-	NEW.cost_center_number = _nr.cost_center_number;
-	NEW.default_badge_type_id = _nr.default_badge_type_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.company_id = _nr.company_id;
+		NEW.manager_account_id = _nr.manager_account_id;
+		NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
+		NEW.dept_code = _nr.dept_code;
+		NEW.cost_center_name = _nr.cost_center_name;
+		NEW.cost_center_number = _nr.cost_center_number;
+		NEW.default_badge_type_id = _nr.default_badge_type_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -5761,6 +5737,8 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.device%rowtype;
 BEGIN
+	-- XXX dropped columns:  auto_mgmt_protocol is_locally_managed is_monitored should_fetch_config
+
 	IF NEW.device_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('device_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.device_id));
@@ -5857,76 +5835,6 @@ BEGIN
 		array_to_string(_vq, ', ') ||
 		') RETURNING *' INTO _nr;
 
-	--
-	-- Backwards compatability
-	--
-	IF NEW.is_monitored IS NOT DISTINCT FROM 'Y' THEN
-		INSERT INTO device_collection_device (
-			device_collection_id, device_id
-		) SELECT device_collection_id, _nr.device_id
-		FROM device_collection
-			JOIN property USING (device_collection_id)
-		WHERE property_name = 'IsMonitoredDevice'
-		AND property_type = 'JazzHandsLegacySupport'
-		LIMIT 1;
-		NEW.is_monitored = 'Y';
-	ELSE
-		IF NEW.is_monitored != 'N' THEN
-			RAISE EXCEPTION 'is_monitored must be Y or N'
-				USING ERRCODE = 'check_violation';
-		END IF;
-		NEW.is_monitored = 'N';
-	END IF;
-
-	IF NEW.should_fetch_config IS NOT DISTINCT FROM 'Y' THEN
-		INSERT INTO device_collection_device (
-			device_collection_id, device_id
-		) SELECT device_collection_id, _nr.device_id
-		FROM device_collection
-			JOIN property USING (device_collection_id)
-		WHERE property_name = 'ShouldConfigFetch'
-		AND property_type = 'JazzHandsLegacySupport'
-		LIMIT 1;
-		NEW.should_fetch_config = 'Y';
-	ELSE
-		IF NEW.should_fetch_config != 'N' THEN
-			RAISE EXCEPTION 'should_fetch_config must be Y or N'
-				USING ERRCODE = 'check_violation';
-		END IF;
-		NEW.should_fetch_config = 'N';
-	END IF;
-
-	IF NEW.is_locally_managed IS NOT DISTINCT FROM 'Y' THEN
-		INSERT INTO device_collection_device (
-			device_collection_id, device_id
-		) SELECT device_collection_id, _nr.device_id
-		FROM device_collection
-			JOIN property USING (device_collection_id)
-		WHERE property_name = 'IsLocallyManagedDevice'
-		AND property_type = 'JazzHandsLegacySupport'
-		LIMIT 1;
-		NEW.is_locally_managed = 'Y';
-	ELSE
-		IF NEW.is_locally_managed != 'N' THEN
-			RAISE EXCEPTION 'is_locally_managed must be Y or N'
-				USING ERRCODE = 'check_violation';
-		END IF;
-		NEW.is_locally_managed = 'N';
-	END IF;
-
-	IF NEW.auto_mgmt_protocol IS NOT NULL THEN
-		INSERT INTO device_collection_device (
-			device_collection_id, device_id
-		) SELECT device_collection_id, _nr.device_id
-		FROM device_collection
-			JOIN property USING (device_collection_id)
-		WHERE property_name = 'AutoMgmtProtocol'
-		AND property_type = 'JazzHandsLegacySupport'
-		AND property_value = NEW.auto_mgmt_protocol
-		LIMIT 1;
-		-- NEW. is already set.
-	END IF;
-
 	NEW.device_id = _nr.device_id;
 	NEW.component_id = _nr.component_id;
 	NEW.device_type_id = _nr.device_type_id;
@@ -5967,15 +5875,14 @@ CREATE OR REPLACE FUNCTION jazzhands_legacy.device_upd()
 RETURNS TRIGGER AS
 $$
 DECLARE
-	_r	RECORD;
+	_r	jazzhands_legacy.device%rowtype;
 	_nr	jazzhands.device%rowtype;
 	_uq	text[];
-	_dcids	integer[];
-	_ndcids	integer[];
 BEGIN
+	-- XXX dropped columns:  auto_mgmt_protocol is_locally_managed is_monitored should_fetch_config
+
 	IF OLD.device_id IS DISTINCT FROM NEW.device_id THEN
-		RAISE EXCEPTION 'Can not change device_id'
-			USING errcode ='invalid_parameter_value';
+_uq := array_append(_uq, 'device_id = ' || quote_nullable(NEW.device_id));
 	END IF;
 
 	IF OLD.component_id IS DISTINCT FROM NEW.component_id THEN
@@ -6058,7 +5965,7 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 			' WHERE  device_id = $1 RETURNING *'  USING OLD.device_id
 			INTO _nr;
 
-		NEW.device_id = _nr.device_id;
+	NEW.device_id = _nr.device_id;
 		NEW.component_id = _nr.component_id;
 		NEW.device_type_id = _nr.device_type_id;
 		NEW.device_name = _nr.device_name;
@@ -6081,162 +5988,6 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 		NEW.data_upd_user = _nr.data_upd_user;
 		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
-
-	--
-	-- backwards compatibility
-	--
-	IF OLD.is_monitored IS DISTINCT FROM NEW.is_monitored THEN
-		IF NEW.is_monitored = 'Y' THEN
-			INSERT INTO device_collection_device (
-				device_collection_id, device_id
-			) SELECT device_collection_id, NEW.device_id
-				FROM device_collection
-				JOIN property USING (device_collection_id)
-			WHERE property_name = 'IsMonitoredDevice'
-			AND property_type = 'JazzHandsLegacySupport'
-			LIMIT 1;
-			NEW.is_monitored = 'Y';
-		ELSIF NEW.is_monitored = 'N' THEN
-			DELETE FROM device_collection_device
-			WHERE device_id = OLD.device_id
-			AND device_collection_id IN
-				( SELECT device_collection_id
-					FROM device_collection
-					JOIN property USING (device_collection_id)
-					WHERE property_name = 'IsMonitoredDevice'
-					AND property_type = 'JazzHandsLegacySupport'
-			);
-			NEW.is_monitored = 'N';
-		ELSE
-			IF NEW.is_monitored IS NULL THEN
-				RAISE EXCEPTION '% is not a valid is_monitored state',
-					NEW.is_monitored
-					USING ERRCODE = 'not_null_violation';
-			ELSE
-				RAISE EXCEPTION '% is not a valid is_monitored state',
-					NEW.is_monitored
-					USING ERRCODE = 'check_violation';
-			END IF;
-		END IF;
-	END IF;
-
-	IF OLD.should_fetch_config IS DISTINCT FROM NEW.should_fetch_config THEN
-		IF NEW.should_fetch_config = 'Y' THEN
-			INSERT INTO device_collection_device (
-				device_collection_id, device_id
-			) SELECT device_collection_id, NEW.device_id
-				FROM device_collection
-				JOIN property USING (device_collection_id)
-			WHERE property_name = 'ShouldConfigFetch'
-			AND property_type = 'JazzHandsLegacySupport'
-			LIMIT 1;
-			NEW.should_fetch_config = 'Y';
-		ELSIF NEW.should_fetch_config = 'N' THEN
-			DELETE FROM device_collection_device
-			WHERE device_id = OLD.device_id
-			AND device_collection_id IN
-				( SELECT device_collection_id
-					FROM device_collection
-					JOIN property USING (device_collection_id)
-					WHERE property_name = 'ShouldConfigFetch'
-					AND property_type = 'JazzHandsLegacySupport'
-			);
-			NEW.should_fetch_config = 'N';
-		ELSE
-			IF NEW.should_fetch_config IS NULL THEN
-				RAISE EXCEPTION '% is not a valid should_fetch_config state',
-					NEW.should_fetch_config
-					USING ERRCODE = 'not_null_violation';
-			ELSE
-				RAISE EXCEPTION '% is not a valid should_fetch_config state',
-					NEW.should_fetch_config
-					USING ERRCODE = 'check_violation';
-			END IF;
-		END IF;
-	END IF;
-
-	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
-		IF NEW.is_locally_managed = 'Y' THEN
-			INSERT INTO device_collection_device (
-				device_collection_id, device_id
-			) SELECT device_collection_id, NEW.device_id
-				FROM device_collection
-				JOIN property USING (device_collection_id)
-			WHERE property_name = 'IsLocallyManagedDevice'
-			AND property_type = 'JazzHandsLegacySupport'
-			LIMIT 1;
-			NEW.is_locally_managed = 'Y';
-		ELSIF NEW.is_locally_managed = 'N' THEN
-			DELETE FROM device_collection_device
-			WHERE device_id = OLD.device_id
-			AND device_collection_id IN
-				( SELECT device_collection_id
-					FROM device_collection
-					JOIN property USING (device_collection_id)
-					WHERE property_name = 'IsLocallyManagedDevice'
-					AND property_type = 'JazzHandsLegacySupport'
-			) RETURNING * INTO _r;
-			RAISE NOTICE '::: %', to_json(_r);
-			NEW.is_locally_managed = 'N';
-		ELSE
-			IF NEW.is_locally_managed IS NULL THEN
-				RAISE EXCEPTION '% is not a valid is_locally_managed state',
-					NEW.is_locally_managed
-					USING ERRCODE = 'not_null_violation';
-			ELSE
-				RAISE EXCEPTION '% is not a valid is_locally_managed state',
-					NEW.is_locally_managed
-					USING ERRCODE = 'check_violation';
-			END IF;
-		END IF;
-	END IF;
-
-	IF OLD.auto_mgmt_protocol IS DISTINCT FROM NEW.auto_mgmt_protocol THEN
-		IF OLD.auto_mgmt_protocol IS NULL THEN
-			INSERT INTO device_collection_device (
-				device_collection_id, device_id
-			) SELECT device_collection_id, NEW.device_id
-				FROM device_collection
-					JOIN property USING (device_collection_id)
-				WHERE property_name = 'AutoMgmtProtocol'
-				AND property_type = 'JazzHandsLegacySupport'
-				AND property_value = NEW.auto_mgmt_protocol
-				ORDER BY device_collection_id, property_id
-				LIMIT 1;
-		ELSIF NEW.auto_mgmt_protocol IS NULL THEN
-			DELETE FROM device_collection_device
-			WHERE device_id = OLD.device_id
-			AND device_collection_id IN
-				( SELECT device_collection_id
-					FROM device_collection
-						JOIN property USING (device_collection_id)
-					WHERE property_name = 'AutoMgmtProtocol'
-					AND property_type = 'JazzHandsLegacySupport'
-				);
-		ELSE
-			UPDATE device_collection_device
-			SET device_collection_id = (
-				( SELECT device_collection_id
-					FROM device_collection
-						JOIN property USING (device_collection_id)
-					WHERE property_name = 'AutoMgmtProtocol'
-					AND property_type = 'JazzHandsLegacySupport'
-					AND property_value = NEW.auto_mgmt_protocol
-					ORDER BY device_collection_id, property_id
-					LIMIT 1
-				)
-			) WHERE device_id = NEW.device_id
-			AND device_collection_id IN
-				( SELECT device_collection_id
-					FROM device_collection
-					JOIN property USING (device_collection_id)
-					WHERE property_name = 'AutoMgmtProtocol'
-					AND property_type = 'JazzHandsLegacySupport'
-					AND property_value = OLD.auto_mgmt_protocol
-				);
-		END IF;
-	END IF;
-
 	RETURN NEW;
 END;
 $$
@@ -6529,27 +6280,28 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  device_type_id = $1 RETURNING *'  USING OLD.device_type_id
 			INTO _nr;
-	END IF;
+
 	NEW.device_type_id = _nr.device_type_id;
-	NEW.component_type_id = _nr.component_type_id;
-	NEW.device_type_name = _nr.device_type_name;
-	NEW.template_device_id = _nr.template_device_id;
-	NEW.idealized_device_id = _nr.idealized_device_id;
-	NEW.description = _nr.description;
-	NEW.company_id = _nr.company_id;
-	NEW.model = _nr.model;
-	NEW.device_type_depth_in_cm = _nr.device_type_depth_in_cm;
-	NEW.processor_architecture = _nr.processor_architecture;
-	NEW.config_fetch_type = _nr.config_fetch_type;
-	NEW.rack_units = _nr.rack_units;
-	NEW.has_802_3_interface = CASE WHEN _nr.has_802_3_interface = true THEN 'Y' WHEN _nr.has_802_3_interface = false THEN 'N' ELSE NULL END;
-	NEW.has_802_11_interface = CASE WHEN _nr.has_802_11_interface = true THEN 'Y' WHEN _nr.has_802_11_interface = false THEN 'N' ELSE NULL END;
-	NEW.snmp_capable = CASE WHEN _nr.snmp_capable = true THEN 'Y' WHEN _nr.snmp_capable = false THEN 'N' ELSE NULL END;
-	NEW.is_chassis = CASE WHEN _nr.is_chassis = true THEN 'Y' WHEN _nr.is_chassis = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.component_type_id = _nr.component_type_id;
+		NEW.device_type_name = _nr.device_type_name;
+		NEW.template_device_id = _nr.template_device_id;
+		NEW.idealized_device_id = _nr.idealized_device_id;
+		NEW.description = _nr.description;
+		NEW.company_id = _nr.company_id;
+		NEW.model = _nr.model;
+		NEW.device_type_depth_in_cm = _nr.device_type_depth_in_cm;
+		NEW.processor_architecture = _nr.processor_architecture;
+		NEW.config_fetch_type = _nr.config_fetch_type;
+		NEW.rack_units = _nr.rack_units;
+		NEW.has_802_3_interface = CASE WHEN _nr.has_802_3_interface = true THEN 'Y' WHEN _nr.has_802_3_interface = false THEN 'N' ELSE NULL END;
+		NEW.has_802_11_interface = CASE WHEN _nr.has_802_11_interface = true THEN 'Y' WHEN _nr.has_802_11_interface = false THEN 'N' ELSE NULL END;
+		NEW.snmp_capable = CASE WHEN _nr.snmp_capable = true THEN 'Y' WHEN _nr.snmp_capable = false THEN 'N' ELSE NULL END;
+		NEW.is_chassis = CASE WHEN _nr.is_chassis = true THEN 'Y' WHEN _nr.is_chassis = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -6792,24 +6544,25 @@ _uq := array_append(_uq, 'last_generated = ' || quote_nullable(NEW.last_generate
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_id = $1 AND  ip_universe_id = $2 RETURNING *'  USING OLD.dns_domain_id, OLD.ip_universe_id
 			INTO _nr;
-	END IF;
+
 	NEW.dns_domain_id = _nr.dns_domain_id;
-	NEW.ip_universe_id = _nr.ip_universe_id;
-	NEW.soa_class = _nr.soa_class;
-	NEW.soa_ttl = _nr.soa_ttl;
-	NEW.soa_serial = _nr.soa_serial;
-	NEW.soa_refresh = _nr.soa_refresh;
-	NEW.soa_retry = _nr.soa_retry;
-	NEW.soa_expire = _nr.soa_expire;
-	NEW.soa_minimum = _nr.soa_minimum;
-	NEW.soa_mname = _nr.soa_mname;
-	NEW.soa_rname = _nr.soa_rname;
-	NEW.should_generate = CASE WHEN _nr.should_generate = true THEN 'Y' WHEN _nr.should_generate = false THEN 'N' ELSE NULL END;
-	NEW.last_generated = _nr.last_generated;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.soa_class = _nr.soa_class;
+		NEW.soa_ttl = _nr.soa_ttl;
+		NEW.soa_serial = _nr.soa_serial;
+		NEW.soa_refresh = _nr.soa_refresh;
+		NEW.soa_retry = _nr.soa_retry;
+		NEW.soa_expire = _nr.soa_expire;
+		NEW.soa_minimum = _nr.soa_minimum;
+		NEW.soa_mname = _nr.soa_mname;
+		NEW.soa_rname = _nr.soa_rname;
+		NEW.should_generate = CASE WHEN _nr.should_generate = true THEN 'Y' WHEN _nr.should_generate = false THEN 'N' ELSE NULL END;
+		NEW.last_generated = _nr.last_generated;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -7105,29 +6858,30 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_record_id = $1 RETURNING *'  USING OLD.dns_record_id
 			INTO _nr;
-	END IF;
+
 	NEW.dns_record_id = _nr.dns_record_id;
-	NEW.dns_name = _nr.dns_name;
-	NEW.dns_domain_id = _nr.dns_domain_id;
-	NEW.dns_ttl = _nr.dns_ttl;
-	NEW.dns_class = _nr.dns_class;
-	NEW.dns_type = _nr.dns_type;
-	NEW.dns_value = _nr.dns_value;
-	NEW.dns_priority = _nr.dns_priority;
-	NEW.dns_srv_service = _nr.dns_srv_service;
-	NEW.dns_srv_protocol = _nr.dns_srv_protocol;
-	NEW.dns_srv_weight = _nr.dns_srv_weight;
-	NEW.dns_srv_port = _nr.dns_srv_port;
-	NEW.netblock_id = _nr.netblock_id;
-	NEW.ip_universe_id = _nr.ip_universe_id;
-	NEW.reference_dns_record_id = _nr.reference_dns_record_id;
-	NEW.dns_value_record_id = _nr.dns_value_record_id;
-	NEW.should_generate_ptr = CASE WHEN _nr.should_generate_ptr = true THEN 'Y' WHEN _nr.should_generate_ptr = false THEN 'N' ELSE NULL END;
-	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.dns_name = _nr.dns_name;
+		NEW.dns_domain_id = _nr.dns_domain_id;
+		NEW.dns_ttl = _nr.dns_ttl;
+		NEW.dns_class = _nr.dns_class;
+		NEW.dns_type = _nr.dns_type;
+		NEW.dns_value = _nr.dns_value;
+		NEW.dns_priority = _nr.dns_priority;
+		NEW.dns_srv_service = _nr.dns_srv_service;
+		NEW.dns_srv_protocol = _nr.dns_srv_protocol;
+		NEW.dns_srv_weight = _nr.dns_srv_weight;
+		NEW.dns_srv_port = _nr.dns_srv_port;
+		NEW.netblock_id = _nr.netblock_id;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.reference_dns_record_id = _nr.reference_dns_record_id;
+		NEW.dns_value_record_id = _nr.dns_value_record_id;
+		NEW.should_generate_ptr = CASE WHEN _nr.should_generate_ptr = true THEN 'Y' WHEN _nr.should_generate_ptr = false THEN 'N' ELSE NULL END;
+		NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -7292,16 +7046,17 @@ _uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
 			array_to_string(_uq, ', ') ||
 			' WHERE  ip_universe_id = $1 RETURNING *'  USING OLD.ip_universe_id
 			INTO _nr;
-	END IF;
+
 	NEW.ip_universe_id = _nr.ip_universe_id;
-	NEW.ip_universe_name = _nr.ip_universe_name;
-	NEW.ip_namespace = _nr.ip_namespace;
-	NEW.should_generate_dns = CASE WHEN _nr.should_generate_dns = true THEN 'Y' WHEN _nr.should_generate_dns = false THEN 'N' ELSE NULL END;
-	NEW.description = _nr.description;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.ip_universe_name = _nr.ip_universe_name;
+		NEW.ip_namespace = _nr.ip_namespace;
+		NEW.should_generate_dns = CASE WHEN _nr.should_generate_dns = true THEN 'Y' WHEN _nr.should_generate_dns = false THEN 'N' ELSE NULL END;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -7433,14 +7188,15 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  ip_universe_id = $1 AND  visible_ip_universe_id = $2 RETURNING *'  USING OLD.ip_universe_id, OLD.visible_ip_universe_id
 			INTO _nr;
-	END IF;
+
 	NEW.ip_universe_id = _nr.ip_universe_id;
-	NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
-	NEW.propagate_dns = CASE WHEN _nr.propagate_dns = true THEN 'Y' WHEN _nr.propagate_dns = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.visible_ip_universe_id = _nr.visible_ip_universe_id;
+		NEW.propagate_dns = CASE WHEN _nr.propagate_dns = true THEN 'Y' WHEN _nr.propagate_dns = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -7646,21 +7402,22 @@ _uq := array_append(_uq, 'external_id = ' || quote_nullable(NEW.external_id));
 			array_to_string(_uq, ', ') ||
 			' WHERE  netblock_id = $1 RETURNING *'  USING OLD.netblock_id
 			INTO _nr;
-	END IF;
+
 	NEW.netblock_id = _nr.netblock_id;
-	NEW.ip_address = _nr.ip_address;
-	NEW.netblock_type = _nr.netblock_type;
-	NEW.is_single_address = CASE WHEN _nr.is_single_address = true THEN 'Y' WHEN _nr.is_single_address = false THEN 'N' ELSE NULL END;
-	NEW.can_subnet = CASE WHEN _nr.can_subnet = true THEN 'Y' WHEN _nr.can_subnet = false THEN 'N' ELSE NULL END;
-	NEW.parent_netblock_id = _nr.parent_netblock_id;
-	NEW.netblock_status = _nr.netblock_status;
-	NEW.ip_universe_id = _nr.ip_universe_id;
-	NEW.description = _nr.description;
-	NEW.external_id = _nr.external_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.ip_address = _nr.ip_address;
+		NEW.netblock_type = _nr.netblock_type;
+		NEW.is_single_address = CASE WHEN _nr.is_single_address = true THEN 'Y' WHEN _nr.is_single_address = false THEN 'N' ELSE NULL END;
+		NEW.can_subnet = CASE WHEN _nr.can_subnet = true THEN 'Y' WHEN _nr.can_subnet = false THEN 'N' ELSE NULL END;
+		NEW.parent_netblock_id = _nr.parent_netblock_id;
+		NEW.netblock_status = _nr.netblock_status;
+		NEW.ip_universe_id = _nr.ip_universe_id;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -7722,6 +7479,8 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.layer3_interface%rowtype;
 BEGIN
+	-- XXX dropped columns:  physical_port_id
+
 	IF NEW.network_interface_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('layer3_interface_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.network_interface_id));
@@ -7750,15 +7509,6 @@ BEGIN
 	IF NEW.parent_relation_type IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('parent_relation_type'));
 		_vq := array_append(_vq, quote_nullable(NEW.parent_relation_type));
-	END IF;
-
-	IF NEW.physical_port_id IS NOT NULL THEN
-		IF NEW.slot_id IS NOT NULL THEN
-			RAISE EXCEPTION 'Only slot_id should be updated.'
-				USING ERRCODE = 'integrity_constraint_violation';
-		END IF;
-		_cq := array_append(_cq, quote_ident('slot_id'));
-		_vq := array_append(_vq, quote_nullable(NEW.physical_port_Id));
 	END IF;
 
 	IF NEW.slot_id IS NOT NULL THEN
@@ -7808,7 +7558,6 @@ BEGIN
 	NEW.description = _nr.description;
 	NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
 	NEW.parent_relation_type = _nr.parent_relation_type;
-	NEW.physical_port_id = _nr.slot_id;
 	NEW.slot_id = _nr.slot_id;
 	NEW.logical_port_id = _nr.logical_port_id;
 	NEW.network_interface_type = _nr.layer3_interface_type;
@@ -7842,6 +7591,8 @@ DECLARE
 	_nr	jazzhands.layer3_interface%rowtype;
 	_uq	text[];
 BEGIN
+	-- XXX dropped columns:  physical_port_id
+
 	IF OLD.network_interface_id IS DISTINCT FROM NEW.network_interface_id THEN
 _uq := array_append(_uq, 'layer3_interface_id = ' || quote_nullable(NEW.network_interface_id));
 	END IF;
@@ -7864,14 +7615,6 @@ _uq := array_append(_uq, 'parent_layer3_interface_id = ' || quote_nullable(NEW.p
 
 	IF OLD.parent_relation_type IS DISTINCT FROM NEW.parent_relation_type THEN
 _uq := array_append(_uq, 'parent_relation_type = ' || quote_nullable(NEW.parent_relation_type));
-	END IF;
-
-	IF OLD.physical_port_id IS DISTINCT FROM NEW.physical_port_id THEN
-		IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
-			RAISE EXCEPTION 'Only slot_id should be updated.'
-			USING ERRCODE = 'integrity_constraint_violation';
-		END IF;
-_uq := array_append(_uq, 'slot_id = ' || quote_nullable(NEW.physical_port_id));
 	END IF;
 
 	IF OLD.slot_id IS DISTINCT FROM NEW.slot_id THEN
@@ -7925,25 +7668,25 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  layer3_interface_id = $1 RETURNING *'  USING OLD.network_interface_id
 			INTO _nr;
-	END IF;
+
 	NEW.network_interface_id = _nr.layer3_interface_id;
-	NEW.device_id = _nr.device_id;
-	NEW.network_interface_name = _nr.layer3_interface_name;
-	NEW.description = _nr.description;
-	NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
-	NEW.parent_relation_type = _nr.parent_relation_type;
-	NEW.physical_port_id = _nr.slot_id;
-	NEW.slot_id = _nr.slot_id;
-	NEW.logical_port_id = _nr.logical_port_id;
-	NEW.network_interface_type = _nr.layer3_interface_type;
-	NEW.is_interface_up = CASE WHEN _nr.is_interface_up = true THEN 'Y' WHEN _nr.is_interface_up = false THEN 'N' ELSE NULL END;
-	NEW.mac_addr = _nr.mac_addr;
-	NEW.should_monitor = CASE WHEN _nr.should_monitor = true THEN 'Y' WHEN _nr.should_monitor = false THEN 'N' ELSE NULL END;
-	NEW.should_manage = CASE WHEN _nr.should_manage = true THEN 'Y' WHEN _nr.should_manage = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.device_id = _nr.device_id;
+		NEW.network_interface_name = _nr.layer3_interface_name;
+		NEW.description = _nr.description;
+		NEW.parent_network_interface_id = _nr.parent_layer3_interface_id;
+		NEW.parent_relation_type = _nr.parent_relation_type;
+		NEW.slot_id = _nr.slot_id;
+		NEW.logical_port_id = _nr.logical_port_id;
+		NEW.network_interface_type = _nr.layer3_interface_type;
+		NEW.is_interface_up = CASE WHEN _nr.is_interface_up = true THEN 'Y' WHEN _nr.is_interface_up = false THEN 'N' ELSE NULL END;
+		NEW.mac_addr = _nr.mac_addr;
+		NEW.should_monitor = CASE WHEN _nr.should_monitor = true THEN 'Y' WHEN _nr.should_monitor = false THEN 'N' ELSE NULL END;
+		NEW.should_manage = CASE WHEN _nr.should_manage = true THEN 'Y' WHEN _nr.should_manage = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -7973,7 +7716,6 @@ BEGIN
 	OLD.description = _or.description;
 	OLD.parent_network_interface_id = _or.parent_layer3_interface_id;
 	OLD.parent_relation_type = _or.parent_relation_type;
-	OLD.physical_port_id = _or.slot_id;
 	OLD.slot_id = _or.slot_id;
 	OLD.logical_port_id = _or.logical_port_id;
 	OLD.network_interface_type = _or.layer3_interface_type;
@@ -8144,20 +7886,21 @@ _uq := array_append(_uq, 'service_environment_id = ' || quote_nullable(NEW.servi
 			array_to_string(_uq, ', ') ||
 			' WHERE  network_service_id = $1 RETURNING *'  USING OLD.network_service_id
 			INTO _nr;
-	END IF;
+
 	NEW.network_service_id = _nr.network_service_id;
-	NEW.name = _nr.name;
-	NEW.description = _nr.description;
-	NEW.network_service_type = _nr.network_service_type;
-	NEW.is_monitored = CASE WHEN _nr.is_monitored = true THEN 'Y' WHEN _nr.is_monitored = false THEN 'N' ELSE NULL END;
-	NEW.device_id = _nr.device_id;
-	NEW.network_interface_id = _nr.network_interface_id;
-	NEW.dns_record_id = _nr.dns_record_id;
-	NEW.service_environment_id = _nr.service_environment_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.name = _nr.name;
+		NEW.description = _nr.description;
+		NEW.network_service_type = _nr.network_service_type;
+		NEW.is_monitored = CASE WHEN _nr.is_monitored = true THEN 'Y' WHEN _nr.is_monitored = false THEN 'N' ELSE NULL END;
+		NEW.device_id = _nr.device_id;
+		NEW.network_interface_id = _nr.network_interface_id;
+		NEW.dns_record_id = _nr.dns_record_id;
+		NEW.service_environment_id = _nr.service_environment_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -8218,6 +7961,8 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.operating_system%rowtype;
 BEGIN
+	-- XXX dropped columns:  processor_architecture
+
 	IF NEW.operating_system_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('operating_system_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.operating_system_id));
@@ -8292,6 +8037,8 @@ DECLARE
 	_nr	jazzhands.operating_system%rowtype;
 	_uq	text[];
 BEGIN
+	-- XXX dropped columns:  processor_architecture
+
 	IF OLD.operating_system_id IS DISTINCT FROM NEW.operating_system_id THEN
 _uq := array_append(_uq, 'operating_system_id = ' || quote_nullable(NEW.operating_system_id));
 	END IF;
@@ -8325,18 +8072,19 @@ _uq := array_append(_uq, 'operating_system_family = ' || quote_nullable(NEW.oper
 			array_to_string(_uq, ', ') ||
 			' WHERE  operating_system_id = $1 RETURNING *'  USING OLD.operating_system_id
 			INTO _nr;
-	END IF;
+
 	NEW.operating_system_id = _nr.operating_system_id;
-	NEW.operating_system_name = _nr.operating_system_name;
-	NEW.operating_system_short_name = _nr.operating_system_short_name;
-	NEW.company_id = _nr.company_id;
-	NEW.major_version = _nr.major_version;
-	NEW.version = _nr.version;
-	NEW.operating_system_family = _nr.operating_system_family;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.operating_system_name = _nr.operating_system_name;
+		NEW.operating_system_short_name = _nr.operating_system_short_name;
+		NEW.company_id = _nr.company_id;
+		NEW.major_version = _nr.major_version;
+		NEW.version = _nr.version;
+		NEW.operating_system_family = _nr.operating_system_family;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -8428,16 +8176,7 @@ BEGIN
 
 	IF NEW.gender IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('gender'));
-		IF NEW.gender = 'M' THEN
-			_vq := array_append(_vq, quote_nullable('male'));
-		ELSIF NEW.gender = 'F' THEN
-			_vq := array_append(_vq, quote_nullable('femaile'));
-		ELSIF NEW.gender = 'U' THEN
-			_vq := array_append(_vq, quote_nullable('unspecified'));
-		ELSE
-			RAISE EXCEPTION 'Invalid gender % in legacy views', NEW.gender
-				USING errcode ='invalid_parameter_value';
-		END IF;
+		_vq := array_append(_vq, quote_nullable(NEW.gender));
 	END IF;
 
 	IF NEW.preferred_first_name IS NOT NULL THEN
@@ -8492,9 +8231,7 @@ BEGIN
 	NEW.middle_name = _nr.middle_name;
 	NEW.last_name = _nr.last_name;
 	NEW.name_suffix = _nr.name_suffix;
-	NEW.gender = CASE WHEN _nr.gender = 'male' THEN 'M'
-		WHEN _nr.gender = 'female' THEN 'F'
-		ELSE 'U' END;
+	NEW.gender = _nr.gender;
 	NEW.preferred_first_name = _nr.preferred_first_name;
 	NEW.preferred_last_name = _nr.preferred_last_name;
 	NEW.nickname = _nr.nickname;
@@ -8555,16 +8292,7 @@ _uq := array_append(_uq, 'name_suffix = ' || quote_nullable(NEW.name_suffix));
 	END IF;
 
 	IF OLD.gender IS DISTINCT FROM NEW.gender THEN
-		IF NEW.gender = 'M' THEN
-			_uq := array_append(_uq, 'gender = ' || quote_nullable('male'));
-		ELSIF NEW.gender = 'F' THEN
-			_uq := array_append(_uq, 'gender = ' || quote_nullable('female'));
-		ELSIF NEW.gender = 'U' THEN
-			_uq := array_append(_uq, 'gender = ' || quote_nullable('unspecified'));
-		ELSE
-			RAISE EXCEPTION 'Invalid gender % in legacy views', NEW.gender
-				USING errcode ='invalid_parameter_value';
-		END IF;
+_uq := array_append(_uq, 'gender = ' || quote_nullable(NEW.gender));
 	END IF;
 
 	IF OLD.preferred_first_name IS DISTINCT FROM NEW.preferred_first_name THEN
@@ -8604,28 +8332,27 @@ _uq := array_append(_uq, 'hat_size = ' || quote_nullable(NEW.hat_size));
 			array_to_string(_uq, ', ') ||
 			' WHERE  person_id = $1 RETURNING *'  USING OLD.person_id
 			INTO _nr;
-	END IF;
+
 	NEW.person_id = _nr.person_id;
-	NEW.description = _nr.description;
-	NEW.first_name = _nr.first_name;
-	NEW.middle_name = _nr.middle_name;
-	NEW.last_name = _nr.last_name;
-	NEW.name_suffix = _nr.name_suffix;
-	NEW.gender = CASE WHEN _nr.gender = 'male' THEN 'M'
-		WHEN _nr.gender = 'female' THEN 'F'
-		ELSE 'U' END;
-	NEW.preferred_first_name = _nr.preferred_first_name;
-	NEW.preferred_last_name = _nr.preferred_last_name;
-	NEW.nickname = _nr.nickname;
-	NEW.birth_date = _nr.birth_date;
-	NEW.diet = _nr.diet;
-	NEW.shirt_size = _nr.shirt_size;
-	NEW.pant_size = _nr.pant_size;
-	NEW.hat_size = _nr.hat_size;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.first_name = _nr.first_name;
+		NEW.middle_name = _nr.middle_name;
+		NEW.last_name = _nr.last_name;
+		NEW.name_suffix = _nr.name_suffix;
+		NEW.gender = _nr.gender;
+		NEW.preferred_first_name = _nr.preferred_first_name;
+		NEW.preferred_last_name = _nr.preferred_last_name;
+		NEW.nickname = _nr.nickname;
+		NEW.birth_date = _nr.birth_date;
+		NEW.diet = _nr.diet;
+		NEW.shirt_size = _nr.shirt_size;
+		NEW.pant_size = _nr.pant_size;
+		NEW.hat_size = _nr.hat_size;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -8655,9 +8382,7 @@ BEGIN
 	OLD.middle_name = _or.middle_name;
 	OLD.last_name = _or.last_name;
 	OLD.name_suffix = _or.name_suffix;
-	OLD.gender = CASE WHEN _or.gender = 'male' THEN 'M'
-		WHEN _or.gender = 'female' THEN 'F'
-		ELSE 'U' END;
+	OLD.gender = _or.gender;
 	OLD.preferred_first_name = _or.preferred_first_name;
 	OLD.preferred_last_name = _or.preferred_last_name;
 	OLD.nickname = _or.nickname;
@@ -8779,15 +8504,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  auth_question_id = $1 AND  person_id = $2 RETURNING *'  USING OLD.auth_question_id, OLD.person_id
 			INTO _nr;
-	END IF;
+
 	NEW.auth_question_id = _nr.auth_question_id;
-	NEW.person_id = _nr.person_id;
-	NEW.user_answer = _nr.user_answer;
-	NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.person_id = _nr.person_id;
+		NEW.user_answer = _nr.user_answer;
+		NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -9030,24 +8756,25 @@ _uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
 			array_to_string(_uq, ', ') ||
 			' WHERE  company_id = $1 AND  person_id = $2 RETURNING *'  USING OLD.company_id, OLD.person_id
 			INTO _nr;
-	END IF;
+
 	NEW.company_id = _nr.company_id;
-	NEW.person_id = _nr.person_id;
-	NEW.person_company_status = _nr.person_company_status;
-	NEW.person_company_relation = _nr.person_company_relation;
-	NEW.is_exempt = CASE WHEN _nr.is_exempt = true THEN 'Y' WHEN _nr.is_exempt = false THEN 'N' ELSE NULL END;
-	NEW.is_management = CASE WHEN _nr.is_management = true THEN 'Y' WHEN _nr.is_management = false THEN 'N' ELSE NULL END;
-	NEW.is_full_time = CASE WHEN _nr.is_full_time = true THEN 'Y' WHEN _nr.is_full_time = false THEN 'N' ELSE NULL END;
-	NEW.description = _nr.description;
-	NEW.position_title = _nr.position_title;
-	NEW.hire_date = _nr.hire_date;
-	NEW.termination_date = _nr.termination_date;
-	NEW.manager_person_id = _nr.manager_person_id;
-	NEW.nickname = _nr.nickname;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.person_id = _nr.person_id;
+		NEW.person_company_status = _nr.person_company_status;
+		NEW.person_company_relation = _nr.person_company_relation;
+		NEW.is_exempt = CASE WHEN _nr.is_exempt = true THEN 'Y' WHEN _nr.is_exempt = false THEN 'N' ELSE NULL END;
+		NEW.is_management = CASE WHEN _nr.is_management = true THEN 'Y' WHEN _nr.is_management = false THEN 'N' ELSE NULL END;
+		NEW.is_full_time = CASE WHEN _nr.is_full_time = true THEN 'Y' WHEN _nr.is_full_time = false THEN 'N' ELSE NULL END;
+		NEW.description = _nr.description;
+		NEW.position_title = _nr.position_title;
+		NEW.hire_date = _nr.hire_date;
+		NEW.termination_date = _nr.termination_date;
+		NEW.manager_person_id = _nr.manager_person_id;
+		NEW.nickname = _nr.nickname;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -9112,27 +8839,11 @@ DECLARE
 	_vq	text[];
 	_nr	jazzhands.physical_connection%rowtype;
 BEGIN
+	-- XXX dropped columns:  physical_port1_id physical_port2_id
+
 	IF NEW.physical_connection_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('physical_connection_id'));
 		_vq := array_append(_vq, quote_nullable(NEW.physical_connection_id));
-	END IF;
-
-	IF NEW.physical_port1_id IS NOT NULL THEN
-		IF NEW.slot1_id IS NOT NULL  THEN
-			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
-				USING ERRCODE = 'integrity_constraint_violation';
-		END IF;
-		_cq := array_append(_cq, quote_ident('slot1_id'));
-		_vq := array_append(_vq, quote_nullable(NEW.physical_port1_id));
-	END IF;
-
-	IF NEW.physical_port2_id IS NOT NULL THEN
-		IF NEW.slot2_id IS NOT NULL  THEN
-			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
-				USING ERRCODE = 'integrity_constraint_violation';
-		END IF;
-		_cq := array_append(_cq, quote_ident('slot2_id'));
-		_vq := array_append(_vq, quote_nullable(NEW.physical_port2_id));
 	END IF;
 
 	IF NEW.slot1_id IS NOT NULL THEN
@@ -9157,8 +8868,6 @@ BEGIN
 		') RETURNING *' INTO _nr;
 
 	NEW.physical_connection_id = _nr.physical_connection_id;
-	NEW.physical_port1_id = _nr.slot1_id;
-	NEW.physical_port2_id = _nr.slot2_id;
 	NEW.slot1_id = _nr.slot1_id;
 	NEW.slot2_id = _nr.slot2_id;
 	NEW.cable_type = _nr.cable_type;
@@ -9188,24 +8897,10 @@ DECLARE
 	_nr	jazzhands.physical_connection%rowtype;
 	_uq	text[];
 BEGIN
+	-- XXX dropped columns:  physical_port1_id physical_port2_id
+
 	IF OLD.physical_connection_id IS DISTINCT FROM NEW.physical_connection_id THEN
 _uq := array_append(_uq, 'physical_connection_id = ' || quote_nullable(NEW.physical_connection_id));
-	END IF;
-
-	IF OLD.physical_port1_id IS DISTINCT FROM NEW.physical_port1_id THEN
-		IF OLD.slot1_id IS DISTINCT FROM NEW.slot1_id THEN
-			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
-			USING ERRCODE = 'integrity_constraint_violation';
-		END IF;
-_uq := array_append(_uq, 'slot1_id = ' || quote_nullable(NEW.physical_port1_id));
-	END IF;
-
-	IF OLD.physical_port2_id IS DISTINCT FROM NEW.physical_port2_id THEN
-		IF OLD.slot2_id IS DISTINCT FROM NEW.slot2_id THEN
-			RAISE EXCEPTION 'Only slot1_id OR slot2_id should be updated.'
-			USING ERRCODE = 'integrity_constraint_violation';
-		END IF;
-_uq := array_append(_uq, 'slot2_id = ' || quote_nullable(NEW.physical_port2_id));
 	END IF;
 
 	IF OLD.slot1_id IS DISTINCT FROM NEW.slot1_id THEN
@@ -9225,17 +8920,16 @@ _uq := array_append(_uq, 'cable_type = ' || quote_nullable(NEW.cable_type));
 			array_to_string(_uq, ', ') ||
 			' WHERE  physical_connection_id = $1 RETURNING *'  USING OLD.physical_connection_id
 			INTO _nr;
-	END IF;
+
 	NEW.physical_connection_id = _nr.physical_connection_id;
-	NEW.physical_port1_id = _nr.slot1_id;
-	NEW.physical_port2_id = _nr.slot2_id;
-	NEW.slot1_id = _nr.slot1_id;
-	NEW.slot2_id = _nr.slot2_id;
-	NEW.cable_type = _nr.cable_type;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.slot1_id = _nr.slot1_id;
+		NEW.slot2_id = _nr.slot2_id;
+		NEW.cable_type = _nr.cable_type;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -9260,8 +8954,6 @@ BEGIN
 	WHERE  physical_connection_id = OLD.physical_connection_id  RETURNING *
 	INTO _or;
 	OLD.physical_connection_id = _or.physical_connection_id;
-	OLD.physical_port1_id = _or.slot1_id;
-	OLD.physical_port2_id = _or.slot2_id;
 	OLD.slot1_id = _or.slot1_id;
 	OLD.slot2_id = _or.slot2_id;
 	OLD.cable_type = _or.cable_type;
@@ -9408,18 +9100,19 @@ _uq := array_append(_uq, 'encryption_key_id = ' || quote_nullable(NEW.encryption
 			array_to_string(_uq, ', ') ||
 			' WHERE  private_key_id = $1 RETURNING *'  USING OLD.private_key_id
 			INTO _nr;
-	END IF;
+
 	NEW.private_key_id = _nr.private_key_id;
-	NEW.private_key_encryption_type = _nr.private_key_encryption_type;
-	NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
-	NEW.subject_key_identifier = _nr.subject_key_identifier;
-	NEW.private_key = _nr.private_key;
-	NEW.passphrase = _nr.passphrase;
-	NEW.encryption_key_id = _nr.encryption_key_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.private_key_encryption_type = _nr.private_key_encryption_type;
+		NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
+		NEW.subject_key_identifier = _nr.subject_key_identifier;
+		NEW.private_key = _nr.private_key;
+		NEW.passphrase = _nr.passphrase;
+		NEW.encryption_key_id = _nr.encryption_key_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -9477,7 +9170,6 @@ DECLARE
 	_cq	text[];
 	_vq	text[];
 	_nr	jazzhands.property%rowtype;
-	_dt	TEXT;
 BEGIN
 
 	IF NEW.property_id IS NOT NULL THEN
@@ -9586,18 +9278,8 @@ BEGIN
 	END IF;
 
 	IF NEW.property_value IS NOT NULL THEN
-		SELECT property_data_type INTO _dt
-		FROM val_property
-		WHERE property_name = NEW.property_name
-		AND property_type = NEW.property_type;
-
-		IF _dt = 'boolean' THEN
-			_cq := array_append(_cq, quote_ident('property_value_boolean'));
-			_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.property_value = 'Y' THEN true WHEN NEW.property_value = 'N' THEN FALSE ELSE NULL END));
-		ELSE
-			_cq := array_append(_cq, quote_ident('property_value'));
-			_vq := array_append(_vq, quote_nullable(NEW.property_value));
-		END IF;
+		_cq := array_append(_cq, quote_ident('property_value'));
+		_vq := array_append(_vq, quote_nullable(NEW.property_value));
 	END IF;
 
 	IF NEW.property_value_timestamp IS NOT NULL THEN
@@ -9692,14 +9374,7 @@ BEGIN
 	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
 	NEW.property_name = _nr.property_name;
 	NEW.property_type = _nr.property_type;
-	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
-		NEW.property_value = CASE
-			WHEN _nr.property_value_boolean = true THEN 'Y'
-			WHEN _nr.property_value_boolean = false THEN 'N'
-			ELSE NULL END;
-	ELSE
-		NEW.property_value = _nr.property_value;
-	END IF;
+	NEW.property_value = _nr.property_value;
 	NEW.property_value_timestamp = _nr.property_value_timestamp;
 	NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
 	NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
@@ -9738,7 +9413,6 @@ DECLARE
 	_r	jazzhands_legacy.property%rowtype;
 	_nr	jazzhands.property%rowtype;
 	_uq	text[];
-	_dt	TEXT;
 BEGIN
 
 	IF OLD.property_id IS DISTINCT FROM NEW.property_id THEN
@@ -9826,18 +9500,7 @@ _uq := array_append(_uq, 'property_type = ' || quote_nullable(NEW.property_type)
 	END IF;
 
 	IF OLD.property_value IS DISTINCT FROM NEW.property_value THEN
-		SELECT property_data_type INTO _dt
-		FROM val_property
-		WHERE property_name = NEW.property_name
-		AND property_type = NEW.property_type;
-
-		IF _dt = 'boolean' THEN
-			_uq := array_append(_uq, 'property_value = ' || quote_nullable(CASE WHEN NEW.is_enabled = 'Y' THEN true WHEN NEW.is_enabled = 'N' THEN false ELSE NULL END));
-			_uq := array_append(_uq, 'property_value = NULL');
-		ELSE
-			_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
-			_uq := array_append(_uq, 'property_value_boolean = NULL');
-		END IF;
+_uq := array_append(_uq, 'property_value = ' || quote_nullable(NEW.property_value));
 	END IF;
 
 	IF OLD.property_value_timestamp IS DISTINCT FROM NEW.property_value_timestamp THEN
@@ -9903,53 +9566,47 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_id = $1 RETURNING *'  USING OLD.property_id
 			INTO _nr;
-	END IF;
+
 	NEW.property_id = _nr.property_id;
-	NEW.account_collection_id = _nr.account_collection_id;
-	NEW.account_id = _nr.account_id;
-	NEW.account_realm_id = _nr.account_realm_id;
-	NEW.company_collection_id = _nr.company_collection_id;
-	NEW.company_id = _nr.company_id;
-	NEW.device_collection_id = _nr.device_collection_id;
-	NEW.dns_domain_collection_id = _nr.dns_domain_collection_id;
-	NEW.layer2_network_collection_id = _nr.layer2_network_collection_id;
-	NEW.layer3_network_collection_id = _nr.layer3_network_collection_id;
-	NEW.netblock_collection_id = _nr.netblock_collection_id;
-	NEW.network_range_id = _nr.network_range_id;
-	NEW.operating_system_id = _nr.operating_system_id;
-	NEW.operating_system_snapshot_id = _nr.operating_system_snapshot_id;
-	NEW.person_id = _nr.person_id;
-	NEW.property_collection_id = _nr.property_name_collection_id;
-	NEW.service_env_collection_id = _nr.service_environment_collection_id;
-	NEW.site_code = _nr.site_code;
-	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
-	NEW.property_name = _nr.property_name;
-	NEW.property_type = _nr.property_type;
-	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
-		NEW.property_value = CASE
-			WHEN _nr.property_value_boolean = true THEN 'Y'
-			WHEN _nr.property_value_boolean = false THEN 'N'
-			ELSE NULL END;
-	ELSE
+		NEW.account_collection_id = _nr.account_collection_id;
+		NEW.account_id = _nr.account_id;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.company_collection_id = _nr.company_collection_id;
+		NEW.company_id = _nr.company_id;
+		NEW.device_collection_id = _nr.device_collection_id;
+		NEW.dns_domain_collection_id = _nr.dns_domain_collection_id;
+		NEW.layer2_network_collection_id = _nr.layer2_network_collection_id;
+		NEW.layer3_network_collection_id = _nr.layer3_network_collection_id;
+		NEW.netblock_collection_id = _nr.netblock_collection_id;
+		NEW.network_range_id = _nr.network_range_id;
+		NEW.operating_system_id = _nr.operating_system_id;
+		NEW.operating_system_snapshot_id = _nr.operating_system_snapshot_id;
+		NEW.person_id = _nr.person_id;
+		NEW.property_collection_id = _nr.property_name_collection_id;
+		NEW.service_env_collection_id = _nr.service_environment_collection_id;
+		NEW.site_code = _nr.site_code;
+		NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
+		NEW.property_name = _nr.property_name;
+		NEW.property_type = _nr.property_type;
 		NEW.property_value = _nr.property_value;
+		NEW.property_value_timestamp = _nr.property_value_timestamp;
+		NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
+		NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
+		NEW.property_value_json = _nr.property_value_json;
+		NEW.property_value_nblk_coll_id = _nr.property_value_netblock_collection_id;
+		NEW.property_value_password_type = _nr.property_value_password_type;
+		NEW.property_value_person_id = _nr.property_value_person_id;
+		NEW.property_value_sw_package_id = _nr.property_value_sw_package_id;
+		NEW.property_value_token_col_id = _nr.property_value_token_collection_id;
+		NEW.property_rank = _nr.property_rank;
+		NEW.start_date = _nr.start_date;
+		NEW.finish_date = _nr.finish_date;
+		NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
 	END IF;
-	NEW.property_value_timestamp = _nr.property_value_timestamp;
-	NEW.property_value_account_coll_id = _nr.property_value_account_collection_id;
-	NEW.property_value_device_coll_id = _nr.property_value_device_collection_id;
-	NEW.property_value_json = _nr.property_value_json;
-	NEW.property_value_nblk_coll_id = _nr.property_value_netblock_collection_id;
-	NEW.property_value_password_type = _nr.property_value_password_type;
-	NEW.property_value_person_id = _nr.property_value_person_id;
-	NEW.property_value_sw_package_id = _nr.property_value_sw_package_id;
-	NEW.property_value_token_col_id = _nr.property_value_token_collection_id;
-	NEW.property_rank = _nr.property_rank;
-	NEW.start_date = _nr.start_date;
-	NEW.finish_date = _nr.finish_date;
-	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
 	RETURN NEW;
 END;
 $$
@@ -9969,17 +9626,10 @@ RETURNS TRIGGER AS
 $$
 DECLARE
 	_or	jazzhands.property%rowtype;
-	_dt	TEXT;
 BEGIN
 	DELETE FROM jazzhands.property
 	WHERE  property_id = OLD.property_id  RETURNING *
 	INTO _or;
-
-	SELECT property_data_type INTO _dt
-	FROM val_property
-	WHERE property_name = OLD.property_name
-	AND property_type = OLD.property_type;
-
 	OLD.property_id = _or.property_id;
 	OLD.account_collection_id = _or.account_collection_id;
 	OLD.account_id = _or.account_id;
@@ -10001,14 +9651,7 @@ BEGIN
 	OLD.x509_signed_certificate_id = _or.x509_signed_certificate_id;
 	OLD.property_name = _or.property_name;
 	OLD.property_type = _or.property_type;
-	IF _dt IS NOT DISTINCT FROM 'boolean' THEN
-		OLD.property_value = CASE
-			WHEN _or.property_value_boolean = true THEN 'Y'
-			WHEN _or.property_value_boolean = false THEN 'N'
-			ELSE NULL END;
-	ELSE
-		OLD.property_value = _or.property_value;
-	END IF;
+	OLD.property_value = _or.property_value;
 	OLD.property_value_timestamp = _or.property_value_timestamp;
 	OLD.property_value_account_coll_id = _or.property_value_account_collection_id;
 	OLD.property_value_device_coll_id = _or.property_value_device_collection_id;
@@ -10205,22 +9848,23 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  rack_id = $1 RETURNING *'  USING OLD.rack_id
 			INTO _nr;
-	END IF;
+
 	NEW.rack_id = _nr.rack_id;
-	NEW.site_code = _nr.site_code;
-	NEW.room = _nr.room;
-	NEW.sub_room = _nr.sub_room;
-	NEW.rack_row = _nr.rack_row;
-	NEW.rack_name = _nr.rack_name;
-	NEW.rack_style = _nr.rack_style;
-	NEW.rack_type = _nr.rack_type;
-	NEW.description = _nr.description;
-	NEW.rack_height_in_u = _nr.rack_height_in_u;
-	NEW.display_from_bottom = CASE WHEN _nr.display_from_bottom = true THEN 'Y' WHEN _nr.display_from_bottom = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.site_code = _nr.site_code;
+		NEW.room = _nr.room;
+		NEW.sub_room = _nr.sub_room;
+		NEW.rack_row = _nr.rack_row;
+		NEW.rack_name = _nr.rack_name;
+		NEW.rack_style = _nr.rack_style;
+		NEW.rack_type = _nr.rack_type;
+		NEW.description = _nr.description;
+		NEW.rack_height_in_u = _nr.rack_height_in_u;
+		NEW.display_from_bottom = CASE WHEN _nr.display_from_bottom = true THEN 'Y' WHEN _nr.display_from_bottom = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -10468,25 +10112,26 @@ _uq := array_append(_uq, 'slot_side = ' || quote_nullable(NEW.slot_side));
 			array_to_string(_uq, ', ') ||
 			' WHERE  slot_id = $1 RETURNING *'  USING OLD.slot_id
 			INTO _nr;
-	END IF;
+
 	NEW.slot_id = _nr.slot_id;
-	NEW.component_id = _nr.component_id;
-	NEW.slot_name = _nr.slot_name;
-	NEW.slot_index = _nr.slot_index;
-	NEW.slot_type_id = _nr.slot_type_id;
-	NEW.component_type_slot_tmplt_id = _nr.component_type_slot_template_id;
-	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
-	NEW.physical_label = _nr.physical_label;
-	NEW.mac_address = _nr.mac_address;
-	NEW.description = _nr.description;
-	NEW.slot_x_offset = _nr.slot_x_offset;
-	NEW.slot_y_offset = _nr.slot_y_offset;
-	NEW.slot_z_offset = _nr.slot_z_offset;
-	NEW.slot_side = _nr.slot_side;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.component_id = _nr.component_id;
+		NEW.slot_name = _nr.slot_name;
+		NEW.slot_index = _nr.slot_index;
+		NEW.slot_type_id = _nr.slot_type_id;
+		NEW.component_type_slot_tmplt_id = _nr.component_type_slot_template_id;
+		NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+		NEW.physical_label = _nr.physical_label;
+		NEW.mac_address = _nr.mac_address;
+		NEW.description = _nr.description;
+		NEW.slot_x_offset = _nr.slot_x_offset;
+		NEW.slot_y_offset = _nr.slot_y_offset;
+		NEW.slot_z_offset = _nr.slot_z_offset;
+		NEW.slot_side = _nr.slot_side;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -10657,17 +10302,18 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  slot_type_id = $1 RETURNING *'  USING OLD.slot_type_id
 			INTO _nr;
-	END IF;
+
 	NEW.slot_type_id = _nr.slot_type_id;
-	NEW.slot_type = _nr.slot_type;
-	NEW.slot_function = _nr.slot_function;
-	NEW.slot_physical_interface_type = _nr.slot_physical_interface_type;
-	NEW.description = _nr.description;
-	NEW.remote_slot_permitted = CASE WHEN _nr.remote_slot_permitted = true THEN 'Y' WHEN _nr.remote_slot_permitted = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.slot_type = _nr.slot_type;
+		NEW.slot_function = _nr.slot_function;
+		NEW.slot_physical_interface_type = _nr.slot_physical_interface_type;
+		NEW.description = _nr.description;
+		NEW.remote_slot_permitted = CASE WHEN _nr.remote_slot_permitted = true THEN 'Y' WHEN _nr.remote_slot_permitted = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -10836,17 +10482,18 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  sudo_alias_name = $1 AND  device_collection_id = $2 AND  account_collection_id = $3 RETURNING *'  USING OLD.sudo_alias_name, OLD.device_collection_id, OLD.account_collection_id
 			INTO _nr;
-	END IF;
+
 	NEW.sudo_alias_name = _nr.sudo_alias_name;
-	NEW.device_collection_id = _nr.device_collection_id;
-	NEW.account_collection_id = _nr.account_collection_id;
-	NEW.run_as_account_collection_id = _nr.run_as_account_collection_id;
-	NEW.requires_password = CASE WHEN _nr.requires_password = true THEN 'Y' WHEN _nr.requires_password = false THEN 'N' ELSE NULL END;
-	NEW.can_exec_child = CASE WHEN _nr.can_exec_child = true THEN 'Y' WHEN _nr.can_exec_child = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.device_collection_id = _nr.device_collection_id;
+		NEW.account_collection_id = _nr.account_collection_id;
+		NEW.run_as_account_collection_id = _nr.run_as_account_collection_id;
+		NEW.requires_password = CASE WHEN _nr.requires_password = true THEN 'Y' WHEN _nr.requires_password = false THEN 'N' ELSE NULL END;
+		NEW.can_exec_child = CASE WHEN _nr.can_exec_child = true THEN 'Y' WHEN _nr.can_exec_child = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -11119,28 +10766,29 @@ _uq := array_append(_uq, 'last_updated = ' || quote_nullable(NEW.last_updated));
 			array_to_string(_uq, ', ') ||
 			' WHERE  token_id = $1 RETURNING *'  USING OLD.token_id
 			INTO _nr;
-	END IF;
+
 	NEW.token_id = _nr.token_id;
-	NEW.token_type = _nr.token_type;
-	NEW.token_status = _nr.token_status;
-	NEW.description = _nr.description;
-	NEW.external_id = _nr.external_id;
-	NEW.token_serial = _nr.token_serial;
-	NEW.zero_time = _nr.zero_time;
-	NEW.time_modulo = _nr.time_modulo;
-	NEW.time_skew = _nr.time_skew;
-	NEW.token_key = _nr.token_key;
-	NEW.encryption_key_id = _nr.encryption_key_id;
-	NEW.token_password = _nr.token_password;
-	NEW.expire_time = _nr.expire_time;
-	NEW.is_token_locked = CASE WHEN _nr.is_token_locked = true THEN 'Y' WHEN _nr.is_token_locked = false THEN 'N' ELSE NULL END;
-	NEW.token_unlock_time = _nr.token_unlock_time;
-	NEW.bad_logins = _nr.bad_logins;
-	NEW.last_updated = _nr.last_updated;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.token_type = _nr.token_type;
+		NEW.token_status = _nr.token_status;
+		NEW.description = _nr.description;
+		NEW.external_id = _nr.external_id;
+		NEW.token_serial = _nr.token_serial;
+		NEW.zero_time = _nr.zero_time;
+		NEW.time_modulo = _nr.time_modulo;
+		NEW.time_skew = _nr.time_skew;
+		NEW.token_key = _nr.token_key;
+		NEW.encryption_key_id = _nr.encryption_key_id;
+		NEW.token_password = _nr.token_password;
+		NEW.expire_time = _nr.expire_time;
+		NEW.is_token_locked = CASE WHEN _nr.is_token_locked = true THEN 'Y' WHEN _nr.is_token_locked = false THEN 'N' ELSE NULL END;
+		NEW.token_unlock_time = _nr.token_unlock_time;
+		NEW.bad_logins = _nr.bad_logins;
+		NEW.last_updated = _nr.last_updated;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -11354,21 +11002,22 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_id = $1 RETURNING *'  USING OLD.account_id
 			INTO _nr;
-	END IF;
+
 	NEW.account_id = _nr.account_id;
-	NEW.login = _nr.login;
-	NEW.person_id = _nr.person_id;
-	NEW.company_id = _nr.company_id;
-	NEW.account_realm_id = _nr.account_realm_id;
-	NEW.account_status = _nr.account_status;
-	NEW.account_role = _nr.account_role;
-	NEW.account_type = _nr.account_type;
-	NEW.description = _nr.description;
-	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.login = _nr.login;
+		NEW.person_id = _nr.person_id;
+		NEW.company_id = _nr.company_id;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.account_status = _nr.account_status;
+		NEW.account_role = _nr.account_role;
+		NEW.account_type = _nr.account_type;
+		NEW.description = _nr.description;
+		NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -11625,26 +11274,27 @@ _uq := array_append(_uq, 'dns_domain_type = ' || quote_nullable(NEW.dns_domain_t
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_id = $1 RETURNING *'  USING OLD.dns_domain_id
 			INTO _nr;
-	END IF;
+
 	NEW.dns_domain_id = _nr.dns_domain_id;
-	NEW.soa_name = _nr.soa_name;
-	NEW.soa_class = _nr.soa_class;
-	NEW.soa_ttl = _nr.soa_ttl;
-	NEW.soa_serial = _nr.soa_serial;
-	NEW.soa_refresh = _nr.soa_refresh;
-	NEW.soa_retry = _nr.soa_retry;
-	NEW.soa_expire = _nr.soa_expire;
-	NEW.soa_minimum = _nr.soa_minimum;
-	NEW.soa_mname = _nr.soa_mname;
-	NEW.soa_rname = _nr.soa_rname;
-	NEW.parent_dns_domain_id = _nr.parent_dns_domain_id;
-	NEW.should_generate = CASE WHEN _nr.should_generate = true THEN 'Y' WHEN _nr.should_generate = false THEN 'N' ELSE NULL END;
-	NEW.last_generated = _nr.last_generated;
-	NEW.dns_domain_type = _nr.dns_domain_type;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.soa_name = _nr.soa_name;
+		NEW.soa_class = _nr.soa_class;
+		NEW.soa_ttl = _nr.soa_ttl;
+		NEW.soa_serial = _nr.soa_serial;
+		NEW.soa_refresh = _nr.soa_refresh;
+		NEW.soa_retry = _nr.soa_retry;
+		NEW.soa_expire = _nr.soa_expire;
+		NEW.soa_minimum = _nr.soa_minimum;
+		NEW.soa_mname = _nr.soa_mname;
+		NEW.soa_rname = _nr.soa_rname;
+		NEW.parent_dns_domain_id = _nr.parent_dns_domain_id;
+		NEW.should_generate = CASE WHEN _nr.should_generate = true THEN 'Y' WHEN _nr.should_generate = false THEN 'N' ELSE NULL END;
+		NEW.last_generated = _nr.last_generated;
+		NEW.dns_domain_type = _nr.dns_domain_type;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -11922,24 +11572,25 @@ _uq := array_append(_uq, 'encryption_method = ' || quote_nullable(NEW.encryption
 			array_to_string(_uq, ', ') ||
 			' WHERE  token_id = $1 RETURNING *'  USING OLD.token_id
 			INTO _nr;
-	END IF;
+
 	NEW.token_id = _nr.token_id;
-	NEW.token_type = _nr.token_type;
-	NEW.token_status = _nr.token_status;
-	NEW.token_serial = _nr.token_serial;
-	NEW.token_key = _nr.token_key;
-	NEW.zero_time = _nr.zero_time;
-	NEW.time_modulo = _nr.time_modulo;
-	NEW.token_password = _nr.token_password;
-	NEW.is_token_locked = CASE WHEN _nr.is_token_locked = true THEN 'Y' WHEN _nr.is_token_locked = false THEN 'N' ELSE NULL END;
-	NEW.token_unlock_time = _nr.token_unlock_time;
-	NEW.bad_logins = _nr.bad_logins;
-	NEW.token_sequence = _nr.token_sequence;
-	NEW.last_updated = _nr.last_updated;
-	NEW.encryption_key_db_value = _nr.encryption_key_db_value;
-	NEW.encryption_key_purpose = _nr.encryption_key_purpose;
-	NEW.encryption_key_purpose_version = _nr.encryption_key_purpose_version;
-	NEW.encryption_method = _nr.encryption_method;
+		NEW.token_type = _nr.token_type;
+		NEW.token_status = _nr.token_status;
+		NEW.token_serial = _nr.token_serial;
+		NEW.token_key = _nr.token_key;
+		NEW.zero_time = _nr.zero_time;
+		NEW.time_modulo = _nr.time_modulo;
+		NEW.token_password = _nr.token_password;
+		NEW.is_token_locked = CASE WHEN _nr.is_token_locked = true THEN 'Y' WHEN _nr.is_token_locked = false THEN 'N' ELSE NULL END;
+		NEW.token_unlock_time = _nr.token_unlock_time;
+		NEW.bad_logins = _nr.bad_logins;
+		NEW.token_sequence = _nr.token_sequence;
+		NEW.last_updated = _nr.last_updated;
+		NEW.encryption_key_db_value = _nr.encryption_key_db_value;
+		NEW.encryption_key_purpose = _nr.encryption_key_purpose;
+		NEW.encryption_key_purpose_version = _nr.encryption_key_purpose_version;
+		NEW.encryption_method = _nr.encryption_method;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -12241,29 +11892,30 @@ _uq := array_append(_uq, 'nickname = ' || quote_nullable(NEW.nickname));
 			array_to_string(_uq, ', ') ||
 			' WHERE  person_id = $1 AND  company_id = $2 RETURNING *'  USING OLD.person_id, OLD.company_id
 			INTO _nr;
-	END IF;
+
 	NEW.company_id = _nr.company_id;
-	NEW.person_id = _nr.person_id;
-	NEW.person_company_status = _nr.person_company_status;
-	NEW.person_company_relation = _nr.person_company_relation;
-	NEW.is_exempt = CASE WHEN _nr.is_exempt = true THEN 'Y' WHEN _nr.is_exempt = false THEN 'N' ELSE NULL END;
-	NEW.is_management = CASE WHEN _nr.is_management = true THEN 'Y' WHEN _nr.is_management = false THEN 'N' ELSE NULL END;
-	NEW.is_full_time = CASE WHEN _nr.is_full_time = true THEN 'Y' WHEN _nr.is_full_time = false THEN 'N' ELSE NULL END;
-	NEW.description = _nr.description;
-	NEW.employee_id = _nr.employee_id;
-	NEW.payroll_id = _nr.payroll_id;
-	NEW.external_hr_id = _nr.external_hr_id;
-	NEW.position_title = _nr.position_title;
-	NEW.badge_system_id = _nr.badge_system_id;
-	NEW.hire_date = _nr.hire_date;
-	NEW.termination_date = _nr.termination_date;
-	NEW.manager_person_id = _nr.manager_person_id;
-	NEW.supervisor_person_id = _nr.supervisor_person_id;
-	NEW.nickname = _nr.nickname;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.person_id = _nr.person_id;
+		NEW.person_company_status = _nr.person_company_status;
+		NEW.person_company_relation = _nr.person_company_relation;
+		NEW.is_exempt = CASE WHEN _nr.is_exempt = true THEN 'Y' WHEN _nr.is_exempt = false THEN 'N' ELSE NULL END;
+		NEW.is_management = CASE WHEN _nr.is_management = true THEN 'Y' WHEN _nr.is_management = false THEN 'N' ELSE NULL END;
+		NEW.is_full_time = CASE WHEN _nr.is_full_time = true THEN 'Y' WHEN _nr.is_full_time = false THEN 'N' ELSE NULL END;
+		NEW.description = _nr.description;
+		NEW.employee_id = _nr.employee_id;
+		NEW.payroll_id = _nr.payroll_id;
+		NEW.external_hr_id = _nr.external_hr_id;
+		NEW.position_title = _nr.position_title;
+		NEW.badge_system_id = _nr.badge_system_id;
+		NEW.hire_date = _nr.hire_date;
+		NEW.termination_date = _nr.termination_date;
+		NEW.manager_person_id = _nr.manager_person_id;
+		NEW.supervisor_person_id = _nr.supervisor_person_id;
+		NEW.nickname = _nr.nickname;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -12454,18 +12106,19 @@ _uq := array_append(_uq, 'account_realm_id = ' || quote_nullable(NEW.account_rea
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_collection_type = $1 RETURNING *'  USING OLD.account_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.account_collection_type = _nr.account_collection_type;
-	NEW.description = _nr.description;
-	NEW.is_infrastructure_type = CASE WHEN _nr.is_infrastructure_type = true THEN 'Y' WHEN _nr.is_infrastructure_type = false THEN 'N' ELSE NULL END;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.account_realm_id = _nr.account_realm_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.is_infrastructure_type = CASE WHEN _nr.is_infrastructure_type = true THEN 'Y' WHEN _nr.is_infrastructure_type = false THEN 'N' ELSE NULL END;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.account_realm_id = _nr.account_realm_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -12599,14 +12252,15 @@ _uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_role = $1 RETURNING *'  USING OLD.account_role
 			INTO _nr;
-	END IF;
+
 	NEW.account_role = _nr.account_role;
-	NEW.uid_gid_forced = CASE WHEN _nr.uid_gid_forced = true THEN 'Y' WHEN _nr.uid_gid_forced = false THEN 'N' ELSE NULL END;
-	NEW.description = _nr.description;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.uid_gid_forced = CASE WHEN _nr.uid_gid_forced = true THEN 'Y' WHEN _nr.uid_gid_forced = false THEN 'N' ELSE NULL END;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -12752,15 +12406,16 @@ _uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
 			array_to_string(_uq, ', ') ||
 			' WHERE  account_type = $1 RETURNING *'  USING OLD.account_type
 			INTO _nr;
-	END IF;
+
 	NEW.account_type = _nr.account_type;
-	NEW.is_person = CASE WHEN _nr.is_person = true THEN 'Y' WHEN _nr.is_person = false THEN 'N' ELSE NULL END;
-	NEW.uid_gid_forced = CASE WHEN _nr.uid_gid_forced = true THEN 'Y' WHEN _nr.uid_gid_forced = false THEN 'N' ELSE NULL END;
-	NEW.description = _nr.description;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.is_person = CASE WHEN _nr.is_person = true THEN 'Y' WHEN _nr.is_person = false THEN 'N' ELSE NULL END;
+		NEW.uid_gid_forced = CASE WHEN _nr.uid_gid_forced = true THEN 'Y' WHEN _nr.uid_gid_forced = false THEN 'N' ELSE NULL END;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -12927,17 +12582,18 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  company_collection_type = $1 RETURNING *'  USING OLD.company_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.company_collection_type = _nr.company_collection_type;
-	NEW.description = _nr.description;
-	NEW.is_infrastructure_type = CASE WHEN _nr.is_infrastructure_type = true THEN 'Y' WHEN _nr.is_infrastructure_type = false THEN 'N' ELSE NULL END;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.is_infrastructure_type = CASE WHEN _nr.is_infrastructure_type = true THEN 'Y' WHEN _nr.is_infrastructure_type = false THEN 'N' ELSE NULL END;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -13200,27 +12856,28 @@ _uq := array_append(_uq, 'permit_slot_id = ' || quote_nullable(NEW.permit_slot_i
 			array_to_string(_uq, ', ') ||
 			' WHERE  component_property_name = $1 AND  component_property_type = $2 RETURNING *'  USING OLD.component_property_name, OLD.component_property_type
 			INTO _nr;
-	END IF;
+
 	NEW.component_property_name = _nr.component_property_name;
-	NEW.component_property_type = _nr.component_property_type;
-	NEW.description = _nr.description;
-	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
-	NEW.property_data_type = _nr.property_data_type;
-	NEW.permit_component_type_id = _nr.permit_component_type_id;
-	NEW.required_component_type_id = _nr.required_component_type_id;
-	NEW.permit_component_function = _nr.permit_component_function;
-	NEW.required_component_function = _nr.required_component_function;
-	NEW.permit_component_id = _nr.permit_component_id;
-	NEW.permit_intcomp_conn_id = _nr.permit_inter_component_connection_id;
-	NEW.permit_slot_type_id = _nr.permit_slot_type_id;
-	NEW.required_slot_type_id = _nr.required_slot_type_id;
-	NEW.permit_slot_function = _nr.permit_slot_function;
-	NEW.required_slot_function = _nr.required_slot_function;
-	NEW.permit_slot_id = _nr.permit_slot_id;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.component_property_type = _nr.component_property_type;
+		NEW.description = _nr.description;
+		NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+		NEW.property_data_type = _nr.property_data_type;
+		NEW.permit_component_type_id = _nr.permit_component_type_id;
+		NEW.required_component_type_id = _nr.required_component_type_id;
+		NEW.permit_component_function = _nr.permit_component_function;
+		NEW.required_component_function = _nr.required_component_function;
+		NEW.permit_component_id = _nr.permit_component_id;
+		NEW.permit_intcomp_conn_id = _nr.permit_inter_component_connection_id;
+		NEW.permit_slot_type_id = _nr.permit_slot_type_id;
+		NEW.required_slot_type_id = _nr.required_slot_type_id;
+		NEW.permit_slot_function = _nr.permit_slot_function;
+		NEW.required_slot_function = _nr.required_slot_function;
+		NEW.permit_slot_id = _nr.permit_slot_id;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -13363,14 +13020,15 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  component_property_type = $1 RETURNING *'  USING OLD.component_property_type
 			INTO _nr;
-	END IF;
+
 	NEW.component_property_type = _nr.component_property_type;
-	NEW.description = _nr.description;
-	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -13520,16 +13178,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  device_collection_type = $1 RETURNING *'  USING OLD.device_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.device_collection_type = _nr.device_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -13681,16 +13340,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_collection_type = $1 RETURNING *'  USING OLD.dns_domain_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -13822,14 +13482,15 @@ _uq := array_append(_uq, 'description = ' || quote_nullable(NEW.description));
 			array_to_string(_uq, ', ') ||
 			' WHERE  dns_domain_type = $1 RETURNING *'  USING OLD.dns_domain_type
 			INTO _nr;
-	END IF;
+
 	NEW.dns_domain_type = _nr.dns_domain_type;
-	NEW.can_generate = CASE WHEN _nr.can_generate = true THEN 'Y' WHEN _nr.can_generate = false THEN 'N' ELSE NULL END;
-	NEW.description = _nr.description;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.can_generate = CASE WHEN _nr.can_generate = true THEN 'Y' WHEN _nr.can_generate = false THEN 'N' ELSE NULL END;
+		NEW.description = _nr.description;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -13979,16 +13640,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  layer2_network_collection_type = $1 RETURNING *'  USING OLD.layer2_network_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -14140,16 +13802,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  layer3_network_collection_type = $1 RETURNING *'  USING OLD.layer3_network_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -14321,18 +13984,19 @@ _uq := array_append(_uq, 'netblock_ip_family_restriction = ' || quote_nullable(N
 			array_to_string(_uq, ', ') ||
 			' WHERE  netblock_collection_type = $1 RETURNING *'  USING OLD.netblock_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.netblock_collection_type = _nr.netblock_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.netblock_single_addr_restrict = _nr.netblock_is_single_address_restriction;
-	NEW.netblock_ip_family_restrict = _nr.netblock_ip_family_restriction;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.netblock_single_addr_restrict = _nr.netblock_is_single_address_restriction;
+		NEW.netblock_ip_family_restrict = _nr.netblock_ip_family_restriction;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -14482,15 +14146,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  netblock_type = $1 RETURNING *'  USING OLD.netblock_type
 			INTO _nr;
-	END IF;
+
 	NEW.netblock_type = _nr.netblock_type;
-	NEW.description = _nr.description;
-	NEW.db_forced_hierarchy = CASE WHEN _nr.db_forced_hierarchy = true THEN 'Y' WHEN _nr.db_forced_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.is_validated_hierarchy = CASE WHEN _nr.is_validated_hierarchy = true THEN 'Y' WHEN _nr.is_validated_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.db_forced_hierarchy = CASE WHEN _nr.db_forced_hierarchy = true THEN 'Y' WHEN _nr.db_forced_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.is_validated_hierarchy = CASE WHEN _nr.is_validated_hierarchy = true THEN 'Y' WHEN _nr.is_validated_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -14667,18 +14332,19 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  network_range_type = $1 RETURNING *'  USING OLD.network_range_type
 			INTO _nr;
-	END IF;
+
 	NEW.network_range_type = _nr.network_range_type;
-	NEW.description = _nr.description;
-	NEW.dns_domain_required = _nr.dns_domain_required;
-	NEW.default_dns_prefix = _nr.default_dns_prefix;
-	NEW.netblock_type = _nr.netblock_type;
-	NEW.can_overlap = CASE WHEN _nr.can_overlap = true THEN 'Y' WHEN _nr.can_overlap = false THEN 'N' ELSE NULL END;
-	NEW.require_cidr_boundary = CASE WHEN _nr.require_cidr_boundary = true THEN 'Y' WHEN _nr.require_cidr_boundary = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.dns_domain_required = _nr.dns_domain_required;
+		NEW.default_dns_prefix = _nr.default_dns_prefix;
+		NEW.netblock_type = _nr.netblock_type;
+		NEW.can_overlap = CASE WHEN _nr.can_overlap = true THEN 'Y' WHEN _nr.can_overlap = false THEN 'N' ELSE NULL END;
+		NEW.require_cidr_boundary = CASE WHEN _nr.require_cidr_boundary = true THEN 'Y' WHEN _nr.require_cidr_boundary = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -14802,13 +14468,14 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  person_image_usage = $1 RETURNING *'  USING OLD.person_image_usage
 			INTO _nr;
-	END IF;
+
 	NEW.person_image_usage = _nr.person_image_usage;
-	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -14985,17 +14652,18 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  person_status = $1 RETURNING *'  USING OLD.person_status
 			INTO _nr;
-	END IF;
+
 	NEW.person_status = _nr.person_status;
-	NEW.description = _nr.description;
-	NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
-	NEW.propagate_from_person = CASE WHEN _nr.propagate_from_person = true THEN 'Y' WHEN _nr.propagate_from_person = false THEN 'N' ELSE NULL END;
-	NEW.is_forced = CASE WHEN _nr.is_forced = true THEN 'Y' WHEN _nr.is_forced = false THEN 'N' ELSE NULL END;
-	NEW.is_db_enforced = CASE WHEN _nr.is_db_enforced = true THEN 'Y' WHEN _nr.is_db_enforced = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.is_enabled = CASE WHEN _nr.is_enabled = true THEN 'Y' WHEN _nr.is_enabled = false THEN 'N' ELSE NULL END;
+		NEW.propagate_from_person = CASE WHEN _nr.propagate_from_person = true THEN 'Y' WHEN _nr.propagate_from_person = false THEN 'N' ELSE NULL END;
+		NEW.is_forced = CASE WHEN _nr.is_forced = true THEN 'Y' WHEN _nr.is_forced = false THEN 'N' ELSE NULL END;
+		NEW.is_db_enforced = CASE WHEN _nr.is_db_enforced = true THEN 'Y' WHEN _nr.is_db_enforced = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -15478,49 +15146,50 @@ _uq := array_append(_uq, 'permit_property_rank = ' || quote_nullable(NEW.permit_
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_name = $1 AND  property_type = $2 RETURNING *'  USING OLD.property_name, OLD.property_type
 			INTO _nr;
-	END IF;
+
 	NEW.property_name = _nr.property_name;
-	NEW.property_type = _nr.property_type;
-	NEW.description = _nr.description;
-	NEW.account_collection_type = _nr.account_collection_type;
-	NEW.company_collection_type = _nr.company_collection_type;
-	NEW.device_collection_type = _nr.device_collection_type;
-	NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
-	NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
-	NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
-	NEW.netblock_collection_type = _nr.netblock_collection_type;
-	NEW.network_range_type = _nr.network_range_type;
-	NEW.property_collection_type = _nr.property_name_collection_type;
-	NEW.service_env_collection_type = _nr.service_environment_collection_type;
-	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
-	NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
-	NEW.prop_val_dev_coll_type_rstrct = _nr.property_value_device_collection_type_restriction;
-	NEW.prop_val_nblk_coll_type_rstrct = _nr.property_value_netblock_collection_type_restriction;
-	NEW.property_data_type = _nr.property_data_type;
-	NEW.property_value_json_schema = _nr.property_value_json_schema;
-	NEW.permit_account_collection_id = _nr.permit_account_collection_id;
-	NEW.permit_account_id = _nr.permit_account_id;
-	NEW.permit_account_realm_id = _nr.permit_account_realm_id;
-	NEW.permit_company_id = _nr.permit_company_id;
-	NEW.permit_company_collection_id = _nr.permit_company_collection_id;
-	NEW.permit_device_collection_id = _nr.permit_device_collection_id;
-	NEW.permit_dns_domain_coll_id = _nr.permit_dns_domain_collection_id;
-	NEW.permit_layer2_network_coll_id = _nr.permit_layer2_network_collection_id;
-	NEW.permit_layer3_network_coll_id = _nr.permit_layer3_network_collection_id;
-	NEW.permit_netblock_collection_id = _nr.permit_netblock_collection_id;
-	NEW.permit_network_range_id = _nr.permit_network_range_id;
-	NEW.permit_operating_system_id = _nr.permit_operating_system_id;
-	NEW.permit_os_snapshot_id = _nr.permit_operating_system_snapshot_id;
-	NEW.permit_person_id = _nr.permit_person_id;
-	NEW.permit_property_collection_id = _nr.permit_property_name_collection_id;
-	NEW.permit_service_env_collection = _nr.permit_service_environment_collection;
-	NEW.permit_site_code = _nr.permit_site_code;
-	NEW.permit_x509_signed_cert_id = _nr.permit_x509_signed_certificate_id;
-	NEW.permit_property_rank = _nr.permit_property_rank;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.property_type = _nr.property_type;
+		NEW.description = _nr.description;
+		NEW.account_collection_type = _nr.account_collection_type;
+		NEW.company_collection_type = _nr.company_collection_type;
+		NEW.device_collection_type = _nr.device_collection_type;
+		NEW.dns_domain_collection_type = _nr.dns_domain_collection_type;
+		NEW.layer2_network_collection_type = _nr.layer2_network_collection_type;
+		NEW.layer3_network_collection_type = _nr.layer3_network_collection_type;
+		NEW.netblock_collection_type = _nr.netblock_collection_type;
+		NEW.network_range_type = _nr.network_range_type;
+		NEW.property_collection_type = _nr.property_name_collection_type;
+		NEW.service_env_collection_type = _nr.service_environment_collection_type;
+		NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+		NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+		NEW.prop_val_dev_coll_type_rstrct = _nr.property_value_device_collection_type_restriction;
+		NEW.prop_val_nblk_coll_type_rstrct = _nr.property_value_netblock_collection_type_restriction;
+		NEW.property_data_type = _nr.property_data_type;
+		NEW.property_value_json_schema = _nr.property_value_json_schema;
+		NEW.permit_account_collection_id = _nr.permit_account_collection_id;
+		NEW.permit_account_id = _nr.permit_account_id;
+		NEW.permit_account_realm_id = _nr.permit_account_realm_id;
+		NEW.permit_company_id = _nr.permit_company_id;
+		NEW.permit_company_collection_id = _nr.permit_company_collection_id;
+		NEW.permit_device_collection_id = _nr.permit_device_collection_id;
+		NEW.permit_dns_domain_coll_id = _nr.permit_dns_domain_collection_id;
+		NEW.permit_layer2_network_coll_id = _nr.permit_layer2_network_collection_id;
+		NEW.permit_layer3_network_coll_id = _nr.permit_layer3_network_collection_id;
+		NEW.permit_netblock_collection_id = _nr.permit_netblock_collection_id;
+		NEW.permit_network_range_id = _nr.permit_network_range_id;
+		NEW.permit_operating_system_id = _nr.permit_operating_system_id;
+		NEW.permit_os_snapshot_id = _nr.permit_operating_system_snapshot_id;
+		NEW.permit_person_id = _nr.permit_person_id;
+		NEW.permit_property_collection_id = _nr.permit_property_name_collection_id;
+		NEW.permit_service_env_collection = _nr.permit_service_environment_collection;
+		NEW.permit_site_code = _nr.permit_site_code;
+		NEW.permit_x509_signed_cert_id = _nr.permit_x509_signed_certificate_id;
+		NEW.permit_property_rank = _nr.permit_property_rank;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -15705,16 +15374,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_name_collection_type = $1 RETURNING *'  USING OLD.property_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.property_collection_type = _nr.property_name_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -15856,15 +15526,16 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  property_type = $1 RETURNING *'  USING OLD.property_type
 			INTO _nr;
-	END IF;
+
 	NEW.property_type = _nr.property_type;
-	NEW.description = _nr.description;
-	NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
-	NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.prop_val_acct_coll_type_rstrct = _nr.property_value_account_collection_type_restriction;
+		NEW.is_multivalue = CASE WHEN _nr.is_multivalue = true THEN 'Y' WHEN _nr.is_multivalue = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -16015,16 +15686,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  service_environment_collection_type = $1 RETURNING *'  USING OLD.service_env_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.service_env_collection_type = _nr.service_environment_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -16156,14 +15828,15 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  slot_function = $1 RETURNING *'  USING OLD.slot_function
 			INTO _nr;
-	END IF;
+
 	NEW.slot_function = _nr.slot_function;
-	NEW.description = _nr.description;
-	NEW.can_have_mac_address = CASE WHEN _nr.can_have_mac_address = true THEN 'Y' WHEN _nr.can_have_mac_address = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.can_have_mac_address = CASE WHEN _nr.can_have_mac_address = true THEN 'Y' WHEN _nr.can_have_mac_address = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -16313,16 +15986,17 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  token_collection_type = $1 RETURNING *'  USING OLD.token_collection_type
 			INTO _nr;
-	END IF;
+
 	NEW.token_collection_type = _nr.token_collection_type;
-	NEW.description = _nr.description;
-	NEW.max_num_members = _nr.max_num_members;
-	NEW.max_num_collections = _nr.max_num_collections;
-	NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.max_num_members = _nr.max_num_members;
+		NEW.max_num_collections = _nr.max_num_collections;
+		NEW.can_have_hierarchy = CASE WHEN _nr.can_have_hierarchy = true THEN 'Y' WHEN _nr.can_have_hierarchy = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -16454,14 +16128,15 @@ END IF;
 			array_to_string(_uq, ', ') ||
 			' WHERE  x509_key_usage = $1 RETURNING *'  USING OLD.x509_key_usg
 			INTO _nr;
-	END IF;
+
 	NEW.x509_key_usg = _nr.x509_key_usage;
-	NEW.description = _nr.description;
-	NEW.is_extended = CASE WHEN _nr.is_extended = true THEN 'Y' WHEN _nr.is_extended = false THEN 'N' ELSE NULL END;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.description = _nr.description;
+		NEW.is_extended = CASE WHEN _nr.is_extended = true THEN 'Y' WHEN _nr.is_extended = false THEN 'N' ELSE NULL END;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -16757,30 +16432,31 @@ _uq := array_append(_uq, 'crl_uri = ' || quote_nullable(NEW.crl_uri));
 			array_to_string(_uq, ', ') ||
 			' WHERE  x509_cert_id = $1 RETURNING *'  USING OLD.x509_cert_id
 			INTO _nr;
-	END IF;
+
 	NEW.x509_cert_id = _nr.x509_cert_id;
-	NEW.friendly_name = _nr.friendly_name;
-	NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
-	NEW.is_certificate_authority = CASE WHEN _nr.is_certificate_authority = true THEN 'Y' WHEN _nr.is_certificate_authority = false THEN 'N' ELSE NULL END;
-	NEW.signing_cert_id = _nr.signing_cert_id;
-	NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
-	NEW.public_key = _nr.public_key;
-	NEW.private_key = _nr.private_key;
-	NEW.certificate_sign_req = _nr.certificate_sign_req;
-	NEW.subject = _nr.subject;
-	NEW.subject_key_identifier = _nr.subject_key_identifier;
-	NEW.valid_from = _nr.valid_from;
-	NEW.valid_to = _nr.valid_to;
-	NEW.x509_revocation_date = _nr.x509_revocation_date;
-	NEW.x509_revocation_reason = _nr.x509_revocation_reason;
-	NEW.passphrase = _nr.passphrase;
-	NEW.encryption_key_id = _nr.encryption_key_id;
-	NEW.ocsp_uri = _nr.ocsp_uri;
-	NEW.crl_uri = _nr.crl_uri;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.friendly_name = _nr.friendly_name;
+		NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
+		NEW.is_certificate_authority = CASE WHEN _nr.is_certificate_authority = true THEN 'Y' WHEN _nr.is_certificate_authority = false THEN 'N' ELSE NULL END;
+		NEW.signing_cert_id = _nr.signing_cert_id;
+		NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+		NEW.public_key = _nr.public_key;
+		NEW.private_key = _nr.private_key;
+		NEW.certificate_sign_req = _nr.certificate_sign_req;
+		NEW.subject = _nr.subject;
+		NEW.subject_key_identifier = _nr.subject_key_identifier;
+		NEW.valid_from = _nr.valid_from;
+		NEW.valid_to = _nr.valid_to;
+		NEW.x509_revocation_date = _nr.x509_revocation_date;
+		NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+		NEW.passphrase = _nr.passphrase;
+		NEW.encryption_key_id = _nr.encryption_key_id;
+		NEW.ocsp_uri = _nr.ocsp_uri;
+		NEW.crl_uri = _nr.crl_uri;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
@@ -17082,29 +16758,30 @@ _uq := array_append(_uq, 'crl_uri = ' || quote_nullable(NEW.crl_uri));
 			array_to_string(_uq, ', ') ||
 			' WHERE  x509_signed_certificate_id = $1 RETURNING *'  USING OLD.x509_signed_certificate_id
 			INTO _nr;
-	END IF;
+
 	NEW.x509_signed_certificate_id = _nr.x509_signed_certificate_id;
-	NEW.x509_certificate_type = _nr.x509_certificate_type;
-	NEW.subject = _nr.subject;
-	NEW.friendly_name = _nr.friendly_name;
-	NEW.subject_key_identifier = _nr.subject_key_identifier;
-	NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
-	NEW.is_certificate_authority = CASE WHEN _nr.is_certificate_authority = true THEN 'Y' WHEN _nr.is_certificate_authority = false THEN 'N' ELSE NULL END;
-	NEW.signing_cert_id = _nr.signing_cert_id;
-	NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
-	NEW.public_key = _nr.public_key;
-	NEW.private_key_id = _nr.private_key_id;
-	NEW.certificate_signing_request_id = _nr.certificate_signing_request_id;
-	NEW.valid_from = _nr.valid_from;
-	NEW.valid_to = _nr.valid_to;
-	NEW.x509_revocation_date = _nr.x509_revocation_date;
-	NEW.x509_revocation_reason = _nr.x509_revocation_reason;
-	NEW.ocsp_uri = _nr.ocsp_uri;
-	NEW.crl_uri = _nr.crl_uri;
-	NEW.data_ins_user = _nr.data_ins_user;
-	NEW.data_ins_date = _nr.data_ins_date;
-	NEW.data_upd_user = _nr.data_upd_user;
-	NEW.data_upd_date = _nr.data_upd_date;
+		NEW.x509_certificate_type = _nr.x509_certificate_type;
+		NEW.subject = _nr.subject;
+		NEW.friendly_name = _nr.friendly_name;
+		NEW.subject_key_identifier = _nr.subject_key_identifier;
+		NEW.is_active = CASE WHEN _nr.is_active = true THEN 'Y' WHEN _nr.is_active = false THEN 'N' ELSE NULL END;
+		NEW.is_certificate_authority = CASE WHEN _nr.is_certificate_authority = true THEN 'Y' WHEN _nr.is_certificate_authority = false THEN 'N' ELSE NULL END;
+		NEW.signing_cert_id = _nr.signing_cert_id;
+		NEW.x509_ca_cert_serial_number = _nr.x509_ca_cert_serial_number;
+		NEW.public_key = _nr.public_key;
+		NEW.private_key_id = _nr.private_key_id;
+		NEW.certificate_signing_request_id = _nr.certificate_signing_request_id;
+		NEW.valid_from = _nr.valid_from;
+		NEW.valid_to = _nr.valid_to;
+		NEW.x509_revocation_date = _nr.x509_revocation_date;
+		NEW.x509_revocation_reason = _nr.x509_revocation_reason;
+		NEW.ocsp_uri = _nr.ocsp_uri;
+		NEW.crl_uri = _nr.crl_uri;
+		NEW.data_ins_user = _nr.data_ins_user;
+		NEW.data_ins_date = _nr.data_ins_date;
+		NEW.data_upd_user = _nr.data_upd_user;
+		NEW.data_upd_date = _nr.data_upd_date;
+	END IF;
 	RETURN NEW;
 END;
 $$
