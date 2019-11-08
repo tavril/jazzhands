@@ -6184,7 +6184,6 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 					WHERE property_name = 'IsLocallyManagedDevice'
 					AND property_type = 'JazzHandsLegacySupport'
 			) RETURNING * INTO _r;
-			RAISE NOTICE '::: %', to_json(_r);
 			NEW.is_locally_managed = 'N';
 		ELSE
 			IF NEW.is_locally_managed IS NULL THEN
