@@ -525,21 +525,38 @@ SELECT
 	device_status,
 	operating_system_id,
 	service_environment_id,
-	NULL::character varying(50) AS auto_mgmt_protocol, -- Need to fill in
-	NULL::character(1) AS is_locally_managed, -- Need to fill in
-	NULL::character(1) AS is_monitored, -- Need to fill in
+	auto_mgmt_protocolish AS auto_mgmt_protocol,
+	CASE WHEN is_locally_managedish IS NOT NULL THEN 'Y' ELSE 'N' END
+		AS is_locally_managed,
+	CASE WHEN is_monitoredish IS NOT NULL THEN 'Y' ELSE 'N' END
+		AS is_monitored,
 	CASE WHEN is_virtual_device IS NULL THEN NULL
 		WHEN is_virtual_device = true THEN 'Y'
 		WHEN is_virtual_device = false THEN 'N'
 		ELSE NULL
 	END AS is_virtual_device,
-	NULL::character(1) AS should_fetch_config, -- Need to fill in
+	CASE WHEN should_cfg_fetchish IS NOT NULL THEN 'Y' ELSE 'N' END
+		AS should_fetch_config,
 	date_in_service,
 	data_ins_user,
 	data_ins_date,
 	data_upd_user,
 	data_upd_date
-FROM jazzhands.device;
+FROM jazzhands.device
+LEFT JOIN (
+	SELECT device_id,
+	min(device_collection_id) FILTER (WHERE property_name ='IsMonitoredDevice') AS is_monitoredish,
+	min(device_collection_id) FILTER (WHERE property_name ='ShouldConfigFetch') AS should_cfg_fetchish,
+	min(device_collection_id) FILTER (WHERE property_name ='IsLocallyManagedDevice') AS is_locally_managedish,
+	min(property_value) FILTER (WHERE property_name ='AutoMgmtProtocol') AS auto_mgmt_protocolish
+	FROM jazzhands.device_collection_device dcd
+		JOIN jazzhands.property USING (device_collection_id)
+	WHERE property_type = 'JazzHandsLegacySupport'
+	AND property_name IN
+		('IsMonitoredDevice','ShouldConfigFetch','AutoMgmtProtocol','IsLocallyManagedDevice')
+	GROUP BY 1
+) legacy USING (device_id);
+
 
 CREATE OR REPLACE VIEW jazzhands_legacy.device_collection AS
 SELECT device_collection_id,device_collection_name,device_collection_type,description,external_id,data_ins_user,data_ins_date,data_upd_user,data_upd_date
@@ -6222,7 +6239,6 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 		END IF;
 	END IF;
 
->>>>>>> 8e58efd4... flesh out device triggers
 	RETURN NEW;
 END;
 $$
