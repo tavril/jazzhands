@@ -225,12 +225,9 @@ BEGIN
 	END IF;
 
 	BEGIN
-		RAISE NOTICE 'before _d1: %', to_json(_d1);
 		UPDATE device SET is_monitored = 'N'
 			WHERE device_id = _d1.device_id RETURNING * INTO _d1;
-		RAISE NOTICE 'after  _d1: %', to_json(_d1);
 		SELECT * INTO _d2 FROM device WHERE device_id = _d1.device_id;
-		RAISE NOTICE 'after  _d2: %', to_json(_d2);
 		IF _d2 != _d1 THEN
 			RAISE EXCEPTION '... is_monitored/N devices do not match - % %', to_json(_d1), to_json(_d2);
 		END IF;
@@ -697,6 +694,90 @@ BEGIN
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
 		RAISE NOTICE '.... it did! (%)', SQLERRM;
 	END;
+
+	DELETE FROM device WHERE device_id = _d1.device_id;
+
+	-- Not checking things for the absense of the property because they ust
+	-- won't show up.
+
+	RAISE NOTICE 'Checking if removing AutoMgmtProtocol property breaks insert...';
+	BEGIN
+		DELETE FROM property
+		WHERE property_name = 'AutoMgmtProtocol'
+		AND property_type = 'JazzHandsLegacySupport';
+		INSERT INTO device (
+			device_name, device_status, device_type_id, service_environment_id,
+			auto_mgmt_protocol
+		) VALUES (
+			'JHTEST01', 'up', _dt.device_type_id, _se.service_environment_id,
+			'ssh'
+		) RETURNING * INTO _d1;
+		RAISE EXCEPTION '%', 'It DID NOT! BAD!';
+	EXCEPTION WHEN error_in_assignment THEN
+		RAISE NOTICE '.... it did! (%)', SQLERRM;
+	END;
+
+	RAISE NOTICE 'Checking if removing is_locally_managed property breaks insert...';
+	BEGIN
+		DELETE FROM property
+		WHERE property_name = 'IsLocallyManagedDevice'
+		AND property_type = 'JazzHandsLegacySupport';
+		INSERT INTO device (
+			device_name, device_status, device_type_id, service_environment_id,
+			is_locally_managed
+		) VALUES (
+			'JHTEST01', 'up', _dt.device_type_id, _se.service_environment_id,
+			'Y'
+		) RETURNING * INTO _d1;
+		RAISE EXCEPTION '%', 'It DID NOT! BAD!';
+	EXCEPTION WHEN error_in_assignment THEN
+		RAISE NOTICE '.... it did! (%)', SQLERRM;
+	END;
+
+	RAISE NOTICE 'Checking if removing is_monitored property breaks insert...';
+	BEGIN
+		DELETE FROM property
+		WHERE property_name = 'IsMonitoredDevice'
+		AND property_type = 'JazzHandsLegacySupport';
+		INSERT INTO device (
+			device_name, device_status, device_type_id, service_environment_id,
+			is_monitored
+		) VALUES (
+			'JHTEST01', 'up', _dt.device_type_id, _se.service_environment_id,
+			'Y'
+		) RETURNING * INTO _d1;
+		RAISE EXCEPTION '%', 'It DID NOT! BAD!';
+	EXCEPTION WHEN error_in_assignment THEN
+		RAISE NOTICE '.... it did! (%)', SQLERRM;
+	END;
+
+	RAISE NOTICE 'Checking if removing should_fetch_config property breaks insert...';
+	BEGIN
+		DELETE FROM property
+		WHERE property_name = 'ShouldConfigFetch'
+		AND property_type = 'JazzHandsLegacySupport';
+		INSERT INTO device (
+			device_name, device_status, device_type_id, service_environment_id,
+			should_fetch_config
+		) VALUES (
+			'JHTEST01', 'up', _dt.device_type_id, _se.service_environment_id,
+			'Y'
+		) RETURNING * INTO _d1;
+		RAISE EXCEPTION '%', 'It DID NOT! BAD!';
+	EXCEPTION WHEN error_in_assignment THEN
+		RAISE NOTICE '.... it did! (%)', SQLERRM;
+	END;
+
+	DELETE FROM device WHERE device_id = _d1.device_id;
+
+	------
+	INSERT INTO device (
+		device_name, device_status, device_type_id, service_environment_id,
+		auto_mgmt_protocol, is_locally_managed, is_monitored, should_fetch_config
+	) VALUES (
+		'JHTEST01', 'up', _dt.device_type_id, _se.service_environment_id,
+		'ssh', 'Y', 'Y', 'Y'
+	) RETURNING * INTO _d1;
 
 
 	--

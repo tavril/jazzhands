@@ -5768,6 +5768,7 @@ DECLARE
 	_cq	text[];
 	_vq	text[];
 	_nr	jazzhands.device%rowtype;
+	_r	RECORD;
 BEGIN
 	IF NEW.device_id IS NOT NULL THEN
 		_cq := array_append(_cq, quote_ident('device_id'));
@@ -5869,6 +5870,7 @@ BEGIN
 	-- Backwards compatability
 	--
 	IF NEW.is_monitored IS NOT DISTINCT FROM 'Y' THEN
+		_r := NULL;
 		INSERT INTO device_collection_device (
 			device_collection_id, device_id
 		) SELECT device_collection_id, _nr.device_id
@@ -5876,7 +5878,11 @@ BEGIN
 			JOIN property USING (device_collection_id)
 		WHERE property_name = 'IsMonitoredDevice'
 		AND property_type = 'JazzHandsLegacySupport'
-		LIMIT 1;
+		LIMIT 1 RETURNING * INTO _r;
+		IF _r IS NULL THEN
+			RAISE EXCEPTION 'Unable to set is_monitored'
+				USING ERRCODE = 'error_in_assignment';
+		END IF;
 		NEW.is_monitored = 'Y';
 	ELSE
 		IF NEW.is_monitored != 'N' THEN
@@ -5887,6 +5893,7 @@ BEGIN
 	END IF;
 
 	IF NEW.should_fetch_config IS NOT DISTINCT FROM 'Y' THEN
+		_r := NULL;
 		INSERT INTO device_collection_device (
 			device_collection_id, device_id
 		) SELECT device_collection_id, _nr.device_id
@@ -5894,7 +5901,11 @@ BEGIN
 			JOIN property USING (device_collection_id)
 		WHERE property_name = 'ShouldConfigFetch'
 		AND property_type = 'JazzHandsLegacySupport'
-		LIMIT 1;
+		LIMIT 1 RETURNING * INTO _r;
+		IF _r IS NULL THEN
+			RAISE EXCEPTION 'Unable to set should_fetch_config'
+				USING ERRCODE = 'error_in_assignment';
+		END IF;
 		NEW.should_fetch_config = 'Y';
 	ELSE
 		IF NEW.should_fetch_config != 'N' THEN
@@ -5905,6 +5916,7 @@ BEGIN
 	END IF;
 
 	IF NEW.is_locally_managed IS NOT DISTINCT FROM 'Y' THEN
+		_r := NULL;
 		INSERT INTO device_collection_device (
 			device_collection_id, device_id
 		) SELECT device_collection_id, _nr.device_id
@@ -5912,7 +5924,11 @@ BEGIN
 			JOIN property USING (device_collection_id)
 		WHERE property_name = 'IsLocallyManagedDevice'
 		AND property_type = 'JazzHandsLegacySupport'
-		LIMIT 1;
+		LIMIT 1 RETURNING * INTO _r;
+		IF _r IS NULL THEN
+			RAISE EXCEPTION 'Unable to set is_locally_managed'
+				USING ERRCODE = 'error_in_assignment';
+		END IF;
 		NEW.is_locally_managed = 'Y';
 	ELSE
 		IF NEW.is_locally_managed != 'N' THEN
@@ -5923,6 +5939,7 @@ BEGIN
 	END IF;
 
 	IF NEW.auto_mgmt_protocol IS NOT NULL THEN
+		_r := NULL;
 		INSERT INTO device_collection_device (
 			device_collection_id, device_id
 		) SELECT device_collection_id, _nr.device_id
@@ -5931,7 +5948,11 @@ BEGIN
 		WHERE property_name = 'AutoMgmtProtocol'
 		AND property_type = 'JazzHandsLegacySupport'
 		AND property_value = NEW.auto_mgmt_protocol
-		LIMIT 1;
+		LIMIT 1 RETURNING * INTO _r;
+		IF _r IS NULL THEN
+			RAISE EXCEPTION 'Unable to set auto_mgmt_protocol'
+				USING ERRCODE = 'error_in_assignment';
+		END IF;
 		-- NEW. is already set.
 	END IF;
 
@@ -6095,6 +6116,7 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 	--
 	IF OLD.is_monitored IS DISTINCT FROM NEW.is_monitored THEN
 		IF NEW.is_monitored = 'Y' THEN
+			_r := NULL;
 			INSERT INTO device_collection_device (
 				device_collection_id, device_id
 			) SELECT device_collection_id, NEW.device_id
@@ -6102,7 +6124,11 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 				JOIN property USING (device_collection_id)
 			WHERE property_name = 'IsMonitoredDevice'
 			AND property_type = 'JazzHandsLegacySupport'
-			LIMIT 1;
+			LIMIT 1 RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set is_monitored'
+					USING ERRCODE = 'error_in_assignment';
+			END IF;
 			NEW.is_monitored = 'Y';
 		ELSIF NEW.is_monitored = 'N' THEN
 			DELETE FROM device_collection_device
@@ -6113,7 +6139,11 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 					JOIN property USING (device_collection_id)
 					WHERE property_name = 'IsMonitoredDevice'
 					AND property_type = 'JazzHandsLegacySupport'
-			);
+			) RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set is_monitored'
+					USING ERRCODE = 'error_in_assignment';
+			END IF;
 			NEW.is_monitored = 'N';
 		ELSE
 			IF NEW.is_monitored IS NULL THEN
@@ -6130,6 +6160,7 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 
 	IF OLD.should_fetch_config IS DISTINCT FROM NEW.should_fetch_config THEN
 		IF NEW.should_fetch_config = 'Y' THEN
+			_r := NULL;
 			INSERT INTO device_collection_device (
 				device_collection_id, device_id
 			) SELECT device_collection_id, NEW.device_id
@@ -6137,7 +6168,11 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 				JOIN property USING (device_collection_id)
 			WHERE property_name = 'ShouldConfigFetch'
 			AND property_type = 'JazzHandsLegacySupport'
-			LIMIT 1;
+			LIMIT 1 RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set should_fetch_config'
+				USING ERRCODE = 'error_in_assignment';
+			END IF;
 			NEW.should_fetch_config = 'Y';
 		ELSIF NEW.should_fetch_config = 'N' THEN
 			DELETE FROM device_collection_device
@@ -6148,7 +6183,11 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 					JOIN property USING (device_collection_id)
 					WHERE property_name = 'ShouldConfigFetch'
 					AND property_type = 'JazzHandsLegacySupport'
-			);
+			) RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set should_fetch_config'
+					USING ERRCODE = 'error_in_assignment';
+			END IF;
 			NEW.should_fetch_config = 'N';
 		ELSE
 			IF NEW.should_fetch_config IS NULL THEN
@@ -6165,6 +6204,7 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 
 	IF OLD.is_locally_managed IS DISTINCT FROM NEW.is_locally_managed THEN
 		IF NEW.is_locally_managed = 'Y' THEN
+			_r := NULL;
 			INSERT INTO device_collection_device (
 				device_collection_id, device_id
 			) SELECT device_collection_id, NEW.device_id
@@ -6172,7 +6212,11 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 				JOIN property USING (device_collection_id)
 			WHERE property_name = 'IsLocallyManagedDevice'
 			AND property_type = 'JazzHandsLegacySupport'
-			LIMIT 1;
+			LIMIT 1 RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set is_locally_managed'
+				USING ERRCODE = 'error_in_assignment';
+			END IF;
 			NEW.is_locally_managed = 'Y';
 		ELSIF NEW.is_locally_managed = 'N' THEN
 			DELETE FROM device_collection_device
@@ -6184,6 +6228,10 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 					WHERE property_name = 'IsLocallyManagedDevice'
 					AND property_type = 'JazzHandsLegacySupport'
 			) RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set is_locally_managed'
+					USING ERRCODE = 'error_in_assignment';
+			END IF;
 			NEW.is_locally_managed = 'N';
 		ELSE
 			IF NEW.is_locally_managed IS NULL THEN
@@ -6200,6 +6248,7 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 
 	IF OLD.auto_mgmt_protocol IS DISTINCT FROM NEW.auto_mgmt_protocol THEN
 		IF OLD.auto_mgmt_protocol IS NULL THEN
+			_r := NULL;
 			INSERT INTO device_collection_device (
 				device_collection_id, device_id
 			) SELECT device_collection_id, NEW.device_id
@@ -6209,7 +6258,11 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 				AND property_type = 'JazzHandsLegacySupport'
 				AND property_value = NEW.auto_mgmt_protocol
 				ORDER BY device_collection_id, property_id
-				LIMIT 1;
+				LIMIT 1 RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set auto_mgmt_protocol'
+					USING ERRCODE = 'error_in_assignment';
+			END IF;
 		ELSIF NEW.auto_mgmt_protocol IS NULL THEN
 			DELETE FROM device_collection_device
 			WHERE device_id = OLD.device_id
@@ -6240,7 +6293,11 @@ _uq := array_append(_uq, 'date_in_service = ' || quote_nullable(NEW.date_in_serv
 					WHERE property_name = 'AutoMgmtProtocol'
 					AND property_type = 'JazzHandsLegacySupport'
 					AND property_value = OLD.auto_mgmt_protocol
-				);
+				) RETURNING * INTO _r;
+			IF _r IS NULL THEN
+				RAISE EXCEPTION 'Unable to set auto_mgmt_protocol'
+					USING ERRCODE = 'error_in_assignment';
+			END IF;
 		END IF;
 	END IF;
 
@@ -9611,7 +9668,7 @@ BEGIN
 			FROM val_property
 			WHERE property_name = NEW.property_name
 			AND property_type = NEW.property_type;
-		
+
 		IF _dt = 'boolean' THEN
 			_cq := array_append(_cq, quote_ident('property_value_boolean'));
 			_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.property_value = 'Y' THEN true WHEN NEW.property_value = 'N' THEN FALSE ELSE NULL END));
