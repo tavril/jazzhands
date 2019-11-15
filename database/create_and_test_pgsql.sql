@@ -103,6 +103,7 @@ begin;
 \ir tests/pgsql/network_range_tests.sql
 \ir tests/pgsql/x509_tests.sql
 \ir tests/pgsql/v_person_company_regression.sql
+\ir tests/pgsql/devices_regression.sql
 
 \ir tests/pgsql/ct_netblock_tests.sql
 \ir tests/pgsql/ct_site_netblock_tests.sql
@@ -149,6 +150,7 @@ set search_path=jazzhands_legacy;
 \ir tests/pgsql/jhlegacy/x509_tests.sql
 \ir tests/pgsql/jhlegacy/v_person_company_regression.sql
 \ir tests/pgsql/jhlegacy/account_enabled_test.sql
+\ir tests/pgsql/jhlegacy/devices_regression.sql
 
 \ir tests/pgsql/jhlegacy/jazzhands_legacy_device.sql
 

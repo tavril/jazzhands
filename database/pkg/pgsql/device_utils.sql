@@ -357,7 +357,7 @@ BEGIN
 					lp.device_id = ANY(device_id_list)
 			)
 	), z AS (
-		DELETE FROM layer2_connection_l2_network l2cl2n WHERE
+		DELETE FROM layer2_connection_layer2_network l2cl2n WHERE
 			l2cl2n.layer2_connection_id IN (
 				SELECT layer2_connection_id FROM x
 			)
