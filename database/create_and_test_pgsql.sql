@@ -131,7 +131,7 @@ set search_path=jazzhands_legacy;
 \ir tests/pgsql/jhlegacy/ip_universe_validation_regression.sql
 \ir tests/pgsql/jhlegacy/netblock_defaults_regression.sql
 \ir tests/pgsql/jhlegacy/network_interface_regression_test.sql
---- \ir tests/pgsql/jhlegacy/property_regression_test.sql
+\ir tests/pgsql/jhlegacy/property_regression_test.sql
 \ir tests/pgsql/jhlegacy/device_ticket_regression.sql
 \ir tests/pgsql/jhlegacy/device_power_regression.sql
 \ir tests/pgsql/jhlegacy/account_coll_hier_regression.sql

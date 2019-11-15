@@ -1453,7 +1453,9 @@ SELECT
 	x509_signed_certificate_id,
 	property_name,
 	property_type,
-	property_value,
+	CASE WHEN property_value_boolean = true THEN 'Y'
+		WHEN property_value_boolean = false THEN 'N'
+		ELSE property_value END AS property_value,
 	property_value_timestamp,
 	property_value_account_collection_id AS property_value_account_coll_id,
 	property_value_device_collection_id AS property_value_device_coll_id,
@@ -2605,7 +2607,9 @@ SELECT
 	x509_signed_certificate_id,
 	property_name,
 	property_type,
-	property_value,
+	cast(CASE WHEN property_value_boolean = true THEN 'Y'
+		WHEN property_value_boolean = false THEN 'N'
+		ELSE property_value END AS varchar(1024)) AS property_value,
 	property_value_timestamp,
 	property_value_account_collection_id AS property_value_account_coll_id,
 	property_value_device_collection_id AS property_value_device_coll_id,
@@ -9671,7 +9675,7 @@ BEGIN
 
 		IF _dt = 'boolean' THEN
 			_cq := array_append(_cq, quote_ident('property_value_boolean'));
-			_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.property_value = 'Y' THEN true WHEN NEW.property_value = 'N' THEN FALSE ELSE NULL END));
+			_vq := array_append(_vq, quote_nullable(CASE WHEN NEW.property_value = 'Y' THEN true WHEN NEW.property_value = 'N' THEN false ELSE NULL END) || '::boolean');
 		ELSE
 			_cq := array_append(_cq, quote_ident('property_value'));
 			_vq := array_append(_vq, quote_nullable(NEW.property_value));

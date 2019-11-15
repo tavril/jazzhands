@@ -51,6 +51,7 @@ SAVEPOINT property_trigger_test;
 -- data is there; need to do that before rewritten to use proper savepoints.
 
 \ir ../../../pkg/pgsql/property_utils.sql
+\ir ../../../ddl/legacy.sql
 -- \ir ../../../ddl/schema/pgsql/create_property_triggers.sql
 
 CREATE OR REPLACE FUNCTION validate_property_triggers() RETURNS BOOLEAN AS $$
@@ -71,7 +72,9 @@ DECLARE
 	v_password_type			Property.Property_Value_Password_Type%TYPE;
 	v_sw_package_id			Property.Property_Value_SW_Package_ID%TYPE;
 	v_token_collection_id	Property.Property_Value_Token_Col_ID%TYPE;
-
+	_p1						property%ROWTYPE;
+	_p2						property%ROWTYPE;
+	_r						RECORD;
 BEGIN
 
 --
@@ -395,7 +398,7 @@ BEGIN
 	);
 
 /*
-    INSERT INTO VAL_Property (
+INSERT INTO VAL_Property (
 	     Property_Name,
 	     Property_Type,
 	     Is_Multivalue,
@@ -410,7 +413,7 @@ BEGIN
 	     Permit_Account_Id,
 	     permit_account_realm_id,
 	     Permit_Account_Collection_Id
-     ) VALUES (
+) VALUES (
 	     'company_collection_id',
 	     'test',
 	     'N',
@@ -425,7 +428,7 @@ BEGIN
 	     'PROHIBITED',
 	     'PROHIBITED',
 	     'PROHIBITED'
-     );
+);
 */
 
 	INSERT INTO VAL_Property (
@@ -897,7 +900,11 @@ BEGIN
 		company_collection_id, Account_Collection_Id, Property_Value
 		) VALUES (
 		'Singlevalue', 'test', v_company_coll_id, v_account_collection_id, 'test'
-		);
+		) RETURNING * INTO _p1;
+	SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+	IF _p1 != _p2 THEN
+		RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+	END IF;
 
 	RAISE NOTICE 'Inserting duplicate non-multivalue property';
 	BEGIN
@@ -905,7 +912,11 @@ BEGIN
 			company_collection_id, Account_Collection_Id, Property_Value
 			) VALUES (
 			'Singlevalue', 'test', v_company_coll_id, v_account_collection_id, 'test2'
-			);
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE NOTICE '... Insert successful.  THIS IS A PROBLEM';
 		raise error_in_assignment;
 	EXCEPTION
@@ -923,7 +934,11 @@ BEGIN
 			company_collection_id, Account_Collection_Id, Property_Value
 			) VALUES (
 			'Singlevalue', 'test', v_company_coll_id, v_account_collection_id2, 'test'
-			);
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+		RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE NOTICE '... Succeeded';
 	EXCEPTION
 		WHEN unique_violation THEN
@@ -948,7 +963,11 @@ BEGIN
 			company_collection_id, Account_Collection_Id, Property_Value
 			) VALUES (
 			'Multivalue', 'test', v_company_coll_id, v_account_collection_id, 'test2'
-			);
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+		RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE NOTICE '... Succeeded';
 	EXCEPTION
 		WHEN unique_violation THEN
@@ -962,7 +981,11 @@ BEGIN
 			company_collection_id, Account_Collection_Id, Property_Value
 			) VALUES (
 			'Multivalue', 'test', v_company_coll_id, v_account_collection_id, 'test'
-			);
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+		RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE NOTICE '... Succeeded.  THIS IS A PROBLEM';
 		raise error_in_assignment;
 	EXCEPTION
@@ -980,7 +1003,11 @@ BEGIN
 		company_collection_id, Account_Collection_Id, Property_Value
 		) VALUES (
 		'Multivalue', 'multivaluetest', v_company_coll_id, v_account_collection_id, 'test'
-		);
+	) RETURNING * INTO _p1;
+	SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+	IF _p1 != _p2 THEN
+	RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+	END IF;
 
 	RAISE NOTICE 'Inserting a different non-multivalue-type property';
 	BEGIN
@@ -989,7 +1016,11 @@ BEGIN
 			) VALUES (
 			'AnotherProperty', 'multivaluetest', v_company_coll_id, v_account_collection_id,
 				'test2'
-			);
+		) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+		RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE NOTICE '... Succeeded.  THIS IS A PROBLEM';
 		raise error_in_assignment;
 	EXCEPTION
@@ -1008,7 +1039,11 @@ BEGIN
 			Property_Value
 			) VALUES (
 			'Allowed', 'test', 'test'
-			);
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Succeeded';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
@@ -1040,7 +1075,11 @@ BEGIN
 			v_account_id,
 			v_account_realm_id,
 			v_account_collection_id
-			);
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Succeeded';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
@@ -1072,7 +1111,11 @@ BEGIN
 			v_account_id,
 			v_account_realm_id,
 			v_account_collection_id
-			);
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Succeeded';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
@@ -1132,7 +1175,11 @@ BEGIN
 			v_site_code,
 			v_account_id,
 			v_account_collection_id
-			);
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Succeeded.  THIS IS A PROBLEM';
 		raise error_in_assignment;
 	EXCEPTION
@@ -1608,7 +1655,7 @@ BEGIN
 
 
 
-  --
+--
 	-- Now test setting RHS values
 	--
 
@@ -1747,14 +1794,18 @@ BEGIN
 			) VALUES (
 			'timestamp', 'test',
 			now()
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
 			RAISE NOTICE '... Failed';
 			raise error_in_assignment;
 	END;
-	DELETE FROM Property where Property_ID = v_property_id;
+	DELETE FROM Property where Property_ID = _p1.property_id;
 
 	RAISE NOTICE 'Inserting Netblock_Collection_id value into timestamp property';
 	BEGIN
@@ -1887,14 +1938,18 @@ BEGIN
 			) VALUES (
 			'netblock_collection_id', 'test',
 			v_net_coll_Id
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
 			RAISE NOTICE '... Failed';
 			raise error_in_assignment;
 	END;
-	DELETE FROM Property where Property_ID = v_property_id;
+	DELETE FROM Property where Property_ID = _p1.property_id;
 
 	RAISE NOTICE 'Inserting Device_Collection_Id value into Netblock_Collection_Id property';
 	BEGIN
@@ -2042,14 +2097,18 @@ BEGIN
 			) VALUES (
 			'password_type', 'test',
 			v_password_type
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
 			RAISE NOTICE '... Failed';
 			raise error_in_assignment;
 	END;
-	DELETE FROM Property where Property_ID = v_property_id;
+	DELETE FROM Property where Property_ID = _p1.property_id;
 
 	RAISE NOTICE 'Inserting SW_Package_ID value into password_type property';
 	BEGIN
@@ -2323,14 +2382,18 @@ BEGIN
 			) VALUES (
 			'token_collection_id', 'test',
 			v_token_collection_id
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
 			RAISE NOTICE '... Failed';
 			raise error_in_assignment;
 	END;
-	DELETE FROM Property where Property_ID = v_property_id;
+	DELETE FROM Property where Property_ID = _p1.property_id;
 
 	RAISE NOTICE 'Inserting Account_Collection_id value into token_collection_id property';
 	BEGIN
@@ -2463,14 +2526,18 @@ BEGIN
 			) VALUES (
 			'account_collection_id', 'test',
 			v_account_collection_id
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
 			RAISE NOTICE '... Failed';
 			raise error_in_assignment;
 	END;
-	DELETE FROM Property where Property_ID = v_property_id;
+	DELETE FROM Property where Property_ID = _p1.property_id;
 
 	--
 	-- none
@@ -2608,14 +2675,18 @@ BEGIN
 			) VALUES (
 			'boolean', 'test',
 			'Y'
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+			SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+			IF _p1 != _p2 THEN
+			-- RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+			END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
 			RAISE NOTICE '... Failed';
 			raise error_in_assignment;
 	END;
-	DELETE FROM Property WHERE Property_ID = v_property_id;
+	DELETE FROM Property where Property_ID = _p1.property_id;
 
 	RAISE NOTICE 'Inserting N value into boolean property';
 	BEGIN
@@ -2624,14 +2695,18 @@ BEGIN
 			) VALUES (
 			'boolean', 'test',
 			'N'
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
 			RAISE NOTICE '... Failed';
 			raise error_in_assignment;
 	END;
-	DELETE FROM Property WHERE Property_ID = v_property_id;
+	DELETE FROM Property where Property_ID = _p1.property_id;
 
 	RAISE NOTICE 'Inserting non-boolean value into boolean property';
 	BEGIN
@@ -2660,7 +2735,11 @@ BEGIN
 			) VALUES (
 			'list', 'test',
 			'value'
-			) RETURNING Property_ID INTO v_property_id;
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE NOTICE '... Success';
 	EXCEPTION
 		WHEN invalid_parameter_value THEN
@@ -2683,9 +2762,7 @@ BEGIN
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
 		RAISE NOTICE '... It did (%)', SQLERRM;
 	END;
-
-
-	DELETE FROM Property WHERE Property_ID = v_property_id;
+	DELETE FROM Property WHERE Property_ID = _p1.property_id;
 
 	RAISE NOTICE 'Inserting invalid value into list property';
 	BEGIN
@@ -2812,7 +2889,11 @@ BEGIN
 		) VALUES (
 			'testjson', 'test',
 			'{ "is": false }'
-		);
+		) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
 		RAISE EXCEPTION 'worked' USING ERRCODE = 'JH999';
 	EXCEPTION WHEN SQLSTATE 'JH999' THEN
 		RAISE NOTICE '.... it did!';
