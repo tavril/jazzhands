@@ -142,13 +142,13 @@ CREATE OR REPLACE FUNCTION account_collection_manip.manip_membership(
 	account_collection_name	account_collection.account_collection_name%TYPE,
 	account_collection_type	account_collection.account_collection_type%TYPE,
 	account_id				account.account_id%TYPE,
-	is_member				boolean
+	is_member				char(1)
 ) RETURNS boolean AS
 $$
 DECLARE
 	forced boolean;
 BEGIN
-	IF is_member IS NULL OR is_member = false THEN
+	IF is_member = 'N' THEN
 		forced = false;
 	ELSE
 		forced = true;
