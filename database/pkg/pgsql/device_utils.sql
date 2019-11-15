@@ -677,7 +677,7 @@ BEGIN
 	SELECT DISTINCT
 		array_agg(shared_netblock_id) INTO sn_list
 	FROM
-		shared_netblock_network_int snni
+		shared_netblock_layer3_interface snni
 	WHERE
 		snni.layer3_interface_id = ANY(layer3_interface_id_list);
 
@@ -687,7 +687,7 @@ BEGIN
 
 	RAISE LOG 'Removing shared netblocks...';
 
-	DELETE FROM shared_netblock_network_int WHERE
+	DELETE FROM shared_netblock_layer3_interface WHERE
 		layer3_interface_id IN (
 			SELECT
 				layer3_interface_id
@@ -707,7 +707,7 @@ BEGIN
 		netblock_id
 	FROM
 		shared_netblock s LEFT JOIN
-		shared_netblock_network_int USING (shared_netblock_id)
+		shared_netblock_layer3_interface USING (shared_netblock_id)
 	WHERE
 		shared_netblock_id = ANY(sn_list) AND
 		layer3_interface_id IS NULL
