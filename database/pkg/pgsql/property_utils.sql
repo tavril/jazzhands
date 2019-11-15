@@ -896,4 +896,3 @@ END;
 $$
 SET search_path=jazzhands
 LANGUAGE plpgsql SECURITY DEFINER;
-END;

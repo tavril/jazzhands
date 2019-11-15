@@ -45,15 +45,15 @@
 
 \t on
 
+SAVEPOINT property_trigger_test;
+
 -- tests this, but does not work just yet because it assumes global test
 -- data is there; need to do that before rewritten to use proper savepoints.
 
--- \ir ../../pkg/pgsql/property_utils.sql
--- \ir ../../ddl/schema/pgsql/create_property_triggers.sql
+\ir ../../../pkg/pgsql/property_utils.sql
+-- \ir ../../../ddl/schema/pgsql/create_property_triggers.sql
 
--- SAVEPOINT property_trigger_test;
-
-CREATE FUNCTION validate_property_triggers() RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION validate_property_triggers() RETURNS BOOLEAN AS $$
 DECLARE
 	v_property_id			Property.property_id%TYPE;
 	v_company_coll_id		Property.company_collection_id%TYPE;
@@ -805,12 +805,15 @@ BEGIN
 		values ('JHTEST', 'JHTEST-PCT');
 
 	--
-	-- Get some valid data to work with
+	-- Get some valid data to work with.  Some of these are inserted, some are
+	-- picked from what's already in the db.  They should all be inserted here
+	-- but, time.
 	--
 
-	SELECT company_collection_id INTO v_company_coll_id FROM company_collection
-		WHERE company_collection_type = 'per-company'
-		LIMIT 1;
+	PERFORM company_manip.add_company(_company_name := 'JHTEST');
+	SELECT company_collection_id INTO v_company_coll_id
+	FROM company_collection LIMIT 1;
+
 	SELECT Device_Collection_ID INTO v_device_collection_id FROM
 		Device_Collection LIMIT 1;
 	SELECT Operating_System_ID INTO v_operating_system_id FROM Operating_System
@@ -820,8 +823,12 @@ BEGIN
 	SELECT property_collection_id INTO v_prop_coll_id
 		FROM property_collection
 		LIMIT 1;
-	SELECT Site_Code INTO v_site_code FROM Site
-		LIMIT 1;
+
+
+	INSERT INTO site (site_code,site_status) VALUES ('MOON0', 'ACTIVE')
+		RETURNING site_code INTO v_site_code;
+
+
 	SELECT Account_Id INTO v_account_Id FROM account
 		LIMIT 1;
 	SELECT Account_Collection_Id INTO v_account_collection_id FROM Account_Collection
@@ -836,8 +843,15 @@ BEGIN
 		LIMIT 1;
 --	SELECT SW_Package_ID INTO v_sw_package_id FROM SW_Package
 --		LIMIT 1;
-	SELECT Token_Collection_ID INTO v_token_collection_id FROM Token_Collection
-		LIMIT 1;
+
+	WITH t AS (
+		INSERT INTO val_token_collection_type (token_collection_type)
+			VALUES ('JHTEST') RETURNING *
+	), tc AS ( INSERT INTO token_collection (
+		token_collection_name, token_collection_type
+		) SELECT token_collection_type, token_collection_type FROM t
+		RETURNING *
+	) SELECT token_collection_id INTO v_token_collection_id FROM tc LIMIT 1;
 
 	RAISE NOTICE 'v_company_coll_id is %', v_company_coll_id;
 	RAISE NOTICE 'v_device_collection_id is %', v_device_collection_id;
@@ -2922,6 +2936,6 @@ $$ LANGUAGE plpgsql;
 SELECT validate_property_triggers();
 DROP FUNCTION validate_property_triggers();
 
--- ROLLBACK TO property_trigger_test;
+ROLLBACK TO property_trigger_test;
 
 \t off
