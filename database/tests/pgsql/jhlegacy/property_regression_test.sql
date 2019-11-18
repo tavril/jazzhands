@@ -2708,6 +2708,67 @@ INSERT INTO VAL_Property (
 	END;
 	DELETE FROM Property where Property_ID = _p1.property_id;
 
+	RAISE NOTICE 'Changing new boolean property from Y to N';
+	BEGIN
+		INSERT INTO Property (Property_Name, Property_Type,
+			Property_Value
+			) VALUES (
+			'boolean', 'test',
+			'Y'
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
+
+		UPDATE property
+		SET property_value = 'N'
+		WHERE property_id = _p1.property_id
+		RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after update, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
+
+		RAISE NOTICE '... Success';
+	EXCEPTION
+		WHEN invalid_parameter_value THEN
+			RAISE NOTICE '... Failed';
+			raise error_in_assignment;
+	END;
+	DELETE FROM Property where Property_ID = _p1.property_id;
+
+	RAISE NOTICE 'Changing new boolean property from N to Y';
+	BEGIN
+		INSERT INTO Property (Property_Name, Property_Type,
+			Property_Value
+			) VALUES (
+			'boolean', 'test',
+			'N'
+			) RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after insert, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
+
+		UPDATE property
+		SET property_value = 'Y'
+		WHERE property_id = _p1.property_id
+		RETURNING * INTO _p1;
+		SELECT * INTO _p2 FROM property WHERE property_id = _p1.property_id;
+		IF _p1 != _p2 THEN
+			RAISE EXCEPTION 'after update, properties do not match - % %', to_json(_p1), to_json(_p2);
+		END IF;
+
+		RAISE NOTICE '... Success';
+	EXCEPTION
+		WHEN invalid_parameter_value THEN
+			RAISE NOTICE '... Failed';
+			raise error_in_assignment;
+	END;
+	DELETE FROM Property where Property_ID = _p1.property_id;
+
+
 	RAISE NOTICE 'Inserting non-boolean value into boolean property';
 	BEGIN
 		INSERT INTO Property (Property_Name, Property_Type,
