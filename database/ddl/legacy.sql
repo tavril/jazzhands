@@ -2,18 +2,18 @@
 
 DO $$
 DECLARE
-        _tal INTEGER;
+	_tal INTEGER;
 BEGIN
-        select count(*)
-        from pg_catalog.pg_namespace
-        into _tal
-        where nspname = 'jazzhands_legacy';
-        IF _tal = 0 THEN
-                DROP SCHEMA IF EXISTS jazzhands_legacy;
-                CREATE SCHEMA jazzhands_legacy AUTHORIZATION jazzhands;
-                COMMENT ON SCHEMA jazzhands_legacy IS 'part of jazzhands';
+	select count(*)
+	from pg_catalog.pg_namespace
+	into _tal
+	where nspname = 'jazzhands_legacy';
+	IF _tal = 0 THEN
+		DROP SCHEMA IF EXISTS jazzhands_legacy;
+		CREATE SCHEMA jazzhands_legacy AUTHORIZATION jazzhands;
+		COMMENT ON SCHEMA jazzhands_legacy IS 'part of jazzhands';
 
-        END IF;
+	END IF;
 END;
 $$;
 
@@ -3910,11 +3910,134 @@ ALTER TABLE jazzhands_legacy.x509_signed_certificate ALTER is_certificate_author
 
 
 -- Deal with dropped tables
---- XXX - need to sort out snmp_commstr by hand
---- XXX - need to sort out v_device_collection_hier_trans by hand
---- XXX - need to sort out v_network_interface_trans by hand
---- XXX - need to sort out val_device_auto_mgmt_protocol by hand
---- XXX - need to sort out val_snmp_commstr_type by hand
+CREATE OR REPLACE VIEW jazzhands_legacy.v_device_collection_hier_trans AS
+ SELECT device_collection_id AS parent_device_collection_id,
+    child_device_collection_id AS device_collection_id,
+    data_ins_user,
+    data_ins_date,
+    data_upd_user,
+    data_upd_date
+   FROM jazzhands.device_collection_hier;
+
+CREATE OR REPLACE VIEW jazzhands_legacy.v_network_interface_trans AS
+WITH x as (
+		SELECT base.layer3_interface_id AS network_interface_id,
+			base.device_id,
+			base.layer3_interface_name AS network_interface_name,
+			base.description,
+			base.parent_layer3_interface_id AS parent_network_interface_id,
+			base.parent_relation_type,
+			base.netblock_id,
+			base.slot_id,
+			base.logical_port_id,
+			base.layer3_interface_type AS network_interface_type,
+			base.is_interface_up,
+			base.mac_addr,
+			base.should_monitor,
+			base.should_manage,
+			base.data_ins_user,
+			base.data_ins_date,
+			base.data_upd_user,
+			base.data_upd_date,
+			rnk
+		FROM ( SELECT  l3i.layer3_interface_id,
+			l3i.layer3_interface_name,
+			l3i.device_id,
+			l3i.description,
+			l3i.parent_layer3_interface_id,
+			l3i.parent_relation_type,
+			l3in.netblock_id,
+			l3i.slot_id,
+			l3i.logical_port_id,
+			l3i.layer3_interface_type,
+			l3i.is_interface_up,
+			l3i.mac_addr,
+			l3i.should_monitor,
+			l3i.should_manage,
+			l3i.data_ins_user,
+			l3i.data_ins_date,
+			l3i.data_upd_user,
+			l3i.data_upd_date,
+			rank() OVER (PARTITION BY l3i.layer3_interface_id
+				ORDER BY l3in.network_interface_rank) AS rnk
+		FROM jazzhands.layer3_interface l3i
+			LEFT JOIN jazzhands.layer3_interface_netblock l3in
+				USING (layer3_interface_id)
+	) base
+) SELECT x.network_interface_id,
+	x.device_id,
+	x.network_interface_name,
+	x.description,
+	x.parent_network_interface_id,
+	x.parent_relation_type,
+	x.netblock_id,
+	x.slot_id AS physical_port_id,
+	x.slot_id,
+	x.logical_port_id,
+	x.network_interface_type,
+	x.is_interface_up,
+	x.mac_addr,
+	x.should_monitor,
+	x.should_manage,
+	x.data_ins_user,
+	x.data_ins_date,
+	x.data_upd_user,
+	x.data_upd_date
+FROM  x
+		WHERE rnk = 1
+;
+
+--
+-- going away, so a bit of a hack
+CREATE OR REPLACE VIEW jazzhands_legacy.val_device_auto_mgmt_protocol AS
+SELECT
+	valid_property_value AS auto_mgmt_protocol,
+	CASE WHEN valid_property_value = 'ssh' THEN 22
+		WHEN valid_property_value = 'telnet'THEN 23
+		ELSE 0 END  AS connection_port,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM jazzhands.val_property_value
+WHERE property_name = 'AutoMgmtProtocol'
+AND property_type = 'JazzHandsLegacySupport';
+
+--- val_snmp_commstr_type going away
+CREATE OR REPLACE VIEW jazzhands_legacy.val_snmp_commstr_type AS
+SELECT
+	device_collection_name AS snmp_commstr_type,
+	description,
+	data_ins_user,
+	data_ins_date,
+	data_upd_user,
+	data_upd_date
+FROM jazzhands.device_collection
+WHERE device_collection_type = 'SnmpCommStrClass';
+
+--- snmp_commstr is going away
+CREATE OR REPLACE VIEW jazzhands_legacy.snmp_commstr AS
+SELECT
+	property_id AS snmp_commstr_id,
+	device_id,
+	device_collection_name AS snmp_commstr_type,
+	property_value_json->>'rd_string' as rd_string,
+	property_value_json->>'wr_string' AS wr_string,
+	property_value_json->>'purpose' AS purpose,
+	p.data_ins_user,
+	p.data_ins_date,
+	p.data_upd_user,
+	p.data_upd_date
+FROM jazzhands.property p
+	JOIN jazzhands.device_collection USING (device_collection_id)
+	JOIN jazzhands.device_collection_device USING (device_collection_id)
+WHERE device_collection_type = 'SnmpCommStrClass'
+AND property_name = 'SnmpCommStr'
+AND property_type = 'JazzHandsLegacySupport'
+;
+
+
 -- Triggers for account
 
 CREATE OR REPLACE FUNCTION jazzhands_legacy.account_ins()
