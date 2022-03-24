@@ -1,0 +1,4 @@
+Makefile.jazzhands
+Makefile.PL
+MANIFEST
+lib/JazzHands/VaultGeneric.pm
